@@ -541,58 +541,6 @@
             cursor: pointer; touch-action: manipulation; font-size: 0.95rem;
         }
 
-        /* --- Burbuja flotante: Lista de Deseos / Bucket List (columna, debajo del muro) --- */
-        .deseos-flotante {
-            position: fixed;
-            top: calc(clamp(16px, 4.5vh, 24px) + env(safe-area-inset-top, 0px) + 76px);
-            left: calc(clamp(28px, 9vw, 40px) + env(safe-area-inset-left, 0px));
-            z-index: 9998;
-            display: none; flex-direction: column; align-items: flex-start; gap: 15px;
-        }
-        .deseos-flotante.mostrar { display: flex; }
-        .burbuja-deseos {
-            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
-            border: 1px solid rgba(178,255,201,0.5); box-shadow: 0 5px 20px rgba(178,255,201,0.25);
-            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
-            animation: aparecerSuave 0.8s forwards; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .burbuja-deseos:active { transform: scale(0.9); }
-        .panel-deseos {
-            position: absolute; top: calc(100% + 15px); left: 0;
-            background: rgba(15, 10, 20, 0.9); border: 1px solid rgba(178,255,201,0.25);
-            border-radius: 24px; width: min(88vw, 330px); height: min(65vh, 460px);
-            display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            transform-origin: top left; opacity: 0; transform: scale(0.9) translateY(-10px);
-            pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .deseos-flotante.abierto .panel-deseos { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
-        .header-deseos {
-            padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08);
-            display: flex; justify-content: space-between; align-items: center; color: #b2ffc9; font-family: var(--fuente-texto);
-        }
-        .titulo-deseos { font-size: 0.95rem; font-weight: bold; }
-        .btn-cerrar-deseos { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
-        .lista-deseos { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-        .lista-deseos .sin-mensajes { font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; text-align: center; margin: auto; }
-        .fila-deseo {
-            display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px;
-            background: rgba(178,255,201,0.08); font-family: var(--fuente-texto); cursor: pointer; touch-action: manipulation;
-        }
-        .fila-deseo .check-deseo { font-size: 1.2rem; flex-shrink: 0; }
-        .fila-deseo .texto-deseo { font-size: 0.88rem; color: white; line-height: 1.35; }
-        .fila-deseo.cumplido .texto-deseo { text-decoration: line-through; color: rgba(255,255,255,0.45); }
-        .input-deseos-area { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
-        #input-deseo {
-            flex: 1; min-width: 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 20px; padding: 11px 14px; color: white; font-family: var(--fuente-texto); outline: none; font-size: 0.9rem;
-        }
-        .btn-enviar-deseo {
-            background: linear-gradient(135deg, #b2ffc9, #a8edea); border: none; border-radius: 50%;
-            width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; touch-action: manipulation; font-size: 0.95rem;
-        }
-
         /* --- Burbuja flotante: Preguntas para nosotros --- */
         .preguntas-flotante {
             position: fixed;
@@ -886,6 +834,77 @@
             50% { box-shadow: 0 0 26px rgba(255, 154, 158, 0.75); }
         }
 
+        /* ============ BOLETO DE AVIÓN DORADO ============ */
+        .btn-ver-boleto {
+            margin-top: 18px; background: rgba(255,255,255,0.08); border: 1px solid rgba(230,190,110,0.5);
+            color: #f0d38a; padding: 10px 22px; border-radius: 30px; font-family: var(--fuente-texto);
+            font-size: clamp(0.78rem, 2.3vw, 0.95rem); cursor: pointer; touch-action: manipulation;
+            letter-spacing: 0.4px; animation: resplandorBoton 2.4s infinite alternate;
+        }
+        .modal-boleto {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5,8,10,0.92); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+        }
+        .modal-boleto .btn-cerrar-boleto {
+            position: absolute; top: calc(18px + env(safe-area-inset-top, 0px)); right: 18px;
+            background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; touch-action: manipulation; z-index: 3;
+        }
+        .pase-abordar {
+            width: min(92vw, 380px); border-radius: 16px; overflow: hidden; position: relative;
+            background: linear-gradient(135deg, #1a1305, #2b2008 40%, #1a1305);
+            border: 1px solid rgba(230,190,110,0.5); box-shadow: 0 30px 70px rgba(0,0,0,0.7);
+            transform: scale(0.9); opacity: 0; transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34,1.2,0.64,1);
+            font-family: var(--fuente-texto); color: #f5e6bd;
+        }
+        .pase-abordar.mostrar { opacity: 1; transform: scale(1); }
+        .pase-holograma {
+            position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: 0.55;
+            background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.55) var(--holo-x, 50%), transparent 65%),
+                        linear-gradient(200deg, rgba(180,255,240,0.25), transparent 40%, rgba(255,200,240,0.25));
+            transition: background-position 0.15s ease;
+        }
+        .pase-header { padding: 18px 20px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(230,190,110,0.4); }
+        .pase-aerolinea { font-family: var(--fuente-titulo); font-size: 1.4rem; color: #f0d38a; }
+        .pase-clase { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(245,230,189,0.6); }
+        .pase-cuerpo { padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; }
+        .pase-ruta { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .pase-ciudad { text-align: center; flex: 1; }
+        .pase-ciudad .codigo { font-family: var(--fuente-titulo); font-size: clamp(1.4rem, 6vw, 1.9rem); color: #fff; display: block; }
+        .pase-ciudad .nombre { font-size: 0.7rem; color: rgba(245,230,189,0.75); }
+        .pase-avion { font-size: 1.3rem; color: #f0d38a; }
+        .pase-datos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px; padding-top: 8px; border-top: 1px dashed rgba(230,190,110,0.4); }
+        .pase-dato .etiqueta { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(245,230,189,0.55); display: block; margin-bottom: 2px; }
+        .pase-dato .valor { font-size: 0.92rem; color: #fff; font-weight: 600; }
+        .pase-footer { padding: 14px 20px calc(16px + env(safe-area-inset-bottom, 0px)); border-top: 1px dashed rgba(230,190,110,0.4); font-size: 0.68rem; color: rgba(245,230,189,0.55); text-align: center; font-style: italic; }
+        .pista-boleto { margin-top: 16px; color: rgba(255,255,255,0.45); font-size: 0.75rem; text-align: center; }
+
+        /* ============ CIELO DE NUESTRO PRIMER DÍA ============ */
+        .btn-ver-cielo {
+            margin-top: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 10px 22px; border-radius: 30px; font-family: var(--fuente-texto);
+            font-size: clamp(0.8rem, 2.3vw, 0.95rem); cursor: pointer; touch-action: manipulation;
+        }
+        .modal-cielo {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #04060c; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        #canvas-constelacion { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .modal-cielo .btn-cerrar-cielo {
+            position: absolute; top: calc(18px + env(safe-area-inset-top, 0px)); right: 18px;
+            background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; touch-action: manipulation; z-index: 3;
+        }
+        .texto-cielo {
+            position: relative; z-index: 2; text-align: center; padding: 0 24px;
+            font-family: var(--fuente-titulo); color: #fff; font-size: clamp(1.2rem, 5vw, 1.8rem);
+            text-shadow: 0 0 20px rgba(120,150,255,0.6); max-width: 600px; line-height: 1.4;
+            opacity: 0; animation: aparecerSuave 1.5s ease 0.6s forwards;
+        }
+        .subtexto-cielo {
+            position: relative; z-index: 2; font-family: var(--fuente-texto); color: rgba(255,255,255,0.55);
+            font-size: 0.8rem; margin-top: 10px; opacity: 0; animation: aparecerSuave 1.5s ease 1.2s forwards;
+        }
+
         .postdata-final {
             margin-top: clamp(14px, 3vh, 22px); font-family: var(--fuente-titulo);
             font-size: clamp(1.1rem, 4vw, 1.7rem); color: #ffe3ec; position: relative; z-index: 1;
@@ -893,6 +912,18 @@
             transition: opacity 1s ease, transform 1s ease;
         }
         .postdata-final.mostrar { opacity: 1; transform: translateY(0); }
+
+        /* --- Lluvia de besos al final --- */
+        .lluvia-besos { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 15000; }
+        .beso-cayendo {
+            position: absolute; top: -60px; will-change: transform, opacity;
+            animation-name: caerBeso; animation-timing-function: ease-in; animation-fill-mode: forwards;
+        }
+        @keyframes caerBeso {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            8% { opacity: 1; }
+            100% { transform: translateY(115vh) rotate(var(--giro, 60deg)); opacity: 0.9; }
+        }
     </style>
 </head>
 
@@ -1037,8 +1068,48 @@
                 <div class="fr-bloque"><span class="fr-valor" id="fr-seg">00</span><span class="fr-etiqueta">seg</span></div>
             </div>
             <div class="fr-fecha" id="fr-fecha">25 de agosto de 2026, 13 hs</div>
+            <a class="btn-ver-boleto" href="https://drive.google.com/uc?export=download&id=1cq1pwYt6iyr96WBC2oJldx05mWZojnXR" target="_blank" rel="noopener" style="text-decoration: none; display: inline-block;">🎫 Ver mi boleto real</a>
         </div>
         <div class="burbuja-reloj" id="burbuja-reloj" onclick="toggleReloj(event)" title="Cuenta regresiva" role="button" aria-label="Ver cuenta regresiva">⏰</div>
+    </div>
+
+    <!-- ====== MODAL: BOLETO DE AVIÓN DORADO ====== -->
+    <div id="modal-boleto" class="modal-boleto oculto">
+        <button class="btn-cerrar-boleto" onclick="cerrarBoleto()">✕</button>
+        <div>
+            <div class="pase-abordar" id="pase-abordar">
+                <div class="pase-holograma" id="pase-holograma"></div>
+                <div class="pase-header">
+                    <span class="pase-aerolinea">Nico & Carito ✈️</span>
+                    <span class="pase-clase">Clase Amor Eterno</span>
+                </div>
+                <div class="pase-cuerpo">
+                    <div class="pase-ruta">
+                        <div class="pase-ciudad"><span class="codigo">DIST</span><span class="nombre">La distancia</span></div>
+                        <div class="pase-avion">✈️</div>
+                        <div class="pase-ciudad"><span class="codigo">ABZO</span><span class="nombre">Nuestro abrazo</span></div>
+                    </div>
+                    <div class="pase-datos">
+                        <div class="pase-dato"><span class="etiqueta">Pasajero</span><span class="valor">Nico & Carito</span></div>
+                        <div class="pase-dato"><span class="etiqueta">Vuelo</span><span class="valor">6 AÑOS</span></div>
+                        <div class="pase-dato"><span class="etiqueta">Fecha</span><span class="valor">25 AGO 2026</span></div>
+                        <div class="pase-dato"><span class="etiqueta">Hora</span><span class="valor">13:00 hs</span></div>
+                        <div class="pase-dato"><span class="etiqueta">Puerta</span><span class="valor">CORAZÓN</span></div>
+                        <div class="pase-dato"><span class="etiqueta">Asiento</span><span class="valor">JUNTOS</span></div>
+                    </div>
+                </div>
+                <div class="pase-footer">Embarque prioritario: nos esperamos toda la vida por esto.</div>
+            </div>
+            <div class="pista-boleto">Mové el celular o el mouse para ver el brillo ✨</div>
+        </div>
+    </div>
+
+    <!-- ====== MODAL: EL CIELO DE NUESTRO PRIMER DÍA ====== -->
+    <div id="modal-cielo" class="modal-cielo oculto">
+        <button class="btn-cerrar-cielo" onclick="cerrarCielo()">✕</button>
+        <canvas id="canvas-constelacion"></canvas>
+        <div class="texto-cielo" id="texto-cielo">Así será nuestro cielo</div>
+        <div class="subtexto-cielo" id="subtexto-cielo">25 de agosto de 2026 · Buenos Aires, Argentina</div>
     </div>
 
     <!-- ====== MODAL DE ACCESO (llave secreta compartida) ====== -->
@@ -1088,7 +1159,7 @@
     <!-- FIREBASE (Proyecto Carolina) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDDvrgXpSxaraqTj83ingY3xa-AT8ywxV4",
@@ -1112,6 +1183,7 @@
         window.serverTimestamp = serverTimestamp;
         window.doc = doc;
         window.updateDoc = updateDoc;
+        window.setDoc = setDoc;
 
         console.log("🔥 Conectado con éxito a Carolina");
     </script>
@@ -1249,6 +1321,7 @@
                 </div>
                 <div class="cuenta-fecha" id="cuenta-fecha">25 de agosto de 2026, 13 hs</div>
                 <p class="cuenta-frase" id="cuenta-frase">Cada segundo que pasa, estoy más cerca de abrazarte 💫</p>
+                <button class="btn-ver-boleto" onclick="abrirBoleto(event)">✈️ Ver nuestro pasaje</button>
                 <p class="cuenta-mensaje" id="cuenta-mensaje"></p>
             </div>
         `;
@@ -1296,6 +1369,7 @@
                 <div class="final-firma">Tu Nico,<br>por siempre tuyo</div>
                 <button class="beso-boton" id="boton-beso" onclick="enviarBeso()">💋 Tocá para un beso</button>
                 <button class="beso-boton" style="margin-top: 15px; background: rgba(255,255,255,0.15);" onclick="abrirMuro()">📜 Entrar a nuestro Muro</button>
+                <button class="beso-boton" style="margin-top: 15px; background: rgba(255,255,255,0.15);" onclick="abrirCielo(event)">🌌 Ver nuestro cielo</button>
                 <p class="postdata-final" id="postdata-final">P.D.: esto recién empieza...</p>
             </div>
         `;
@@ -1436,9 +1510,38 @@
                 }, i * 90);
             }
 
+            lanzarLluviaDeBesos();
+
             setTimeout(() => {
                 document.getElementById('postdata-final').classList.add('mostrar');
             }, 700);
+        }
+
+        function lanzarLluviaDeBesos() {
+            const contenedor = document.createElement('div');
+            contenedor.className = 'lluvia-besos';
+            document.body.appendChild(contenedor);
+
+            const emojis = ['💋', '💕', '💖', '💗'];
+            const cantidad = 55;
+            for (let i = 0; i < cantidad; i++) {
+                const beso = document.createElement('span');
+                beso.className = 'beso-cayendo';
+                beso.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                const izquierda = Math.random() * 100;
+                const duracion = 2.6 + Math.random() * 2.2;
+                const demora = Math.random() * 1.8;
+                const tamano = 1.1 + Math.random() * 1.6;
+                const giro = (Math.random() * 140 - 70) + 'deg';
+                beso.style.left = izquierda + 'vw';
+                beso.style.fontSize = tamano + 'rem';
+                beso.style.setProperty('--giro', giro);
+                beso.style.animationDuration = duracion + 's';
+                beso.style.animationDelay = demora + 's';
+                contenedor.appendChild(beso);
+            }
+
+            setTimeout(() => contenedor.remove(), 6000);
         }
 
         const observer = new IntersectionObserver((entradas) => {
@@ -2621,6 +2724,165 @@
         function toggleReloj(event) {
             if (event) event.stopPropagation();
             document.getElementById('reloj-flotante').classList.toggle('abierto');
+        }
+
+        // BOLETO DE AVIÓN DORADO
+        // ============================================================
+        function abrirBoleto(event) {
+            if (event) event.stopPropagation();
+            vibrar(15);
+            const modal = document.getElementById('modal-boleto');
+            modal.classList.remove('oculto');
+            setTimeout(() => document.getElementById('pase-abordar').classList.add('mostrar'), 60);
+            window.addEventListener('deviceorientation', actualizarHolograma);
+            modal.addEventListener('mousemove', actualizarHologramaMouse);
+            modal.addEventListener('touchmove', actualizarHologramaTouch);
+        }
+
+        function cerrarBoleto() {
+            const modal = document.getElementById('modal-boleto');
+            document.getElementById('pase-abordar').classList.remove('mostrar');
+            setTimeout(() => modal.classList.add('oculto'), 300);
+            window.removeEventListener('deviceorientation', actualizarHolograma);
+            modal.removeEventListener('mousemove', actualizarHologramaMouse);
+            modal.removeEventListener('touchmove', actualizarHologramaTouch);
+        }
+
+        function actualizarHolograma(e) {
+            const porcentaje = Math.max(0, Math.min(100, 50 + (e.gamma || 0) * 1.5));
+            document.getElementById('pase-holograma').style.setProperty('--holo-x', porcentaje + '%');
+        }
+        function actualizarHologramaMouse(e) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const porcentaje = ((e.clientX - rect.left) / rect.width) * 100;
+            document.getElementById('pase-holograma').style.setProperty('--holo-x', porcentaje + '%');
+        }
+        function actualizarHologramaTouch(e) {
+            if (!e.touches || !e.touches[0]) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            const porcentaje = ((e.touches[0].clientX - rect.left) / rect.width) * 100;
+            document.getElementById('pase-holograma').style.setProperty('--holo-x', porcentaje + '%');
+        }
+
+        // ============================================================
+        // EL CIELO DE NUESTRO PRIMER DÍA
+        // ============================================================
+        // Usa la misma fecha que la cuenta regresiva (fechaEncuentro).
+        // Antes de esa fecha habla en futuro ("Así será"); después, en pasado ("Así fue").
+        let cieloAnimId = null;
+
+        function abrirCielo(event) {
+            if (event) event.stopPropagation();
+            vibrar(15);
+            document.getElementById('modal-cielo').classList.remove('oculto');
+
+            const yaPaso = Date.now() >= fechaEncuentro.getTime();
+            const textoCielo = document.getElementById('texto-cielo');
+            const subtexto = document.getElementById('subtexto-cielo');
+            if (yaPaso) {
+                textoCielo.innerText = 'Así fue nuestro cielo';
+                subtexto.innerText = 'El cielo que nos vio abrazarnos por fin, el 25 de agosto de 2026, en Buenos Aires';
+            } else {
+                textoCielo.innerText = 'Así será nuestro cielo';
+                subtexto.innerText = 'El cielo que nos va a ver abrazarnos por fin, el 25 de agosto de 2026, en Buenos Aires';
+            }
+
+            dibujarConstelacion();
+            window.addEventListener('resize', dibujarConstelacion);
+        }
+
+        function cerrarCielo() {
+            document.getElementById('modal-cielo').classList.add('oculto');
+            window.removeEventListener('resize', dibujarConstelacion);
+            if (cieloAnimId) cancelAnimationFrame(cieloAnimId);
+        }
+
+        function dibujarConstelacion() {
+            const canvas = document.getElementById('canvas-constelacion');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const w = window.innerWidth, h = window.innerHeight;
+
+            // Semilla fija (25/08/2026) para que el cielo sea siempre el mismo al volver a abrirlo
+            let semilla = 20260825;
+            function random() {
+                semilla = (semilla * 9301 + 49297) % 233280;
+                return semilla / 233280;
+            }
+
+            const estrellas = [];
+            const cantidadEstrellas = 140;
+            for (let i = 0; i < cantidadEstrellas; i++) {
+                estrellas.push({
+                    x: random() * w, y: random() * h,
+                    r: random() * 1.6 + 0.4,
+                    brillo: random(), velocidad: random() * 0.02 + 0.01
+                });
+            }
+
+            // Constelación propia: un grupo de estrellas destacadas unidas por líneas
+            const puntosConstelacion = [];
+            const centroX = w * 0.5, centroY = h * 0.42;
+            const numPuntos = 7;
+            for (let i = 0; i < numPuntos; i++) {
+                const angulo = (i / numPuntos) * Math.PI * 2 + random() * 0.5;
+                const radio = Math.min(w, h) * (0.14 + random() * 0.12);
+                puntosConstelacion.push({
+                    x: centroX + Math.cos(angulo) * radio,
+                    y: centroY + Math.sin(angulo) * radio * 0.7
+                });
+            }
+
+            let t = 0;
+            function frame() {
+                t += 0.016;
+                ctx.clearRect(0, 0, w, h);
+                const grad = ctx.createRadialGradient(w/2, h*0.4, 0, w/2, h*0.4, Math.max(w,h)*0.8);
+                grad.addColorStop(0, '#0a1128');
+                grad.addColorStop(1, '#04060c');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, w, h);
+
+                // Estrellas de fondo
+                estrellas.forEach(e => {
+                    const parpadeo = 0.5 + 0.5 * Math.sin(t * e.velocidad * 20 + e.brillo * 10);
+                    ctx.beginPath();
+                    ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,255,255,${0.3 + parpadeo * 0.6})`;
+                    ctx.fill();
+                });
+
+                // Líneas de la constelación
+                ctx.strokeStyle = 'rgba(150,180,255,0.5)';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                puntosConstelacion.forEach((p, i) => {
+                    if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+                });
+                ctx.closePath();
+                ctx.stroke();
+
+                // Puntos brillantes de la constelación
+                puntosConstelacion.forEach(p => {
+                    const pulso = 2.2 + Math.sin(t * 1.5) * 0.6;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, pulso, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffe3ec';
+                    ctx.shadowColor = 'rgba(255,182,193,0.9)';
+                    ctx.shadowBlur = 12;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
+
+                cieloAnimId = requestAnimationFrame(frame);
+            }
+            if (cieloAnimId) cancelAnimationFrame(cieloAnimId);
+            frame();
         }
     </script>
 </body>

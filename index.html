@@ -439,6 +439,7 @@
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); touch-action: manipulation;
         }
         .panel-chat {
+            position: absolute; top: calc(100% + 15px); right: 0;
             background: rgba(15, 10, 20, 0.9); border: 1px solid rgba(255,182,193,0.2);
             border-radius: 24px; width: min(88vw, 330px); height: min(65vh, 460px);
             display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
@@ -509,6 +510,7 @@
         }
         .burbuja-gratitud:active { transform: scale(0.9); }
         .panel-gratitud {
+            position: absolute; top: calc(100% + 15px); right: 0;
             background: rgba(15, 10, 20, 0.9); border: 1px solid rgba(255,214,102,0.25);
             border-radius: 24px; width: min(88vw, 330px); height: min(65vh, 460px);
             display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
@@ -557,6 +559,7 @@
         }
         .burbuja-deseos:active { transform: scale(0.9); }
         .panel-deseos {
+            position: absolute; top: calc(100% + 15px); left: 0;
             background: rgba(15, 10, 20, 0.9); border: 1px solid rgba(178,255,201,0.25);
             border-radius: 24px; width: min(88vw, 330px); height: min(65vh, 460px);
             display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
@@ -608,6 +611,7 @@
         }
         .burbuja-preguntas:active { transform: scale(0.9); }
         .panel-preguntas {
+            position: absolute; bottom: calc(100% + 15px); right: 0;
             background: rgba(15, 10, 20, 0.92); border: 1px solid rgba(216,180,254,0.25);
             border-radius: 24px; width: min(88vw, 330px); max-height: min(60vh, 420px);
             display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
@@ -629,6 +633,12 @@
             width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; touch-action: manipulation;
             background: linear-gradient(135deg, #d8b4fe, #a5b4fc); color: #2a1a3d; font-weight: bold; font-family: var(--fuente-texto);
         }
+        .fila-envio-whatsapp { display: flex; gap: 8px; margin-top: 10px; }
+        .btn-enviar-whatsapp {
+            flex: 1; padding: 10px 6px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;
+            touch-action: manipulation; background: rgba(37,211,102,0.15); color: white; font-size: 0.78rem;
+            font-weight: bold; font-family: var(--fuente-texto);
+        }
 
         /* --- Burbuja flotante: Reloj / Cuenta regresiva (apilado sobre las preguntas) --- */
         .reloj-flotante {
@@ -648,6 +658,7 @@
         }
         .burbuja-reloj:active { transform: scale(0.9); }
         .panel-reloj {
+            position: absolute; bottom: calc(100% + 15px); right: 0;
             background: rgba(15, 10, 20, 0.92); border: 1px solid rgba(255,183,197,0.25);
             border-radius: 24px; width: min(88vw, 320px); padding: 22px 20px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8); text-align: center;
@@ -1002,6 +1013,10 @@
             </div>
             <div class="pie-preguntas">
                 <button class="btn-otra-pregunta" onclick="mostrarPreguntaAleatoria()">🔀 Otra pregunta</button>
+                <div class="fila-envio-whatsapp">
+                    <button class="btn-enviar-whatsapp nico" onclick="enviarPreguntaWhatsApp('nico')">Enviar a Nico 💙</button>
+                    <button class="btn-enviar-whatsapp carito" onclick="enviarPreguntaWhatsApp('carito')">Enviar a Carito 💖</button>
+                </div>
             </div>
         </div>
         <div class="burbuja-preguntas" id="burbuja-preguntas" onclick="togglePreguntas(event)" title="Preguntas para nosotros" role="button" aria-label="Abrir preguntas para la pareja">💭</div>
@@ -1688,11 +1703,8 @@
         let esRandom = true; // Desde la 2da canción en adelante, siempre aleatorio: nunca se sabe qué sigue
         let esRepetir = false;
         
-        // Buscar "She" de Elvis Costello para que sea la inicial
-        const indiceShe = canciones.findIndex(c => c.nombre.toLowerCase().includes('she') && c.nombre.toLowerCase().includes('costello'));
-        if (indiceShe !== -1) {
-            indiceCancionActiva = indiceShe;
-        }
+        // La primera canción también es al azar (antes arrancaba siempre en la misma)
+        indiceCancionActiva = Math.floor(Math.random() * canciones.length);
 
         const reproductorMusical = new Audio();
         reproductorMusical.src = canciones[indiceCancionActiva].src;
@@ -1789,10 +1801,8 @@
         }
 
         function toggleRandom() {
-            esRandom = !esRandom;
-            const btn = document.getElementById('btn-random');
-            if(esRandom) btn.classList.add('activo');
-            else btn.classList.remove('activo');
+            // La música siempre es aleatoria: este botón ya no la desactiva.
+            vibrar(10);
         }
 
         function toggleRepeat() {
@@ -2595,6 +2605,16 @@
             const pregunta = preguntasPareja[indice];
             document.getElementById('pregunta-categoria').innerText = pregunta.c;
             document.getElementById('pregunta-texto').innerText = pregunta.t;
+        }
+
+        function enviarPreguntaWhatsApp(destinatario) {
+            vibrar(15);
+            const numeros = { nico: "5493516575261", carito: "5491170131229" };
+            const numero = numeros[destinatario];
+            if (!numero) return;
+            const texto = document.getElementById('pregunta-texto').innerText || "";
+            const url = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+            window.open(url, '_blank');
         }
 
         // ================== RELOJ / CUENTA REGRESIVA FLOTANTE ==================

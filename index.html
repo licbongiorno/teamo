@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#05080a">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9D%A4%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <title>Para Carito, el amor de mi vida</title>
+    <meta name="description" content="Una cartita interactiva para Carito, el amor de mi vida.">
+    <meta property="og:title" content="Para Carito, el amor de mi vida">
+    <meta property="og:description" content="Tocá la puerta... 💕">
+    <meta property="og:type" content="website">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com;
+        connect-src 'self' data: blob: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com https://www.gstatic.com;
+        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+        font-src 'self' https://fonts.gstatic.com;
+        img-src 'self' data: https:;
+    ">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg-oscuro: #05080a;
+            --color-madera-base: #3a2313;
+            --fuente-titulo: 'Dancing Script', cursive;
+            --fuente-texto: 'Montserrat', sans-serif;
+        }
+
+        html, body {
+            margin: 0; padding: 0; height: 100%;
+            background-color: var(--color-bg-oscuro); 
+            font-family: var(--fuente-texto);
+            color: #333; 
+            overflow: hidden;
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-text-size-adjust: 100%;
+            touch-action: manipulation;
+        }
+
+        /* Compatibilidad móvil: nada de selección de texto accidental ni "flash" al tocar */
+        * { -webkit-tap-highlight-color: transparent; }
+        button, .btn, .puerta, .btn-azar, .burbuja-reproductor, .beso-boton, .controles-audio button, .barra-progreso-container, #barra-progreso, #volumen {
+            -webkit-user-select: none; user-select: none;
+        }
+
+        .contenedor-scroll {
+            height: 100dvh;
+            width: 100vw;
+            overflow-y: hidden; 
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+            z-index: 10;
+        }
+        .contenedor-scroll.activo { overflow-y: auto; }
+
+        .pantalla {
+            height: 100dvh; width: 100vw;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            position: relative;
+            background: transparent;
+        }
+
+        #canvas-particulas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none; 
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+        #canvas-particulas.activo { opacity: 1; }
+
+        .pantalla-puerta {
+            background: radial-gradient(circle at center, #1a2530, #020304);
+            perspective: 1500px; 
+            color: white;
+            z-index: 20;
+        }
+
+        .pantalla { background-size: 300% 300%; }
+        .fondo-animado { animation: flotarGradiente 16s ease-in-out infinite; overflow: hidden; }
+        @keyframes flotarGradiente {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .circulo-flotante {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(35px);
+            pointer-events: none;
+            z-index: 0;
+            animation: flotarCirculo ease-in-out infinite alternate;
+        }
+        @keyframes flotarCirculo {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(var(--flotar-x, 20px), var(--flotar-y, -25px)) scale(1.1); }
+        }
+
+        .brillo-flotante {
+            position: absolute;
+            font-size: clamp(1rem, 3vw, 1.6rem);
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 0;
+            animation: derivarBrillo ease-in-out infinite;
+        }
+        @keyframes derivarBrillo {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.35; }
+            50% { transform: translateY(-18px) rotate(15deg); opacity: 0.65; }
+        }
+
+        .marco-exterior {
+            padding: clamp(10px, 3vw, 25px); 
+            background: #111;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.9);
+            position: relative; 
+            width: clamp(220px, 70vw, 320px); 
+            height: clamp(380px, 65vh, 500px);
+            border-left: clamp(8px, 2vw, 15px) solid #0a0a0a; 
+            border-right: clamp(8px, 2vw, 15px) solid #151515; 
+            border-top: clamp(8px, 2vw, 15px) solid #0d0d0d;
+        }
+
+        .interior-casa {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle, #fff, #ff9a9e, #fecfef);
+            box-shadow: inset 0 0 80px rgba(255, 105, 180, 1);
+            z-index: 1; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; opacity: 0; transition: opacity 1.5s ease;
+        }
+        .interior-casa.iluminar { opacity: 1; cursor: pointer; touch-action: manipulation; }
+        .interior-casa .foto-puerta {
+            width: clamp(90px, 32vw, 150px); height: clamp(90px, 32vw, 150px);
+            border-radius: 50%; object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.9);
+            animation: latido 1.6s infinite;
+            position: relative; z-index: 1;
+        }
+
+        .secreto-puerta {
+            position: fixed; top: 10%; left: 50%; transform: translate(-50%, -12px);
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            color: #ffe3ec; font-family: var(--fuente-titulo); font-size: clamp(1.15rem, 4.5vw, 1.7rem);
+            padding: 12px 26px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            opacity: 0; pointer-events: none; transition: opacity 0.6s ease, transform 0.6s ease;
+            z-index: 30; text-align: center; max-width: 82vw;
+        }
+        .secreto-puerta.mostrar { opacity: 1; transform: translate(-50%, 0); }
+
+        .puerta {
+            width: 100%; height: 100%;
+            background: var(--color-madera-base); 
+            background-image: linear-gradient(90deg, rgba(0,0,0,0.6) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.6) 100%), 
+                              linear-gradient(rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.7) 100%);
+            border: 2px solid #140b06; position: absolute; top: 0; left: 0;
+            cursor: pointer;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.95), 10px 0 20px rgba(0,0,0,0.7);
+            transform-origin: left center;
+            transition: transform 2.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 2.2s ease, filter 2.2s ease;
+            display: flex; flex-direction: column; justify-content: space-around; align-items: center;
+            padding: 5% 0; box-sizing: border-box; z-index: 2; transform-style: preserve-3d;
+            touch-action: manipulation;
+        }
+
+        .puerta.abierta {
+            transform: rotateY(-105deg) skewY(-2deg);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9), 30px 15px 50px rgba(0,0,0,0.8);
+            filter: brightness(0.3);
+        }
+
+        .panel {
+            width: 76%; height: 22%; background: #2b1a0e;
+            border: 3px solid #140b06; border-bottom-color: #4a2e1a; border-right-color: #4a2e1a;
+            box-shadow: inset 8px 8px 20px rgba(0,0,0,0.95); border-radius: 4px;
+        }
+        .panel-largo { height: 40%; }
+        
+        .pomo {
+            width: clamp(20px, 6vw, 30px); height: clamp(20px, 6vw, 30px);
+            background: radial-gradient(circle at 30% 30%, #fbdcb5, #d35400, #5e2c00);
+            border-radius: 50%; position: absolute; right: 8%; top: 52%;
+            box-shadow: -4px 6px 10px rgba(0,0,0,0.9), inset -2px -2px 5px rgba(0,0,0,0.7);
+        }
+
+        .pista-tocar {
+            position: absolute; bottom: -14%; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.75); font-size: clamp(0.8rem, 2.8vw, 1rem);
+            font-family: var(--fuente-texto); white-space: nowrap;
+            opacity: 0; pointer-events: none; z-index: 3;
+            animation: aparecerPista 1s ease forwards 3.5s, rebote 1.8s infinite 3.5s;
+            text-shadow: 0 0 10px rgba(0,0,0,0.9);
+        }
+        .marco-exterior.oculto-pista .pista-tocar { display: none; }
+        @keyframes aparecerPista { to { opacity: 1; } }
+
+        .texto-toc {
+            position: absolute; font-size: clamp(2.5rem, 8vw, 4rem); font-weight: bold; color: #ff7e67;
+            text-shadow: 0 0 20px rgba(255, 126, 103, 0.9), 3px 3px 6px #000;
+            pointer-events: none; opacity: 0; transform: scale(0.5);
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            z-index: 10;
+        }
+        .texto-toc.mostrar { opacity: 1; transform: scale(1.1); }
+
+        .interfaz { margin-top: clamp(20px, 5vh, 40px); height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; }
+        
+        .texto-dinamico {
+            font-size: clamp(1.2rem, 4vw, 1.8rem); margin-bottom: 15px; opacity: 0; transform: translateY(-10px);
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-style: italic; text-align: center; display: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        .texto-dinamico.mostrar { opacity: 1; transform: translateY(0); display: block; }
+
+        .contenedor-botones { display: none; gap: clamp(15px, 4vw, 30px); }
+        .contenedor-botones.mostrar { display: flex; }
+        
+        .btn {
+            background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            padding: clamp(8px, 2vw, 12px) clamp(20px, 5vw, 40px); 
+            font-size: clamp(1rem, 3vw, 1.2rem); border-radius: 30px;
+            cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease; 
+            font-family: var(--fuente-texto); text-transform: uppercase; letter-spacing: 1px;
+            touch-action: manipulation;
+        }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.6); background: rgba(255,255,255,0.15); }
+        .btn-si { background: rgba(231, 76, 60, 0.7); border-color: #ff7979; }
+        .btn-si:hover { background: rgba(255, 82, 82, 0.9); box-shadow: 0 0 25px rgba(255, 82, 82, 0.8); }
+
+        .mensaje-final { font-size: clamp(1.1rem, 3.5vw, 1.4rem); color: #f1c40f; font-style: italic; display: none; }
+        .indicador-scroll { color: #fff; font-size: clamp(1rem, 3vw, 1.3rem); animation: rebote 1.5s infinite; margin-top: 15px; display: none; text-align: center; background: rgba(0,0,0,0.5); padding: 10px 25px; border-radius: 25px; backdrop-filter: blur(5px); }
+
+        .tarjeta-cristal {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+            padding: clamp(25px, 6vw, 50px) clamp(20px, 5vw, 40px);
+            width: clamp(260px, 85vw, 800px);
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255,255,255,0.2);
+            opacity: 0; transform: translateY(40px) scale(0.95);
+            transition: all 1s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 10;
+        }
+        
+        .pantalla.visible .tarjeta-cristal {
+            opacity: 1; transform: translateY(0) scale(1);
+        }
+
+        .texto-romantico {
+            font-size: clamp(2.5rem, 8vw, 5.5rem); 
+            color: #d63031;
+            text-shadow: 2px 2px 6px rgba(255, 255, 255, 0.8);
+            font-family: var(--fuente-titulo);
+            line-height: 1.2; margin: 0;
+        }
+
+        .cursor-escritura {
+            display: inline-block;
+            width: 0.06em;
+            height: 0.9em;
+            background: #d63031;
+            margin-left: 3px;
+            vertical-align: middle;
+            animation: parpadearCursor 0.8s step-end infinite;
+        }
+        @keyframes parpadearCursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+        .deco-amo-carito {
+            position: absolute; font-family: var(--fuente-titulo);
+            color: rgba(214, 48, 49, 0.08); pointer-events: none; z-index: 0;
+            white-space: nowrap; user-select: none;
+        }
+
+        .btn-azar {
+            position: fixed;
+            bottom: calc(clamp(20px, 5vh, 40px) + env(safe-area-inset-bottom, 0px));
+            right: calc(clamp(15px, 5vw, 40px) + env(safe-area-inset-right, 0px));
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            color: #d63031; font-weight: bold; font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+            border: none; border-radius: 50px; padding: clamp(10px, 3vw, 18px) clamp(16px, 5vw, 30px);
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.5);
+            cursor: pointer; z-index: 1000;
+            display: none; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: var(--fuente-texto);
+            align-items: center; gap: 8px;
+            animation: resplandorBoton 2s infinite alternate;
+            touch-action: manipulation;
+            max-width: calc(100vw - 30px);
+        }
+        .btn-azar.mostrar { display: flex; animation: aparecerSuave 1s forwards, resplandorBoton 2s infinite alternate; }
+        .btn-azar:hover { transform: scale(1.08) translateY(-5px); }
+
+        /* Reproductor de Sonidos Flotante: burbuja colapsable + panel */
+        .reproductor-flotante {
+            position: fixed;
+            bottom: calc(clamp(16px, 4.5vh, 36px) + env(safe-area-inset-bottom, 0px));
+            left: calc(clamp(12px, 5vw, 40px) + env(safe-area-inset-left, 0px));
+            z-index: 900;
+            display: none;
+            flex-direction: column-reverse;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .reproductor-flotante.mostrar { display: flex; }
+
+        /* La burbuja: siempre chica, siempre en su rincón, nunca invade el resto de la pantalla */
+        .burbuja-reproductor {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; cursor: pointer; touch-action: manipulation;
+            flex-shrink: 0;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+            animation: aparecerSuave 0.8s forwards;
+        }
+        .burbuja-reproductor:active { transform: scale(0.9); }
+        .burbuja-reproductor.sonando {
+            animation: latidoBurbuja 1.4s ease-in-out infinite;
+            box-shadow: 0 8px 20px rgba(255, 154, 158, 0.55);
+            border-color: rgba(255, 154, 158, 0.6);
+        }
+        @keyframes latidoBurbuja {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .panel-reproductor {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px; padding: clamp(10px, 3vw, 15px) clamp(14px, 4vw, 25px);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            color: white; font-family: var(--fuente-texto);
+            width: clamp(160px, 55vw, 230px);
+            box-sizing: border-box;
+            transform-origin: bottom left;
+            opacity: 0; transform: scale(0.85) translateY(10px);
+            max-height: 0; overflow: hidden; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), max-height 0.35s ease, padding 0.35s ease, border-width 0.35s ease;
+        }
+        .reproductor-flotante.abierto .panel-reproductor {
+            opacity: 1; transform: scale(1) translateY(0);
+            max-height: 260px; padding-top: clamp(10px, 3vw, 15px); padding-bottom: clamp(10px, 3vw, 15px);
+            border-width: 1px;
+            pointer-events: auto;
+        }
+        
+        .info-cancion { font-size: clamp(0.8rem, 3vw, 0.95rem); font-weight: bold; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); text-align: center; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ff9a9e; }
+
+        .barra-progreso-container { display: flex; align-items: center; gap: 8px; width: 100%; }
+        .barra-progreso-container .tiempo { font-size: 0.65rem; color: rgba(255,255,255,0.75); min-width: 28px; text-align: center; }
+        #barra-progreso { -webkit-appearance: none; appearance: none; flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.25); accent-color: #ff9a9e; cursor: pointer; touch-action: none; }
+        #barra-progreso::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #ff9a9e; box-shadow: 0 0 6px rgba(255,154,158,0.9); cursor: pointer; }
+        #barra-progreso::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #ff9a9e; border: none; box-shadow: 0 0 6px rgba(255,154,158,0.9); cursor: pointer; }
+
+        .controles-audio { display: flex; gap: clamp(6px, 3vw, 15px); align-items: center; justify-content: center; width: 100%; }
+        .controles-audio button { background: none; border: none; color: white; font-size: clamp(1.1rem, 4vw, 1.3rem); cursor: pointer; transition: transform 0.2s, color 0.2s; padding: 8px; min-width: 32px; min-height: 32px; touch-action: manipulation; }
+        .controles-audio button:hover, .controles-audio button:active { transform: scale(1.2); color: #ff9a9e; }
+        .controles-audio .btn-toggle.activo { color: #ff9a9e; text-shadow: 0 0 8px rgba(255, 154, 158, 0.8); }
+        
+        .control-volumen { display: flex; align-items: center; gap: 8px; width: 100%; }
+        .control-volumen span { font-size: 1rem; }
+        #volumen { width: 100%; accent-color: #ff9a9e; cursor: pointer; }
+
+        @keyframes latido { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px #ff6b81); } 50% { transform: scale(1.15); filter: drop-shadow(0 0 40px #ff4757); } }
+
+        /* ============ NUESTRO REFUGIO: acceso, chat y muro en el tiempo ============ */
+
+        /* --- Componentes compartidos (cristal) --- */
+        .modal-cristal, .muro-pantalla {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(5, 8, 10, 0.85);
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            z-index: 10000; display: flex; flex-direction: column;
+            opacity: 1; transition: opacity 0.5s ease;
+        }
+        .oculto { opacity: 0; pointer-events: none; display: none !important; }
+
+        /* --- Acceso secreto --- */
+        .modal-cristal { justify-content: center; align-items: center; display: flex; padding: 20px; box-sizing: border-box; }
+        .tarjeta-acceso {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,182,193,0.3);
+            padding: clamp(22px, 6vw, 32px); border-radius: 20px; text-align: center; color: white;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5); font-family: var(--fuente-texto);
+            animation: aparecerSuave 0.5s forwards;
+            width: min(90vw, 340px); box-sizing: border-box;
+        }
+        .tarjeta-acceso h3 { font-family: var(--fuente-titulo); font-size: clamp(1.6rem, 6vw, 2rem); color: #ffb3c6; margin: 0 0 10px; }
+        .tarjeta-acceso p { font-size: 0.9rem; color: rgba(255,255,255,0.75); margin: 0; }
+        .tarjeta-acceso input {
+            width: 100%; box-sizing: border-box; padding: 12px; margin: 15px 0 0; border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;
+            text-align: center; font-size: 1.05rem; font-family: var(--fuente-texto);
+        }
+        .tarjeta-acceso button {
+            background: #ffb3c6; color: #1a1015; padding: 10px 25px; border-radius: 20px; border: none;
+            font-weight: bold; cursor: pointer; margin-top: 14px; font-family: var(--fuente-texto);
+            touch-action: manipulation; width: 100%;
+        }
+        .error-texto { color: #ff7e67; font-size: 0.82rem; margin-top: 10px; min-height: 1.2em; }
+
+        /* --- Burbuja + panel de chat --- */
+        .chat-flotante {
+            position: fixed;
+            top: calc(clamp(16px, 4.5vh, 24px) + env(safe-area-inset-top, 0px));
+            right: calc(clamp(12px, 5vw, 24px) + env(safe-area-inset-right, 0px));
+            z-index: 9999;
+            display: none; flex-direction: column; align-items: flex-end; gap: 15px;
+        }
+        .chat-flotante.mostrar { display: flex; }
+        .burbuja-chat {
+            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,182,193,0.5); box-shadow: 0 5px 20px rgba(255,154,158,0.3);
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
+            animation: aparecerSuave 0.8s forwards, latidoBurbuja 3s infinite;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); touch-action: manipulation;
+        }
+        .panel-chat {
+            background: rgba(15, 10, 20, 0.9); border: 1px solid rgba(255,182,193,0.2);
+            border-radius: 24px; width: min(88vw, 330px); height: min(65vh, 460px);
+            display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform-origin: top right; opacity: 0; transform: scale(0.9) translateY(-10px);
+            pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .chat-flotante.abierto .panel-chat { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+        .header-chat {
+            padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center; color: #ffb3c6; font-family: var(--fuente-texto);
+        }
+        .titulo-chat { font-size: 0.95rem; font-weight: bold; }
+        .btn-cerrar-chat { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
+        .mensajes-chat { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .mensajes-chat .sin-mensajes { font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; text-align: center; margin: auto; }
+        .burbuja-msg {
+            max-width: 82%; padding: 9px 14px; border-radius: 18px; font-family: var(--fuente-texto);
+            font-size: 0.88rem; line-height: 1.4; animation: aparecerSuave 0.3s forwards; color: white; word-wrap: break-word;
+        }
+        .msg-carito { background: rgba(255, 154, 158, 0.18); border-bottom-left-radius: 4px; align-self: flex-start; }
+        .msg-nico { background: rgba(161, 196, 253, 0.18); border-bottom-right-radius: 4px; align-self: flex-end; }
+        .input-chat-area { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
+        #input-chat {
+            flex: 1; min-width: 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px; padding: 11px 14px; color: white; font-family: var(--fuente-texto); outline: none; font-size: 0.9rem;
+        }
+        .btn-enviar-chat {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef); border: none; border-radius: 50%;
+            width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; touch-action: manipulation; font-size: 0.95rem;
+        }
+
+        /* --- Burbuja flotante del Muro --- */
+        .muro-flotante {
+            position: fixed;
+            top: calc(clamp(16px, 4.5vh, 24px) + env(safe-area-inset-top, 0px));
+            left: calc(clamp(12px, 5vw, 24px) + env(safe-area-inset-left, 0px));
+            z-index: 9999;
+            display: none;
+        }
+        .muro-flotante.mostrar { display: flex; }
+        .burbuja-muro {
+            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(161,196,253,0.5); box-shadow: 0 5px 20px rgba(161,196,253,0.25);
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
+            animation: aparecerSuave 0.8s forwards; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .burbuja-muro:active { transform: scale(0.9); }
+
+        /* --- Muro en el tiempo --- */
+        .muro-pantalla { padding: 20px; overflow-y: auto; box-sizing: border-box; }
+        .muro-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px clamp(20px, 4vh, 30px); gap: 12px; flex-wrap: wrap; }
+        .muro-titulo { font-family: var(--fuente-titulo); font-size: clamp(1.8rem, 6vw, 3.2rem); color: #ffb3c6; margin: 0; text-shadow: 0 0 20px rgba(255,154,158,0.5); }
+        .muro-cerrar {
+            background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 20px; border-radius: 20px; cursor: pointer; font-family: var(--fuente-texto); touch-action: manipulation;
+        }
+        .muro-input-container {
+            max-width: 800px; margin: 0 auto clamp(30px, 5vh, 40px); background: rgba(255,255,255,0.03);
+            padding: clamp(16px, 4vw, 20px); border-radius: 20px; border: 1px solid rgba(255,182,193,0.2);
+            display: flex; flex-direction: column; align-items: flex-end; gap: 14px; width: 100%; box-sizing: border-box;
+        }
+        #texto-muro {
+            width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
+            padding: 12px; color: white; font-family: var(--fuente-texto); font-size: 1rem; resize: vertical; outline: none; line-height: 1.5;
+        }
+        #texto-muro::placeholder { color: rgba(255,255,255,0.4); }
+        .btn-publicar-muro {
+            background: #ffb3c6; color: #1a1015; border: none; padding: 10px 24px; border-radius: 20px;
+            cursor: pointer; font-family: var(--fuente-texto); font-weight: bold; touch-action: manipulation;
+        }
+        .btn-publicar-muro:disabled { opacity: 0.6; cursor: default; }
+        .muro-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 18px;
+            max-width: 1000px; margin: 0 auto; width: 100%; padding-bottom: 50px;
+        }
+        .muro-grid .sin-notas { grid-column: 1 / -1; text-align: center; color: rgba(255,255,255,0.55); font-style: italic; font-family: var(--fuente-texto); padding: 30px 0; }
+        .tarjeta-nota {
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); padding: 22px; border-radius: 15px;
+            display: flex; flex-direction: column; gap: 14px; color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); transition: transform 0.3s ease;
+            animation: aparecerSuave 0.4s forwards;
+        }
+        .tarjeta-nota:hover { transform: translateY(-5px); }
+        .nota-carito { border-top: 4px solid #ff9a9e; }
+        .nota-nico { border-top: 4px solid #a1c4fd; }
+        .nota-autor { font-family: var(--fuente-titulo); font-size: 1.4rem; color: #ffb3c6; }
+        .nota-texto { font-family: var(--fuente-texto); font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; flex: 1; }
+        .nota-fecha { font-family: var(--fuente-texto); font-size: 0.78rem; color: rgba(255,255,255,0.4); text-align: right; }
+
+        @keyframes rebote { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes aparecerSuave { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes resplandorBoton { from { box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4); } to { box-shadow: 0 15px 35px rgba(255, 105, 180, 0.8); } }
+
+
+        /* PORTADAS DE CAPÍTULO */
+        .portada-capitulo {
+            background: radial-gradient(ellipse at center, #3a1220 0%, #1a0810 60%, #0a0408 100%);
+            color: #fff;
+            overflow: hidden;
+        }
+        .portada-capitulo::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(255,105,180,0.15), transparent 50%),
+                        radial-gradient(circle at 70% 70%, rgba(214,48,49,0.12), transparent 50%);
+            animation: flotarGradiente 12s ease-in-out infinite;
+            background-size: 200% 200%;
+        }
+        .capitulo-numero {
+            font-family: var(--fuente-texto); text-transform: uppercase; letter-spacing: 4px;
+            font-size: clamp(0.75rem, 2.5vw, 1rem); color: #ff9a9e;
+            opacity: 0; transform: translateY(20px); transition: all 0.9s ease 0.1s;
+            position: relative; z-index: 1;
+        }
+        .capitulo-titulo {
+            font-family: var(--fuente-titulo); font-size: clamp(2.5rem, 9vw, 5rem);
+            margin: 15px 0 30px; text-align: center; padding: 0 20px;
+            text-shadow: 0 0 30px rgba(255, 126, 103, 0.5);
+            opacity: 0; transform: translateY(25px); transition: all 0.9s ease 0.35s;
+            position: relative; z-index: 1;
+        }
+        .capitulo-indicador {
+            font-size: clamp(0.85rem, 2.5vw, 1.05rem); color: rgba(255,255,255,0.65);
+            animation: rebote 1.8s infinite;
+            opacity: 0; transform: translateY(20px); transition: all 0.9s ease 0.6s;
+            position: relative; z-index: 1;
+        }
+        .portada-capitulo.visible .capitulo-numero,
+        .portada-capitulo.visible .capitulo-titulo,
+        .portada-capitulo.visible .capitulo-indicador {
+            opacity: 1; transform: translateY(0);
+        }
+
+        /* PANTALLA CUENTA REGRESIVA (primer encuentro en persona) */
+        .pantalla-cuenta-regresiva {
+            background: radial-gradient(ellipse at center, #2b1130 0%, #170a1e 55%, #05030a 100%);
+            color: #fff; overflow: hidden;
+        }
+        .pantalla-cuenta-regresiva::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(255,105,180,0.18), transparent 50%),
+                        radial-gradient(circle at 70% 70%, rgba(255,154,158,0.15), transparent 50%);
+            animation: flotarGradiente 14s ease-in-out infinite;
+            background-size: 200% 200%;
+        }
+        .cuenta-contenido {
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 0 clamp(20px, 6vw, 60px); text-align: center;
+        }
+        .cuenta-subtitulo {
+            font-family: var(--fuente-texto); text-transform: uppercase; letter-spacing: 3px;
+            font-size: clamp(0.75rem, 2.5vw, 1rem); color: #ff9a9e;
+        }
+        .cuenta-titulo {
+            font-family: var(--fuente-titulo); font-size: clamp(2rem, 7vw, 3.6rem);
+            margin: 10px 0 clamp(20px, 4vh, 34px);
+            text-shadow: 0 0 25px rgba(255, 126, 103, 0.5);
+        }
+        .cuenta-numeros { display: flex; gap: clamp(10px, 3vw, 22px); justify-content: center; flex-wrap: wrap; }
+        .cuenta-bloque {
+            display: flex; flex-direction: column; align-items: center;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px; padding: clamp(10px, 3vw, 16px) clamp(12px, 3.5vw, 18px);
+            min-width: clamp(56px, 15vw, 78px);
+        }
+        .cuenta-valor { font-size: clamp(1.6rem, 6vw, 2.6rem); font-weight: bold; color: #ffb3c6; font-family: var(--fuente-texto); }
+        .cuenta-etiqueta { font-size: clamp(0.65rem, 2vw, 0.8rem); text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+        .cuenta-fecha { margin-top: clamp(18px, 4vh, 28px); font-style: italic; color: rgba(255,255,255,0.65); font-size: clamp(0.85rem, 2.5vw, 1.05rem); }
+        .cuenta-frase {
+            margin-top: clamp(10px, 2.5vh, 16px); font-family: var(--fuente-titulo);
+            font-size: clamp(1.15rem, 4vw, 1.7rem); color: #ffb3c6;
+            text-shadow: 0 0 18px rgba(255,154,158,0.5);
+        }
+        .cuenta-mensaje { display: none; margin-top: clamp(14px, 3vh, 20px); font-family: var(--fuente-titulo); font-size: clamp(1.5rem, 6vw, 2.4rem); color: #ff7e67; }
+
+        .cuenta-subtitulo, .cuenta-titulo, .cuenta-numeros, .cuenta-fecha, .cuenta-frase {
+            opacity: 0; transform: translateY(20px); transition: all 0.9s ease;
+        }
+        .pantalla-cuenta-regresiva.visible .cuenta-subtitulo { opacity: 1; transform: translateY(0); transition-delay: 0.1s; }
+        .pantalla-cuenta-regresiva.visible .cuenta-titulo { opacity: 1; transform: translateY(0); transition-delay: 0.3s; }
+        .pantalla-cuenta-regresiva.visible .cuenta-numeros { opacity: 1; transform: translateY(0); transition-delay: 0.5s; }
+        .pantalla-cuenta-regresiva.visible .cuenta-fecha { opacity: 1; transform: translateY(0); transition-delay: 0.7s; }
+        .pantalla-cuenta-regresiva.visible .cuenta-frase { opacity: 1; transform: translateY(0); transition-delay: 0.95s; }
+
+        /* PANTALLA FINAL ESPECIAL */
+        .final-especial {
+            background: radial-gradient(ellipse at center, #4a1428 0%, #1f0812 55%, #050205 100%);
+            color: #fff; overflow: hidden;
+        }
+        .final-brillo {
+            position: absolute; inset: -20%;
+            background: radial-gradient(circle at 50% 45%, rgba(255,154,158,0.35), transparent 55%);
+            animation: flotarGradiente 10s ease-in-out infinite;
+            background-size: 200% 200%;
+            pointer-events: none;
+        }
+        .final-contenido {
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 0 clamp(20px, 6vw, 60px); text-align: center;
+        }
+        .final-lineas { display: flex; flex-direction: column; gap: clamp(10px, 2.5vh, 22px); align-items: center; }
+        .final-linea {
+            font-family: var(--fuente-titulo); margin: 0;
+            text-shadow: 0 0 25px rgba(255, 154, 158, 0.7);
+            color: #fff;
+        }
+        .final-linea-1, .final-linea-2 { font-size: clamp(1.8rem, 6vw, 3.2rem); }
+        .final-linea-3 { font-size: clamp(2.2rem, 7.5vw, 4rem); color: #ffb3c6; }
+        .final-firma {
+            margin-top: clamp(25px, 5vh, 45px); font-family: var(--fuente-texto); font-style: italic;
+            font-size: clamp(0.9rem, 2.5vw, 1.15rem); color: rgba(255,255,255,0.6);
+            opacity: 0; transition: opacity 1.5s ease 0.5s;
+        }
+        .final-especial.final-completo .final-firma { opacity: 1; }
+
+        .final-foto {
+            margin-top: clamp(18px, 4vh, 30px);
+            padding: 10px 10px 22px 10px;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.45), 0 0 30px rgba(255,154,158,0.25);
+            transform: rotate(-3deg);
+            opacity: 0; translate: 0 10px;
+            transition: opacity 1.3s ease 0.9s, translate 1.3s ease 0.9s;
+        }
+        .final-especial.final-completo .final-foto { opacity: 1; translate: 0 0; }
+        .final-foto img {
+            display: block;
+            width: clamp(190px, 55vw, 300px);
+            height: auto;
+            border-radius: 2px;
+        }
+
+        .beso-boton {
+            margin-top: clamp(20px, 4vh, 34px);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 182, 193, 0.5);
+            color: #ffb3c6; padding: clamp(10px, 2.5vw, 14px) clamp(22px, 6vw, 32px);
+            border-radius: 40px; font-family: var(--fuente-texto);
+            font-size: clamp(0.85rem, 2.5vw, 1.05rem); letter-spacing: 0.5px;
+            cursor: pointer; touch-action: manipulation; position: relative; z-index: 1;
+            opacity: 0; transform: translateY(10px);
+            transition: opacity 1s ease 1.8s, transform 1s ease 1.8s, background 0.3s ease;
+            animation: resplandorBeso 2.5s ease-in-out infinite;
+        }
+        .final-especial.final-completo .beso-boton { opacity: 1; transform: translateY(0); }
+        .beso-boton:active { transform: scale(0.94); }
+        .beso-boton.enviado { opacity: 0.55; pointer-events: none; animation: none; }
+        @keyframes resplandorBeso {
+            0%, 100% { box-shadow: 0 0 12px rgba(255, 154, 158, 0.3); }
+            50% { box-shadow: 0 0 26px rgba(255, 154, 158, 0.75); }
+        }
+
+        .postdata-final {
+            margin-top: clamp(14px, 3vh, 22px); font-family: var(--fuente-titulo);
+            font-size: clamp(1.1rem, 4vw, 1.7rem); color: #ffe3ec; position: relative; z-index: 1;
+            opacity: 0; transform: translateY(8px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        .postdata-final.mostrar { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="canvas-particulas"></canvas>
+
+    <div id="contenedor" class="contenedor-scroll">
+        <section class="pantalla pantalla-puerta">
+            <div class="marco-exterior" id="marco-exterior">
+                <div id="luz-interior" class="interior-casa" onclick="revelarSecreto(event)">
+                    <img class="foto-puerta" src="https://i.postimg.cc/QtLY0Cnx/78df8d38-6373-43d9-9323-70ba109c8c91.png" alt="Carito">
+                </div>
+                <div id="puerta-id" class="puerta" onclick="interaccionPuerta(event)">
+                    <div class="panel"></div>
+                    <div class="pomo"></div>
+                    <div class="panel panel-largo"></div>
+                </div>
+                <div class="pista-tocar">👆 Tocá la puerta</div>
+            </div>
+
+            <div id="secreto-puerta" class="secreto-puerta"></div>
+            
+            <div id="toc1" class="texto-toc">¡TOC!</div>
+            <div id="toc2" class="texto-toc">...¡TOC!</div>
+
+            <div class="interfaz">
+                <div id="pregunta1" class="texto-dinamico">¿Hay alguien ahí?</div>
+                <div id="pregunta2" class="texto-dinamico">¿Está Carito, el amor de mi vida?</div>
+                
+                <div id="botones" class="contenedor-botones">
+                    <button class="btn btn-si" onclick="responder('SI', event)">Sí</button>
+                    <button class="btn btn-no" onclick="responder('NO', event)">No</button>
+                </div>
+
+                <div id="mensaje-final" class="mensaje-final"></div>
+                <div id="scroll-aviso" class="indicador-scroll">✨ ¡Abre la puerta! Desliza 👇</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Reproductor de Audio Flotante: burbuja colapsable + panel, no compite con el botón mágico -->
+    <div id="reproductor-flotante" class="reproductor-flotante">
+        <div class="panel-reproductor" id="panel-reproductor">
+            <div class="info-cancion" id="info-cancion">🎵 Cargando...</div>
+            <div class="barra-progreso-container">
+                <span class="tiempo" id="tiempo-actual">0:00</span>
+                <input type="range" id="barra-progreso" min="0" max="100" value="0" step="0.1">
+                <span class="tiempo" id="tiempo-total">0:00</span>
+            </div>
+            <div class="controles-audio">
+                <button id="btn-random" class="btn-toggle" onclick="toggleRandom()" title="Aleatorio" aria-label="Reproducción aleatoria">🔀</button>
+                <button onclick="cambiarCancion(-1)" title="Anterior" aria-label="Canción anterior">⏮</button>
+                <button id="btn-play-pause" onclick="togglePlayPause()" title="Pausar/Reproducir" aria-label="Pausar o reproducir">⏸</button>
+                <button onclick="cambiarCancion(1)" title="Siguiente" aria-label="Canción siguiente">⏭</button>
+                <button id="btn-repeat" class="btn-toggle" onclick="toggleRepeat()" title="Repetir" aria-label="Repetir canción">🔁</button>
+            </div>
+            <div class="control-volumen">
+                <span>🔉</span>
+                <input type="range" id="volumen" min="0" max="1" step="0.05" value="0.8" onchange="cambiarVolumen(this.value)" oninput="cambiarVolumen(this.value)">
+                <span>🔊</span>
+            </div>
+        </div>
+        <div class="burbuja-reproductor" id="burbuja-reproductor" onclick="toggleReproductor(event)" title="Nuestra música" role="button" aria-label="Abrir reproductor de música">🎵</div>
+    </div>
+
+    <button id="btn-azar" class="btn-azar" onclick="viajarAlAzar()">
+        <span>✨ Mensaje Mágico</span>
+    </button>
+
+    <!-- Burbuja flotante para entrar al Muro desde cualquier pantalla -->
+    <div id="muro-flotante" class="muro-flotante">
+        <div class="burbuja-muro" onclick="abrirMuro()" title="Nuestro Muro en el Tiempo" role="button" aria-label="Abrir el Muro">📜</div>
+    </div>
+
+    <!-- ====== MODAL DE ACCESO (llave secreta compartida) ====== -->
+    <div id="modal-acceso" class="modal-cristal oculto">
+        <div class="tarjeta-acceso">
+            <h3>Nuestra Llave Secreta 🗝️</h3>
+            <p>Escribí tu nombre (nico o carito)</p>
+            <form onsubmit="return false;">
+                <input type="password" id="input-clave" placeholder="Tu nombre..." autocomplete="off" onkeypress="verificarEnterAcceso(event)">
+                <button onclick="verificarIdentidad()">Entrar</button>
+            </form>
+            <div id="error-clave" class="error-texto"></div>
+        </div>
+    </div>
+
+    <!-- ====== CHAT FLOTANTE (estilo cristal) ====== -->
+    <div id="chat-flotante" class="chat-flotante">
+        <div class="panel-chat" id="panel-chat">
+            <div class="header-chat">
+                <span class="titulo-chat">Nuestro Chat 💬</span>
+                <button class="btn-cerrar-chat" onclick="toggleChat(event)">✕</button>
+            </div>
+            <div class="mensajes-chat" id="mensajes-chat"></div>
+            <div class="input-chat-area">
+                <input type="text" id="input-chat" placeholder="Escribí un mensajito..." autocomplete="off" onkeypress="verificarEnterChat(event)">
+                <button class="btn-enviar-chat" onclick="enviarMensajeChat()">➤</button>
+            </div>
+        </div>
+        <div class="burbuja-chat" id="burbuja-chat" onclick="toggleChat(event)" title="Abrir chat" role="button" aria-label="Abrir nuestro chat privado">💬</div>
+    </div>
+
+    <!-- ====== MURO EN EL TIEMPO (pantalla completa) ====== -->
+    <div id="modal-muro" class="muro-pantalla oculto">
+        <div class="muro-header">
+            <h2 class="muro-titulo">Nuestro Refugio en el Tiempo</h2>
+            <button class="muro-cerrar" onclick="cerrarMuro()">✕ Volver</button>
+        </div>
+
+        <div class="muro-input-container">
+            <textarea id="texto-muro" placeholder="Dejá una carta, un pensamiento o un recuerdo para la eternidad..." rows="3"></textarea>
+            <button class="btn-publicar-muro" onclick="guardarEnMuro()">Inmortalizar mensaje ✨</button>
+        </div>
+
+        <div class="muro-grid" id="contenedor-tarjetas-muro"></div>
+    </div>
+
+    <!-- FIREBASE (Proyecto Carolina) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDDvrgXpSxaraqTj83ingY3xa-AT8ywxV4",
+            authDomain: "carolina-634a1.firebaseapp.com",
+            projectId: "carolina-634a1",
+            storageBucket: "carolina-634a1.firebasestorage.app",
+            messagingSenderId: "80980917854",
+            appId: "1:80980917854:web:15a9f9a238ed2bd7c0becf",
+            measurementId: "G-VDJ7B6SDW4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.onSnapshot = onSnapshot;
+        window.query = query;
+        window.orderBy = orderBy;
+        window.serverTimestamp = serverTimestamp;
+
+        console.log("🔥 Conectado con éxito a Carolina");
+    </script>
+
+    <script>
+        // ============================================================
+        // NUESTRO REFUGIO — chat + muro, usando la conexión a Firebase
+        // del bloque <script type="module"> de más arriba (window.db).
+        // La clave de acceso ("nico" / "carito") identifica quién es
+        // quién, sin pasos extra. Es la misma llave para chat y muro.
+        // ============================================================
+
+        const capitulos = [
+            {
+                numero: "I",
+                titulo: "Lo que sos para mí",
+                frases: [
+                    "Sos mi corazón de chocolate.", "Sos todo lo que esta bien.", "Sos mi todo.",
+                    "Sos mi paz en medio del caos.", "Sos mi lugar seguro.", "Sos la casualidad más linda.",
+                    "Sos la luz que ilumina mi camino.", "Sos mi sueño hecho realidad.",
+                    "Sos el motivo de mis mejores sonrisas.", "Sos la flor más hermosa de mi jardín.",
+                    "Sos la melodía que no puedo dejar de escuchar.", "Sos mi principio y mi final.",
+                    "Sos el arte que quiero admirar toda la vida.", "Sos mi persona favorita en el mundo.",
+                    "Sos el milagro que tanto esperé.", "Sos mi destino.", "Sos la pieza que le faltaba a mi rompecabezas.",
+                    "Sos mi rayito de sol en días nublados.", "Sos el amor que nunca supe que necesitaba.", "Sos mi hogar.",
+                    "Sos la reina de mi corazón.", "Sos mi mayor tesoro.", "Sos la respuesta a todas mis oraciones.",
+                    "Sos mi oasis.", "Sos el poema más lindo que leí.", "Sos mi aventura favorita.",
+                    "Sos el fuego que abriga mi alma.", "Sos mi confidente y mi amor.", "Sos mi inspiración constante.",
+                    "Sos la estrella que más brilla en mi cielo.", "Sos mi presente y mi futuro.",
+                    "Sos la magia que le faltaba a mis días.", "Sos mi otra mitad.", "Sos mi locura más linda.",
+                    "Sos el latido de mi corazón.", "Sos el regalo más lindo que me dio la vida.", "Sos mi brújula.",
+                    "Sos la dueña de mis pensamientos.", "Sos mi calma y mi tempestad.",
+                    "Sos mi vida, mi alma.", "Sos mi to-do.", "Sos una hermosa persona, amor.",
+                    "Para mí sos única.", "Quién iba a decir que un scroll cualquiera en Facebook nos iba a traer hasta acá."
+                ]
+            },
+            {
+                numero: "II",
+                titulo: "Lo que siento cuando estás cerca",
+                frases: [
+                    "Te admiro.", "Cada rincón de mi alma te pertenece.", "Te elijo hoy y todos los días de mi vida.",
+                    "Amo la forma en la que me mirás.", "Hacés que el mundo sea más hermoso.",
+                    "Mi corazón late más fuerte cuando estás cerca.", "Tus abrazos son mi refugio.",
+                    "Me enamoro de vos todos los días.", "Nadie me hace sentir como vos.", "Tu sonrisa es mi debilidad.",
+                    "Echar raíces con vos es lo que más deseo.", "Con vos, cada momento es magia.",
+                    "Amo cada pequeño detalle tuyo.", "Me hacés ser una mejor persona.",
+                    "Mi vida tiene sentido porque estás vos.", "Te pienso desde que despierto hasta que duermo.",
+                    "Tu voz es mi sonido favorito.", "Con vos, el tiempo se detiene.", "Amo lo que somos juntos.",
+                    "Me haces sentir invencible.", "Tus besos son mi medicina.", "Amo tu forma de ver la vida.",
+                    "Me das una paz infinita.", "Amo tus virtudes y tus defectos.", "Con vos lo tengo todo.",
+                    "Hacés que mi alma baile.", "Me enseñaste lo que es amar de verdad.",
+                    "Amo la tranquilidad que me transmitís.", "Me haces volar sin alas.",
+                    "Amo despertar y saber que existís.", "Me llenás el alma de colores.", "Amo amarte.",
+                    "Con vos, hasta el silencio es hermoso.", "Me hacés sentir pleno.", "Amo compartir mi vida con vos.",
+                    "Con vos todo es perfecto.",
+                    "Te amo mucho, mucho, mucho.", "Carito, te pienso todo el día.", "Nunca conocí a alguien como vos."
+                ]
+            },
+            {
+                numero: "III",
+                titulo: "Lo que quiero para nosotros",
+                frases: [
+                    "Quiero que sanes.", "Quiero llenarte de besos...", "Quiero fundirme en un abrazo con vos.",
+                    "Quiero envejecer con vos.", "Quiero la vida entera con vos.", "Quiero despertar a tu lado cada mañana.",
+                    "Quiero construir nuestro propio universo.", "Quiero cuidarte siempre.", "Quiero perderme en tu mirada.",
+                    "Quiero caminar de tu mano siempre.", "Quiero llenarte de mimos todos los días.",
+                    "Quiero escribir nuestra historia juntos.", "Quiero hacerte feliz cada segundo.",
+                    "Quiero escucharte reír por el resto de mi vida.", "Quiero besarte hasta quedarme sin aliento.",
+                    "Quiero ser tu refugio cuando llueva.", "Quiero abrazarte y no soltarte nunca.",
+                    "Quiero que crezcamos juntos.", "Quiero ser el motivo de tus alegrías.",
+                    "Quiero perderme con vos en cualquier parte.", "Quiero ser tu compañero de vida.",
+                    "Quiero darte lo mejor de mí.", "Quiero ver pasar los años a tu lado.", "Quiero acariciar tu alma.",
+                    "Quiero amarte en todas tus facetas.",
+                    "Amor mío, lo quiero todo con vos.", "Algún día vamos a contar 'cómo conocí a Carito'."
+                ]
+            }
+        ];
+
+        const fraseFinal = ["Sos el amor de mi vida, Carito.", "Quiero que seas eterna.", "Simplemente... Te amo con toda mi alma."];
+
+        // Array plano de todas las frases de los 3 capítulos (mantiene compatibilidad con el botón "al azar")
+        const frasesRomanticas = capitulos.flatMap(cap => cap.frases);
+
+        const coloresPasteles = ['#ffdde1', '#ee9ca7', '#ffecd2', '#fcb69f', '#cfd9df', '#e2ebf0', '#fbc2eb', '#a18cd1', '#ff9a9e', '#fecfef', '#f6d5f7', '#fbc7d4'];
+
+        const contenedor = document.getElementById('contenedor');
+
+        let indiceGlobal = 0;
+        capitulos.forEach(cap => {
+            // Pantalla portada del capítulo
+            const portada = document.createElement('section');
+            portada.className = 'pantalla portada-capitulo placeholder';
+            portada.dataset.tipo = 'portada';
+            portada.innerHTML = `
+                <div class="capitulo-numero">Capítulo ${cap.numero}</div>
+                <h2 class="capitulo-titulo">${cap.titulo}</h2>
+                <div class="capitulo-indicador">✨ Deslizá para continuar ✨</div>
+            `;
+            contenedor.appendChild(portada);
+
+            cap.frases.forEach(frase => {
+                const index = indiceGlobal;
+                const sec = document.createElement('section');
+                sec.className = 'pantalla placeholder fondo-animado';
+                sec.id = `frase-${index + 1}`;
+                sec.dataset.index = index;
+                sec.dataset.tipo = 'frase';
+
+                const c1 = coloresPasteles[index % coloresPasteles.length];
+                const c2 = coloresPasteles[(index + 3) % coloresPasteles.length];
+                const c3 = coloresPasteles[(index + 5) % coloresPasteles.length];
+                const c4 = coloresPasteles[(index + 8) % coloresPasteles.length];
+                sec.style.background = `linear-gradient(-45deg, ${c1}, ${c2}, ${c3}, ${c4})`;
+                sec.style.animationDelay = `-${(index * 3) % 15}s`;
+
+                contenedor.appendChild(sec);
+                indiceGlobal++;
+            });
+        });
+
+        // Pantalla de cuenta regresiva: la primera vez que se van a ver en persona
+        const cuentaSec = document.createElement('section');
+        cuentaSec.className = 'pantalla pantalla-cuenta-regresiva placeholder';
+        cuentaSec.id = 'pantalla-cuenta-regresiva';
+        cuentaSec.dataset.tipo = 'cuenta';
+        cuentaSec.innerHTML = `
+            <div class="cuenta-contenido">
+                <div class="cuenta-subtitulo" id="cuenta-subtitulo">Cuenta regresiva</div>
+                <h2 class="cuenta-titulo" id="cuenta-titulo">La primera vez que nos vamos a ver</h2>
+                <div class="cuenta-numeros" id="cuenta-numeros">
+                    <div class="cuenta-bloque"><span class="cuenta-valor" id="cr-dias">00</span><span class="cuenta-etiqueta">días</span></div>
+                    <div class="cuenta-bloque"><span class="cuenta-valor" id="cr-horas">00</span><span class="cuenta-etiqueta">hs</span></div>
+                    <div class="cuenta-bloque"><span class="cuenta-valor" id="cr-min">00</span><span class="cuenta-etiqueta">min</span></div>
+                    <div class="cuenta-bloque"><span class="cuenta-valor" id="cr-seg">00</span><span class="cuenta-etiqueta">seg</span></div>
+                </div>
+                <div class="cuenta-fecha" id="cuenta-fecha">25 de agosto de 2026</div>
+                <p class="cuenta-frase" id="cuenta-frase">Cada segundo que pasa, estoy más cerca de abrazarte 💫</p>
+                <p class="cuenta-mensaje" id="cuenta-mensaje"></p>
+            </div>
+        `;
+        contenedor.appendChild(cuentaSec);
+
+        // Decoración romántica: corazones y círculos flotando, igual que en el resto de las pantallas
+        const simbolosCuenta = ['💗', '✨', '🤍', '💫'];
+        for (let i = 0; i < 5; i++) {
+            const brillo = document.createElement('div');
+            brillo.className = 'brillo-flotante';
+            brillo.innerText = simbolosCuenta[i % simbolosCuenta.length];
+            brillo.style.left = (Math.random() * 85) + '%';
+            brillo.style.top = (Math.random() * 85) + '%';
+            brillo.style.animationDuration = `${Math.random() * 3 + 4}s`;
+            brillo.style.animationDelay = `${Math.random() * 3}s`;
+            cuentaSec.appendChild(brillo);
+        }
+        for (let i = 0; i < 3; i++) {
+            const circulo = document.createElement('div');
+            circulo.className = 'circulo-flotante';
+            const size = Math.random() * 20 + 20;
+            circulo.style.width = `${size}vw`;
+            circulo.style.height = `${size}vw`;
+            circulo.style.left = (Math.random() * 80 - 10) + '%';
+            circulo.style.top = (Math.random() * 80 - 10) + '%';
+            circulo.style.background = 'rgba(255,105,180,0.25)';
+            circulo.style.setProperty('--flotar-x', `${Math.random() * 60 - 30}px`);
+            circulo.style.setProperty('--flotar-y', `${Math.random() * 60 - 30}px`);
+            circulo.style.animationDuration = `${Math.random() * 6 + 8}s`;
+            cuentaSec.appendChild(circulo);
+        }
+
+        // Pantalla final especial (el cierre)
+        const finalSec = document.createElement('section');
+        finalSec.className = 'pantalla final-especial placeholder';
+        finalSec.id = 'final-especial';
+        finalSec.dataset.tipo = 'final';
+        finalSec.innerHTML = `
+            <div class="final-brillo"></div>
+            <div class="final-contenido">
+                <div class="final-lineas" id="final-lineas"></div>
+                <div class="final-foto">
+                    <img src="https://i.postimg.cc/QtLY0Cnx/78df8d38-6373-43d9-9323-70ba109c8c91.png" alt="Carito llena de mensajes de amor" loading="lazy">
+                </div>
+                <div class="final-firma">Tu Nico,<br>por siempre tuyo</div>
+                <button class="beso-boton" id="boton-beso" onclick="enviarBeso()">💋 Tocá para un beso</button>
+                <button class="beso-boton" style="margin-top: 15px; background: rgba(255,255,255,0.15);" onclick="abrirMuro()">📜 Entrar a nuestro Muro</button>
+                <p class="postdata-final" id="postdata-final">P.D.: esto recién empieza...</p>
+            </div>
+        `;
+        contenedor.appendChild(finalSec);
+
+        // Unos corazones flotando suave y constante en la pantalla final, para que se sienta viva
+        const simbolosFinal = ['💗', '✨', '🤍'];
+        for (let i = 0; i < 5; i++) {
+            const brillo = document.createElement('div');
+            brillo.className = 'brillo-flotante';
+            brillo.innerText = simbolosFinal[i % simbolosFinal.length];
+            brillo.style.left = (Math.random() * 85) + '%';
+            brillo.style.top = (Math.random() * 85) + '%';
+            brillo.style.animationDuration = `${Math.random() * 3 + 4}s`;
+            brillo.style.animationDelay = `${Math.random() * 3}s`;
+            finalSec.appendChild(brillo);
+        }
+
+        function construirPantalla(seccion, index) {
+            // Círculos difuminados flotando de fondo (efecto aurora romántico)
+            const numCirculos = 3;
+            const coloresCirculo = ['rgba(255,255,255,0.55)', 'rgba(255,105,180,0.35)', 'rgba(255,219,235,0.5)'];
+            for (let i = 0; i < numCirculos; i++) {
+                const circulo = document.createElement('div');
+                circulo.className = 'circulo-flotante';
+                const size = Math.random() * 20 + 20; // 20 - 40 vw aprox controlado en vw
+                circulo.style.width = `${size}vw`;
+                circulo.style.height = `${size}vw`;
+                circulo.style.left = (Math.random() * 80 - 10) + '%';
+                circulo.style.top = (Math.random() * 80 - 10) + '%';
+                circulo.style.background = coloresCirculo[i % coloresCirculo.length];
+                circulo.style.setProperty('--flotar-x', `${Math.random() * 60 - 30}px`);
+                circulo.style.setProperty('--flotar-y', `${Math.random() * 60 - 30}px`);
+                circulo.style.animationDuration = `${Math.random() * 6 + 8}s`;
+                seccion.appendChild(circulo);
+            }
+
+            // Brillitos/corazones flotando suavemente
+            const simbolos = ['✨', '💗', '🤍', '💫'];
+            const numBrillos = Math.floor(Math.random() * 3) + 3;
+            for (let i = 0; i < numBrillos; i++) {
+                const brillo = document.createElement('div');
+                brillo.className = 'brillo-flotante';
+                brillo.innerText = simbolos[Math.floor(Math.random() * simbolos.length)];
+                brillo.style.left = (Math.random() * 90) + '%';
+                brillo.style.top = (Math.random() * 90) + '%';
+                brillo.style.animationDuration = `${Math.random() * 3 + 3}s`;
+                brillo.style.animationDelay = `${Math.random() * 3}s`;
+                seccion.appendChild(brillo);
+            }
+
+            const frasesDecoFondo = ['Amo a Carito', 'Sos el amor de mi vida', 'Nico y Caro', 'Por siempre, siempre, siempre'];
+            const numAmoCarito = Math.floor(Math.random() * 2) + 1;
+            for(let i=0; i<numAmoCarito; i++) {
+                const deco = document.createElement('div');
+                deco.className = 'deco-amo-carito';
+                deco.innerText = frasesDecoFondo[Math.floor(Math.random() * frasesDecoFondo.length)];
+                deco.style.fontSize = `clamp(3rem, ${Math.random() * 5 + 5}vw, 8rem)`;
+                deco.style.left = (Math.random() * 80 - 5) + '%';
+                deco.style.top = (Math.random() * 80 - 5) + '%';
+                deco.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
+                seccion.appendChild(deco);
+            }
+
+            const tarjeta = document.createElement('div');
+            tarjeta.className = 'tarjeta-cristal';
+            const texto = document.createElement('h1');
+            texto.className = 'texto-romantico';
+            
+            tarjeta.appendChild(texto);
+            seccion.appendChild(tarjeta);
+
+            // Efecto máquina de escribir (rápido)
+            escribirTexto(texto, frasesRomanticas[index]);
+        }
+
+        function escribirTexto(elemento, texto, velocidad = 20, callback) {
+            elemento.innerHTML = '';
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor-escritura';
+            elemento.appendChild(cursor);
+
+            let i = 0;
+            function paso() {
+                if (i < texto.length) {
+                    cursor.insertAdjacentText('beforebegin', texto.charAt(i));
+                    i++;
+                    setTimeout(paso, velocidad);
+                } else {
+                    setTimeout(() => cursor.remove(), 900);
+                    if (callback) setTimeout(callback, 500);
+                }
+            }
+            paso();
+        }
+
+        let finalYaConstruido = false;
+        function construirFinal(seccion) {
+            if (finalYaConstruido) return;
+            finalYaConstruido = true;
+
+            const contenedorLineas = document.getElementById('final-lineas');
+            let i = 0;
+
+            function escribirSiguienteLinea() {
+                if (i >= fraseFinal.length) {
+                    setTimeout(() => {
+                        seccion.classList.add('final-completo');
+                        if (typeof lanzarExplosionCanvas === 'function') lanzarExplosionCanvas();
+                    }, 400);
+                    return;
+                }
+                const p = document.createElement('p');
+                p.className = `final-linea final-linea-${i + 1}`;
+                contenedorLineas.appendChild(p);
+                escribirTexto(p, fraseFinal[i], 28, () => {
+                    i++;
+                    setTimeout(escribirSiguienteLinea, 500);
+                });
+            }
+            escribirSiguienteLinea();
+        }
+
+        let besoEnviado = false;
+        function enviarBeso() {
+            if (besoEnviado) return;
+            besoEnviado = true;
+            vibrar([40, 80, 40, 80, 220]); // como un latido de corazón
+
+            const btn = document.getElementById('boton-beso');
+            btn.innerText = '💋 Beso enviado';
+            btn.classList.add('enviado');
+
+            const rect = btn.getBoundingClientRect();
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    lanzarCorazonSutil(rect.left + rect.width / 2 + (Math.random() * 50 - 25), rect.top + (Math.random() * 10 - 5));
+                }, i * 90);
+            }
+
+            setTimeout(() => {
+                document.getElementById('postdata-final').classList.add('mostrar');
+            }, 700);
+        }
+
+        const observer = new IntersectionObserver((entradas) => {
+            entradas.forEach(entrada => {
+                const sec = entrada.target;
+                if (entrada.isIntersecting) {
+                    if (sec.classList.contains('placeholder')) {
+                        if (sec.dataset.tipo === 'frase') {
+                            construirPantalla(sec, parseInt(sec.dataset.index));
+                        } else if (sec.dataset.tipo === 'final') {
+                            construirFinal(sec);
+                        }
+                        sec.classList.remove('placeholder');
+                    }
+                    if ((sec.dataset.tipo === 'portada' || sec.dataset.tipo === 'cuenta') && !sec.dataset.vibrado) {
+                        sec.dataset.vibrado = '1';
+                        vibrar([25, 60, 25]); // un latido suave al llegar a un nuevo capítulo
+                    }
+                    sec.classList.add('visible');
+                } else {
+                    sec.classList.remove('visible'); 
+                }
+            });
+        }, { root: contenedor, rootMargin: '100% 0px', threshold: 0.1 }); 
+
+        document.querySelectorAll('.pantalla.placeholder').forEach(sec => observer.observe(sec));
+
+
+        // CANVAS
+        const canvas = document.getElementById('canvas-particulas');
+        const ctx = canvas.getContext('2d');
+        let particulas = [];
+        let particulasActivas = false;
+        let mouse = { x: -1000, y: -1000 };
+
+        function ajustarCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', ajustarCanvas); ajustarCanvas();
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }, {passive: true});
+
+        class Particula {
+            constructor(x, y, esExplosion = false) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || canvas.height + 50;
+                this.size = Math.random() * 15 + 10;
+                this.velocidadY = esExplosion ? (Math.random() * -15 - 5) : (Math.random() * -2 - 1);
+                this.velocidadX = esExplosion ? (Math.random() * 20 - 10) : (Math.random() * 2 - 1);
+                this.gravedad = esExplosion ? 0.3 : -0.01; 
+                this.friccion = 0.98;
+                this.tipo = ['❤️','✨','💖','🌸','⭐'][Math.floor(Math.random() * 5)];
+                this.opacidad = 1;
+                this.rotacion = Math.random() * 360;
+                this.rotacionVel = (Math.random() - 0.5) * 5;
+            }
+            actualizar() {
+                this.velocidadY += this.gravedad;
+                this.velocidadX *= this.friccion;
+                this.x += this.velocidadX;
+                this.y += this.velocidadY;
+                this.rotacion += this.rotacionVel;
+
+                let dx = mouse.x - this.x; let dy = mouse.y - this.y;
+                let distancia = Math.sqrt(dx * dx + dy * dy);
+                if (distancia < 100) { this.x -= dx * 0.05; this.y -= dy * 0.05; }
+                if(this.y < -50 || this.opacidad <= 0) this.reiniciar();
+            }
+            reiniciar() {
+                this.y = canvas.height + 50; this.x = Math.random() * canvas.width;
+                this.velocidadY = Math.random() * -2 - 1; this.velocidadX = Math.random() * 2 - 1;
+                this.gravedad = -0.02; this.opacidad = 1;
+            }
+            dibujar() {
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotacion * Math.PI / 180);
+                ctx.globalAlpha = this.opacidad; ctx.font = `${this.size}px Arial`;
+                ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(this.tipo, 0, 0); ctx.restore();
+            }
+        }
+
+        function animarParticulas() {
+            if(!particulasActivas) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particulas.forEach(p => { p.actualizar(); p.dibujar(); });
+            requestAnimationFrame(animarParticulas);
+        }
+
+        function lanzarExplosionCanvas() {
+            canvas.classList.add('activo'); particulasActivas = true;
+            for(let i=0; i<60; i++) particulas.push(new Particula(canvas.width/2, canvas.height/2 + 50, true));
+            for(let i=0; i<40; i++) particulas.push(new Particula(null, null, false));
+            animarParticulas();
+        }
+
+        // Detalle romántico: un corazoncito sutil donde toques la pantalla (fuera de botones y controles)
+        function lanzarCorazonSutil(x, y) {
+            canvas.classList.add('activo'); particulasActivas = true;
+            for (let i = 0; i < 3; i++) {
+                const p = new Particula(x, y, true);
+                p.tipo = ['💗','✨','💫'][Math.floor(Math.random() * 3)];
+                p.size = Math.random() * 8 + 12;
+                p.velocidadY = Math.random() * -4 - 2;
+                p.velocidadX = Math.random() * 3 - 1.5;
+                p.gravedad = 0.08;
+                particulas.push(p);
+            }
+            animarParticulas();
+        }
+
+        document.addEventListener('pointerdown', (event) => {
+            const objetivo = event.target;
+            if (objetivo.closest('button, input, .btn, .btn-azar, .reproductor-flotante, .puerta, a')) return;
+            lanzarCorazonSutil(event.clientX, event.clientY);
+        }, { passive: true });
+
+        // CUENTA REGRESIVA: 25 de agosto de 2026, la primera vez que se ven en persona
+        const fechaEncuentro = new Date(2026, 7, 25, 0, 0, 0);
+        let intervaloCuentaRegresiva = null;
+
+        let modoAscendenteActivado = false;
+
+        function actualizarCuentaRegresiva() {
+            const elDias = document.getElementById('cr-dias');
+            if (!elDias) return; // la pantalla todavía no se construyó
+
+            const ahora = new Date();
+            let diff = fechaEncuentro - ahora;
+
+            if (diff <= 0) {
+                // Ya nos vimos en persona: el reloj se da vuelta y empieza a contar
+                // hace cuánto empezó nuestra historia en el plano real.
+                if (!modoAscendenteActivado) {
+                    modoAscendenteActivado = true;
+                    document.getElementById('cuenta-subtitulo').innerText = 'Desde que nos vimos';
+                    document.getElementById('cuenta-titulo').innerText = 'Nuestra historia en el mundo real';
+                    document.getElementById('cuenta-fecha').innerText = 'Empezó el 25 de agosto de 2026';
+                    document.getElementById('cuenta-frase').innerText = 'Cada segundo que pasa, esto es más real 💫';
+                    const msj = document.getElementById('cuenta-mensaje');
+                    msj.innerText = '¡Hoy es el día! 🎉';
+                    msj.style.display = 'block';
+                    setTimeout(() => { msj.style.display = 'none'; }, 5000);
+                }
+
+                let transcurrido = ahora - fechaEncuentro;
+                const dias = Math.floor(transcurrido / 86400000); transcurrido -= dias * 86400000;
+                const horas = Math.floor(transcurrido / 3600000); transcurrido -= horas * 3600000;
+                const min = Math.floor(transcurrido / 60000); transcurrido -= min * 60000;
+                const seg = Math.floor(transcurrido / 1000);
+
+                elDias.innerText = dias;
+                document.getElementById('cr-horas').innerText = String(horas).padStart(2, '0');
+                document.getElementById('cr-min').innerText = String(min).padStart(2, '0');
+                document.getElementById('cr-seg').innerText = String(seg).padStart(2, '0');
+                return;
+            }
+
+            const dias = Math.floor(diff / 86400000); diff -= dias * 86400000;
+            const horas = Math.floor(diff / 3600000); diff -= horas * 3600000;
+            const min = Math.floor(diff / 60000); diff -= min * 60000;
+            const seg = Math.floor(diff / 1000);
+
+            elDias.innerText = dias;
+            document.getElementById('cr-horas').innerText = String(horas).padStart(2, '0');
+            document.getElementById('cr-min').innerText = String(min).padStart(2, '0');
+            document.getElementById('cr-seg').innerText = String(seg).padStart(2, '0');
+        }
+        actualizarCuentaRegresiva();
+        intervaloCuentaRegresiva = setInterval(actualizarCuentaRegresiva, 1000);
+
+        // AUDIO FX
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+        function iniciarAudio() { if (!audioCtx) audioCtx = new AudioContext(); }
+
+        function reproducirGolpeMaderaMaciza() {
+            iniciarAudio();
+            const oscBase = audioCtx.createOscillator(); const oscResonancia = audioCtx.createOscillator();
+            const filtroBase = audioCtx.createBiquadFilter(); const gainNode = audioCtx.createGain();
+            oscBase.type = 'sine'; oscBase.frequency.setValueAtTime(65, audioCtx.currentTime); oscBase.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.1);
+            oscResonancia.type = 'triangle'; oscResonancia.frequency.setValueAtTime(120, audioCtx.currentTime); oscResonancia.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.05);
+            filtroBase.type = 'lowpass'; filtroBase.frequency.setValueAtTime(400, audioCtx.currentTime); filtroBase.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+            oscBase.connect(filtroBase); oscResonancia.connect(filtroBase); filtroBase.connect(gainNode); gainNode.connect(audioCtx.destination);
+            oscBase.start(); oscResonancia.start(); oscBase.stop(audioCtx.currentTime + 0.15); oscResonancia.stop(audioCtx.currentTime + 0.15);
+        }
+
+        function reproducirAcordeMagico() {
+            iniciarAudio();
+            const frecuencias = [523.25, 659.25, 783.99, 987.77]; 
+            frecuencias.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.type = 'sine'; osc.frequency.value = freq + (Math.random() * 2 - 1); 
+                gain.gain.setValueAtTime(0, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.5 + (index * 0.1)); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 4.5);
+                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 5);
+            });
+        }
+
+        // REPRODUCTOR MUSICA
+        const canciones = [
+            { src: "https://dl.dropboxusercontent.com/scl/fi/yl60jkydjx61e8kos5h6h/A-Thousand-Years-Christina-Perri-Sub.-Espa-ol-Lyrics.mp3?rlkey=e2lmd44a0kvm3cimimdf36xls&st=syx967jx&dl=1", nombre: "A Thousand Years Christina Perri" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/q4lsxzk5x1mvje8097db5/Aerosmith-I-Don-t-Want-Miss-a-Thing-Sub.-Espa-ol-Lyrics.mp3?rlkey=xsn5z7zt5ebiuutlzq996fbki&st=hirxl3aj&dl=1", nombre: "Aerosmith I Don t Want Miss a Thing" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/ot4numpjk4bxdr0nc1kyq/Alejandro-Sanz-Camila-Cabello-Mi-Persona-Favorita-V-deo-Oficial.mp3?rlkey=n9ws42u3bjsv0pmzqlgz3kuxw&st=1xqhw2o3&dl=1", nombre: "Alejandro Sanz Camila Cabello Mi Persona Favorita V deo Oficial" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/jrfeo2uvx4xybq7breiid/Alicia-Keys-Fallin-Official-HD-Video.mp3?rlkey=6v2aghxbw7fwbpvkx24vvljql&st=gkz00q6v&dl=1", nombre: "Alicia Keys Fallin" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/q083kk90h35448pgi2nt6/Andrea-Bocelli-Marta-Sanchez-Vivo-Por-Ella.mp3?rlkey=rjy0hq7e167na5x4x0a9xlbw9&st=kwon53cs&dl=1", nombre: "Andrea Bocelli Marta Sanchez Vivo Por Ella" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/bxb6qua70ci9iw1priuew/Bee-Gees-How-Deep-Is-Your-Love-Official-Video.mp3?rlkey=hmjcpgq903qut34711n30ss33&st=d54qkji1&dl=1", nombre: "Bee Gees How Deep Is Your Love" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/x6kys9xv4wvi9kqzzun7b/Billy-Joel-Just-the-Way-You-Are-Live-1977.mp3?rlkey=4dtg1trj8i66npnoo7oom44jo&st=sox42kc8&dl=1", nombre: "Billy Joel Just the Way You Are Live 1977" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/fejk45rs5hbhfw2nsk9dx/Bryan-Adams-Everything-I-Do-I-Do-It-For-You.mp3?rlkey=gyrj618r6al4d9xrjbkc33r4b&st=o6kyfit1&dl=1", nombre: "Bryan Adams Everything I Do I Do It For You" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/4srs6smco8lrpshjencki/Bryan-Adams-Heaven.mp3?rlkey=zh6opxdhtj0d7v6fpzd45mzqw&st=3vh4cv2w&dl=1", nombre: "Bryan Adams Heaven" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/8vdt4kjdizvz227yzh8m6/Caf-Tacvba-Eres-MTV-Unplugged.mp3?rlkey=1s1nuiraanjw350yhfvcwnbcz&st=kiulj08o&dl=1", nombre: "Caf Tacvba Eres MTV Unplugged" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/47ih2s6haxpcgdqhn3bt5/Carla-Morrison-Te-regalo-letra.mp3?rlkey=zqezdeww7yew3w0w9syht35m4&st=gwtj7c3q&dl=1", nombre: "Carla Morrison Te regalo letra" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/fl912b0nek6uapmfrxt7o/Carlos-Baute-Colgando-en-Tus-Manos-con-Marta-S-nchez-Letra.mp3?rlkey=tgf2al8nej25tivt01y4xzt3p&st=svw9h0pp&dl=1", nombre: "Carlos Baute Colgando en Tus Manos con Marta S nchez" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/8jwl1vs3ank93aa7mfnip/C-line-Dion-The-Power-Of-Love-Official-Remastered-HD-Video.mp3?rlkey=9m0ylporynwac9riacd6umyga&st=nutjcf03&dl=1", nombre: "C line Dion The Power Of Love" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/ergemcfbe90rk2i3x68xz/CONTIGO-EN-LA-DISTANCIA-CHRISTINA-AGUILERA.mp3?rlkey=7bcsk1hpez84a9maewjjdi2yl&st=yt28e7ev&dl=1", nombre: "CONTIGO EN LA DISTANCIA CHRISTINA AGUILERA" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/7y5xru5zxqqkafs1mb4h5/Cristian-Castro-Por-Amarte-As-LetraLyrics.mp3?rlkey=uabxnbawmgsn6va6gj6okx5c9&st=4aox01mf&dl=1", nombre: "Cristian Castro Por Amarte As" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/tft9s672uux7ul5c2k2g6/D-a-Tras-D-a.mp3?rlkey=l8829qe6ti7cjiasie7anwwe7&st=hco6fyof&dl=1", nombre: "D a Tras D a" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/lqxk0tr3d0whxxq4ujkrg/Elton-John-Your-Song-Live-at-the-Royal-Opera-House-2002-HD.mp3?rlkey=85szp40oyqiwaifqe6ij108h9&st=qs4rsay4&dl=1", nombre: "Elton John Your Song Live at the Royal Opera House 2002" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/08amrsrj6wk5krn68o3rf/Elvis-Costello-She.mp3?rlkey=sik9h3s2u1a760494laa7nc2q&st=qtm2yjnl&dl=1", nombre: "Elvis Costello She" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/5cbxjqsvqusayv1xmd05x/Elvis-Crespo-Suavemente.mp3?rlkey=lqitit6ruvznelx7t3x9op8p9&st=jl16jkb5&dl=1", nombre: "Elvis Crespo Suavemente" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/9gjxnpb95zp0uhh9usdeh/Eric-Clapton-Wonderful-Tonight-Official-Live.mp3?rlkey=ujwzywf0wgn4j9nn2sgnmy60c&st=hthi9d3g&dl=1", nombre: "Eric Clapton Wonderful Tonight Live" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/w01tt8nfdh5njpwto5898/Eterno-Amor.mp3?rlkey=84qzmxjk0gyvshdgaqs0pr8nb&st=jd8c9cqy&dl=1", nombre: "Eterno Amor" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/6w2ribkmzx6iivlckkmqx/Extreme-More-Than-Words-Official-Music-Video.mp3?rlkey=f47m0k6s9hzins6stj24w7jir&st=wulyf3wb&dl=1", nombre: "Extreme More Than Words Music" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/sjd3ph8a61r00rzjdfy7i/Franco-De-Vita-Tan-S-lo-T-Live-ft.-Alejandra-Guzm-n.mp3?rlkey=93spthi1dwa54xi9f0uzz7mx8&st=gx9fgnqb&dl=1", nombre: "Franco De Vita Tan S lo T Live ft. Alejandra Guzm n" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/m3lskavmglir393eh1yzr/Isn-t-She-Lovely.mp3?rlkey=u4907hhngguokb4vgflwe7wjc&st=vkujbzgv&dl=1", nombre: "Isn t She Lovely" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/3l6y9owlbqa5xxqxhsibm/Juan-Gabriel-Abr-zame-Muy-Fuerte-Letra.mp3?rlkey=n7antjbpisofazgs6tmv6x01v&st=w72gir9y&dl=1", nombre: "Juan Gabriel Abr zame Muy Fuerte" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/opcwrq0xt11d4rwisx6vu/Juanes-Nelly-Furtado-Fotograf-a-Official-Music-Video.mp3?rlkey=qlym8yofvv2x5z2h57cvg3ciz&st=te3t37eb&dl=1", nombre: "Juanes Nelly Furtado Fotograf a Music" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/pm4nb7a6dk7su6y9ysqt3/Los-Nocheros-Entre-La-Tierra-Y-Cielo.mp3?rlkey=2lbl3vq15kvryj2vnuxw5q982&st=ndbloc60&dl=1", nombre: "Los Nocheros Entre La Tierra Y Cielo" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/wvkyk87i4wfisxl71czqp/Louis-Armstrong-What-A-Wonderful-World-Official-Video.mp3?rlkey=gf3u8nz2w4aykkfithc803oeh&st=8mc7z3p6&dl=1", nombre: "Louis Armstrong What A Wonderful World" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/1z1kxlveapxkl4632iapp/Luck-Ra-Chayanne-UN-SIGLO-SIN-TI-Official-Video.mp3?rlkey=1rp72s64q0t2j0ac3qi7qsq5d&st=zq77s7x6&dl=1", nombre: "Luck Ra Chayanne UN SIGLO SIN TI" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/2pucmfb375w8l33crwljz/Man-Bendita-Tu-Luz-Video-Oficial.mp3?rlkey=mbuphis9so8xcw6vogf5zz8oj&st=dp4pl263&dl=1", nombre: "Man Bendita Tu Luz Oficial" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/rdkhev17b95tma89nkhlz/Mi-Coraz-n-Encantado-Letra.mp3?rlkey=js5e2onxua6kyyvvc1fti6rwo&st=fyornsbd&dl=1", nombre: "Mi Coraz n Encantado" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/o7ncjjrq7baxc5pedoyqn/Natalia-Lafourcade-Hasta-la-Ra-z.mp3?rlkey=lxkjxiok8unpw98p7o8lqurqv&st=qrexoqc1&dl=1", nombre: "Natalia Lafourcade Hasta la Ra z" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/vsjf5yuf2hoyoc9k0r712/Noelia-Tu.mp3?rlkey=6sbq4937ddtqgg8farvj0j9j7&st=w1joymnr&dl=1", nombre: "Noelia Tu" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/317r48oi6fqya1gwh48vd/Nos-Veremos-Otra-Vez.mp3?rlkey=9qr8gczav7ui7qmsfegw2utrh&st=fcpuh4f9&dl=1", nombre: "Nos Veremos Otra Vez" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/678pl82mua36i49c88zt7/Pablo-Albor-n-Solamente-t-Letra.mp3?rlkey=73nwq8rqm6e9pimpdxfrfqnhl&st=w7n9xeto&dl=1", nombre: "Pablo Albor n Solamente t" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/162g1v54a3x86kavdyysw/Richard-Marx-Right-Here-Waiting-Official-Music-Video.mp3?rlkey=gkolhfnalznqlpn1xavkf88ci&st=1rado01t&dl=1", nombre: "Richard Marx Right Here Waiting Music" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/q52prx2wmf9c1jvgtqu6j/Robbie-Williams-Angel-en-Espa-ol-Letra.mp3?rlkey=mra6zi9ywf0szm2oao0hz6yet&st=cjwk834f&dl=1", nombre: "Robbie Williams Angel en" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/thh2s2s7nadtcs9ez2uq0/Roxette-Un-Dia-Sin-Ti-Official-Video.mp3?rlkey=1karaze93hih47dgo54vdm796&st=2ccbhv8c&dl=1", nombre: "Roxette Un Dia Sin Ti" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/euwutuhzr2a6h054a7w3e/Sin-Bandera-Entra-En-Mi-Vida-Official-Video.mp3?rlkey=egoflaljp51n7ijk6xncdle2o&st=nduwesvr&dl=1", nombre: "Sin Bandera Entra En Mi Vida" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/6ipb17g3gsgitzvj3r2ll/Sin-Bandera-Kilometros.mp3?rlkey=94lefeitswdxrkdyv72g2qv5g&st=5h6ts00y&dl=1", nombre: "Sin Bandera Kilometros" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/8nmj780w4hpjf52n1a7zg/Tiziano-Ferro-El-Regalo-Mas-Grande.mp3?rlkey=9td8slvkdirdyhzpltk0shhdo&st=memusxu3&dl=1", nombre: "Tiziano Ferro El Regalo Mas Grande" },
+            { src: "https://dl.dropboxusercontent.com/scl/fi/78vav8osvu1k7o5v5iw2k/Whitney-Houston-Saving-All-My-Love-For-You-Official-HD-Video.mp3?rlkey=579qx6kqhn25hk8qa4deukikw&st=8d1u6p4f&dl=1", nombre: "Whitney Houston Saving All My Love For You" },
+        ];
+        
+        let indiceCancionActiva = 0;
+        let esRandom = true; // Desde la 2da canción en adelante, siempre aleatorio: nunca se sabe qué sigue
+        let esRepetir = false;
+        
+        // Buscar "She" de Elvis Costello para que sea la inicial
+        const indiceShe = canciones.findIndex(c => c.nombre.toLowerCase().includes('she') && c.nombre.toLowerCase().includes('costello'));
+        if (indiceShe !== -1) {
+            indiceCancionActiva = indiceShe;
+        }
+
+        const reproductorMusical = new Audio();
+        reproductorMusical.src = canciones[indiceCancionActiva].src;
+        reproductorMusical.volume = 0.8;
+        document.getElementById('btn-random').classList.add('activo'); // arranca en aleatorio
+
+        function actualizarInfoCancion() {
+            let titulo = canciones[indiceCancionActiva].nombre;
+            // truncar si es muy largo
+            if(titulo.length > 25) titulo = titulo.substring(0, 22) + "...";
+            document.getElementById('info-cancion').innerText = "🎵 " + titulo;
+        }
+        actualizarInfoCancion(); // Init text
+
+        function formatearTiempo(segundos) {
+            if (isNaN(segundos) || segundos === Infinity) return "0:00";
+            const min = Math.floor(segundos / 60);
+            const seg = Math.floor(segundos % 60).toString().padStart(2, '0');
+            return `${min}:${seg}`;
+        }
+
+        const barraProgreso = document.getElementById('barra-progreso');
+        const tiempoActualEl = document.getElementById('tiempo-actual');
+        const tiempoTotalEl = document.getElementById('tiempo-total');
+        let arrastrandoBarra = false;
+
+        reproductorMusical.addEventListener('loadedmetadata', () => {
+            barraProgreso.max = reproductorMusical.duration;
+            tiempoTotalEl.innerText = formatearTiempo(reproductorMusical.duration);
+        });
+
+        reproductorMusical.addEventListener('timeupdate', () => {
+            if (!arrastrandoBarra) {
+                barraProgreso.value = reproductorMusical.currentTime;
+                tiempoActualEl.innerText = formatearTiempo(reproductorMusical.currentTime);
+            }
+        });
+
+        barraProgreso.addEventListener('input', () => {
+            arrastrandoBarra = true;
+            tiempoActualEl.innerText = formatearTiempo(barraProgreso.value);
+        });
+
+        barraProgreso.addEventListener('change', () => {
+            reproductorMusical.currentTime = barraProgreso.value;
+            arrastrandoBarra = false;
+        });
+
+        reproductorMusical.addEventListener('ended', () => {
+            if (!esRepetir) {
+                cambiarCancion(1);
+            } // Si esRepetir es true, la propiedad 'loop' del audio se encarga
+        });
+
+        // Manejo de errores: si una canción no carga (link caído, formato no soportado, etc.)
+        // saltamos automáticamente a la siguiente en vez de romper el reproductor.
+        let fallosConsecutivos = 0;
+        let saltandoPorError = false;
+
+        reproductorMusical.addEventListener('error', () => {
+            if (saltandoPorError) return;
+            fallosConsecutivos++;
+            console.warn('No se pudo cargar la canción:', canciones[indiceCancionActiva]?.nombre);
+
+            if (fallosConsecutivos >= canciones.length) {
+                document.getElementById('info-cancion').innerText = '🎵 Música no disponible';
+                document.getElementById('burbuja-reproductor').classList.remove('sonando');
+                fallosConsecutivos = 0;
+                return;
+            }
+
+            saltandoPorError = true;
+            setTimeout(() => {
+                cambiarCancion(1);
+                saltandoPorError = false;
+            }, 150);
+        });
+
+        reproductorMusical.addEventListener('playing', () => { fallosConsecutivos = 0; });
+
+        function togglePlayPause() {
+            vibrar(12);
+            const btn = document.getElementById('btn-play-pause');
+            const burbuja = document.getElementById('burbuja-reproductor');
+            if (reproductorMusical.paused) {
+                reproductorMusical.play().catch(e => console.log(e));
+                btn.innerText = "⏸";
+                burbuja.classList.add('sonando');
+            } else {
+                reproductorMusical.pause();
+                btn.innerText = "▶";
+                burbuja.classList.remove('sonando');
+            }
+        }
+
+        function toggleRandom() {
+            esRandom = !esRandom;
+            const btn = document.getElementById('btn-random');
+            if(esRandom) btn.classList.add('activo');
+            else btn.classList.remove('activo');
+        }
+
+        function toggleRepeat() {
+            esRepetir = !esRepetir;
+            reproductorMusical.loop = esRepetir;
+            const btn = document.getElementById('btn-repeat');
+            if(esRepetir) btn.classList.add('activo');
+            else btn.classList.remove('activo');
+        }
+
+        function cambiarCancion(direccion) {
+            if (esRandom) {
+                let nuevoIndice;
+                do {
+                    nuevoIndice = Math.floor(Math.random() * canciones.length);
+                } while (nuevoIndice === indiceCancionActiva && canciones.length > 1);
+                indiceCancionActiva = nuevoIndice;
+            } else {
+                indiceCancionActiva = (indiceCancionActiva + direccion + canciones.length) % canciones.length;
+            }
+            
+            reproductorMusical.src = canciones[indiceCancionActiva].src;
+            actualizarInfoCancion();
+            
+            if(pasoActual >= 2) {
+                reproductorMusical.play().catch(e => console.log("Error cambiando pista:", e));
+                document.getElementById('btn-play-pause').innerText = "⏸";
+                document.getElementById('burbuja-reproductor').classList.add('sonando');
+            }
+        }
+
+        function cambiarVolumen(vol) {
+            reproductorMusical.volume = vol;
+        }
+
+        // BURBUJA DEL REPRODUCTOR: se abre/cierra sin invadir nunca el resto de la pantalla
+        let temporizadorAutoColapso = null;
+
+        function toggleReproductor(event) {
+            if (event) event.stopPropagation();
+            vibrar(15);
+            const repFlotante = document.getElementById('reproductor-flotante');
+            const estaAbierto = repFlotante.classList.toggle('abierto');
+            clearTimeout(temporizadorAutoColapso);
+            if (estaAbierto) {
+                // Si nadie interactúa, se recoge solo a los pocos segundos para no tapar la pantalla
+                temporizadorAutoColapso = setTimeout(() => repFlotante.classList.remove('abierto'), 6000);
+            }
+        }
+
+        document.addEventListener('click', (event) => {
+            const repFlotante = document.getElementById('reproductor-flotante');
+            if (repFlotante.classList.contains('abierto') && !repFlotante.contains(event.target)) {
+                repFlotante.classList.remove('abierto');
+                clearTimeout(temporizadorAutoColapso);
+            }
+            const chatFlotante = document.getElementById('chat-flotante');
+            const modalAcceso = document.getElementById('modal-acceso');
+            const dentroDelModalAcceso = modalAcceso.contains(event.target);
+            if (chatFlotante.classList.contains('abierto') && !chatFlotante.contains(event.target) && !dentroDelModalAcceso) {
+                chatFlotante.classList.remove('abierto');
+            }
+        });
+
+        // VIBRACIÓN TÁCTIL (funciona solo en celulares compatibles; en el resto no rompe nada)
+        function vibrar(patron) {
+            try {
+                if (navigator.vibrate) navigator.vibrate(patron);
+            } catch (e) { /* silencioso */ }
+        }
+
+        // Mensaje secreto: tocando el corazón de la casa iluminada aparece una frase distinta cada vez
+        const secretosCasa = [
+            "Sos mi persona favorita en este mundo. Siempre.",
+            "Cada vez que pienso en vos, sonrío solo.",
+            "Esto es solo un poquito de lo que siento.",
+            "Gracias por existir, Carito.",
+            "No hay nada de vos que no ame."
+        ];
+        let indiceSecreto = 0;
+        let temporizadorSecreto = null;
+
+        function revelarSecreto(event) {
+            if (!document.getElementById('luz-interior').classList.contains('iluminar')) return;
+            if (event) event.stopPropagation();
+            vibrar(20);
+
+            const el = document.getElementById('secreto-puerta');
+            el.innerText = secretosCasa[indiceSecreto % secretosCasa.length];
+            indiceSecreto++;
+            el.classList.add('mostrar');
+
+            clearTimeout(temporizadorSecreto);
+            temporizadorSecreto = setTimeout(() => el.classList.remove('mostrar'), 3200);
+        }
+
+        // INTERACCION
+        let golpeando = false;
+        let pasoActual = 1;
+
+        function interaccionPuerta(event) {
+            if (golpeando || document.getElementById('puerta-id').classList.contains('abierta')) return;
+            document.getElementById('mensaje-final').style.display = 'none';
+            document.getElementById('marco-exterior').classList.add('oculto-pista');
+            pasoActual = 1; golpeando = true;
+
+            const toc1 = document.getElementById('toc1'); const toc2 = document.getElementById('toc2');
+            reproducirGolpeMaderaMaciza(); vibrar(30);
+            toc1.style.left = (event.clientX - 50) + 'px'; toc1.style.top = (event.clientY - 40) + 'px';
+            toc1.classList.add('mostrar'); setTimeout(() => toc1.classList.remove('mostrar'), 300);
+            if (typeof lanzarCorazonSutil === 'function') lanzarCorazonSutil(event.clientX, event.clientY);
+
+            setTimeout(() => {
+                reproducirGolpeMaderaMaciza(); vibrar(30);
+                toc2.style.left = (event.clientX + 30) + 'px'; toc2.style.top = (event.clientY - 20) + 'px';
+                toc2.classList.add('mostrar'); setTimeout(() => toc2.classList.remove('mostrar'), 300);
+                if (typeof lanzarCorazonSutil === 'function') lanzarCorazonSutil(event.clientX + 30, event.clientY - 20);
+            }, 500);
+
+            setTimeout(() => {
+                document.getElementById('pregunta1').classList.add('mostrar');
+                setTimeout(() => { document.getElementById('botones').classList.add('mostrar'); golpeando = false; }, 700);
+            }, 1200);
+        }
+
+        const mensajesNo = [
+            "Ok, vuelvo en un rato...",
+            "Tengo algo que me urge decirte... 👀",
+            "En serio, esto no puede esperar 🥺",
+            "Última oportunidad de decir que sí (mentira, hay más) 😏",
+            "Bueno, entro igual. No hay escapatoria 💛"
+        ];
+        let contadorNo = 0;
+
+        function responder(opcion, event) {
+            vibrar(opcion === 'SI' ? [15, 40, 15] : 15);
+            if (opcion === 'SI' && event && event.target && typeof lanzarCorazonSutil === 'function') {
+                const rect = event.target.getBoundingClientRect();
+                lanzarCorazonSutil(rect.left + rect.width / 2, rect.top);
+            }
+            document.getElementById('botones').classList.remove('mostrar');
+            if (opcion === 'NO') {
+                document.getElementById('pregunta1').classList.remove('mostrar'); document.getElementById('pregunta2').classList.remove('mostrar');
+                const esUltimo = contadorNo >= mensajesNo.length - 1;
+                const msjNo = mensajesNo[Math.min(contadorNo, mensajesNo.length - 1)];
+                contadorNo++;
+                setTimeout(() => {
+                    const elMsj = document.getElementById('mensaje-final');
+                    elMsj.innerText = msjNo;
+                    elMsj.style.display = 'block';
+                    if (esUltimo) {
+                        // Remate del chiste: entra igual, como si hubiera dicho que sí
+                        setTimeout(() => {
+                            elMsj.style.display = 'none';
+                            pasoActual = 2;
+                            responder('SI', null);
+                        }, 1800);
+                    }
+                }, 300);
+            } 
+            else if (opcion === 'SI') {
+                if (pasoActual === 1) {
+                    document.getElementById('pregunta1').classList.remove('mostrar'); pasoActual = 2; 
+                    setTimeout(() => { document.getElementById('pregunta2').classList.add('mostrar'); document.getElementById('botones').classList.add('mostrar'); }, 500);
+                } 
+                else if (pasoActual === 2) {
+                    document.getElementById('pregunta2').classList.remove('mostrar'); document.getElementById('luz-interior').classList.add('iluminar');
+                    
+                    reproductorMusical.play().catch(e => console.error("Error reproduciendo audio nativo:", e));
+                    document.getElementById('burbuja-reproductor').classList.add('sonando');
+                    actualizarInfoCancion();
+
+                    setTimeout(() => {
+                        document.getElementById('puerta-id').classList.add('abierta');
+                        vibrar([40, 60, 40, 60, 120]); // el momento más emotivo
+                        reproducirAcordeMagico(); lanzarExplosionCanvas();
+
+                        setTimeout(() => {
+                            document.getElementById('contenedor').classList.add('activo');
+                            document.getElementById('scroll-aviso').style.display = 'block';
+                            
+                            const btnAzar = document.getElementById('btn-azar');
+                            btnAzar.style.display = 'flex'; setTimeout(() => btnAzar.classList.add('mostrar'), 100);
+
+                            const repFlotante = document.getElementById('reproductor-flotante');
+                            repFlotante.style.display = 'flex';
+                            setTimeout(() => {
+                                repFlotante.classList.add('mostrar');
+                                // Se abre solo un instante para mostrar qué está sonando, y luego se recoge a burbuja
+                                setTimeout(() => {
+                                    repFlotante.classList.add('abierto');
+                                    setTimeout(() => repFlotante.classList.remove('abierto'), 3200);
+                                }, 350);
+                            }, 100);
+
+                            const chatFlotante = document.getElementById('chat-flotante');
+                            chatFlotante.style.display = 'flex';
+                            setTimeout(() => chatFlotante.classList.add('mostrar'), 150);
+
+                            const muroFlotante = document.getElementById('muro-flotante');
+                            muroFlotante.style.display = 'flex';
+                            setTimeout(() => muroFlotante.classList.add('mostrar'), 200);
+                        }, 2000);
+                    }, 400);
+                }
+            }
+        }
+
+        // ==========================================
+        // MOTOR DE BASE DE DATOS: CHAT Y MURO
+        // ==========================================
+
+        let miIdentidad = localStorage.getItem("identidadRefugio");
+        let chatIniciado = false;
+        let muroIniciado = false;
+        let accionPendiente = null; // 'chat' o 'muro'
+
+        // --- Sistema de acceso y seguridad ---
+        function requerirIdentidad(accion) {
+            if (miIdentidad) {
+                ejecutarAccion(accion);
+            } else {
+                accionPendiente = accion;
+                document.getElementById('modal-acceso').classList.remove('oculto');
+                setTimeout(() => document.getElementById('input-clave').focus(), 100);
+            }
+        }
+
+        function verificarIdentidad() {
+            let clave = document.getElementById('input-clave').value.toLowerCase().trim();
+            if (clave === "nico" || clave === "carito") {
+                vibrar(15);
+                miIdentidad = clave;
+                localStorage.setItem("identidadRefugio", miIdentidad);
+                document.getElementById('modal-acceso').classList.add('oculto');
+                document.getElementById('input-clave').value = '';
+                document.getElementById('error-clave').innerText = "";
+                if (accionPendiente) ejecutarAccion(accionPendiente);
+            } else {
+                vibrar([10, 40, 10]);
+                document.getElementById('error-clave').innerText = "Llave incorrecta. Solo nuestro amor puede abrir esto.";
+                document.getElementById('input-clave').value = '';
+            }
+        }
+
+        function verificarEnterAcceso(e) { if (e.key === "Enter") verificarIdentidad(); }
+
+        function ejecutarAccion(accion) {
+            if (accion === 'chat') abrirChatInterno();
+            if (accion === 'muro') abrirMuroInterno();
+        }
+
+        // --- Lógica del chat privado ---
+        function toggleChat(event) {
+            if (event) event.stopPropagation();
+            const chatFlotante = document.getElementById('chat-flotante');
+            if (chatFlotante.classList.contains('abierto')) {
+                chatFlotante.classList.remove('abierto');
+            } else {
+                requerirIdentidad('chat');
+            }
+        }
+
+        function abrirChatInterno() {
+            document.getElementById('chat-flotante').classList.add('abierto');
+            setTimeout(() => document.getElementById('input-chat').focus(), 300);
+
+            if (!chatIniciado) {
+                chatIniciado = true;
+                const q = window.query(window.collection(window.db, "chat"), window.orderBy("timestamp", "asc"));
+                window.onSnapshot(q, (snapshot) => {
+                    const contenedor = document.getElementById('mensajes-chat');
+                    if (snapshot.empty) {
+                        contenedor.innerHTML = '<p class="sin-mensajes">Todavía no hay nada por acá... escribí el primer mensaje 💌</p>';
+                        return;
+                    }
+                    contenedor.innerHTML = '';
+                    snapshot.forEach((doc) => {
+                        const msg = doc.data();
+                        const div = document.createElement('div');
+                        div.className = `burbuja-msg ${msg.autor === "carito" ? 'msg-carito' : 'msg-nico'}`;
+                        div.innerText = msg.texto;
+                        contenedor.appendChild(div);
+                    });
+                    contenedor.scrollTop = contenedor.scrollHeight; // Auto-scroll
+                }, (error) => {
+                    console.error('Error escuchando el chat:', error);
+                    const contenedor = document.getElementById('mensajes-chat');
+                    if (contenedor) contenedor.innerHTML = `<p class="sin-mensajes">⚠️ No se pudo conectar (${error.code || 'error'}). Revisá las Reglas de Firestore.</p>`;
+                });
+            }
+        }
+
+        async function enviarMensajeChat() {
+            const input = document.getElementById('input-chat');
+            const texto = input.value.trim();
+            if (!texto || !miIdentidad) return;
+            vibrar(12);
+            input.value = '';
+
+            try {
+                await window.addDoc(window.collection(window.db, "chat"), {
+                    autor: miIdentidad, texto: texto, timestamp: window.serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Error chat:", e);
+                input.value = texto; // devolvemos el texto para que no se pierda
+                const contenedor = document.getElementById('mensajes-chat');
+                if (contenedor) {
+                    const aviso = document.createElement('p');
+                    aviso.className = 'sin-mensajes';
+                    aviso.innerText = `⚠️ No se pudo enviar (${e.code || 'error'}). Revisá las Reglas de Firestore.`;
+                    contenedor.appendChild(aviso);
+                    contenedor.scrollTop = contenedor.scrollHeight;
+                }
+            }
+        }
+
+        function verificarEnterChat(e) { if (e.key === "Enter") enviarMensajeChat(); }
+
+        // --- Lógica del Muro en el Tiempo ---
+        function abrirMuro() { requerirIdentidad('muro'); }
+        function cerrarMuro() { document.getElementById('modal-muro').classList.add('oculto'); }
+
+        function abrirMuroInterno() {
+            const modal = document.getElementById('modal-muro');
+            modal.classList.remove('oculto');
+            modal.style.display = 'flex';
+
+            if (!muroIniciado) {
+                muroIniciado = true;
+                const q = window.query(window.collection(window.db, "muro"), window.orderBy("timestamp", "desc"));
+                window.onSnapshot(q, (snapshot) => {
+                    const contenedor = document.getElementById('contenedor-tarjetas-muro');
+                    if (snapshot.empty) {
+                        contenedor.innerHTML = '<p class="sin-notas">Este muro todavía está en blanco... dejá el primer recuerdo 🕊️</p>';
+                        return;
+                    }
+                    contenedor.innerHTML = '';
+                    snapshot.forEach((doc) => {
+                        const nota = doc.data();
+                        const div = document.createElement('div');
+                        div.className = `tarjeta-nota ${nota.autor === "carito" ? 'nota-carito' : 'nota-nico'}`;
+                        const autorEl = document.createElement('div');
+                        autorEl.className = 'nota-autor';
+                        autorEl.innerText = nota.autor === "carito" ? "Carito 💖" : "Nico 💙";
+                        const textoEl = document.createElement('div');
+                        textoEl.className = 'nota-texto';
+                        textoEl.innerText = nota.texto;
+                        const fechaEl = document.createElement('div');
+                        fechaEl.className = 'nota-fecha';
+                        fechaEl.innerText = nota.fecha || '';
+                        div.appendChild(autorEl); div.appendChild(textoEl); div.appendChild(fechaEl);
+                        contenedor.appendChild(div);
+                    });
+                }, (error) => {
+                    console.error('Error escuchando el muro:', error);
+                    const contenedor = document.getElementById('contenedor-tarjetas-muro');
+                    if (contenedor) contenedor.innerHTML = `<p class="sin-notas">⚠️ No se pudo conectar (${error.code || 'error'}). Revisá las Reglas de Firestore.</p>`;
+                });
+            }
+        }
+
+        async function guardarEnMuro() {
+            const textarea = document.getElementById('texto-muro');
+            const texto = textarea.value.trim();
+            if (!texto || !miIdentidad) return;
+
+            const btn = document.querySelector('.btn-publicar-muro');
+            btn.innerText = "Guardando... ⏳";
+            btn.disabled = true;
+            vibrar(15);
+
+            try {
+                await window.addDoc(window.collection(window.db, "muro"), {
+                    autor: miIdentidad,
+                    texto: texto,
+                    fecha: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' }),
+                    timestamp: window.serverTimestamp()
+                });
+                textarea.value = '';
+            } catch (e) { console.error("Error muro:", e); }
+
+            btn.innerText = "Inmortalizar mensaje ✨";
+            btn.disabled = false;
+        }
+
+        function viajarAlAzar() {
+            vibrar(18);
+            const numeroAleatorio = Math.floor(Math.random() * frasesRomanticas.length) + 1;
+            const seccionDestino = document.getElementById(`frase-${numeroAleatorio}`);
+            const btn = document.getElementById('btn-azar');
+            btn.style.transform = 'scale(0.9)'; setTimeout(() => btn.style.transform = '', 150);
+            seccionDestino.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

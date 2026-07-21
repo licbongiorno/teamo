@@ -593,10 +593,10 @@
         /* --- Burbuja flotante: Preguntas para nosotros --- */
         .preguntas-flotante {
             position: fixed;
-            bottom: calc(clamp(16px, 4.5vh, 36px) + env(safe-area-inset-bottom, 0px) + 78px);
-            left: calc(clamp(12px, 5vw, 40px) + env(safe-area-inset-left, 0px));
-            z-index: 899;
-            display: none; flex-direction: column; align-items: flex-start; gap: 15px;
+            bottom: calc(clamp(20px, 5vh, 40px) + env(safe-area-inset-bottom, 0px) + 92px);
+            right: calc(clamp(15px, 5vw, 40px) + env(safe-area-inset-right, 0px));
+            z-index: 1001;
+            display: none; flex-direction: column; align-items: flex-end; gap: 15px;
         }
         .preguntas-flotante.mostrar { display: flex; }
         .burbuja-preguntas {
@@ -611,7 +611,7 @@
             background: rgba(15, 10, 20, 0.92); border: 1px solid rgba(216,180,254,0.25);
             border-radius: 24px; width: min(88vw, 330px); max-height: min(60vh, 420px);
             display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            transform-origin: bottom left; opacity: 0; transform: scale(0.9) translateY(10px);
+            transform-origin: bottom right; opacity: 0; transform: scale(0.9) translateY(10px);
             pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .preguntas-flotante.abierto .panel-preguntas { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
@@ -629,6 +629,41 @@
             width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; touch-action: manipulation;
             background: linear-gradient(135deg, #d8b4fe, #a5b4fc); color: #2a1a3d; font-weight: bold; font-family: var(--fuente-texto);
         }
+
+        /* --- Burbuja flotante: Reloj / Cuenta regresiva (apilado sobre las preguntas) --- */
+        .reloj-flotante {
+            position: fixed;
+            bottom: calc(clamp(20px, 5vh, 40px) + env(safe-area-inset-bottom, 0px) + 168px);
+            right: calc(clamp(15px, 5vw, 40px) + env(safe-area-inset-right, 0px));
+            z-index: 1001;
+            display: none; flex-direction: column; align-items: flex-end; gap: 15px;
+        }
+        .reloj-flotante.mostrar { display: flex; }
+        .burbuja-reloj {
+            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,183,197,0.5); box-shadow: 0 5px 20px rgba(255,183,197,0.25);
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
+            animation: aparecerSuave 0.8s forwards, latidoBurbuja 3s infinite; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .burbuja-reloj:active { transform: scale(0.9); }
+        .panel-reloj {
+            background: rgba(15, 10, 20, 0.92); border: 1px solid rgba(255,183,197,0.25);
+            border-radius: 24px; width: min(88vw, 320px); padding: 22px 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); text-align: center;
+            transform-origin: bottom right; opacity: 0; transform: scale(0.9) translateY(10px);
+            pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .reloj-flotante.abierto .panel-reloj { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+        .header-reloj { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+        .btn-cerrar-reloj { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
+        .fr-subtitulo { font-family: var(--fuente-texto); font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; color: #ffb7c5; }
+        .fr-titulo { font-family: var(--fuente-titulo); font-size: clamp(1rem, 4vw, 1.3rem); color: white; margin: 6px 0 14px; line-height: 1.3; }
+        .fr-numeros { display: flex; justify-content: center; gap: 10px; }
+        .fr-bloque { display: flex; flex-direction: column; align-items: center; }
+        .fr-valor { font-family: var(--fuente-titulo); font-size: clamp(1.4rem, 6vw, 1.9rem); color: #ffb7c5; }
+        .fr-etiqueta { font-family: var(--fuente-texto); font-size: 0.65rem; color: rgba(255,255,255,0.6); text-transform: uppercase; }
+        .fr-fecha { font-family: var(--fuente-texto); font-size: 0.75rem; font-style: italic; color: rgba(255,255,255,0.5); margin-top: 14px; }
 
         /* --- Muro en el tiempo --- */
         .muro-pantalla { padding: 20px; overflow-y: auto; box-sizing: border-box; }
@@ -972,6 +1007,25 @@
         <div class="burbuja-preguntas" id="burbuja-preguntas" onclick="togglePreguntas(event)" title="Preguntas para nosotros" role="button" aria-label="Abrir preguntas para la pareja">💭</div>
     </div>
 
+    <!-- ====== RELOJ / CUENTA REGRESIVA FLOTANTE ====== -->
+    <div id="reloj-flotante" class="reloj-flotante">
+        <div class="panel-reloj" id="panel-reloj">
+            <div class="header-reloj">
+                <button class="btn-cerrar-reloj" onclick="toggleReloj(event)">✕</button>
+            </div>
+            <div class="fr-subtitulo" id="fr-subtitulo">Cuenta regresiva</div>
+            <div class="fr-titulo" id="fr-titulo">La primera vez que nos vamos a ver</div>
+            <div class="fr-numeros">
+                <div class="fr-bloque"><span class="fr-valor" id="fr-dias">00</span><span class="fr-etiqueta">días</span></div>
+                <div class="fr-bloque"><span class="fr-valor" id="fr-horas">00</span><span class="fr-etiqueta">hs</span></div>
+                <div class="fr-bloque"><span class="fr-valor" id="fr-min">00</span><span class="fr-etiqueta">min</span></div>
+                <div class="fr-bloque"><span class="fr-valor" id="fr-seg">00</span><span class="fr-etiqueta">seg</span></div>
+            </div>
+            <div class="fr-fecha" id="fr-fecha">25 de agosto de 2026, 13 hs</div>
+        </div>
+        <div class="burbuja-reloj" id="burbuja-reloj" onclick="toggleReloj(event)" title="Cuenta regresiva" role="button" aria-label="Ver cuenta regresiva">⏰</div>
+    </div>
+
     <!-- ====== MODAL DE ACCESO (llave secreta compartida) ====== -->
     <div id="modal-acceso" class="modal-cristal oculto">
         <div class="tarjeta-acceso">
@@ -1178,7 +1232,7 @@
                     <div class="cuenta-bloque"><span class="cuenta-valor" id="cr-min">00</span><span class="cuenta-etiqueta">min</span></div>
                     <div class="cuenta-bloque"><span class="cuenta-valor" id="cr-seg">00</span><span class="cuenta-etiqueta">seg</span></div>
                 </div>
-                <div class="cuenta-fecha" id="cuenta-fecha">25 de agosto de 2026</div>
+                <div class="cuenta-fecha" id="cuenta-fecha">25 de agosto de 2026, 13 hs</div>
                 <p class="cuenta-frase" id="cuenta-frase">Cada segundo que pasa, estoy más cerca de abrazarte 💫</p>
                 <p class="cuenta-mensaje" id="cuenta-mensaje"></p>
             </div>
@@ -1483,15 +1537,21 @@
             lanzarCorazonSutil(event.clientX, event.clientY);
         }, { passive: true });
 
-        // CUENTA REGRESIVA: 25 de agosto de 2026, la primera vez que se ven en persona
-        const fechaEncuentro = new Date(2026, 7, 25, 0, 0, 0);
+        // CUENTA REGRESIVA: 25 de agosto de 2026 a las 13hs, la primera vez que se ven en persona
+        const fechaEncuentro = new Date(2026, 7, 25, 13, 0, 0);
         let intervaloCuentaRegresiva = null;
 
         let modoAscendenteActivado = false;
 
+        function setTextoSiExiste(id, texto) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = texto;
+        }
+
         function actualizarCuentaRegresiva() {
             const elDias = document.getElementById('cr-dias');
-            if (!elDias) return; // la pantalla todavía no se construyó
+            const elDiasFlotante = document.getElementById('fr-dias');
+            if (!elDias && !elDiasFlotante) return; // todavía no se construyó ninguna de las dos pantallas
 
             const ahora = new Date();
             let diff = fechaEncuentro - ahora;
@@ -1501,14 +1561,19 @@
                 // hace cuánto empezó nuestra historia en el plano real.
                 if (!modoAscendenteActivado) {
                     modoAscendenteActivado = true;
-                    document.getElementById('cuenta-subtitulo').innerText = 'Desde que nos vimos';
-                    document.getElementById('cuenta-titulo').innerText = 'Nuestra historia en el mundo real';
-                    document.getElementById('cuenta-fecha').innerText = 'Empezó el 25 de agosto de 2026';
-                    document.getElementById('cuenta-frase').innerText = 'Cada segundo que pasa, esto es más real 💫';
+                    setTextoSiExiste('cuenta-subtitulo', 'Desde que nos vimos');
+                    setTextoSiExiste('cuenta-titulo', 'Nuestra historia en el mundo real');
+                    setTextoSiExiste('cuenta-fecha', 'Empezó el 25 de agosto de 2026, 13 hs');
+                    setTextoSiExiste('cuenta-frase', 'Cada segundo que pasa, esto es más real 💫');
+                    setTextoSiExiste('fr-subtitulo', 'Desde que nos vimos');
+                    setTextoSiExiste('fr-titulo', 'Nuestro segundo cero');
+                    setTextoSiExiste('fr-fecha', 'Empezó el 25 de agosto de 2026, 13 hs');
                     const msj = document.getElementById('cuenta-mensaje');
-                    msj.innerText = '¡Hoy es el día! 🎉';
-                    msj.style.display = 'block';
-                    setTimeout(() => { msj.style.display = 'none'; }, 5000);
+                    if (msj) {
+                        msj.innerText = '¡Hoy es el día! 🎉';
+                        msj.style.display = 'block';
+                        setTimeout(() => { msj.style.display = 'none'; }, 5000);
+                    }
                 }
 
                 let transcurrido = ahora - fechaEncuentro;
@@ -1517,10 +1582,14 @@
                 const min = Math.floor(transcurrido / 60000); transcurrido -= min * 60000;
                 const seg = Math.floor(transcurrido / 1000);
 
-                elDias.innerText = dias;
-                document.getElementById('cr-horas').innerText = String(horas).padStart(2, '0');
-                document.getElementById('cr-min').innerText = String(min).padStart(2, '0');
-                document.getElementById('cr-seg').innerText = String(seg).padStart(2, '0');
+                setTextoSiExiste('cr-dias', dias);
+                setTextoSiExiste('cr-horas', String(horas).padStart(2, '0'));
+                setTextoSiExiste('cr-min', String(min).padStart(2, '0'));
+                setTextoSiExiste('cr-seg', String(seg).padStart(2, '0'));
+                setTextoSiExiste('fr-dias', dias);
+                setTextoSiExiste('fr-horas', String(horas).padStart(2, '0'));
+                setTextoSiExiste('fr-min', String(min).padStart(2, '0'));
+                setTextoSiExiste('fr-seg', String(seg).padStart(2, '0'));
                 return;
             }
 
@@ -1529,10 +1598,14 @@
             const min = Math.floor(diff / 60000); diff -= min * 60000;
             const seg = Math.floor(diff / 1000);
 
-            elDias.innerText = dias;
-            document.getElementById('cr-horas').innerText = String(horas).padStart(2, '0');
-            document.getElementById('cr-min').innerText = String(min).padStart(2, '0');
-            document.getElementById('cr-seg').innerText = String(seg).padStart(2, '0');
+            setTextoSiExiste('cr-dias', dias);
+            setTextoSiExiste('cr-horas', String(horas).padStart(2, '0'));
+            setTextoSiExiste('cr-min', String(min).padStart(2, '0'));
+            setTextoSiExiste('cr-seg', String(seg).padStart(2, '0'));
+            setTextoSiExiste('fr-dias', dias);
+            setTextoSiExiste('fr-horas', String(horas).padStart(2, '0'));
+            setTextoSiExiste('fr-min', String(min).padStart(2, '0'));
+            setTextoSiExiste('fr-seg', String(seg).padStart(2, '0'));
         }
         actualizarCuentaRegresiva();
         intervaloCuentaRegresiva = setInterval(actualizarCuentaRegresiva, 1000);
@@ -1794,6 +1867,10 @@
             if (preguntasFlotante.classList.contains('abierto') && !preguntasFlotante.contains(event.target)) {
                 preguntasFlotante.classList.remove('abierto');
             }
+            const relojFlotante = document.getElementById('reloj-flotante');
+            if (relojFlotante.classList.contains('abierto') && !relojFlotante.contains(event.target)) {
+                relojFlotante.classList.remove('abierto');
+            }
         });
 
         // VIBRACIÓN TÁCTIL (funciona solo en celulares compatibles; en el resto no rompe nada)
@@ -1946,6 +2023,10 @@
                             const preguntasFlotante = document.getElementById('preguntas-flotante');
                             preguntasFlotante.style.display = 'flex';
                             setTimeout(() => preguntasFlotante.classList.add('mostrar'), 350);
+
+                            const relojFlotante = document.getElementById('reloj-flotante');
+                            relojFlotante.style.display = 'flex';
+                            setTimeout(() => relojFlotante.classList.add('mostrar'), 400);
                         }, 2000);
                     }, 400);
                 }
@@ -2514,6 +2595,12 @@
             const pregunta = preguntasPareja[indice];
             document.getElementById('pregunta-categoria').innerText = pregunta.c;
             document.getElementById('pregunta-texto').innerText = pregunta.t;
+        }
+
+        // ================== RELOJ / CUENTA REGRESIVA FLOTANTE ==================
+        function toggleReloj(event) {
+            if (event) event.stopPropagation();
+            document.getElementById('reloj-flotante').classList.toggle('abierto');
         }
     </script>
 </body>

@@ -491,6 +491,145 @@
         }
         .burbuja-muro:active { transform: scale(0.9); }
 
+        /* --- Burbuja flotante: Rincón de la Gratitud (columna, debajo del chat) --- */
+        .gratitud-flotante {
+            position: fixed;
+            top: calc(clamp(16px, 4.5vh, 24px) + env(safe-area-inset-top, 0px) + 76px);
+            right: calc(clamp(12px, 5vw, 24px) + env(safe-area-inset-right, 0px));
+            z-index: 9998;
+            display: none; flex-direction: column; align-items: flex-end; gap: 15px;
+        }
+        .gratitud-flotante.mostrar { display: flex; }
+        .burbuja-gratitud {
+            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,214,102,0.5); box-shadow: 0 5px 20px rgba(255,214,102,0.25);
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
+            animation: aparecerSuave 0.8s forwards; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .burbuja-gratitud:active { transform: scale(0.9); }
+        .panel-gratitud {
+            background: rgba(15, 10, 20, 0.9); border: 1px solid rgba(255,214,102,0.25);
+            border-radius: 24px; width: min(88vw, 330px); height: min(65vh, 460px);
+            display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform-origin: top right; opacity: 0; transform: scale(0.9) translateY(-10px);
+            pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .gratitud-flotante.abierto .panel-gratitud { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+        .header-gratitud {
+            padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center; color: #ffd666; font-family: var(--fuente-texto);
+        }
+        .titulo-gratitud { font-size: 0.95rem; font-weight: bold; }
+        .btn-cerrar-gratitud { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
+        .lista-gratitud { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .lista-gratitud .sin-mensajes { font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; text-align: center; margin: auto; }
+        .tarjeta-gratitud { padding: 10px 14px; border-radius: 14px; background: rgba(255,214,102,0.1); font-family: var(--fuente-texto); }
+        .tarjeta-gratitud .gr-autor { font-size: 0.75rem; color: #ffd666; font-weight: bold; margin-bottom: 3px; }
+        .tarjeta-gratitud .gr-texto { font-size: 0.9rem; color: white; line-height: 1.4; }
+        .tarjeta-gratitud .gr-fecha { font-size: 0.68rem; color: rgba(255,255,255,0.4); margin-top: 4px; }
+        .input-gratitud-area { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
+        #input-gratitud {
+            flex: 1; min-width: 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px; padding: 11px 14px; color: white; font-family: var(--fuente-texto); outline: none; font-size: 0.9rem;
+        }
+        .btn-enviar-gratitud {
+            background: linear-gradient(135deg, #ffe29f, #ffa99f); border: none; border-radius: 50%;
+            width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; touch-action: manipulation; font-size: 0.95rem;
+        }
+
+        /* --- Burbuja flotante: Lista de Deseos / Bucket List (columna, debajo del muro) --- */
+        .deseos-flotante {
+            position: fixed;
+            top: calc(clamp(16px, 4.5vh, 24px) + env(safe-area-inset-top, 0px) + 76px);
+            left: calc(clamp(28px, 9vw, 40px) + env(safe-area-inset-left, 0px));
+            z-index: 9998;
+            display: none; flex-direction: column; align-items: flex-start; gap: 15px;
+        }
+        .deseos-flotante.mostrar { display: flex; }
+        .burbuja-deseos {
+            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(178,255,201,0.5); box-shadow: 0 5px 20px rgba(178,255,201,0.25);
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
+            animation: aparecerSuave 0.8s forwards; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .burbuja-deseos:active { transform: scale(0.9); }
+        .panel-deseos {
+            background: rgba(15, 10, 20, 0.9); border: 1px solid rgba(178,255,201,0.25);
+            border-radius: 24px; width: min(88vw, 330px); height: min(65vh, 460px);
+            display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform-origin: top left; opacity: 0; transform: scale(0.9) translateY(-10px);
+            pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .deseos-flotante.abierto .panel-deseos { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+        .header-deseos {
+            padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center; color: #b2ffc9; font-family: var(--fuente-texto);
+        }
+        .titulo-deseos { font-size: 0.95rem; font-weight: bold; }
+        .btn-cerrar-deseos { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
+        .lista-deseos { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .lista-deseos .sin-mensajes { font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; text-align: center; margin: auto; }
+        .fila-deseo {
+            display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px;
+            background: rgba(178,255,201,0.08); font-family: var(--fuente-texto); cursor: pointer; touch-action: manipulation;
+        }
+        .fila-deseo .check-deseo { font-size: 1.2rem; flex-shrink: 0; }
+        .fila-deseo .texto-deseo { font-size: 0.88rem; color: white; line-height: 1.35; }
+        .fila-deseo.cumplido .texto-deseo { text-decoration: line-through; color: rgba(255,255,255,0.45); }
+        .input-deseos-area { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
+        #input-deseo {
+            flex: 1; min-width: 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px; padding: 11px 14px; color: white; font-family: var(--fuente-texto); outline: none; font-size: 0.9rem;
+        }
+        .btn-enviar-deseo {
+            background: linear-gradient(135deg, #b2ffc9, #a8edea); border: none; border-radius: 50%;
+            width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; touch-action: manipulation; font-size: 0.95rem;
+        }
+
+        /* --- Burbuja flotante: Preguntas para nosotros --- */
+        .preguntas-flotante {
+            position: fixed;
+            bottom: calc(clamp(16px, 4.5vh, 36px) + env(safe-area-inset-bottom, 0px) + 78px);
+            left: calc(clamp(12px, 5vw, 40px) + env(safe-area-inset-left, 0px));
+            z-index: 899;
+            display: none; flex-direction: column; align-items: flex-start; gap: 15px;
+        }
+        .preguntas-flotante.mostrar { display: flex; }
+        .burbuja-preguntas {
+            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(216,180,254,0.5); box-shadow: 0 5px 20px rgba(216,180,254,0.25);
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
+            animation: aparecerSuave 0.8s forwards; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .burbuja-preguntas:active { transform: scale(0.9); }
+        .panel-preguntas {
+            background: rgba(15, 10, 20, 0.92); border: 1px solid rgba(216,180,254,0.25);
+            border-radius: 24px; width: min(88vw, 330px); max-height: min(60vh, 420px);
+            display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform-origin: bottom left; opacity: 0; transform: scale(0.9) translateY(10px);
+            pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .preguntas-flotante.abierto .panel-preguntas { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+        .header-preguntas {
+            padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; justify-content: space-between; align-items: center; color: #d8b4fe; font-family: var(--fuente-texto);
+        }
+        .titulo-preguntas { font-size: 0.95rem; font-weight: bold; }
+        .btn-cerrar-preguntas { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
+        .cuerpo-preguntas { padding: 20px 18px; overflow-y: auto; }
+        .pregunta-categoria { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: #d8b4fe; margin-bottom: 10px; }
+        .pregunta-texto { font-family: var(--fuente-titulo); font-size: clamp(1.15rem, 4vw, 1.4rem); color: white; line-height: 1.35; }
+        .pie-preguntas { padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgba(255,255,255,0.08); }
+        .btn-otra-pregunta {
+            width: 100%; padding: 12px; border-radius: 20px; border: none; cursor: pointer; touch-action: manipulation;
+            background: linear-gradient(135deg, #d8b4fe, #a5b4fc); color: #2a1a3d; font-weight: bold; font-family: var(--fuente-texto);
+        }
+
         /* --- Muro en el tiempo --- */
         .muro-pantalla { padding: 20px; overflow-y: auto; box-sizing: border-box; }
         .muro-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px clamp(20px, 4vh, 30px); gap: 12px; flex-wrap: wrap; }
@@ -780,7 +919,57 @@
 
     <!-- Burbuja flotante para entrar al Muro desde cualquier pantalla -->
     <div id="muro-flotante" class="muro-flotante">
-        <div class="burbuja-muro" onclick="abrirMuro()" title="Nuestro Muro en el Tiempo" role="button" aria-label="Abrir el Muro">📜</div>
+        <div class="burbuja-muro" onclick="abrirMuro(event)" title="Nuestro Muro en el Tiempo" role="button" aria-label="Abrir el Muro">📜</div>
+    </div>
+
+    <!-- ====== RINCÓN DE LA GRATITUD (Hoy te amo por...) ====== -->
+    <div id="gratitud-flotante" class="gratitud-flotante">
+        <div class="panel-gratitud" id="panel-gratitud">
+            <div class="header-gratitud">
+                <span class="titulo-gratitud">Hoy te amo por... 💛</span>
+                <button class="btn-cerrar-gratitud" onclick="toggleGratitud(event)">✕</button>
+            </div>
+            <div class="lista-gratitud" id="lista-gratitud"></div>
+            <div class="input-gratitud-area">
+                <input type="text" id="input-gratitud" placeholder="Hoy te amo por..." maxlength="140" autocomplete="off" onkeypress="verificarEnterGratitud(event)">
+                <button class="btn-enviar-gratitud" onclick="guardarGratitud()">➤</button>
+            </div>
+        </div>
+        <div class="burbuja-gratitud" id="burbuja-gratitud" onclick="toggleGratitud(event)" title="Rincón de la gratitud" role="button" aria-label="Abrir el rincón de la gratitud">💛</div>
+    </div>
+
+    <!-- ====== LISTA DE DESEOS JUNTOS (Bucket List) ====== -->
+    <div id="deseos-flotante" class="deseos-flotante">
+        <div class="panel-deseos" id="panel-deseos">
+            <div class="header-deseos">
+                <span class="titulo-deseos">Nuestra lista de deseos 🌠</span>
+                <button class="btn-cerrar-deseos" onclick="toggleDeseos(event)">✕</button>
+            </div>
+            <div class="lista-deseos" id="lista-deseos"></div>
+            <div class="input-deseos-area">
+                <input type="text" id="input-deseo" placeholder="Un sueño para cumplir juntos..." maxlength="140" autocomplete="off" onkeypress="verificarEnterDeseo(event)">
+                <button class="btn-enviar-deseo" onclick="agregarDeseo()">➤</button>
+            </div>
+        </div>
+        <div class="burbuja-deseos" id="burbuja-deseos" onclick="toggleDeseos(event)" title="Lista de deseos juntos" role="button" aria-label="Abrir la lista de deseos juntos">🌠</div>
+    </div>
+
+    <!-- ====== PREGUNTAS PARA NOSOTROS ====== -->
+    <div id="preguntas-flotante" class="preguntas-flotante">
+        <div class="panel-preguntas" id="panel-preguntas">
+            <div class="header-preguntas">
+                <span class="titulo-preguntas">Preguntas para nosotros 💭</span>
+                <button class="btn-cerrar-preguntas" onclick="togglePreguntas(event)">✕</button>
+            </div>
+            <div class="cuerpo-preguntas">
+                <div class="pregunta-categoria" id="pregunta-categoria">Nostalgia y recuerdos</div>
+                <div class="pregunta-texto" id="pregunta-texto">Toca "otra pregunta" para empezar.</div>
+            </div>
+            <div class="pie-preguntas">
+                <button class="btn-otra-pregunta" onclick="mostrarPreguntaAleatoria()">🔀 Otra pregunta</button>
+            </div>
+        </div>
+        <div class="burbuja-preguntas" id="burbuja-preguntas" onclick="togglePreguntas(event)" title="Preguntas para nosotros" role="button" aria-label="Abrir preguntas para la pareja">💭</div>
     </div>
 
     <!-- ====== MODAL DE ACCESO (llave secreta compartida) ====== -->
@@ -830,7 +1019,7 @@
     <!-- FIREBASE (Proyecto Carolina) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDDvrgXpSxaraqTj83ingY3xa-AT8ywxV4",
@@ -852,6 +1041,8 @@
         window.query = query;
         window.orderBy = orderBy;
         window.serverTimestamp = serverTimestamp;
+        window.doc = doc;
+        window.updateDoc = updateDoc;
 
         console.log("🔥 Conectado con éxito a Carolina");
     </script>
@@ -1591,6 +1782,18 @@
             if (chatFlotante.classList.contains('abierto') && !chatFlotante.contains(event.target) && !dentroDelModalAcceso) {
                 chatFlotante.classList.remove('abierto');
             }
+            const gratitudFlotante = document.getElementById('gratitud-flotante');
+            if (gratitudFlotante.classList.contains('abierto') && !gratitudFlotante.contains(event.target) && !dentroDelModalAcceso) {
+                gratitudFlotante.classList.remove('abierto');
+            }
+            const deseosFlotante = document.getElementById('deseos-flotante');
+            if (deseosFlotante.classList.contains('abierto') && !deseosFlotante.contains(event.target) && !dentroDelModalAcceso) {
+                deseosFlotante.classList.remove('abierto');
+            }
+            const preguntasFlotante = document.getElementById('preguntas-flotante');
+            if (preguntasFlotante.classList.contains('abierto') && !preguntasFlotante.contains(event.target)) {
+                preguntasFlotante.classList.remove('abierto');
+            }
         });
 
         // VIBRACIÓN TÁCTIL (funciona solo en celulares compatibles; en el resto no rompe nada)
@@ -1731,6 +1934,18 @@
                             const muroFlotante = document.getElementById('muro-flotante');
                             muroFlotante.style.display = 'flex';
                             setTimeout(() => muroFlotante.classList.add('mostrar'), 200);
+
+                            const gratitudFlotante = document.getElementById('gratitud-flotante');
+                            gratitudFlotante.style.display = 'flex';
+                            setTimeout(() => gratitudFlotante.classList.add('mostrar'), 250);
+
+                            const deseosFlotante = document.getElementById('deseos-flotante');
+                            deseosFlotante.style.display = 'flex';
+                            setTimeout(() => deseosFlotante.classList.add('mostrar'), 300);
+
+                            const preguntasFlotante = document.getElementById('preguntas-flotante');
+                            preguntasFlotante.style.display = 'flex';
+                            setTimeout(() => preguntasFlotante.classList.add('mostrar'), 350);
                         }, 2000);
                     }, 400);
                 }
@@ -1744,7 +1959,9 @@
         let miIdentidad = localStorage.getItem("identidadRefugio");
         let chatIniciado = false;
         let muroIniciado = false;
-        let accionPendiente = null; // 'chat' o 'muro'
+        let gratitudIniciado = false;
+        let deseosIniciado = false;
+        let accionPendiente = null; // 'chat', 'muro', 'gratitud' o 'deseos'
 
         // --- Sistema de acceso y seguridad ---
         function requerirIdentidad(accion) {
@@ -1779,6 +1996,8 @@
         function ejecutarAccion(accion) {
             if (accion === 'chat') abrirChatInterno();
             if (accion === 'muro') abrirMuroInterno();
+            if (accion === 'gratitud') abrirGratitudInterno();
+            if (accion === 'deseos') abrirDeseosInterno();
         }
 
         // --- Lógica del chat privado ---
@@ -1850,7 +2069,7 @@
         function verificarEnterChat(e) { if (e.key === "Enter") enviarMensajeChat(); }
 
         // --- Lógica del Muro en el Tiempo ---
-        function abrirMuro() { requerirIdentidad('muro'); }
+        function abrirMuro(event) { if (event) event.stopPropagation(); requerirIdentidad('muro'); }
         function cerrarMuro() { document.getElementById('modal-muro').classList.add('oculto'); }
 
         function abrirMuroInterno() {
@@ -1923,6 +2142,378 @@
             const btn = document.getElementById('btn-azar');
             btn.style.transform = 'scale(0.9)'; setTimeout(() => btn.style.transform = '', 150);
             seccionDestino.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ================== RINCÓN DE LA GRATITUD ==================
+        function toggleGratitud(event) {
+            if (event) event.stopPropagation();
+            const gratitudFlotante = document.getElementById('gratitud-flotante');
+            if (gratitudFlotante.classList.contains('abierto')) {
+                gratitudFlotante.classList.remove('abierto');
+            } else {
+                requerirIdentidad('gratitud');
+            }
+        }
+
+        function abrirGratitudInterno() {
+            document.getElementById('gratitud-flotante').classList.add('abierto');
+            setTimeout(() => document.getElementById('input-gratitud').focus(), 300);
+
+            if (!gratitudIniciado) {
+                gratitudIniciado = true;
+                const q = window.query(window.collection(window.db, "gratitud"), window.orderBy("timestamp", "desc"));
+                window.onSnapshot(q, (snapshot) => {
+                    const lista = document.getElementById('lista-gratitud');
+                    if (snapshot.empty) {
+                        lista.innerHTML = '<p class="sin-mensajes">Todavía no hay nada acá... dejá el primer "te amo por" 💛</p>';
+                        return;
+                    }
+                    lista.innerHTML = '';
+                    snapshot.forEach((docSnap) => {
+                        const nota = docSnap.data();
+                        const div = document.createElement('div');
+                        div.className = 'tarjeta-gratitud';
+                        const autorEl = document.createElement('div');
+                        autorEl.className = 'gr-autor';
+                        autorEl.innerText = nota.autor === "carito" ? "Carito 💖" : "Nico 💙";
+                        const textoEl = document.createElement('div');
+                        textoEl.className = 'gr-texto';
+                        textoEl.innerText = nota.texto;
+                        const fechaEl = document.createElement('div');
+                        fechaEl.className = 'gr-fecha';
+                        fechaEl.innerText = nota.fecha || '';
+                        div.appendChild(autorEl); div.appendChild(textoEl); div.appendChild(fechaEl);
+                        lista.appendChild(div);
+                    });
+                }, (error) => {
+                    console.error('Error escuchando la gratitud:', error);
+                    const lista = document.getElementById('lista-gratitud');
+                    if (lista) lista.innerHTML = `<p class="sin-mensajes">⚠️ No se pudo conectar (${error.code || 'error'}).</p>`;
+                });
+            }
+        }
+
+        function verificarEnterGratitud(e) { if (e.key === "Enter") guardarGratitud(); }
+
+        async function guardarGratitud() {
+            const input = document.getElementById('input-gratitud');
+            const texto = input.value.trim();
+            if (!texto || !miIdentidad) return;
+            vibrar(15);
+            input.value = '';
+            try {
+                await window.addDoc(window.collection(window.db, "gratitud"), {
+                    autor: miIdentidad,
+                    texto: texto,
+                    fecha: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' }),
+                    timestamp: window.serverTimestamp()
+                });
+            } catch (e) { console.error("Error gratitud:", e); }
+        }
+
+        // ================== LISTA DE DESEOS JUNTOS (BUCKET LIST) ==================
+        function toggleDeseos(event) {
+            if (event) event.stopPropagation();
+            const deseosFlotante = document.getElementById('deseos-flotante');
+            if (deseosFlotante.classList.contains('abierto')) {
+                deseosFlotante.classList.remove('abierto');
+            } else {
+                requerirIdentidad('deseos');
+            }
+        }
+
+        function abrirDeseosInterno() {
+            document.getElementById('deseos-flotante').classList.add('abierto');
+
+            if (!deseosIniciado) {
+                deseosIniciado = true;
+                const q = window.query(window.collection(window.db, "deseos"), window.orderBy("timestamp", "asc"));
+                window.onSnapshot(q, (snapshot) => {
+                    const lista = document.getElementById('lista-deseos');
+                    if (snapshot.empty) {
+                        lista.innerHTML = '<p class="sin-mensajes">Todavía no hay sueños anotados... agreguen el primero 🌠</p>';
+                        return;
+                    }
+                    lista.innerHTML = '';
+                    snapshot.forEach((docSnap) => {
+                        const deseo = docSnap.data();
+                        const fila = document.createElement('div');
+                        fila.className = `fila-deseo ${deseo.cumplido ? 'cumplido' : ''}`;
+                        fila.onclick = () => marcarDeseo(docSnap.id, !!deseo.cumplido);
+                        const check = document.createElement('span');
+                        check.className = 'check-deseo';
+                        check.innerText = deseo.cumplido ? '💗' : '🤍';
+                        const texto = document.createElement('span');
+                        texto.className = 'texto-deseo';
+                        texto.innerText = deseo.texto;
+                        fila.appendChild(check); fila.appendChild(texto);
+                        lista.appendChild(fila);
+                    });
+                }, (error) => {
+                    console.error('Error escuchando los deseos:', error);
+                    const lista = document.getElementById('lista-deseos');
+                    if (lista) lista.innerHTML = `<p class="sin-mensajes">⚠️ No se pudo conectar (${error.code || 'error'}).</p>`;
+                });
+            }
+        }
+
+        function verificarEnterDeseo(e) { if (e.key === "Enter") agregarDeseo(); }
+
+        async function agregarDeseo() {
+            const input = document.getElementById('input-deseo');
+            const texto = input.value.trim();
+            if (!texto || !miIdentidad) return;
+            vibrar(15);
+            input.value = '';
+            try {
+                await window.addDoc(window.collection(window.db, "deseos"), {
+                    autor: miIdentidad,
+                    texto: texto,
+                    cumplido: false,
+                    timestamp: window.serverTimestamp()
+                });
+            } catch (e) { console.error("Error deseo:", e); }
+        }
+
+        async function marcarDeseo(id, estabaCumplido) {
+            vibrar(15);
+            try {
+                await window.updateDoc(window.doc(window.db, "deseos", id), { cumplido: !estabaCumplido });
+            } catch (e) { console.error("Error marcando deseo:", e); }
+        }
+
+        // ================== PREGUNTAS PARA NOSOTROS ==================
+        const categoriasPreguntas = [
+            { nombre: "Nostalgia y recuerdos especiales", preguntas: [
+                "¿Cuál fue el primer momento en que sentiste que esta relación era diferente a las demás?",
+                "¿Qué recuerdo nuestro te hace sonreír instantáneamente?",
+                "¿Qué conversación nuestra nunca quisieras olvidar?",
+                "¿Qué detalle mío te sorprendió al principio?",
+                "¿Cuál fue el día más emocionante que vivimos juntos?",
+                "¿Qué recuerdo te gustaría volver a vivir exactamente igual?",
+                "¿Qué momento marcó un antes y un después para nosotros?",
+                "¿Qué foto nuestra cuenta mejor nuestra historia?",
+                "¿Cuál fue tu primera impresión de mí y cuánto cambió?",
+                "¿Qué mensaje mío recuerdas con más cariño?",
+                "¿Qué momento te hizo sentir especialmente amado/a?",
+                "¿Qué pequeña anécdota merece estar en un libro sobre nosotros?",
+                "¿Cuál fue nuestro momento más espontáneo?",
+                "¿Qué recuerdo te genera más ternura?",
+                "¿Qué recuerdo te gustaría contarles algún día a nuestros nietos?",
+                "¿Cuál fue nuestra etapa más divertida?",
+                "¿Qué situación difícil nos hizo más fuertes?",
+                "¿Qué regalo o detalle significó más para ti?",
+                "¿Qué recuerdo te hace pensar 'qué suerte tuve'?",
+                "¿Cuál fue nuestra primera gran aventura?",
+                "¿Qué momento cotidiano terminó convirtiéndose en algo especial?",
+                "¿Qué recuerdo sigue emocionándote como el primer día?",
+                "¿Qué escena de nuestra historia parece sacada de una película?",
+                "¿Qué recuerdo te gustaría conservar para siempre en una cápsula del tiempo?",
+                "¿Cuál fue la primera vez que te sentiste realmente comprendido/a por mí?",
+                "¿Qué recuerdo te hace reír más fuerte?",
+                "¿Qué costumbre nació por casualidad y se volvió importante?",
+                "¿Cuál fue el mejor reencuentro que hemos tenido?",
+                "¿Qué recuerdo te hace sentir más orgulloso/a de nosotros?",
+                "¿Qué momento te hizo pensar que éramos un gran equipo?",
+                "¿Qué recuerdo te hace extrañarme más?",
+                "¿Qué viaje o salida recuerdas con más cariño?",
+                "¿Qué detalle mío descubriste con el tiempo?",
+                "¿Qué momento te hizo enamorarte un poco más?",
+                "¿Qué recuerdo tiene una canción especial asociada?",
+                "¿Cuál fue nuestro momento más romántico?",
+                "¿Qué recuerdo te gustaría revivir durante un día entero?",
+                "¿Qué experiencia nos unió más?",
+                "¿Qué recuerdo demuestra cuánto hemos crecido juntos?",
+                "Si pudieras congelar un instante de nuestra historia, ¿cuál sería?"
+            ]},
+            { nombre: "Complicidad y cotidianeidad", preguntas: [
+                "¿Qué rutina nuestra extrañarías más?",
+                "¿Cuál es nuestro chiste interno favorito?",
+                "¿Qué hago sin darme cuenta que te hace feliz?",
+                "¿Cuál es nuestro ritual más especial?",
+                "¿Qué costumbre compartida te da tranquilidad?",
+                "¿Qué momento del día asocias más conmigo?",
+                "¿Qué palabra o frase nuestra tiene un significado especial?",
+                "¿Qué hábito mío te resulta adorable?",
+                "¿Qué costumbre nuestra nunca deberíamos perder?",
+                "¿Qué hacemos juntos que parece insignificante pero significa mucho?",
+                "¿Cuál es nuestra tradición más linda?",
+                "¿Qué gesto cotidiano te hace sentir amado/a?",
+                "¿Qué actividad compartida nos representa mejor?",
+                "¿Qué pequeña locura hacemos que nadie entendería?",
+                "¿Qué es lo primero que te gustaría contarme cuando te pasa algo bueno?",
+                "¿Qué es lo primero que te gustaría contarme cuando te pasa algo malo?",
+                "¿Qué momento simple se volvió imprescindible?",
+                "¿Cuál es nuestro idioma secreto?",
+                "¿Qué costumbre nació accidentalmente?",
+                "¿Qué mensaje mío reconoces sin mirar el nombre?",
+                "¿Qué te hace sentir acompañado/a cuando estamos lejos?",
+                "¿Qué serie o película te recuerda a nosotros?",
+                "¿Qué emoji nos representa?",
+                "¿Qué comida te recuerda a mí?",
+                "¿Qué canción parece escrita para nosotros?",
+                "¿Qué situación cotidiana nos hace reír siempre?",
+                "¿Qué momento compartido parece insignificante para otros pero no para nosotros?",
+                "¿Qué rutina diaria te gustaría mantener siempre?",
+                "¿Qué tema nunca nos cansamos de hablar?",
+                "¿Qué actividad podríamos repetir mil veces?",
+                "¿Qué costumbre surgió durante la distancia?",
+                "¿Qué gesto mío te hace sentir cerca?",
+                "¿Qué cosa hacemos mejor como equipo?",
+                "¿Qué momento de nuestras videollamadas disfrutas más?",
+                "¿Qué hábito compartido deberíamos inventar?",
+                "¿Qué tradición te gustaría comenzar?",
+                "¿Qué conversación parece eterna pero nunca aburrida?",
+                "¿Qué hacemos diferente al resto de las parejas?",
+                "¿Qué detalle cotidiano te enamora todavía?",
+                "¿Qué momento simple describe mejor nuestra conexión?"
+            ]},
+            { nombre: "Profundidad y emoción", preguntas: [
+                "¿Qué aprendiste sobre el amor gracias a nosotros?",
+                "¿Qué valoras más de mi forma de quererte?",
+                "¿Qué crees que aporto a tu vida?",
+                "¿Qué versión de ti aparece cuando estás conmigo?",
+                "¿Qué admiras más de mí?",
+                "¿Qué te hace sentir seguro/a en esta relación?",
+                "¿Cuál es la lección más importante que hemos aprendido juntos?",
+                "¿Qué aspecto de tu vida mejoró gracias a nuestra relación?",
+                "¿Qué te gustaría que nunca cambiara entre nosotros?",
+                "¿Qué significa para ti sentirte amado/a?",
+                "¿Cuándo te has sentido más comprendido/a por mí?",
+                "¿Qué fortaleza tenemos como pareja?",
+                "¿Qué vulnerabilidad puedes mostrar conmigo?",
+                "¿Qué emoción asocias más a nuestra historia?",
+                "¿Qué cualidad mía te inspira?",
+                "¿Qué te hace confiar en mí?",
+                "¿Qué crees que hacemos bien cuando enfrentamos problemas?",
+                "¿Qué parte de tu vida sería diferente sin mí?",
+                "¿Qué sueño personal te gustaría compartir más conmigo?",
+                "¿Qué te gustaría que entendiera mejor de ti?",
+                "¿Qué significa para ti ser compañeros de vida?",
+                "¿Qué es lo que más agradeces de nosotros?",
+                "¿Qué miedo hemos superado juntos?",
+                "¿Qué emoción te gustaría compartir más?",
+                "¿Qué significa para ti la palabra hogar?",
+                "¿Cuándo sentiste más orgullo de nosotros?",
+                "¿Qué momento te hizo sentir profundamente amado/a?",
+                "¿Qué cualidad nuestra nos hace únicos?",
+                "¿Qué valor compartimos más intensamente?",
+                "¿Qué aspecto de nuestra relación te da esperanza?",
+                "¿Qué has descubierto sobre ti gracias a mí?",
+                "¿Qué significa para ti nuestro apoyo mutuo?",
+                "¿Qué sacrificio mutuo valoras más?",
+                "¿Qué desafío nos fortaleció?",
+                "¿Qué emoción positiva te genera pensar en nuestro futuro?",
+                "¿Qué sueño te emociona compartir conmigo?",
+                "¿Qué cualidad tuya crees que floreció gracias a nuestra relación?",
+                "¿Qué palabra define mejor nuestro vínculo?",
+                "¿Qué te gustaría agradecerme hoy?",
+                "¿Qué sentimiento resume nuestra historia?"
+            ]},
+            { nombre: "Futuro y sueños compartidos", preguntas: [
+                "¿Cómo imaginas nuestro próximo reencuentro?",
+                "¿Qué lugar sueñas visitar conmigo?",
+                "¿Qué experiencia te gustaría vivir juntos al menos una vez?",
+                "¿Cómo imaginas un día perfecto juntos?",
+                "¿Qué sueño compartido te emociona más?",
+                "¿Qué aventura deberíamos planear pronto?",
+                "¿Dónde te gustaría celebrar un aniversario importante?",
+                "¿Qué proyecto te gustaría construir juntos?",
+                "¿Cómo imaginas nuestra vida dentro de cinco años?",
+                "¿Qué hábito nos ayudaría a acercarnos a nuestros sueños?",
+                "¿Qué país deberíamos conocer juntos?",
+                "¿Qué experiencia romántica está pendiente?",
+                "¿Qué tradición futura te gustaría crear?",
+                "¿Qué meta deberíamos alcanzar como equipo?",
+                "¿Qué tipo de hogar imaginas?",
+                "¿Qué ciudad te gustaría explorar conmigo?",
+                "¿Qué aventura espontánea deberíamos vivir?",
+                "¿Qué sueño parece imposible pero vale la pena intentar?",
+                "¿Qué experiencia te gustaría regalarme?",
+                "¿Qué experiencia te gustaría que yo te regalara?",
+                "¿Cómo imaginas nuestros fines de semana ideales?",
+                "¿Qué lista de deseos deberíamos crear?",
+                "¿Qué aprendizaje te gustaría vivir juntos?",
+                "¿Qué proyecto creativo haríamos bien?",
+                "¿Qué viaje repetiríamos varias veces?",
+                "¿Qué experiencia nos haría crecer más?",
+                "¿Qué sueño compartido te parece más emocionante?",
+                "¿Cómo imaginas nuestro aniversario número veinte?",
+                "¿Qué recuerdo futuro quieres empezar a construir ya?",
+                "¿Qué aventura debería ocurrir este año?",
+                "¿Qué celebración imaginaria organizarías para nosotros?",
+                "¿Qué sueño personal quieres que apoyemos juntos?",
+                "¿Qué lugar del mundo te recuerda a nosotros?",
+                "¿Qué meta te gustaría alcanzar conmigo?",
+                "¿Qué experiencia extrema te animarías a vivir juntos?",
+                "¿Cómo te imaginas nuestras vacaciones perfectas?",
+                "¿Qué historia quieres que contemos en el futuro?",
+                "¿Qué momento futuro te emociona más esperar?",
+                "¿Qué deseo compartido aún no hemos dicho en voz alta?",
+                "¿Qué legado te gustaría construir juntos?"
+            ]},
+            { nombre: "Divertidas y dilemas cómicos", preguntas: [
+                "¿Qué preferirías: leer mi mente o que yo lea la tuya?",
+                "Si nuestra relación fuera una película, ¿qué género sería?",
+                "Si intercambiáramos cuerpos por un día, ¿qué harías primero?",
+                "¿Quién sobreviviría más tiempo en una isla desierta?",
+                "¿Quién gastaría primero un millón de dólares?",
+                "¿Qué superpoder sería perfecto para nuestra relación?",
+                "¿Quién ganaría una competencia de terquedad?",
+                "¿Qué animal representa mejor nuestra pareja?",
+                "¿Qué personaje ficticio se parece más a nosotros?",
+                "¿Qué harías si aparezco de sorpresa en tu puerta ahora mismo?",
+                "¿Qué emoji sería nuestro escudo oficial?",
+                "¿Quién sería peor espía?",
+                "¿Qué sería más peligroso: cocinar juntos o armar muebles juntos?",
+                "Si fuéramos famosos, ¿por qué nos conocería la gente?",
+                "¿Qué nombre tendría nuestra sitcom?",
+                "¿Qué concurso de televisión podríamos ganar?",
+                "¿Quién perdería primero en un juego de silencio?",
+                "¿Qué ley absurda tendría nuestro país imaginario?",
+                "¿Qué castigo gracioso pondrías por olvidar fechas?",
+                "¿Qué habilidad inútil nos haría millonarios?",
+                "¿Qué harías si un genio te concede un deseo para nosotros?",
+                "¿Quién tiene más probabilidades de iniciar una aventura accidental?",
+                "¿Qué haríamos si quedamos encerrados en un supermercado toda la noche?",
+                "¿Qué haríamos si ganamos la lotería mañana?",
+                "¿Qué objeto cotidiano representa nuestra relación?",
+                "¿Qué apodo ridículamente cursi nos pondríamos?",
+                "¿Qué haríamos en un apocalipsis zombie?",
+                "¿Qué harías si solo pudiéramos comunicarnos con memes durante una semana?",
+                "¿Qué trabajo extraño podríamos hacer juntos?",
+                "¿Qué harías si descubres que soy un extraterrestre?",
+                "¿Qué sería más difícil: no hablarme una semana o no usar internet una semana?",
+                "¿Qué invento absurdo crearíamos?",
+                "¿Quién ganaría una competencia de memes?",
+                "¿Qué título tendría nuestro reality show?",
+                "¿Qué harías si nos vuelven personajes de dibujos animados?",
+                "¿Qué objeto salvarías primero de nuestra historia?",
+                "¿Qué tres cosas llevaríamos a una isla desierta?",
+                "¿Qué sería más divertido: viajar al pasado o al futuro juntos?",
+                "¿Qué misión imposible aceptaríamos como equipo?",
+                "Si nuestra historia terminara en una frase divertida, ¿cuál sería?"
+            ]}
+        ];
+        const preguntasPareja = categoriasPreguntas.flatMap(cat => cat.preguntas.map(t => ({ c: cat.nombre, t })));
+        let ultimaPreguntaIndex = -1;
+
+        function togglePreguntas(event) {
+            if (event) event.stopPropagation();
+            const preguntasFlotante = document.getElementById('preguntas-flotante');
+            const estabaAbierto = preguntasFlotante.classList.toggle('abierto');
+            if (estabaAbierto && ultimaPreguntaIndex === -1) mostrarPreguntaAleatoria();
+        }
+
+        function mostrarPreguntaAleatoria() {
+            vibrar(15);
+            let indice;
+            do { indice = Math.floor(Math.random() * preguntasPareja.length); }
+            while (indice === ultimaPreguntaIndex && preguntasPareja.length > 1);
+            ultimaPreguntaIndex = indice;
+            const pregunta = preguntasPareja[indice];
+            document.getElementById('pregunta-categoria').innerText = pregunta.c;
+            document.getElementById('pregunta-texto').innerText = pregunta.t;
         }
     </script>
 </body>

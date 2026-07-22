@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -313,11 +312,11 @@
         .reproductor-flotante {
             position: fixed;
             bottom: calc(clamp(16px, 4.5vh, 36px) + env(safe-area-inset-bottom, 0px));
-            left: calc(clamp(12px, 5vw, 40px) + env(safe-area-inset-left, 0px));
+            right: calc(clamp(12px, 5vw, 40px) + env(safe-area-inset-right, 0px));
             z-index: 900;
             display: none;
             flex-direction: column-reverse;
-            align-items: flex-start;
+            align-items: flex-end;
             gap: 12px;
         }
         .reproductor-flotante.mostrar { display: flex; }
@@ -356,7 +355,7 @@
             color: white; font-family: var(--fuente-texto);
             width: clamp(160px, 55vw, 230px);
             box-sizing: border-box;
-            transform-origin: bottom left;
+            transform-origin: bottom right;
             opacity: 0; transform: scale(0.85) translateY(10px);
             max-height: 0; overflow: hidden; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0;
             pointer-events: none;
@@ -675,6 +674,56 @@
         .fr-valor { font-family: var(--fuente-titulo); font-size: clamp(1.4rem, 6vw, 1.9rem); color: #ffb7c5; }
         .fr-etiqueta { font-family: var(--fuente-texto); font-size: 0.65rem; color: rgba(255,255,255,0.6); text-transform: uppercase; }
         .fr-fecha { font-family: var(--fuente-texto); font-size: 0.75rem; font-style: italic; color: rgba(255,255,255,0.5); margin-top: 14px; }
+
+        /* --- Menú principal único: agrupa chat, muro, gratitud, deseos, preguntas y reloj --- */
+        /* La música queda afuera, tal como estaba (burbuja-reproductor sin tocar) */
+        .burbuja-chat, .burbuja-muro, .burbuja-gratitud, .burbuja-deseos, .burbuja-preguntas, .burbuja-reloj {
+            display: none !important;
+        }
+        .menu-principal {
+            position: fixed;
+            top: calc(clamp(16px, 4.5vh, 24px) + env(safe-area-inset-top, 0px));
+            left: calc(clamp(12px, 5vw, 24px) + env(safe-area-inset-left, 0px));
+            z-index: 9999;
+            display: none; flex-direction: column; align-items: flex-start; gap: 15px;
+        }
+        .menu-principal.mostrar { display: flex; }
+        .burbuja-menu {
+            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,182,193,0.5); box-shadow: 0 5px 20px rgba(255,154,158,0.3);
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
+            animation: aparecerSuave 0.8s forwards, latidoBurbuja 3s infinite;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); touch-action: manipulation;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .burbuja-menu:active { transform: scale(0.9); }
+        .menu-principal.abierto .burbuja-menu { transform: rotate(90deg); }
+        .menu-principal.abierto .burbuja-menu:active { transform: rotate(90deg) scale(0.9); }
+        .panel-menu-opciones {
+            background: rgba(15, 10, 20, 0.92); border: 1px solid rgba(255,182,193,0.25);
+            border-radius: 22px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
+            width: min(72vw, 230px); box-sizing: border-box;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform-origin: top left; opacity: 0; transform: scale(0.9) translateY(-10px);
+            max-height: 0; overflow: hidden; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), max-height 0.4s ease, padding 0.4s ease, border-width 0.4s ease;
+        }
+        .menu-principal.abierto .panel-menu-opciones {
+            opacity: 1; transform: scale(1) translateY(0);
+            max-height: 420px; padding: 10px; border-width: 1px;
+            pointer-events: auto;
+        }
+        .opcion-menu {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; padding: 11px 14px; color: white;
+            font-family: var(--fuente-texto); font-size: 0.9rem; text-align: left;
+            cursor: pointer; touch-action: manipulation; width: 100%; box-sizing: border-box;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        .opcion-menu span { font-size: 1.2rem; flex-shrink: 0; }
+        .opcion-menu:active { transform: scale(0.96); background: rgba(255,154,158,0.2); }
 
         /* --- Muro en el tiempo --- */
         .muro-pantalla { padding: 20px; overflow-y: auto; box-sizing: border-box; }
@@ -1040,6 +1089,19 @@
             </div>
         </div>
         <div class="burbuja-reproductor" id="burbuja-reproductor" onclick="toggleReproductor(event)" title="Nuestra música" role="button" aria-label="Abrir reproductor de música">🎵</div>
+    </div>
+
+    <!-- Menú principal: agrupa todos los accesos (menos la música) en un solo desplegable -->
+    <div id="menu-principal" class="menu-principal">
+        <div class="panel-menu-opciones" id="panel-menu-opciones">
+            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'chat')"><span>💬</span> Chat</button>
+            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'muro')"><span>📜</span> Muro en el tiempo</button>
+            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'gratitud')"><span>💛</span> Rincón de gratitud</button>
+            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'deseos')"><span>🌠</span> Lista de deseos</button>
+            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'preguntas')"><span>💭</span> Preguntas para nosotros</button>
+            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'reloj')"><span>⏰</span> Cuenta regresiva</button>
+        </div>
+        <div class="burbuja-menu" id="burbuja-menu" onclick="toggleMenuPrincipal(event)" title="Menú" role="button" aria-label="Abrir menú de opciones">☰</div>
     </div>
 
     <button id="btn-azar" class="btn-azar" onclick="viajarAlAzar()">
@@ -1703,7 +1765,7 @@
 
         document.addEventListener('pointerdown', (event) => {
             const objetivo = event.target;
-            if (objetivo.closest('button, input, .btn, .btn-azar, .reproductor-flotante, .puerta, a')) return;
+            if (objetivo.closest('button, input, .btn, .btn-azar, .reproductor-flotante, .menu-principal, .puerta, a')) return;
             lanzarCorazonSutil(event.clientX, event.clientY);
         }, { passive: true });
 
@@ -2192,6 +2254,10 @@
                             const relojFlotante = document.getElementById('reloj-flotante');
                             relojFlotante.style.display = 'flex';
                             setTimeout(() => relojFlotante.classList.add('mostrar'), 400);
+
+                            const menuPrincipal = document.getElementById('menu-principal');
+                            menuPrincipal.style.display = 'flex';
+                            setTimeout(() => menuPrincipal.classList.add('mostrar'), 450);
                         }, 2000);
                     }, 400);
                 }
@@ -2247,6 +2313,25 @@
         }
 
         // --- Lógica del chat privado ---
+        // --- Menú principal único: desplegar/contraer y disparar la opción elegida ---
+        function toggleMenuPrincipal(event) {
+            if (event) event.stopPropagation();
+            document.getElementById('menu-principal').classList.toggle('abierto');
+        }
+
+        function ejecutarOpcionMenu(event, opcion) {
+            if (event) event.stopPropagation();
+            document.getElementById('menu-principal').classList.remove('abierto');
+            switch (opcion) {
+                case 'chat': toggleChat(event); break;
+                case 'muro': abrirMuro(event); break;
+                case 'gratitud': toggleGratitud(event); break;
+                case 'deseos': toggleDeseos(event); break;
+                case 'preguntas': togglePreguntas(event); break;
+                case 'reloj': toggleReloj(event); break;
+            }
+        }
+
         function toggleChat(event) {
             if (event) event.stopPropagation();
             const chatFlotante = document.getElementById('chat-flotante');

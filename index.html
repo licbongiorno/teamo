@@ -482,7 +482,7 @@
         }
         .titulo-chat { font-size: 0.95rem; font-weight: bold; }
         .btn-cerrar-chat { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
-        .mensajes-chat { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .mensajes-chat { flex: 1; padding: 14px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; }
         .mensajes-chat .sin-mensajes { font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; text-align: center; margin: auto; }
         .burbuja-msg {
             max-width: 82%; padding: 9px 14px; border-radius: 18px; font-family: var(--fuente-texto);
@@ -553,7 +553,7 @@
         }
         .titulo-gratitud { font-size: 0.95rem; font-weight: bold; }
         .btn-cerrar-gratitud { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
-        .lista-gratitud { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .lista-gratitud { flex: 1; padding: 14px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; }
         .lista-gratitud .sin-mensajes { font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; text-align: center; margin: auto; }
         .tarjeta-gratitud { padding: 10px 14px; border-radius: 14px; background: rgba(255,214,102,0.1); font-family: var(--fuente-texto); }
         .tarjeta-gratitud .gr-autor { font-size: 0.75rem; color: #ffd666; font-weight: bold; margin-bottom: 3px; }
@@ -601,7 +601,7 @@
         }
         .titulo-deseos { font-size: 0.95rem; font-weight: bold; }
         .btn-cerrar-deseos { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
-        .lista-deseos { flex: 1; padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .lista-deseos { flex: 1; padding: 14px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 8px; }
         .lista-deseos .sin-mensajes { font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; text-align: center; margin: auto; }
         .fila-deseo {
             display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px;
@@ -653,7 +653,7 @@
         }
         .titulo-preguntas { font-size: 0.95rem; font-weight: bold; }
         .btn-cerrar-preguntas { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
-        .cuerpo-preguntas { padding: 20px 18px; overflow-y: auto; }
+        .cuerpo-preguntas { padding: 20px 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; }
         .pregunta-categoria { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: #d8b4fe; margin-bottom: 10px; }
         .pregunta-texto { font-family: var(--fuente-titulo); font-size: clamp(1.15rem, 4vw, 1.4rem); color: white; line-height: 1.35; }
         .pie-preguntas { padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgba(255,255,255,0.08); }
@@ -769,7 +769,7 @@
         .icono-interactivo:active { transform: scale(0.82); background: rgba(255,154,158,0.25); }
 
         /* --- Muro en el tiempo --- */
-        .muro-pantalla { padding: 20px; overflow-y: auto; box-sizing: border-box; }
+        .muro-pantalla { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; box-sizing: border-box; }
         .muro-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px clamp(20px, 4vh, 30px); gap: 12px; flex-wrap: wrap; }
         .muro-titulo { font-family: var(--fuente-titulo); font-size: clamp(1.8rem, 6vw, 3.2rem); color: #ffb3c6; margin: 0; text-shadow: 0 0 20px rgba(255,154,158,0.5); }
         .muro-cerrar {
@@ -2804,10 +2804,16 @@
                 const objetivoInicial = inicioObjetivo;
                 inicioY = null; inicioX = null; inicioObjetivo = null;
 
-                // Ignoramos toques que arrancaron sobre botones, menús, modales, inputs, etc.
+                // Ignoramos toques que arrancaron sobre botones, menús, modales, inputs,
+                // o CUALQUIER burbuja/panel flotante (chat, gratitud, deseos, preguntas,
+                // reloj, muro, reproductor). Así, arrastrar el dedo dentro de un panel
+                // abierto para leer o scrollear nunca se confunde con "cambiar de pantalla"
+                // ni lo cierra por accidente.
                 if (objetivoInicial && objetivoInicial.closest && objetivoInicial.closest(
                     'button, .btn, .btn-azar, .nav-flecha, .menu-principal, .reproductor-flotante, ' +
-                    '.modal-cristal, .muro-pantalla, input, textarea, a, .icono-interactivo, .puerta'
+                    '.modal-cristal, .muro-pantalla, input, textarea, a, .icono-interactivo, .puerta, ' +
+                    '.chat-flotante, .gratitud-flotante, .deseos-flotante, .preguntas-flotante, ' +
+                    '.reloj-flotante, .muro-flotante'
                 )) return;
 
                 // Ignoramos gestos casi horizontales (para no interferir con otros gestos) o muy cortos

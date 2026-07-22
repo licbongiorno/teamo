@@ -312,11 +312,11 @@
         .reproductor-flotante {
             position: fixed;
             bottom: calc(clamp(16px, 4.5vh, 36px) + env(safe-area-inset-bottom, 0px));
-            right: calc(clamp(12px, 5vw, 40px) + env(safe-area-inset-right, 0px));
+            left: calc(clamp(12px, 5vw, 40px) + env(safe-area-inset-left, 0px));
             z-index: 900;
             display: none;
             flex-direction: column-reverse;
-            align-items: flex-end;
+            align-items: flex-start;
             gap: 12px;
         }
         .reproductor-flotante.mostrar { display: flex; }
@@ -355,7 +355,7 @@
             color: white; font-family: var(--fuente-texto);
             width: clamp(160px, 55vw, 230px);
             box-sizing: border-box;
-            transform-origin: bottom right;
+            transform-origin: bottom left;
             opacity: 0; transform: scale(0.85) translateY(10px);
             max-height: 0; overflow: hidden; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0;
             pointer-events: none;
@@ -2057,22 +2057,38 @@
         }
 
         // Sonido suave y dulce para cada emoji/partícula que cae en las lluvias
-        // (como una campanita chiquita, en el mismo espíritu que el "toc toc" de la puerta)
+        // (una campanita chiquita y breve, en el mismo espíritu que el "toc toc" de la puerta)
         function reproducirSonidoCaida() {
             try {
                 iniciarAudio();
                 const ahora = audioCtx.currentTime;
-                const notas = [523.25, 587.33, 659.25, 698.46, 783.99, 880]; // Do, Re, Mi, Fa, Sol, La
-                const freq = notas[Math.floor(Math.random() * notas.length)] * (Math.random() < 0.5 ? 1 : 2);
-                const osc = audioCtx.createOscillator();
+                const notas = [659.25, 698.46, 783.99, 880, 987.77]; // Mi, Fa, Sol, La, Si (agudo y dulce)
+                const freq = notas[Math.floor(Math.random() * notas.length)];
+
+                const filtro = audioCtx.createBiquadFilter();
+                filtro.type = 'lowpass';
+                filtro.frequency.setValueAtTime(3200, ahora);
+                filtro.Q.value = 0.7;
+
                 const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, ahora);
                 gain.gain.setValueAtTime(0, ahora);
-                gain.gain.linearRampToValueAtTime(0.045, ahora + 0.015);
-                gain.gain.exponentialRampToValueAtTime(0.0001, ahora + 0.32);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(ahora); osc.stop(ahora + 0.35);
+                gain.gain.linearRampToValueAtTime(0.032, ahora + 0.008);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ahora + 0.16);
+
+                // Fundamental + un armónico suave una octava arriba, para un toque de campanita
+                const oscBase = audioCtx.createOscillator();
+                oscBase.type = 'sine'; oscBase.frequency.setValueAtTime(freq, ahora);
+                const oscArmonico = audioCtx.createOscillator();
+                oscArmonico.type = 'sine'; oscArmonico.frequency.setValueAtTime(freq * 2, ahora);
+                const gainArmonico = audioCtx.createGain();
+                gainArmonico.gain.value = 0.35;
+
+                oscBase.connect(filtro);
+                oscArmonico.connect(gainArmonico); gainArmonico.connect(filtro);
+                filtro.connect(gain); gain.connect(audioCtx.destination);
+
+                oscBase.start(ahora); oscArmonico.start(ahora);
+                oscBase.stop(ahora + 0.18); oscArmonico.stop(ahora + 0.18);
             } catch (e) { /* silencioso */ }
         }
 

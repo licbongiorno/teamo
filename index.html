@@ -53,9 +53,10 @@
             height: 100dvh;
             width: 100vw;
             overflow-y: hidden; 
-            scroll-snap-type: y mandatory;
+            scroll-snap-type: y proximity;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
             position: relative;
             z-index: 10;
         }
@@ -64,7 +65,7 @@
         .pantalla {
             height: 100dvh; width: 100vw;
             scroll-snap-align: start;
-            scroll-snap-stop: always;
+            scroll-snap-stop: normal;
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             position: relative;
@@ -2062,33 +2063,41 @@
             try {
                 iniciarAudio();
                 const ahora = audioCtx.currentTime;
-                const notas = [659.25, 698.46, 783.99, 880, 987.77]; // Mi, Fa, Sol, La, Si (agudo y dulce)
+                const notas = [659.25, 783.99, 880, 987.77, 1046.5]; // Mi, Sol, La, Si, Do (pentatónica, siempre suena dulce)
                 const freq = notas[Math.floor(Math.random() * notas.length)];
 
                 const filtro = audioCtx.createBiquadFilter();
                 filtro.type = 'lowpass';
-                filtro.frequency.setValueAtTime(3200, ahora);
-                filtro.Q.value = 0.7;
+                filtro.frequency.setValueAtTime(2600, ahora);
+                filtro.Q.value = 0.5;
 
                 const gain = audioCtx.createGain();
                 gain.gain.setValueAtTime(0, ahora);
-                gain.gain.linearRampToValueAtTime(0.032, ahora + 0.008);
-                gain.gain.exponentialRampToValueAtTime(0.0001, ahora + 0.16);
+                gain.gain.linearRampToValueAtTime(0.03, ahora + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ahora + 0.22);
 
-                // Fundamental + un armónico suave una octava arriba, para un toque de campanita
+                // Fundamental + un armónico suave una octava arriba, para un toque de campanita cálida
                 const oscBase = audioCtx.createOscillator();
                 oscBase.type = 'sine'; oscBase.frequency.setValueAtTime(freq, ahora);
                 const oscArmonico = audioCtx.createOscillator();
                 oscArmonico.type = 'sine'; oscArmonico.frequency.setValueAtTime(freq * 2, ahora);
                 const gainArmonico = audioCtx.createGain();
-                gainArmonico.gain.value = 0.35;
+                gainArmonico.gain.value = 0.25;
+
+                let salida = filtro;
+                if (typeof audioCtx.createStereoPanner === 'function') {
+                    const panner = audioCtx.createStereoPanner();
+                    panner.pan.value = Math.random() * 1.2 - 0.6; // un poquito de espacio, nunca a un extremo
+                    filtro.connect(panner);
+                    salida = panner;
+                }
 
                 oscBase.connect(filtro);
                 oscArmonico.connect(gainArmonico); gainArmonico.connect(filtro);
-                filtro.connect(gain); gain.connect(audioCtx.destination);
+                salida.connect(gain); gain.connect(audioCtx.destination);
 
                 oscBase.start(ahora); oscArmonico.start(ahora);
-                oscBase.stop(ahora + 0.18); oscArmonico.stop(ahora + 0.18);
+                oscBase.stop(ahora + 0.24); oscArmonico.stop(ahora + 0.24);
             } catch (e) { /* silencioso */ }
         }
 

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -311,6 +312,29 @@
         }
         .btn-azar.mostrar { display: flex; animation: aparecerSuave 1s forwards, resplandorBoton 2s infinite alternate; }
         .btn-azar:hover { transform: scale(1.08) translateY(-5px); }
+
+        /* Navegación garantizada entre pantallas (a los costados, estilo "pasar página") */
+        .nav-pantallas {
+            position: fixed; inset: 0;
+            z-index: 950; pointer-events: none;
+            display: none;
+        }
+        .nav-pantallas.mostrar { display: block; }
+        .nav-flecha {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.22);
+            color: rgba(255,255,255,0.85); font-size: 1.6rem; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; touch-action: manipulation; pointer-events: auto;
+            opacity: 0.5;
+            transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+        }
+        .nav-flecha:active { transform: translateY(-50%) scale(0.85); opacity: 0.95; background: rgba(0,0,0,0.6); }
+        .nav-anterior { left: calc(6px + env(safe-area-inset-left, 0px)); }
+        .nav-siguiente { right: calc(6px + env(safe-area-inset-right, 0px)); }
 
         /* Reproductor de Sonidos Flotante: burbuja colapsable + panel */
         .reproductor-flotante {
@@ -1171,10 +1195,17 @@
         <span>✨ Mensaje Mágico</span>
     </button>
 
+    <!-- Navegación garantizada entre pantallas: funciona siempre, aunque el swipe nativo falle en algún celular -->
+    <div class="nav-pantallas" id="nav-pantallas">
+        <button class="nav-flecha nav-anterior" onclick="pantallaAnterior()" title="Mensaje anterior" aria-label="Ir al mensaje anterior">‹</button>
+        <button class="nav-flecha nav-siguiente" onclick="pantallaSiguiente()" title="Mensaje siguiente" aria-label="Ir al mensaje siguiente">›</button>
+    </div>
+
     <!-- Burbuja flotante para entrar al Muro desde cualquier pantalla -->
     <div id="muro-flotante" class="muro-flotante">
         <div class="burbuja-muro" onclick="abrirMuro(event)" title="Nuestro Muro en el Tiempo" role="button" aria-label="Abrir el Muro">📜</div>
     </div>
+
 
     <!-- ====== RINCÓN DE LA GRATITUD (Hoy te amo por...) ====== -->
     <div id="gratitud-flotante" class="gratitud-flotante">
@@ -2454,7 +2485,9 @@
                         setTimeout(() => {
                             document.getElementById('contenedor').classList.add('activo');
                             document.getElementById('scroll-aviso').style.display = 'block';
-                            
+
+                            document.getElementById('nav-pantallas').classList.add('mostrar');
+
                             const btnAzar = document.getElementById('btn-azar');
                             btnAzar.style.display = 'flex'; setTimeout(() => btnAzar.classList.add('mostrar'), 100);
 
@@ -2712,6 +2745,72 @@
             btn.style.transform = 'scale(0.9)'; setTimeout(() => btn.style.transform = '', 150);
             seccionDestino.scrollIntoView({ behavior: 'smooth' });
         }
+
+        // ============================================================
+        // NAVEGACIÓN GARANTIZADA ENTRE PANTALLAS (botones + swipe manual)
+        // No depende del scroll nativo del navegador: calcula en qué
+        // pantalla estamos según scrollTop y mueve con scrollIntoView,
+        // que es el mismo mecanismo que ya usa el botón "Mensaje Mágico".
+        // Así funciona sí o sí, incluso en celulares donde el swipe
+        // nativo con scroll-snap se traba.
+        // ============================================================
+        function obtenerPantallas() {
+            return Array.from(document.querySelectorAll('#contenedor .pantalla'));
+        }
+
+        function indiceActualPantalla() {
+            const pantallas = obtenerPantallas();
+            const alto = contenedor.clientHeight || window.innerHeight;
+            const indice = Math.round(contenedor.scrollTop / alto);
+            return Math.max(0, Math.min(pantallas.length - 1, indice));
+        }
+
+        function irAPantalla(indice) {
+            const pantallas = obtenerPantallas();
+            if (!pantallas.length) return;
+            const destino = Math.max(0, Math.min(pantallas.length - 1, indice));
+            pantallas[destino].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            vibrar(10);
+        }
+
+        function pantallaSiguiente() { irAPantalla(indiceActualPantalla() + 1); }
+        function pantallaAnterior() { irAPantalla(indiceActualPantalla() - 1); }
+
+        // Swipe manual de respaldo: si el dedo se mueve claramente hacia
+        // arriba o abajo, pasamos de pantalla nosotros mismos por si el
+        // scroll nativo del navegador no responde bien en ese celular.
+        (function configurarSwipeManual() {
+            let inicioY = null, inicioX = null, inicioObjetivo = null;
+
+            contenedor.addEventListener('touchstart', (e) => {
+                if (!contenedor.classList.contains('activo') || !e.touches[0]) return;
+                inicioY = e.touches[0].clientY;
+                inicioX = e.touches[0].clientX;
+                inicioObjetivo = e.target;
+            }, { passive: true });
+
+            contenedor.addEventListener('touchend', (e) => {
+                if (inicioY === null || !e.changedTouches[0]) return;
+                const finY = e.changedTouches[0].clientY;
+                const finX = e.changedTouches[0].clientX;
+                const deltaY = inicioY - finY;
+                const deltaX = inicioX - finX;
+                const objetivoInicial = inicioObjetivo;
+                inicioY = null; inicioX = null; inicioObjetivo = null;
+
+                // Ignoramos toques que arrancaron sobre botones, menús, modales, inputs, etc.
+                if (objetivoInicial && objetivoInicial.closest && objetivoInicial.closest(
+                    'button, .btn, .btn-azar, .nav-flecha, .menu-principal, .reproductor-flotante, ' +
+                    '.modal-cristal, .muro-pantalla, input, textarea, a, .icono-interactivo, .puerta'
+                )) return;
+
+                // Ignoramos gestos casi horizontales (para no interferir con otros gestos) o muy cortos
+                if (Math.abs(deltaX) > Math.abs(deltaY)) return;
+                if (Math.abs(deltaY) < 45) return;
+
+                if (deltaY > 0) pantallaSiguiente(); else pantallaAnterior();
+            }, { passive: true });
+        })();
 
         // ================== RINCÓN DE LA GRATITUD ==================
         function toggleGratitud(event) {

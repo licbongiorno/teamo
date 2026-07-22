@@ -53,14 +53,19 @@
             height: 100vh;
             height: 100svh;
             width: 100vw;
-            overflow-y: hidden; 
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: contain;
+            overflow: hidden;
             position: relative;
             z-index: 10;
         }
-        .contenedor-scroll.activo { overflow-y: auto; }
+
+        /* La pista es la que realmente se mueve (translateY) para pasar de pantalla.
+           Al no depender del scroll nativo del navegador, el avance funciona siempre
+           (abajo, arriba, y con los botones de navegación) sin importar el celular. */
+        .pista-pantallas {
+            width: 100%;
+            transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+            will-change: transform;
+        }
 
         .pantalla {
             height: 100vh;
@@ -1104,6 +1109,7 @@
     <canvas id="canvas-particulas"></canvas>
 
     <div id="contenedor" class="contenedor-scroll">
+        <div id="pista-pantallas" class="pista-pantallas">
         <section class="pantalla pantalla-puerta">
             <div class="marco-exterior" id="marco-exterior">
                 <div id="luz-interior" class="interior-casa" onclick="revelarSecreto(event)">
@@ -1135,6 +1141,7 @@
                 <div id="scroll-aviso" class="indicador-scroll">✨ ¡Abre la puerta! Desliza 👇</div>
             </div>
         </section>
+        </div>
     </div>
 
     <!-- Reproductor de Audio Flotante: burbuja colapsable + panel, no compite con el botón mágico -->
@@ -1474,6 +1481,7 @@
         const coloresPasteles = ['#ffdde1', '#ee9ca7', '#ffecd2', '#fcb69f', '#cfd9df', '#e2ebf0', '#fbc2eb', '#a18cd1', '#ff9a9e', '#fecfef', '#f6d5f7', '#fbc7d4'];
 
         const contenedor = document.getElementById('contenedor');
+        const pista = document.getElementById('pista-pantallas');
 
         let indiceGlobal = 0;
         capitulos.forEach(cap => {
@@ -1486,7 +1494,7 @@
                 <h2 class="capitulo-titulo">${cap.titulo}</h2>
                 <div class="capitulo-indicador">✨ Deslizá para continuar ✨</div>
             `;
-            contenedor.appendChild(portada);
+            pista.appendChild(portada);
 
             cap.frases.forEach(frase => {
                 const index = indiceGlobal;
@@ -1503,7 +1511,7 @@
                 sec.style.background = `linear-gradient(-45deg, ${c1}, ${c2}, ${c3}, ${c4})`;
                 sec.style.animationDelay = `-${(index * 3) % 15}s`;
 
-                contenedor.appendChild(sec);
+                pista.appendChild(sec);
                 indiceGlobal++;
             });
         });
@@ -1529,7 +1537,7 @@
                 <p class="cuenta-mensaje" id="cuenta-mensaje"></p>
             </div>
         `;
-        contenedor.appendChild(cuentaSec);
+        pista.appendChild(cuentaSec);
 
         // Decoración romántica: corazones y círculos flotando, igual que en el resto de las pantallas
         const simbolosCuenta = ['💗', '✨', '🤍', '💫'];
@@ -1577,7 +1585,7 @@
                 <p class="postdata-final" id="postdata-final">P.D.: esto recién empieza...</p>
             </div>
         `;
-        contenedor.appendChild(finalSec);
+        pista.appendChild(finalSec);
 
         // Unos corazones flotando suave y constante en la pantalla final, para que se sienta viva
         const simbolosFinal = ['💗', '✨', '🤍'];
@@ -2739,33 +2747,35 @@
             const seccionDestino = document.getElementById(`frase-${numeroAleatorio}`);
             const btn = document.getElementById('btn-azar');
             btn.style.transform = 'scale(0.9)'; setTimeout(() => btn.style.transform = '', 150);
-            seccionDestino.scrollIntoView({ behavior: 'smooth' });
+            const pantallas = obtenerPantallas();
+            const indiceDestino = pantallas.indexOf(seccionDestino);
+            if (indiceDestino !== -1) irAPantalla(indiceDestino);
         }
 
         // ============================================================
         // NAVEGACIÓN GARANTIZADA ENTRE PANTALLAS (botones + swipe manual)
-        // No depende del scroll nativo del navegador: calcula en qué
-        // pantalla estamos según scrollTop y mueve con scrollIntoView,
-        // que es el mismo mecanismo que ya usa el botón "Mensaje Mágico".
-        // Así funciona sí o sí, incluso en celulares donde el swipe
-        // nativo con scroll-snap se traba.
+        // No depende del scroll nativo del navegador en absoluto: el
+        // avance entre pantallas se hace 100% por código, moviendo la
+        // "pista" interna con transform (como un carrusel). Así no hay
+        // manera de que el scroll quede trabado ni de que se desalinee,
+        // sin importar el celular o navegador.
         // ============================================================
+        let indicePantallaActual = 0;
+
         function obtenerPantallas() {
-            return Array.from(document.querySelectorAll('#contenedor .pantalla'));
+            return Array.from(document.querySelectorAll('#pista-pantallas .pantalla'));
         }
 
         function indiceActualPantalla() {
-            const pantallas = obtenerPantallas();
-            const alto = contenedor.clientHeight || window.innerHeight;
-            const indice = Math.round(contenedor.scrollTop / alto);
-            return Math.max(0, Math.min(pantallas.length - 1, indice));
+            return indicePantallaActual;
         }
 
         function irAPantalla(indice) {
             const pantallas = obtenerPantallas();
             if (!pantallas.length) return;
             const destino = Math.max(0, Math.min(pantallas.length - 1, indice));
-            pantallas[destino].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            indicePantallaActual = destino;
+            pista.style.transform = `translateY(-${destino * 100}vh)`;
             vibrar(10);
         }
 

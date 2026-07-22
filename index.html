@@ -711,7 +711,8 @@
         }
         .menu-principal.abierto .panel-menu-opciones {
             opacity: 1; transform: scale(1) translateY(0);
-            max-height: 420px; padding: 10px; border-width: 1px;
+            max-height: min(76vh, 640px); padding: 10px; border-width: 1px;
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
             pointer-events: auto;
         }
         .opcion-menu {
@@ -724,6 +725,19 @@
         }
         .opcion-menu span { font-size: 1.2rem; flex-shrink: 0; }
         .opcion-menu:active { transform: scale(0.96); background: rgba(255,154,158,0.2); }
+        .separador-romantico {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            color: rgba(255,182,193,0.55); font-size: 0.7rem; margin: 4px 0 2px; letter-spacing: 2px;
+        }
+        .fila-iconos-interactivos { display: flex; justify-content: center; gap: 14px; padding: 4px 0 2px; }
+        .icono-interactivo {
+            width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(255,182,193,0.35);
+            background: rgba(255,255,255,0.06); font-size: 1.5rem; cursor: pointer; touch-action: manipulation;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease;
+            animation: latidoBurbuja 3.2s infinite;
+        }
+        .icono-interactivo:active { transform: scale(0.82); background: rgba(255,154,158,0.25); }
 
         /* --- Muro en el tiempo --- */
         .muro-pantalla { padding: 20px; overflow-y: auto; box-sizing: border-box; }
@@ -1025,6 +1039,39 @@
             8% { opacity: 1; }
             100% { transform: translateY(115vh) rotate(var(--giro, 60deg)); opacity: 0.9; }
         }
+
+        /* --- Lluvia de "Te amo" en distintos idiomas --- */
+        .lluvia-teamo { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 15000; }
+        .teamo-cayendo {
+            position: absolute; top: -60px; will-change: transform, opacity;
+            font-family: var(--fuente-titulo); color: #ffb3c6; text-shadow: 0 0 12px rgba(255,105,135,0.8);
+            white-space: nowrap; animation-name: caerTeAmo; animation-timing-function: ease-in; animation-fill-mode: forwards;
+        }
+        @keyframes caerTeAmo {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            8% { opacity: 1; }
+            100% { transform: translateY(115vh) rotate(var(--giro, 20deg)); opacity: 0.85; }
+        }
+
+        /* --- Lluvia de abrazos --- */
+        .lluvia-abrazos { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 15000; }
+        .abrazo-cayendo {
+            position: absolute; top: -60px; will-change: transform, opacity;
+            animation-name: caerAbrazo; animation-timing-function: ease-in; animation-fill-mode: forwards;
+        }
+        @keyframes caerAbrazo {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            8% { opacity: 1; }
+            100% { transform: translateY(115vh) rotate(var(--giro, 60deg)); opacity: 0.9; }
+        }
+
+        /* --- Lluvia de dulces (chocolate / helado / dulces) --- */
+        .lluvia-dulces { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 15000; }
+        .dulce-cayendo {
+            position: absolute; top: -60px; will-change: transform, opacity;
+            animation-name: caerBeso; animation-timing-function: ease-in; animation-fill-mode: forwards;
+        }
+
     </style>
 </head>
 
@@ -1100,6 +1147,18 @@
             <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'deseos')"><span>🌠</span> Lista de deseos</button>
             <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'preguntas')"><span>💭</span> Preguntas para nosotros</button>
             <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'reloj')"><span>⏰</span> Cuenta regresiva</button>
+            <div class="separador-romantico"><span>♥</span><span>·</span><span>✦</span><span>·</span><span>♥</span></div>
+            <div class="fila-iconos-interactivos">
+                <button class="icono-interactivo" onclick="lanzarLluviaTeAmo(event)" title="Te amo" aria-label="Te amo en todos los idiomas">❤️</button>
+                <button class="icono-interactivo" onclick="lanzarLluviaBesosMenu(event)" title="Beso" aria-label="Mandar un beso">💋</button>
+                <button class="icono-interactivo" onclick="lanzarLluviaAbrazos(event)" title="Abrazo" aria-label="Mandar un abrazo">🤗</button>
+            </div>
+            <div class="separador-romantico"><span>♥</span><span>·</span><span>✦</span><span>·</span><span>♥</span></div>
+            <div class="fila-iconos-interactivos">
+                <button class="icono-interactivo" onclick="lanzarLluviaChocolate(event)" title="Chocolate" aria-label="Lluvia de chocolates">🍫</button>
+                <button class="icono-interactivo" onclick="lanzarLluviaFlores(event)" title="Flores" aria-label="Lluvia de flores">🌸</button>
+                <button class="icono-interactivo" onclick="lanzarLluviaEstrellas(event)" title="Estrellas" aria-label="Lluvia de estrellas">✨</button>
+            </div>
         </div>
         <div class="burbuja-menu" id="burbuja-menu" onclick="toggleMenuPrincipal(event)" title="Menú" role="button" aria-label="Abrir menú de opciones">☰</div>
     </div>
@@ -1157,7 +1216,7 @@
                 <div class="pregunta-texto" id="pregunta-texto">Toca "otra pregunta" para empezar.</div>
             </div>
             <div class="pie-preguntas">
-                <button class="btn-otra-pregunta" onclick="mostrarPreguntaAleatoria()">🔀 Otra pregunta</button>
+                <button class="btn-otra-pregunta" onclick="mostrarPreguntaAleatoria(event)">🔀 Otra pregunta</button>
                 <div class="fila-envio-whatsapp">
                     <button class="btn-enviar-whatsapp nico" onclick="enviarPreguntaWhatsApp('nico')">Enviar a Nico 💙</button>
                     <button class="btn-enviar-whatsapp carito" onclick="enviarPreguntaWhatsApp('carito')">Enviar a Carito 💖</button>
@@ -1631,57 +1690,184 @@
             }, 700);
         }
 
-        function lanzarLluviaDeBesos() {
+        // ============================================================
+        // MOTOR GENÉRICO DE LLUVIAS DE EMOJIS/TEXTO
+        // El tiempo de limpieza del contenedor se calcula a partir de la
+        // duración y demora máximas reales, para que nada se corte a mitad de camino.
+        // ============================================================
+        function crearLluvia(config) {
+            const {
+                contenedorClase, itemClase, cantidad, generarItem,
+                duracionBase = 2.6, duracionVariable = 2.0, demoraMax = 1.6, giroMax = 70
+            } = config;
+
             const contenedor = document.createElement('div');
-            contenedor.className = 'lluvia-besos';
+            contenedor.className = contenedorClase;
             document.body.appendChild(contenedor);
 
-            const emojis = ['💋', '💕', '💖', '💗'];
-            const cantidad = 55;
             for (let i = 0; i < cantidad; i++) {
-                const beso = document.createElement('span');
-                beso.className = 'beso-cayendo';
-                beso.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                const izquierda = Math.random() * 100;
-                const duracion = 2.6 + Math.random() * 2.2;
-                const demora = Math.random() * 1.8;
-                const tamano = 1.1 + Math.random() * 1.6;
-                const giro = (Math.random() * 140 - 70) + 'deg';
-                beso.style.left = izquierda + 'vw';
-                beso.style.fontSize = tamano + 'rem';
-                beso.style.setProperty('--giro', giro);
-                beso.style.animationDuration = duracion + 's';
-                beso.style.animationDelay = demora + 's';
-                contenedor.appendChild(beso);
+                const { texto, tamano } = generarItem(i);
+                const item = document.createElement('span');
+                item.className = itemClase;
+                item.textContent = texto;
+                item.style.left = (Math.random() * 100) + 'vw';
+                item.style.fontSize = tamano + 'rem';
+                item.style.setProperty('--giro', (Math.random() * giroMax * 2 - giroMax) + 'deg');
+                item.style.animationDuration = (duracionBase + Math.random() * duracionVariable) + 's';
+                const demoraItem = Math.random() * demoraMax;
+                item.style.animationDelay = demoraItem + 's';
+                contenedor.appendChild(item);
+
+                // Cada partícula suena y vibra apenas un poquito al empezar a caer
+                setTimeout(() => {
+                    reproducirSonidoCaida();
+                    vibrar(8);
+                }, demoraItem * 1000);
             }
 
-            setTimeout(() => contenedor.remove(), 6000);
+            // Tiempo máximo real que puede tardar la última partícula + margen de seguridad
+            const tiempoMaximo = (duracionBase + duracionVariable + demoraMax) * 1000 + 400;
+            setTimeout(() => contenedor.remove(), tiempoMaximo);
         }
 
-        const observer = new IntersectionObserver((entradas) => {
-            entradas.forEach(entrada => {
-                const sec = entrada.target;
-                if (entrada.isIntersecting) {
-                    if (sec.classList.contains('placeholder')) {
-                        if (sec.dataset.tipo === 'frase') {
-                            construirPantalla(sec, parseInt(sec.dataset.index));
-                        } else if (sec.dataset.tipo === 'final') {
-                            construirFinal(sec);
-                        }
-                        sec.classList.remove('placeholder');
-                    }
-                    if ((sec.dataset.tipo === 'portada' || sec.dataset.tipo === 'cuenta') && !sec.dataset.vibrado) {
-                        sec.dataset.vibrado = '1';
-                        vibrar([25, 60, 25]); // un latido suave al llegar a un nuevo capítulo
-                    }
-                    sec.classList.add('visible');
-                } else {
-                    sec.classList.remove('visible'); 
+        function lanzarLluviaDeBesos() {
+            crearLluvia({
+                contenedorClase: 'lluvia-besos', itemClase: 'beso-cayendo', cantidad: 55,
+                generarItem: () => ({
+                    texto: ['💋', '💕', '💖', '💗'][Math.floor(Math.random() * 4)],
+                    tamano: 1.1 + Math.random() * 1.6
+                })
+            });
+        }
+
+        // ============================================================
+        // ÍCONOS INTERACTIVOS DEL MENÚ: Te amo / Beso / Abrazo / Dulces
+        // ============================================================
+        function cerrarMenuPrincipal() {
+            const menu = document.getElementById('menu-principal');
+            if (menu) menu.classList.remove('abierto');
+        }
+
+        const teAmoIdiomas = [
+            "Te amo", "I love you", "Je t'aime", "Ti amo", "Eu te amo", "Ich liebe dich",
+            "愛してる", "사랑해", "我爱你", "Я тебя люблю", "أحبك", "Σ' αγαπώ",
+            "Seni seviyorum", "Ik hou van je", "Kocham cię", "Eu iubesc",
+            "Jag älskar dig", "Rakastan sinua", "Anh yêu em", "Mahal kita"
+        ];
+
+        function lanzarLluviaTeAmo(event) {
+            if (event) event.stopPropagation();
+            vibrar([25, 50, 25, 50, 90]);
+            cerrarMenuPrincipal();
+            crearLluvia({
+                contenedorClase: 'lluvia-teamo', itemClase: 'teamo-cayendo', cantidad: 45, giroMax: 30,
+                generarItem: () => {
+                    const esCorazon = Math.random() < 0.25;
+                    return esCorazon
+                        ? { texto: ['❤️', '💗', '💖', '💕'][Math.floor(Math.random() * 4)], tamano: 1.2 + Math.random() * 1.4 }
+                        : { texto: teAmoIdiomas[Math.floor(Math.random() * teAmoIdiomas.length)], tamano: 0.85 + Math.random() * 0.55 };
                 }
             });
-        }, { root: contenedor, rootMargin: '100% 0px', threshold: 0.1 }); 
+        }
 
-        document.querySelectorAll('.pantalla.placeholder').forEach(sec => observer.observe(sec));
+        function lanzarLluviaBesosMenu(event) {
+            if (event) event.stopPropagation();
+            vibrar([30, 60, 30]);
+            cerrarMenuPrincipal();
+            lanzarLluviaDeBesos();
+        }
+
+        function lanzarLluviaAbrazos(event) {
+            if (event) event.stopPropagation();
+            vibrar([30, 50, 30, 50, 80]);
+            cerrarMenuPrincipal();
+            crearLluvia({
+                contenedorClase: 'lluvia-abrazos', itemClase: 'abrazo-cayendo', cantidad: 50,
+                generarItem: () => ({
+                    texto: ['🤗', '💞', '💗', '🫂'][Math.floor(Math.random() * 4)],
+                    tamano: 1.2 + Math.random() * 1.5
+                })
+            });
+        }
+
+        function lanzarLluviaChocolate(event) {
+            if (event) event.stopPropagation();
+            vibrar([25, 45, 25]);
+            cerrarMenuPrincipal();
+            crearLluvia({
+                contenedorClase: 'lluvia-dulces', itemClase: 'dulce-cayendo', cantidad: 50,
+                generarItem: () => ({
+                    texto: ['🍫', '🍪', '🍩'][Math.floor(Math.random() * 3)],
+                    tamano: 1.2 + Math.random() * 1.4
+                })
+            });
+        }
+
+        function lanzarLluviaFlores(event) {
+            if (event) event.stopPropagation();
+            vibrar([25, 45, 25]);
+            cerrarMenuPrincipal();
+            crearLluvia({
+                contenedorClase: 'lluvia-dulces', itemClase: 'dulce-cayendo', cantidad: 50,
+                generarItem: () => ({
+                    texto: ['🌸', '🌷', '🌹', '🌺', '🪻'][Math.floor(Math.random() * 5)],
+                    tamano: 1.2 + Math.random() * 1.4
+                })
+            });
+        }
+
+        function lanzarLluviaEstrellas(event) {
+            if (event) event.stopPropagation();
+            vibrar([25, 45, 25]);
+            cerrarMenuPrincipal();
+            crearLluvia({
+                contenedorClase: 'lluvia-dulces', itemClase: 'dulce-cayendo', cantidad: 50,
+                generarItem: () => ({
+                    texto: ['✨', '🌟', '⭐', '☀️'][Math.floor(Math.random() * 4)],
+                    tamano: 1.1 + Math.random() * 1.3
+                })
+            });
+        }
+
+        try {
+            if (typeof IntersectionObserver === 'function') {
+                const observer = new IntersectionObserver((entradas) => {
+                    entradas.forEach(entrada => {
+                        const sec = entrada.target;
+                        if (entrada.isIntersecting) {
+                            if (sec.classList.contains('placeholder')) {
+                                if (sec.dataset.tipo === 'frase') {
+                                    construirPantalla(sec, parseInt(sec.dataset.index));
+                                } else if (sec.dataset.tipo === 'final') {
+                                    construirFinal(sec);
+                                }
+                                sec.classList.remove('placeholder');
+                            }
+                            if ((sec.dataset.tipo === 'portada' || sec.dataset.tipo === 'cuenta') && !sec.dataset.vibrado) {
+                                sec.dataset.vibrado = '1';
+                                vibrar([25, 60, 25]); // un latido suave al llegar a un nuevo capítulo
+                            }
+                            sec.classList.add('visible');
+                        } else {
+                            sec.classList.remove('visible'); 
+                        }
+                    });
+                }, { root: contenedor, rootMargin: '100% 0px', threshold: 0.1 }); 
+
+                document.querySelectorAll('.pantalla.placeholder').forEach(sec => observer.observe(sec));
+            } else {
+                // Navegador sin soporte a IntersectionObserver: construimos todas las pantallas de una
+                document.querySelectorAll('.pantalla.placeholder').forEach(sec => {
+                    if (sec.dataset.tipo === 'frase') construirPantalla(sec, parseInt(sec.dataset.index));
+                    else if (sec.dataset.tipo === 'final') construirFinal(sec);
+                    sec.classList.remove('placeholder');
+                    sec.classList.add('visible');
+                });
+            }
+        } catch (errorObserver) {
+            // Si algo falla acá, no debe frenar el resto del script (preguntas, deseos, etc.)
+            console.error('Error al iniciar el observador de pantallas:', errorObserver);
+        }
 
 
         // CANVAS
@@ -1868,6 +2054,26 @@
                 gain.gain.setValueAtTime(0, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.5 + (index * 0.1)); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 4.5);
                 osc.connect(gain); gain.connect(audioCtx.destination); osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 5);
             });
+        }
+
+        // Sonido suave y dulce para cada emoji/partícula que cae en las lluvias
+        // (como una campanita chiquita, en el mismo espíritu que el "toc toc" de la puerta)
+        function reproducirSonidoCaida() {
+            try {
+                iniciarAudio();
+                const ahora = audioCtx.currentTime;
+                const notas = [523.25, 587.33, 659.25, 698.46, 783.99, 880]; // Do, Re, Mi, Fa, Sol, La
+                const freq = notas[Math.floor(Math.random() * notas.length)] * (Math.random() < 0.5 ? 1 : 2);
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, ahora);
+                gain.gain.setValueAtTime(0, ahora);
+                gain.gain.linearRampToValueAtTime(0.045, ahora + 0.015);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ahora + 0.32);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(ahora); osc.stop(ahora + 0.35);
+            } catch (e) { /* silencioso */ }
         }
 
         // REPRODUCTOR MUSICA
@@ -2097,6 +2303,10 @@
             const relojFlotante = document.getElementById('reloj-flotante');
             if (relojFlotante.classList.contains('abierto') && !relojFlotante.contains(event.target)) {
                 relojFlotante.classList.remove('abierto');
+            }
+            const menuPrincipal = document.getElementById('menu-principal');
+            if (menuPrincipal.classList.contains('abierto') && !menuPrincipal.contains(event.target)) {
+                menuPrincipal.classList.remove('abierto');
             }
         });
 
@@ -2937,15 +3147,20 @@
             if (estabaAbierto && ultimaPreguntaIndex === -1) mostrarPreguntaAleatoria();
         }
 
-        function mostrarPreguntaAleatoria() {
-            vibrar(15);
-            let indice;
-            do { indice = Math.floor(Math.random() * preguntasPareja.length); }
-            while (indice === ultimaPreguntaIndex && preguntasPareja.length > 1);
-            ultimaPreguntaIndex = indice;
-            const pregunta = preguntasPareja[indice];
-            document.getElementById('pregunta-categoria').innerText = pregunta.c;
-            document.getElementById('pregunta-texto').innerText = pregunta.t;
+        function mostrarPreguntaAleatoria(event) {
+            if (event) event.stopPropagation();
+            try {
+                vibrar(15);
+                let indice;
+                do { indice = Math.floor(Math.random() * preguntasPareja.length); }
+                while (indice === ultimaPreguntaIndex && preguntasPareja.length > 1);
+                ultimaPreguntaIndex = indice;
+                const pregunta = preguntasPareja[indice];
+                document.getElementById('pregunta-categoria').innerText = pregunta.c;
+                document.getElementById('pregunta-texto').innerText = pregunta.t;
+            } catch (errorPregunta) {
+                console.error('Error al mostrar otra pregunta:', errorPregunta);
+            }
         }
 
         function enviarPreguntaWhatsApp(destinatario) {

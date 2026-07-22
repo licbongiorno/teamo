@@ -50,7 +50,8 @@
         }
 
         .contenedor-scroll {
-            height: 100dvh;
+            height: 100vh;
+            height: 100svh;
             width: 100vw;
             overflow-y: hidden; 
             scroll-snap-type: y proximity;
@@ -63,7 +64,9 @@
         .contenedor-scroll.activo { overflow-y: auto; }
 
         .pantalla {
-            height: 100dvh; width: 100vw;
+            height: 100vh;
+            height: 100svh;
+            width: 100vw;
             scroll-snap-align: start;
             scroll-snap-stop: normal;
             display: flex; flex-direction: column;

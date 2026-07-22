@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -317,25 +318,28 @@
         /* Navegación garantizada entre pantallas (a los costados, estilo "pasar página") */
         .nav-pantallas {
             position: fixed; inset: 0;
-            z-index: 950; pointer-events: none;
+            z-index: 9990; pointer-events: none;
             display: none;
         }
         .nav-pantallas.mostrar { display: block; }
         .nav-flecha {
             position: absolute; top: 50%; transform: translateY(-50%);
-            width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(0,0,0,0.4);
+            width: 50px; height: 50px; border-radius: 50%;
+            background: rgba(0,0,0,0.45);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.22);
-            color: rgba(255,255,255,0.85); font-size: 1.6rem; line-height: 1;
+            color: rgba(255,255,255,0.9); font-size: 1.7rem; line-height: 1;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; touch-action: manipulation; pointer-events: auto;
-            opacity: 0.5;
+            opacity: 0.65;
             transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
         }
         .nav-flecha:active { transform: translateY(-50%) scale(0.85); opacity: 0.95; background: rgba(0,0,0,0.6); }
-        .nav-anterior { left: calc(6px + env(safe-area-inset-left, 0px)); }
-        .nav-siguiente { right: calc(6px + env(safe-area-inset-right, 0px)); }
+        /* Separadas del borde extremo: muy pegado al canto, Android suele robarse el toque
+           para su gesto de "volver atrás", así que las alejamos un poco más adentro. */
+        .nav-anterior { left: calc(14px + env(safe-area-inset-left, 0px)); }
+        .nav-siguiente { right: calc(14px + env(safe-area-inset-right, 0px)); }
+
 
         /* Reproductor de Sonidos Flotante: burbuja colapsable + panel */
         .reproductor-flotante {
@@ -460,6 +464,7 @@
             display: none; flex-direction: column; align-items: flex-end; gap: 15px;
         }
         .chat-flotante.mostrar { display: flex; }
+        .chat-flotante.abierto { z-index: 10050; }
         .burbuja-chat {
             width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
             border: 1px solid rgba(255,182,193,0.5); box-shadow: 0 5px 20px rgba(255,154,158,0.3);
@@ -530,6 +535,7 @@
             display: none; flex-direction: column; align-items: flex-end; gap: 15px;
         }
         .gratitud-flotante.mostrar { display: flex; }
+        .gratitud-flotante.abierto { z-index: 10050; }
         .burbuja-gratitud {
             width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
             border: 1px solid rgba(255,214,102,0.5); box-shadow: 0 5px 20px rgba(255,214,102,0.25);
@@ -579,6 +585,7 @@
             display: none; flex-direction: column; align-items: flex-start; gap: 15px;
         }
         .deseos-flotante.mostrar { display: flex; }
+        .deseos-flotante.abierto { z-index: 10050; }
         .burbuja-deseos {
             width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
             border: 1px solid rgba(178,255,201,0.5); box-shadow: 0 5px 20px rgba(178,255,201,0.25);
@@ -629,6 +636,9 @@
             z-index: 1001;
             display: none; flex-direction: column; align-items: flex-end; gap: 15px;
         }
+        /* Cuando el panel está abierto, sube muy por encima de cualquier otra burbuja vecina
+           (reloj, chat, etc.) para que nunca le tapen los botones de "otra pregunta" / "enviar" */
+        .preguntas-flotante.abierto { z-index: 10050; }
         .preguntas-flotante.mostrar { display: flex; }
         .burbuja-preguntas {
             width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
@@ -677,6 +687,7 @@
             display: none; flex-direction: column; align-items: flex-end; gap: 15px;
         }
         .reloj-flotante.mostrar { display: flex; }
+        .reloj-flotante.abierto { z-index: 10050; }
         .burbuja-reloj {
             width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
             border: 1px solid rgba(255,183,197,0.5); box-shadow: 0 5px 20px rgba(255,183,197,0.25);

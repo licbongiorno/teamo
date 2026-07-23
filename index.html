@@ -40,7 +40,6 @@
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
             -webkit-text-size-adjust: 100%;
-            touch-action: manipulation;
         }
 
         /* Compatibilidad móvil: nada de selección de texto accidental ni "flash" al tocar */
@@ -54,18 +53,27 @@
             height: 100svh;
             width: 100vw;
             overflow: hidden;
-            touch-action: pan-y;
             position: relative;
             z-index: 10;
+            overscroll-behavior-y: contain;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .contenedor-scroll::-webkit-scrollbar { display: none; }
+
+        /* Scroll nativo con CSS Scroll Snap: mientras la puerta no se abre
+           (sin la clase .activo) el contenedor queda bloqueado para respetar
+           la introducción; al desbloquear, el scroll pasa a ser 100% nativo
+           del navegador, fluido en cualquier celular, sin JS de por medio. */
+        .contenedor-scroll.activo {
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
         }
 
-        /* La pista es la que realmente se mueve (translateY) para pasar de pantalla.
-           Al no depender del scroll nativo del navegador, el avance funciona siempre
-           (abajo, arriba, y con los botones de navegación) sin importar el celular. */
         .pista-pantallas {
             width: 100%;
-            transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
-            will-change: transform;
         }
 
         .pantalla {
@@ -76,6 +84,8 @@
             justify-content: center; align-items: center;
             position: relative;
             background: transparent;
+            scroll-snap-align: start;
+            scroll-snap-stop: normal;
         }
 
         #canvas-particulas {
@@ -430,7 +440,9 @@
             z-index: 10000; display: flex; flex-direction: column;
             opacity: 1; transition: opacity 0.5s ease;
         }
-        .oculto { opacity: 0; pointer-events: none; display: none !important; }
+        /* visibility (no display:none) para que la transición de opacidad se
+           vea completa al cerrar cualquier modal, en vez de cortarse de golpe */
+        .oculto { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.4s ease, visibility 0s 0.4s; }
 
         /* --- Acceso secreto --- */
         .modal-cristal { justify-content: center; align-items: center; display: flex; padding: 20px; box-sizing: border-box; }
@@ -720,6 +732,107 @@
         .burbuja-chat, .burbuja-muro, .burbuja-gratitud, .burbuja-deseos, .burbuja-preguntas, .burbuja-reloj {
             display: none !important;
         }
+        /* ============================================================
+           CONSOLIDACIÓN DE BOTONES FLOTANTES
+           Las burbujas individuales (chat, muro, gratitud, deseos,
+           preguntas, reloj, música) dejan de mostrarse como círculos
+           sueltos en pantalla: ahora se disparan únicamente desde el
+           menú único de abajo (#menu-principal). No se toca la lógica
+           JS de cada panel, solo se oculta su "gatillo" visual propio,
+           conservando el tamaño de su contenedor para no romper el
+           posicionamiento (absolute) de los paneles que cuelgan de él.
+           ============================================================ */
+        .burbuja-chat, .burbuja-muro, .burbuja-gratitud, .burbuja-deseos,
+        .burbuja-preguntas, .burbuja-reloj, .burbuja-reproductor {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* ============================================================
+           ÍNDICE DE NAVEGACIÓN (glassmorphism)
+           Menú lateral sutil para saltar a los Capítulos y a la Cuenta
+           Regresiva. Se muestra recién cuando la experiencia se
+           desbloquea (misma pauta que el resto de la interfaz).
+           ============================================================ */
+        .indice-navegacion {
+            position: fixed;
+            top: calc(84px + env(safe-area-inset-top, 0px));
+            right: calc(10px + env(safe-area-inset-right, 0px));
+            z-index: 9995;
+            isolation: isolate;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px 8px;
+            background: rgba(10, 8, 14, 0.35);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+            opacity: 0; transition: opacity 0.6s ease;
+            pointer-events: auto;
+        }
+        .indice-navegacion.mostrar { display: flex; }
+        .indice-navegacion.visible-suave { opacity: 1; }
+        .item-indice {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.08);
+            color: #ffe3ec;
+            font-family: var(--fuente-texto);
+            font-size: 0.72rem; font-weight: 600;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; touch-action: manipulation; pointer-events: auto;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s ease, border-color 0.25s ease;
+        }
+        .item-indice:active { transform: scale(0.88); }
+        .item-indice.activo-indice {
+            background: rgba(255, 154, 158, 0.55);
+            border-color: rgba(255,255,255,0.7);
+            box-shadow: 0 0 14px rgba(255,154,158,0.6);
+        }
+
+        /* Indicador de progreso: puntos milimétricos al pie de la pantalla */
+        .progreso-lectura {
+            position: fixed;
+            left: 50%;
+            top: calc(10px + env(safe-area-inset-top, 0px));
+            transform: translateX(-50%);
+            z-index: 9994;
+            display: none;
+            align-items: center;
+            gap: 5px;
+            max-width: min(70vw, 320px);
+            overflow: hidden;
+            padding: 7px 12px;
+            background: rgba(10, 8, 14, 0.32);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 30px;
+            pointer-events: none;
+            opacity: 0; transition: opacity 0.6s ease;
+        }
+        .progreso-lectura.mostrar { display: flex; }
+        .progreso-lectura.visible-suave { opacity: 1; }
+        .punto-progreso {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: rgba(255,255,255,0.35);
+            transition: background 0.3s ease, transform 0.3s ease, width 0.3s ease;
+            flex-shrink: 0;
+        }
+        .punto-progreso.activo-punto {
+            background: #ffb3c6;
+            width: 16px; border-radius: 4px;
+        }
+
+        /* Legibilidad: sombras suaves para texto dinámico sobre fondos animados */
+        .texto-romantico, .capitulo-titulo, .cuenta-titulo, .cuenta-subtitulo,
+        .cuenta-fecha, .cuenta-frase, .final-firma, #pregunta1, #pregunta2,
+        #mensaje-final, .capitulo-indicador {
+            text-shadow: 0 2px 14px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.45);
+        }
+
         .menu-principal {
             position: fixed;
             top: calc(clamp(16px, 4.5vh, 24px) + env(safe-area-inset-top, 0px));
@@ -1000,6 +1113,7 @@
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(5,8,10,0.92); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
+            opacity: 1; transition: opacity 0.4s ease, visibility 0s;
         }
         .modal-boleto .btn-cerrar-boleto {
             position: absolute; top: calc(18px + env(safe-area-inset-top, 0px)); right: 18px;
@@ -1043,6 +1157,7 @@
         .modal-cielo {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: #04060c; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 1; transition: opacity 0.4s ease, visibility 0s;
         }
         #canvas-constelacion { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .modal-cielo .btn-cerrar-cielo {
@@ -1183,6 +1298,7 @@
     <!-- Menú principal: agrupa todos los accesos (menos la música) en un solo desplegable -->
     <div id="menu-principal" class="menu-principal">
         <div class="panel-menu-opciones" id="panel-menu-opciones">
+            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'musica')"><span>🎵</span> Música</button>
             <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'chat')"><span>💬</span> Chat</button>
             <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'muro')"><span>📜</span> Muro en el tiempo</button>
             <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'gratitud')"><span>💛</span> Rincón de gratitud</button>
@@ -1208,6 +1324,12 @@
     <button id="btn-azar" class="btn-azar" onclick="viajarAlAzar()">
         <span>✨ Mensaje Mágico</span>
     </button>
+
+    <!-- Índice de navegación: salto directo a portadas de capítulo y cuenta regresiva -->
+    <nav id="indice-navegacion" class="indice-navegacion" aria-label="Índice de capítulos"></nav>
+
+    <!-- Indicador de progreso de lectura -->
+    <div id="progreso-lectura" class="progreso-lectura" aria-hidden="true"></div>
 
     <!-- Navegación garantizada entre pantallas: funciona siempre, aunque el swipe nativo falle en algún celular -->
     <div class="nav-pantallas" id="nav-pantallas">
@@ -1495,10 +1617,12 @@
         const pista = document.getElementById('pista-pantallas');
 
         let indiceGlobal = 0;
+        const destinosIndice = []; // { id, etiqueta } para el índice lateral de navegación
         capitulos.forEach(cap => {
             // Pantalla portada del capítulo
             const portada = document.createElement('section');
             portada.className = 'pantalla portada-capitulo placeholder';
+            portada.id = `capitulo-${cap.numero}`;
             portada.dataset.tipo = 'portada';
             portada.innerHTML = `
                 <div class="capitulo-numero">Capítulo ${cap.numero}</div>
@@ -1506,6 +1630,7 @@
                 <div class="capitulo-indicador">✨ Deslizá para continuar ✨</div>
             `;
             pista.appendChild(portada);
+            destinosIndice.push({ id: portada.id, etiqueta: String(cap.numero) });
 
             cap.frases.forEach(frase => {
                 const index = indiceGlobal;
@@ -1549,6 +1674,7 @@
             </div>
         `;
         pista.appendChild(cuentaSec);
+        destinosIndice.push({ id: cuentaSec.id, etiqueta: '⏰' });
 
         // Decoración romántica: corazones y círculos flotando, igual que en el resto de las pantallas
         const simbolosCuenta = ['💗', '✨', '🤍', '💫'];
@@ -1597,6 +1723,29 @@
             </div>
         `;
         pista.appendChild(finalSec);
+
+        // Índice lateral (glass) para saltar directo a cada capítulo / cuenta regresiva,
+        // y puntos de progreso que reflejan el avance total de la lectura.
+        (function construirIndiceYProgreso() {
+            const nav = document.getElementById('indice-navegacion');
+            destinosIndice.forEach(destino => {
+                const btn = document.createElement('button');
+                btn.className = 'item-indice';
+                btn.textContent = destino.etiqueta;
+                btn.title = destino.etiqueta === '⏰' ? 'Cuenta regresiva' : `Capítulo ${destino.etiqueta}`;
+                btn.setAttribute('aria-label', btn.title);
+                btn.dataset.destino = destino.id;
+                btn.onclick = () => irAId(destino.id);
+                nav.appendChild(btn);
+            });
+
+            const progreso = document.getElementById('progreso-lectura');
+            document.querySelectorAll('#pista-pantallas .pantalla').forEach(() => {
+                const punto = document.createElement('span');
+                punto.className = 'punto-progreso';
+                progreso.appendChild(punto);
+            });
+        })();
 
         // Unos corazones flotando suave y constante en la pantalla final, para que se sienta viva
         const simbolosFinal = ['💗', '✨', '🤍'];
@@ -1942,6 +2091,20 @@
         window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
         window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }, {passive: true});
 
+        // Si la pestaña queda en segundo plano, se corta el requestAnimationFrame:
+        // nada de seguir animando partículas invisibles y gastando batería.
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                particulasPausadasPorFoco = particulasActivas;
+                particulasActivas = false;
+            } else if (particulasPausadasPorFoco) {
+                particulasPausadasPorFoco = false;
+                particulasActivas = true;
+                animarParticulas();
+            }
+        });
+        let particulasPausadasPorFoco = false;
+
         class Particula {
             constructor(x, y, esExplosion = false) {
                 this.x = x || Math.random() * canvas.width;
@@ -1987,16 +2150,30 @@
             requestAnimationFrame(animarParticulas);
         }
 
+        // Techo de partículas simultáneas: las explosiones se reciclan en
+        // partículas ambiente que flotan "para siempre", así que sin límite
+        // el array crecería sin parar en una sesión larga (cada toque suma
+        // más). Al tocar el techo, se descartan las más viejas primero.
+        const MAX_PARTICULAS = 160;
+        function agregarParticulas(nuevas) {
+            particulas.push(...nuevas);
+            const exceso = particulas.length - MAX_PARTICULAS;
+            if (exceso > 0) particulas.splice(0, exceso);
+        }
+
         function lanzarExplosionCanvas() {
             canvas.classList.add('activo'); particulasActivas = true;
-            for(let i=0; i<60; i++) particulas.push(new Particula(canvas.width/2, canvas.height/2 + 50, true));
-            for(let i=0; i<40; i++) particulas.push(new Particula(null, null, false));
+            const nuevas = [];
+            for(let i=0; i<60; i++) nuevas.push(new Particula(canvas.width/2, canvas.height/2 + 50, true));
+            for(let i=0; i<40; i++) nuevas.push(new Particula(null, null, false));
+            agregarParticulas(nuevas);
             animarParticulas();
         }
 
         // Detalle romántico: un corazoncito sutil donde toques la pantalla (fuera de botones y controles)
         function lanzarCorazonSutil(x, y) {
             canvas.classList.add('activo'); particulasActivas = true;
+            const nuevas = [];
             for (let i = 0; i < 3; i++) {
                 const p = new Particula(x, y, true);
                 p.tipo = ['💗','✨','💫'][Math.floor(Math.random() * 3)];
@@ -2004,8 +2181,9 @@
                 p.velocidadY = Math.random() * -4 - 2;
                 p.velocidadX = Math.random() * 3 - 1.5;
                 p.gravedad = 0.08;
-                particulas.push(p);
+                nuevas.push(p);
             }
+            agregarParticulas(nuevas);
             animarParticulas();
         }
 
@@ -2514,6 +2692,14 @@
                             document.getElementById('nav-pantallas').classList.add('mostrar');
                             programarAutoAvance();
 
+                            const indiceNav = document.getElementById('indice-navegacion');
+                            indiceNav.classList.add('mostrar');
+                            setTimeout(() => indiceNav.classList.add('visible-suave'), 100);
+
+                            const progresoLectura = document.getElementById('progreso-lectura');
+                            progresoLectura.classList.add('mostrar');
+                            setTimeout(() => progresoLectura.classList.add('visible-suave'), 150);
+
                             const btnAzar = document.getElementById('btn-azar');
                             btnAzar.style.display = 'flex'; setTimeout(() => btnAzar.classList.add('mostrar'), 100);
 
@@ -2620,6 +2806,7 @@
             if (event) event.stopPropagation();
             document.getElementById('menu-principal').classList.remove('abierto');
             switch (opcion) {
+                case 'musica': toggleReproductor(event); break;
                 case 'chat': toggleChat(event); break;
                 case 'muro': abrirMuro(event); break;
                 case 'gratitud': toggleGratitud(event); break;
@@ -2775,12 +2962,13 @@
         }
 
         // ============================================================
-        // NAVEGACIÓN GARANTIZADA ENTRE PANTALLAS (botones + swipe manual)
-        // No depende del scroll nativo del navegador en absoluto: el
-        // avance entre pantallas se hace 100% por código, moviendo la
-        // "pista" interna con transform (como un carrusel). Así no hay
-        // manera de que el scroll quede trabado ni de que se desalinee,
-        // sin importar el celular o navegador.
+        // NAVEGACIÓN ENTRE PANTALLAS (scroll nativo + botones + índice)
+        // El avance es scroll nativo del navegador con CSS Scroll Snap:
+        // el swipe, la rueda del mouse y el trackpad funcionan solos.
+        // Las funciones de acá abajo solo llevan el foco calculando
+        // offsetTop + contenedor.scrollTo() para los botones, el índice
+        // lateral y el avance automático (nada de scrollIntoView, que
+        // en Chrome Android choca con scroll-snap y traba el touch).
         // ============================================================
         let indicePantallaActual = 0;
 
@@ -2792,58 +2980,70 @@
             return indicePantallaActual;
         }
 
+        // Navegación 100% nativa: el scroll lo maneja el navegador (CSS Scroll
+        // Snap). Para llevar el foco a una pantalla puntual (botones,
+        // índice, avance automático) NO usamos scrollIntoView(): en Chrome
+        // Android esa función entra en conflicto con scroll-snap y termina
+        // bloqueando el gesto táctil. En su lugar calculamos la posición
+        // exacta con offsetTop y desplazamos el contenedor a mano con
+        // scrollTo(), que no interfiere con el touch nativo.
         function irAPantalla(indice) {
             const pantallas = obtenerPantallas();
             if (!pantallas.length) return;
             const destino = Math.max(0, Math.min(pantallas.length - 1, indice));
-            indicePantallaActual = destino;
-            pista.style.transform = `translateY(-${destino * 100}vh)`;
+            contenedor.scrollTo({ top: pantallas[destino].offsetTop, left: 0, behavior: 'smooth' });
             vibrar(10);
             pausarAutoAvance();
+        }
+
+        function irAId(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            contenedor.scrollTo({ top: el.offsetTop, left: 0, behavior: 'smooth' });
+            vibrar(10);
+            pausarAutoAvance();
+            document.getElementById('menu-principal') && document.getElementById('menu-principal').classList.remove('abierto');
         }
 
         function pantallaSiguiente() { irAPantalla(indiceActualPantalla() + 1); }
         function pantallaAnterior() { irAPantalla(indiceActualPantalla() - 1); }
 
-        // Swipe manual: detectamos el gesto solo al soltar el dedo (touchend),
-        // comparando contra dónde empezó (touchstart). Nada de arrastrar la
-        // pista en vivo ni de preventDefault: eso es lo que rompía el gesto
-        // a partir de la segunda pantalla. El conflicto con el scroll nativo
-        // de Android se resuelve por CSS con "touch-action: pan-y" en el
-        // contenedor, que es la forma estándar y segura de hacerlo.
-        (function configurarSwipeManual() {
-            const SELECTOR_IGNORAR = 'button, .btn, .btn-azar, .nav-flecha, .menu-principal, .reproductor-flotante, ' +
-                '.modal-cristal, .muro-pantalla, input, textarea, a, .icono-interactivo, .puerta, ' +
-                '.chat-flotante, .gratitud-flotante, .deseos-flotante, .preguntas-flotante, ' +
-                '.reloj-flotante, .muro-flotante';
+        // Seguimiento de la pantalla actual: qué sección está realmente a la
+        // vista se usa para resaltar el índice lateral y avanzar los puntos
+        // de progreso. Es un observador aparte del que arma el contenido,
+        // con un umbral más estricto (0.55) porque acá nos interesa "cuál
+        // es la pantalla dominante ahora", no "cuál hay que empezar a armar".
+        (function configurarSeguimientoDeIndice() {
+            if (typeof IntersectionObserver !== 'function') return;
+            const pantallas = obtenerPantallas();
+            const puntos = Array.from(document.querySelectorAll('#progreso-lectura .punto-progreso'));
+            const seguidor = new IntersectionObserver((entradas) => {
+                entradas.forEach(entrada => {
+                    if (!entrada.isIntersecting) return;
+                    const idx = pantallas.indexOf(entrada.target);
+                    if (idx === -1) return;
+                    indicePantallaActual = idx;
 
-            let inicioY = null, inicioX = null, inicioObjetivo = null;
+                    if (puntos[idx]) {
+                        puntos.forEach(p => p.classList.remove('activo-punto'));
+                        puntos[idx].classList.add('activo-punto');
+                    }
 
-            contenedor.addEventListener('touchstart', (e) => {
-                if (!contenedor.classList.contains('activo') || !e.touches[0]) { inicioY = null; return; }
-                if (e.target && e.target.closest && e.target.closest(SELECTOR_IGNORAR)) { inicioY = null; return; }
-                inicioY = e.touches[0].clientY;
-                inicioX = e.touches[0].clientX;
-                inicioObjetivo = e.target;
-                pausarAutoAvance();
-            }, { passive: true });
-
-            contenedor.addEventListener('touchend', (e) => {
-                if (inicioY === null || !e.changedTouches[0]) return;
-                const finY = e.changedTouches[0].clientY;
-                const finX = e.changedTouches[0].clientX;
-                const deltaY = inicioY - finY;
-                const deltaX = inicioX - finX;
-                inicioY = null; inicioX = null; inicioObjetivo = null;
-
-                // Ignoramos gestos casi horizontales (para no interferir con otros
-                // gestos) o demasiado cortos como para ser un swipe intencional.
-                if (Math.abs(deltaX) > Math.abs(deltaY)) return;
-                if (Math.abs(deltaY) < 45) return;
-
-                if (deltaY > 0) pantallaSiguiente(); else pantallaAnterior();
-            }, { passive: true });
+                    document.querySelectorAll('#indice-navegacion .item-indice').forEach(btn => {
+                        btn.classList.toggle('activo-indice', btn.dataset.destino === entrada.target.id);
+                    });
+                });
+            }, { root: contenedor, threshold: 0.55 });
+            pantallas.forEach(sec => seguidor.observe(sec));
         })();
+
+        // El scroll nativo también reinicia el temporizador de avance
+        // automático apenas la persona interactúa a mano.
+        let temporizadorScrollUsuario = null;
+        contenedor.addEventListener('scroll', () => {
+            clearTimeout(temporizadorScrollUsuario);
+            temporizadorScrollUsuario = setTimeout(pausarAutoAvance, 120);
+        }, { passive: true });
 
         // ================== AVANCE AUTOMÁTICO (respaldo) ==================
         // Si por lo que sea el gesto manual o los botones no responden en

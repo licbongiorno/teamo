@@ -54,6 +54,7 @@
             height: 100svh;
             width: 100vw;
             overflow: hidden;
+            touch-action: pan-y;
             position: relative;
             z-index: 10;
         }
@@ -1885,10 +1886,16 @@
                         const sec = entrada.target;
                         if (entrada.isIntersecting) {
                             if (sec.classList.contains('placeholder')) {
-                                if (sec.dataset.tipo === 'frase') {
-                                    construirPantalla(sec, parseInt(sec.dataset.index));
-                                } else if (sec.dataset.tipo === 'final') {
-                                    construirFinal(sec);
+                                try {
+                                    if (sec.dataset.tipo === 'frase') {
+                                        construirPantalla(sec, parseInt(sec.dataset.index));
+                                    } else if (sec.dataset.tipo === 'final') {
+                                        construirFinal(sec);
+                                    }
+                                } catch (errorConstruccion) {
+                                    // Si el armado de ESTA pantalla falla, no debe frenar
+                                    // la navegación general ni el resto de las pantallas.
+                                    console.error('No se pudo construir una pantalla:', errorConstruccion);
                                 }
                                 sec.classList.remove('placeholder');
                             }
@@ -1907,8 +1914,12 @@
             } else {
                 // Navegador sin soporte a IntersectionObserver: construimos todas las pantallas de una
                 document.querySelectorAll('.pantalla.placeholder').forEach(sec => {
-                    if (sec.dataset.tipo === 'frase') construirPantalla(sec, parseInt(sec.dataset.index));
-                    else if (sec.dataset.tipo === 'final') construirFinal(sec);
+                    try {
+                        if (sec.dataset.tipo === 'frase') construirPantalla(sec, parseInt(sec.dataset.index));
+                        else if (sec.dataset.tipo === 'final') construirFinal(sec);
+                    } catch (errorConstruccion) {
+                        console.error('No se pudo construir una pantalla:', errorConstruccion);
+                    }
                     sec.classList.remove('placeholder');
                     sec.classList.add('visible');
                 });
@@ -2501,6 +2512,7 @@
                             document.getElementById('scroll-aviso').style.display = 'block';
 
                             document.getElementById('nav-pantallas').classList.add('mostrar');
+                            programarAutoAvance();
 
                             const btnAzar = document.getElementById('btn-azar');
                             btnAzar.style.display = 'flex'; setTimeout(() => btnAzar.classList.add('mostrar'), 100);
@@ -2787,22 +2799,33 @@
             indicePantallaActual = destino;
             pista.style.transform = `translateY(-${destino * 100}vh)`;
             vibrar(10);
+            pausarAutoAvance();
         }
 
         function pantallaSiguiente() { irAPantalla(indiceActualPantalla() + 1); }
         function pantallaAnterior() { irAPantalla(indiceActualPantalla() - 1); }
 
-        // Swipe manual de respaldo: si el dedo se mueve claramente hacia
-        // arriba o abajo, pasamos de pantalla nosotros mismos por si el
-        // scroll nativo del navegador no responde bien en ese celular.
+        // Swipe manual: detectamos el gesto solo al soltar el dedo (touchend),
+        // comparando contra dónde empezó (touchstart). Nada de arrastrar la
+        // pista en vivo ni de preventDefault: eso es lo que rompía el gesto
+        // a partir de la segunda pantalla. El conflicto con el scroll nativo
+        // de Android se resuelve por CSS con "touch-action: pan-y" en el
+        // contenedor, que es la forma estándar y segura de hacerlo.
         (function configurarSwipeManual() {
+            const SELECTOR_IGNORAR = 'button, .btn, .btn-azar, .nav-flecha, .menu-principal, .reproductor-flotante, ' +
+                '.modal-cristal, .muro-pantalla, input, textarea, a, .icono-interactivo, .puerta, ' +
+                '.chat-flotante, .gratitud-flotante, .deseos-flotante, .preguntas-flotante, ' +
+                '.reloj-flotante, .muro-flotante';
+
             let inicioY = null, inicioX = null, inicioObjetivo = null;
 
             contenedor.addEventListener('touchstart', (e) => {
-                if (!contenedor.classList.contains('activo') || !e.touches[0]) return;
+                if (!contenedor.classList.contains('activo') || !e.touches[0]) { inicioY = null; return; }
+                if (e.target && e.target.closest && e.target.closest(SELECTOR_IGNORAR)) { inicioY = null; return; }
                 inicioY = e.touches[0].clientY;
                 inicioX = e.touches[0].clientX;
                 inicioObjetivo = e.target;
+                pausarAutoAvance();
             }, { passive: true });
 
             contenedor.addEventListener('touchend', (e) => {
@@ -2811,28 +2834,40 @@
                 const finX = e.changedTouches[0].clientX;
                 const deltaY = inicioY - finY;
                 const deltaX = inicioX - finX;
-                const objetivoInicial = inicioObjetivo;
                 inicioY = null; inicioX = null; inicioObjetivo = null;
 
-                // Ignoramos toques que arrancaron sobre botones, menús, modales, inputs,
-                // o CUALQUIER burbuja/panel flotante (chat, gratitud, deseos, preguntas,
-                // reloj, muro, reproductor). Así, arrastrar el dedo dentro de un panel
-                // abierto para leer o scrollear nunca se confunde con "cambiar de pantalla"
-                // ni lo cierra por accidente.
-                if (objetivoInicial && objetivoInicial.closest && objetivoInicial.closest(
-                    'button, .btn, .btn-azar, .nav-flecha, .menu-principal, .reproductor-flotante, ' +
-                    '.modal-cristal, .muro-pantalla, input, textarea, a, .icono-interactivo, .puerta, ' +
-                    '.chat-flotante, .gratitud-flotante, .deseos-flotante, .preguntas-flotante, ' +
-                    '.reloj-flotante, .muro-flotante'
-                )) return;
-
-                // Ignoramos gestos casi horizontales (para no interferir con otros gestos) o muy cortos
+                // Ignoramos gestos casi horizontales (para no interferir con otros
+                // gestos) o demasiado cortos como para ser un swipe intencional.
                 if (Math.abs(deltaX) > Math.abs(deltaY)) return;
                 if (Math.abs(deltaY) < 45) return;
 
                 if (deltaY > 0) pantallaSiguiente(); else pantallaAnterior();
             }, { passive: true });
         })();
+
+        // ================== AVANCE AUTOMÁTICO (respaldo) ==================
+        // Si por lo que sea el gesto manual o los botones no responden en
+        // algún celular, la pantalla igual avanza sola cada ciertos segundos.
+        // Se pausa apenas la persona interactúa (botón, flecha, swipe) y
+        // se detiene al llegar a la última pantalla.
+        let temporizadorAutoAvance = null;
+        const INTERVALO_AUTO_AVANCE = 9000;
+
+        function programarAutoAvance() {
+            clearTimeout(temporizadorAutoAvance);
+            temporizadorAutoAvance = setTimeout(() => {
+                const pantallas = obtenerPantallas();
+                if (indicePantallaActual < pantallas.length - 1) {
+                    pantallaSiguiente();
+                    programarAutoAvance();
+                }
+            }, INTERVALO_AUTO_AVANCE);
+        }
+
+        function pausarAutoAvance() {
+            clearTimeout(temporizadorAutoAvance);
+            programarAutoAvance();
+        }
 
         // ================== RINCÓN DE LA GRATITUD ==================
         function toggleGratitud(event) {

@@ -40,7 +40,6 @@
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
             -webkit-text-size-adjust: 100%;
-            touch-action: manipulation;
         }
 
         /* Compatibilidad móvil: nada de selección de texto accidental ni "flash" al tocar */
@@ -69,8 +68,8 @@
         .contenedor-scroll.activo {
             overflow-y: scroll;
             scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
         }
 
         .pista-pantallas {
@@ -86,7 +85,7 @@
             position: relative;
             background: transparent;
             scroll-snap-align: start;
-            scroll-snap-stop: always;
+            scroll-snap-stop: normal;
         }
 
         #canvas-particulas {
@@ -759,7 +758,8 @@
             position: fixed;
             top: calc(84px + env(safe-area-inset-top, 0px));
             right: calc(10px + env(safe-area-inset-right, 0px));
-            z-index: 950;
+            z-index: 9995;
+            isolation: isolate;
             display: none;
             flex-direction: column;
             gap: 10px;
@@ -770,6 +770,7 @@
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.35);
             opacity: 0; transition: opacity 0.6s ease;
+            pointer-events: auto;
         }
         .indice-navegacion.mostrar { display: flex; }
         .indice-navegacion.visible-suave { opacity: 1; }
@@ -782,7 +783,7 @@
             font-family: var(--fuente-texto);
             font-size: 0.72rem; font-weight: 600;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; touch-action: manipulation;
+            cursor: pointer; touch-action: manipulation; pointer-events: auto;
             transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s ease, border-color 0.25s ease;
         }
         .item-indice:active { transform: scale(0.88); }
@@ -798,7 +799,7 @@
             left: 50%;
             top: calc(10px + env(safe-area-inset-top, 0px));
             transform: translateX(-50%);
-            z-index: 940;
+            z-index: 9994;
             display: none;
             align-items: center;
             gap: 5px;
@@ -2964,9 +2965,10 @@
         // NAVEGACIÓN ENTRE PANTALLAS (scroll nativo + botones + índice)
         // El avance es scroll nativo del navegador con CSS Scroll Snap:
         // el swipe, la rueda del mouse y el trackpad funcionan solos.
-        // Las funciones de acá abajo solo llevan el foco con
-        // scrollIntoView() para los botones, el índice lateral y el
-        // avance automático; no manipulan ningún transform a mano.
+        // Las funciones de acá abajo solo llevan el foco calculando
+        // offsetTop + contenedor.scrollTo() para los botones, el índice
+        // lateral y el avance automático (nada de scrollIntoView, que
+        // en Chrome Android choca con scroll-snap y traba el touch).
         // ============================================================
         let indicePantallaActual = 0;
 
@@ -2979,14 +2981,17 @@
         }
 
         // Navegación 100% nativa: el scroll lo maneja el navegador (CSS Scroll
-        // Snap). Estas funciones solo llevan el foco a la pantalla pedida con
-        // scrollIntoView; el propio motor de snap se encarga de que encastre
-        // perfecto, sin translateY ni cálculos manuales.
+        // Snap). Para llevar el foco a una pantalla puntual (botones,
+        // índice, avance automático) NO usamos scrollIntoView(): en Chrome
+        // Android esa función entra en conflicto con scroll-snap y termina
+        // bloqueando el gesto táctil. En su lugar calculamos la posición
+        // exacta con offsetTop y desplazamos el contenedor a mano con
+        // scrollTo(), que no interfiere con el touch nativo.
         function irAPantalla(indice) {
             const pantallas = obtenerPantallas();
             if (!pantallas.length) return;
             const destino = Math.max(0, Math.min(pantallas.length - 1, indice));
-            pantallas[destino].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            contenedor.scrollTo({ top: pantallas[destino].offsetTop, left: 0, behavior: 'smooth' });
             vibrar(10);
             pausarAutoAvance();
         }
@@ -2994,7 +2999,7 @@
         function irAId(id) {
             const el = document.getElementById(id);
             if (!el) return;
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            contenedor.scrollTo({ top: el.offsetTop, left: 0, behavior: 'smooth' });
             vibrar(10);
             pausarAutoAvance();
             document.getElementById('menu-principal') && document.getElementById('menu-principal').classList.remove('abierto');

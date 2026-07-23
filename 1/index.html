@@ -50,48 +50,47 @@
 
         .contenedor-scroll {
             height: 100vh;
-            height: 100svh;
+            height: 100dvh;
             width: 100vw;
             overflow: hidden;
+            overscroll-behavior: none;
             position: relative;
             z-index: 10;
-            overscroll-behavior-y: contain;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-        .contenedor-scroll::-webkit-scrollbar { display: none; }
-
-        /* Scroll nativo con CSS Scroll Snap: mientras la puerta no se abre
-           (sin la clase .activo) el contenedor queda bloqueado para respetar
-           la introducción; al desbloquear, el scroll pasa a ser 100% nativo
-           del navegador, fluido en cualquier celular, sin JS de por medio. */
-        .contenedor-scroll.activo {
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
+            touch-action: pan-y; /* el eje que navega es X (JS); dejamos pan-y libre por si algo interno scrollea vertical (chat, muro) */
         }
 
+        /* Libro horizontal: cada "página" (.pantalla) es una tapa de 100vw
+           puesta en fila, y la "pista" se corre con transform: translateX.
+           No usamos scroll nativo en absoluto (ni vertical ni horizontal):
+           en el Chrome real de Android la barra de direcciones cambia de
+           alto en vivo durante el gesto y eso puede trabar cualquier
+           scroll-snap nativo. Manejando el paginado 100% por código (sin
+           overflow scrolleable) ese problema desaparece de raíz. */
         .pista-pantallas {
-            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            width: max-content;
+            transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+            will-change: transform;
         }
 
         .pantalla {
             height: 100vh;
-            height: 100svh;
+            height: 100dvh;
             width: 100vw;
+            flex: 0 0 100vw;
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             position: relative;
             background: transparent;
-            scroll-snap-align: start;
-            scroll-snap-stop: normal;
         }
 
         #canvas-particulas {
             position: fixed;
             top: 0; left: 0;
-            width: 100vw; height: 100vh;
+            width: 100vw; height: 100vh; height: 100dvh;
             pointer-events: none; 
             z-index: 5;
             opacity: 0;
@@ -314,7 +313,7 @@
             color: #d63031; font-weight: bold; font-size: clamp(0.8rem, 2.5vw, 1.2rem);
             border: none; border-radius: 50px; padding: clamp(10px, 3vw, 18px) clamp(16px, 5vw, 30px);
             box-shadow: 0 10px 25px rgba(255, 105, 180, 0.5);
-            cursor: pointer; z-index: 1000;
+            cursor: pointer; z-index: 9995; pointer-events: auto;
             display: none; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             font-family: var(--fuente-texto);
             align-items: center; gap: 8px;
@@ -434,7 +433,7 @@
 
         /* --- Componentes compartidos (cristal) --- */
         .modal-cristal, .muro-pantalla {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
             background: rgba(5, 8, 10, 0.85);
             backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             z-index: 10000; display: flex; flex-direction: column;
@@ -749,81 +748,74 @@
         }
 
         /* ============================================================
-           ÍNDICE DE NAVEGACIÓN (glassmorphism)
-           Menú lateral sutil para saltar a los Capítulos y a la Cuenta
-           Regresiva. Se muestra recién cuando la experiencia se
-           desbloquea (misma pauta que el resto de la interfaz).
+           ÍNDICE (tabla de contenidos, como pantalla principal del libro)
+           Pantalla principal de Índice (tabla de contenidos): reemplaza al
+           viejo menú lateral. Es la página 2 del libro (después de la
+           puerta) y desde ahí se salta directo a cualquier capítulo.
            ============================================================ */
-        .indice-navegacion {
+        .pantalla-indice {
+            padding: calc(32px + env(safe-area-inset-top, 0px)) 24px calc(32px + env(safe-area-inset-bottom, 0px));
+            box-sizing: border-box;
+            text-align: center;
+            background: radial-gradient(circle at 50% 15%, rgba(255,182,193,0.14), transparent 60%), #0c0810;
+        }
+        .indice-titulo {
+            font-family: var(--fuente-titulo); font-weight: 400;
+            font-size: clamp(1.8rem, 7vw, 2.6rem); color: #fff; margin: 0 0 8px;
+            text-shadow: 0 2px 14px rgba(0,0,0,0.35);
+        }
+        .indice-subtitulo {
+            font-family: var(--fuente-texto); color: rgba(255,255,255,0.55);
+            font-size: 0.85rem; margin: 0 0 26px; letter-spacing: 0.03em;
+        }
+        .lista-indice {
+            display: flex; flex-direction: column; gap: 12px;
+            width: min(88vw, 380px);
+            max-height: min(54vh, 420px);
+            overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y;
+            padding: 4px 4px 4px 0;
+        }
+        .tarjeta-indice {
+            display: flex; align-items: center; gap: 14px;
+            padding: 15px 18px; border-radius: 18px;
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            cursor: pointer; touch-action: manipulation; pointer-events: auto;
+            text-align: left; -webkit-user-select: none; user-select: none;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .tarjeta-indice:active { transform: scale(0.97); background: rgba(255,255,255,0.12); }
+        .tarjeta-indice .numero-indice {
+            width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(255,154,158,0.25); border: 1px solid rgba(255,255,255,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--fuente-titulo); font-size: 1.05rem; color: #ffe3ec;
+        }
+        .tarjeta-indice .titulo-indice { font-family: var(--fuente-texto); color: #fff; font-size: 0.95rem; font-weight: 600; }
+        .tarjeta-indice .detalle-indice { font-family: var(--fuente-texto); color: rgba(255,255,255,0.5); font-size: 0.75rem; margin-top: 2px; }
+
+        /* Botón de acceso rápido: vuelve al Índice desde cualquier página del libro */
+        .btn-indice-rapido {
             position: fixed;
             top: calc(84px + env(safe-area-inset-top, 0px));
             right: calc(10px + env(safe-area-inset-right, 0px));
             z-index: 9995;
-            isolation: isolate;
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-            padding: 12px 8px;
-            background: rgba(10, 8, 14, 0.35);
-            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.18);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-            opacity: 0; transition: opacity 0.6s ease;
-            pointer-events: auto;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(10, 8, 14, 0.4);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.22);
+            display: none; align-items: center; justify-content: center;
+            font-size: 1.15rem; color: #ffe3ec; cursor: pointer;
+            touch-action: manipulation; pointer-events: auto;
+            opacity: 0; transition: opacity 0.6s ease, transform 0.2s ease;
         }
-        .indice-navegacion.mostrar { display: flex; }
-        .indice-navegacion.visible-suave { opacity: 1; }
-        .item-indice {
-            width: 34px; height: 34px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.3);
-            background: rgba(255,255,255,0.08);
-            color: #ffe3ec;
-            font-family: var(--fuente-texto);
-            font-size: 0.72rem; font-weight: 600;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; touch-action: manipulation; pointer-events: auto;
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.25s ease, border-color 0.25s ease;
-        }
-        .item-indice:active { transform: scale(0.88); }
-        .item-indice.activo-indice {
+        .btn-indice-rapido.mostrar { display: flex; }
+        .btn-indice-rapido.visible-suave { opacity: 1; }
+        .btn-indice-rapido:active { transform: scale(0.88); }
+        .btn-indice-rapido.activo-indice {
             background: rgba(255, 154, 158, 0.55);
             border-color: rgba(255,255,255,0.7);
             box-shadow: 0 0 14px rgba(255,154,158,0.6);
-        }
-
-        /* Indicador de progreso: puntos milimétricos al pie de la pantalla */
-        .progreso-lectura {
-            position: fixed;
-            left: 50%;
-            top: calc(10px + env(safe-area-inset-top, 0px));
-            transform: translateX(-50%);
-            z-index: 9994;
-            display: none;
-            align-items: center;
-            gap: 5px;
-            max-width: min(70vw, 320px);
-            overflow: hidden;
-            padding: 7px 12px;
-            background: rgba(10, 8, 14, 0.32);
-            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 30px;
-            pointer-events: none;
-            opacity: 0; transition: opacity 0.6s ease;
-        }
-        .progreso-lectura.mostrar { display: flex; }
-        .progreso-lectura.visible-suave { opacity: 1; }
-        .punto-progreso {
-            width: 5px; height: 5px; border-radius: 50%;
-            background: rgba(255,255,255,0.35);
-            transition: background 0.3s ease, transform 0.3s ease, width 0.3s ease;
-            flex-shrink: 0;
-        }
-        .punto-progreso.activo-punto {
-            background: #ffb3c6;
-            width: 16px; border-radius: 4px;
         }
 
         /* Legibilidad: sombras suaves para texto dinámico sobre fondos animados */
@@ -1110,7 +1102,7 @@
             letter-spacing: 0.4px; animation: resplandorBoton 2.4s infinite alternate;
         }
         .modal-boleto {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
             background: rgba(5,8,10,0.92); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
             opacity: 1; transition: opacity 0.4s ease, visibility 0s;
@@ -1155,7 +1147,7 @@
             font-size: clamp(0.8rem, 2.3vw, 0.95rem); cursor: pointer; touch-action: manipulation;
         }
         .modal-cielo {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
             background: #04060c; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center;
             opacity: 1; transition: opacity 0.4s ease, visibility 0s;
         }
@@ -1184,7 +1176,7 @@
         .postdata-final.mostrar { opacity: 1; transform: translateY(0); }
 
         /* --- Lluvia de besos al final --- */
-        .lluvia-besos { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 15000; }
+        .lluvia-besos { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; pointer-events: none; z-index: 15000; }
         .beso-cayendo {
             position: absolute; top: -60px; will-change: transform, opacity;
             animation-name: caerBeso; animation-timing-function: ease-in; animation-fill-mode: forwards;
@@ -1196,7 +1188,7 @@
         }
 
         /* --- Lluvia de "Te amo" en distintos idiomas --- */
-        .lluvia-teamo { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 15000; }
+        .lluvia-teamo { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; pointer-events: none; z-index: 15000; }
         .teamo-cayendo {
             position: absolute; top: -60px; will-change: transform, opacity;
             font-family: var(--fuente-titulo); color: #ffb3c6; text-shadow: 0 0 12px rgba(255,105,135,0.8);
@@ -1209,7 +1201,7 @@
         }
 
         /* --- Lluvia de abrazos --- */
-        .lluvia-abrazos { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 15000; }
+        .lluvia-abrazos { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; pointer-events: none; z-index: 15000; }
         .abrazo-cayendo {
             position: absolute; top: -60px; will-change: transform, opacity;
             animation-name: caerAbrazo; animation-timing-function: ease-in; animation-fill-mode: forwards;
@@ -1221,7 +1213,7 @@
         }
 
         /* --- Lluvia de dulces (chocolate / helado / dulces) --- */
-        .lluvia-dulces { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; pointer-events: none; z-index: 15000; }
+        .lluvia-dulces { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; pointer-events: none; z-index: 15000; }
         .dulce-cayendo {
             position: absolute; top: -60px; will-change: transform, opacity;
             animation-name: caerBeso; animation-timing-function: ease-in; animation-fill-mode: forwards;
@@ -1264,7 +1256,7 @@
                 </div>
 
                 <div id="mensaje-final" class="mensaje-final"></div>
-                <div id="scroll-aviso" class="indicador-scroll">✨ ¡Abre la puerta! Desliza 👇</div>
+                <div id="scroll-aviso" class="indicador-scroll">✨ ¡Abre la puerta! Deslizá 👉</div>
             </div>
         </section>
         </div>
@@ -1325,11 +1317,8 @@
         <span>✨ Mensaje Mágico</span>
     </button>
 
-    <!-- Índice de navegación: salto directo a portadas de capítulo y cuenta regresiva -->
-    <nav id="indice-navegacion" class="indice-navegacion" aria-label="Índice de capítulos"></nav>
-
-    <!-- Indicador de progreso de lectura -->
-    <div id="progreso-lectura" class="progreso-lectura" aria-hidden="true"></div>
+    <!-- Acceso rápido de vuelta al Índice (tabla de contenidos), visible desde cualquier página del libro -->
+    <button id="btn-indice-rapido" class="btn-indice-rapido" onclick="irAId('pantalla-indice')" title="Volver al índice" aria-label="Volver al índice">📖</button>
 
     <!-- Navegación garantizada entre pantallas: funciona siempre, aunque el swipe nativo falle en algún celular -->
     <div class="nav-pantallas" id="nav-pantallas">
@@ -1617,7 +1606,18 @@
         const pista = document.getElementById('pista-pantallas');
 
         let indiceGlobal = 0;
-        const destinosIndice = []; // { id, etiqueta } para el índice lateral de navegación
+        const destinosIndice = []; // { id, etiqueta, titulo, detalle } usados para armar la pantalla de Índice
+
+        // La pantalla de Índice es la página 2 del libro (justo después de
+        // la puerta de entrada). Se crea vacía acá para que quede en el
+        // orden correcto dentro de la pista; su contenido se arma más
+        // abajo, una vez que ya sabemos todos los capítulos disponibles.
+        const pantallaIndice = document.createElement('section');
+        pantallaIndice.className = 'pantalla pantalla-indice';
+        pantallaIndice.id = 'pantalla-indice';
+        pantallaIndice.dataset.tipo = 'indice';
+        pista.appendChild(pantallaIndice);
+
         capitulos.forEach(cap => {
             // Pantalla portada del capítulo
             const portada = document.createElement('section');
@@ -1630,7 +1630,10 @@
                 <div class="capitulo-indicador">✨ Deslizá para continuar ✨</div>
             `;
             pista.appendChild(portada);
-            destinosIndice.push({ id: portada.id, etiqueta: String(cap.numero) });
+            destinosIndice.push({
+                id: portada.id, etiqueta: String(cap.numero), tipo: 'capitulo',
+                titulo: cap.titulo, detalle: `${cap.frases.length} mensajes`
+            });
 
             cap.frases.forEach(frase => {
                 const index = indiceGlobal;
@@ -1674,7 +1677,7 @@
             </div>
         `;
         pista.appendChild(cuentaSec);
-        destinosIndice.push({ id: cuentaSec.id, etiqueta: '⏰' });
+        destinosIndice.push({ id: cuentaSec.id, etiqueta: '⏰', tipo: 'cuenta', titulo: 'Cuenta regresiva', detalle: 'Nuestro primer encuentro' });
 
         // Decoración romántica: corazones y círculos flotando, igual que en el resto de las pantallas
         const simbolosCuenta = ['💗', '✨', '🤍', '💫'];
@@ -1723,27 +1726,33 @@
             </div>
         `;
         pista.appendChild(finalSec);
+        destinosIndice.push({ id: finalSec.id, tipo: 'final', titulo: 'Cierre', detalle: 'El final (que es un comienzo)' });
 
-        // Índice lateral (glass) para saltar directo a cada capítulo / cuenta regresiva,
-        // y puntos de progreso que reflejan el avance total de la lectura.
-        (function construirIndiceYProgreso() {
-            const nav = document.getElementById('indice-navegacion');
-            destinosIndice.forEach(destino => {
-                const btn = document.createElement('button');
-                btn.className = 'item-indice';
-                btn.textContent = destino.etiqueta;
-                btn.title = destino.etiqueta === '⏰' ? 'Cuenta regresiva' : `Capítulo ${destino.etiqueta}`;
-                btn.setAttribute('aria-label', btn.title);
-                btn.dataset.destino = destino.id;
-                btn.onclick = () => irAId(destino.id);
-                nav.appendChild(btn);
-            });
+        // Se arma el contenido de la pantalla de Índice ahora que ya
+        // existen todas las páginas del libro: una tarjeta por capítulo,
+        // más la cuenta regresiva y el cierre, cada una con salto directo.
+        (function construirPantallaIndice() {
+            const tarjetas = destinosIndice.map(destino => {
+                const icono = destino.tipo === 'capitulo' ? destino.etiqueta
+                    : destino.tipo === 'cuenta' ? '⏰' : '💌';
+                return `
+                    <div class="tarjeta-indice" data-destino="${destino.id}" role="button" tabindex="0" aria-label="Ir a ${destino.titulo}">
+                        <div class="numero-indice">${icono}</div>
+                        <div>
+                            <div class="titulo-indice">${destino.titulo}</div>
+                            <div class="detalle-indice">${destino.detalle}</div>
+                        </div>
+                    </div>`;
+            }).join('');
 
-            const progreso = document.getElementById('progreso-lectura');
-            document.querySelectorAll('#pista-pantallas .pantalla').forEach(() => {
-                const punto = document.createElement('span');
-                punto.className = 'punto-progreso';
-                progreso.appendChild(punto);
+            pantallaIndice.innerHTML = `
+                <h1 class="indice-titulo">Índice</h1>
+                <p class="indice-subtitulo">Tocá un capítulo para entrar</p>
+                <div class="lista-indice">${tarjetas}</div>
+            `;
+
+            pantallaIndice.querySelectorAll('.tarjeta-indice').forEach(tarjeta => {
+                tarjeta.addEventListener('click', () => irAId(tarjeta.dataset.destino));
             });
         })();
 
@@ -2057,7 +2066,7 @@
                             sec.classList.remove('visible'); 
                         }
                     });
-                }, { root: contenedor, rootMargin: '100% 0px', threshold: 0.1 }); 
+                }, { root: contenedor, rootMargin: '0px 100%', threshold: 0.1 }); 
 
                 document.querySelectorAll('.pantalla.placeholder').forEach(sec => observer.observe(sec));
             } else {
@@ -2692,13 +2701,9 @@
                             document.getElementById('nav-pantallas').classList.add('mostrar');
                             programarAutoAvance();
 
-                            const indiceNav = document.getElementById('indice-navegacion');
-                            indiceNav.classList.add('mostrar');
-                            setTimeout(() => indiceNav.classList.add('visible-suave'), 100);
-
-                            const progresoLectura = document.getElementById('progreso-lectura');
-                            progresoLectura.classList.add('mostrar');
-                            setTimeout(() => progresoLectura.classList.add('visible-suave'), 150);
+                            const btnIndiceRapido = document.getElementById('btn-indice-rapido');
+                            btnIndiceRapido.classList.add('mostrar');
+                            setTimeout(() => btnIndiceRapido.classList.add('visible-suave'), 100);
 
                             const btnAzar = document.getElementById('btn-azar');
                             btnAzar.style.display = 'flex'; setTimeout(() => btnAzar.classList.add('mostrar'), 100);
@@ -2962,13 +2967,13 @@
         }
 
         // ============================================================
-        // NAVEGACIÓN ENTRE PANTALLAS (scroll nativo + botones + índice)
-        // El avance es scroll nativo del navegador con CSS Scroll Snap:
-        // el swipe, la rueda del mouse y el trackpad funcionan solos.
-        // Las funciones de acá abajo solo llevan el foco calculando
-        // offsetTop + contenedor.scrollTo() para los botones, el índice
-        // lateral y el avance automático (nada de scrollIntoView, que
-        // en Chrome Android choca con scroll-snap y traba el touch).
+        // NAVEGACIÓN ENTRE PÁGINAS (libro horizontal, 100% por código)
+        // La "pista" es una fila de páginas (una por .pantalla) que se
+        // mueve con transform: translateX. No hay scroll nativo en juego
+        // en ningún eje: el paginado horizontal se controla enteramente
+        // acá, así el gesto de "pasar la hoja" funciona igual en
+        // cualquier navegador/celular, sin depender de cómo cada uno
+        // maneje el scroll-snap o la barra de direcciones dinámica.
         // ============================================================
         let indicePantallaActual = 0;
 
@@ -2980,76 +2985,98 @@
             return indicePantallaActual;
         }
 
-        // Navegación 100% nativa: el scroll lo maneja el navegador (CSS Scroll
-        // Snap). Para llevar el foco a una pantalla puntual (botones,
-        // índice, avance automático) NO usamos scrollIntoView(): en Chrome
-        // Android esa función entra en conflicto con scroll-snap y termina
-        // bloqueando el gesto táctil. En su lugar calculamos la posición
-        // exacta con offsetTop y desplazamos el contenedor a mano con
-        // scrollTo(), que no interfiere con el touch nativo.
         function irAPantalla(indice) {
             const pantallas = obtenerPantallas();
             if (!pantallas.length) return;
             const destino = Math.max(0, Math.min(pantallas.length - 1, indice));
-            contenedor.scrollTo({ top: pantallas[destino].offsetTop, left: 0, behavior: 'smooth' });
+            indicePantallaActual = destino;
+            pista.style.transform = `translateX(-${destino * 100}vw)`;
             vibrar(10);
             pausarAutoAvance();
+            actualizarIndiceVisual(destino);
         }
 
         function irAId(id) {
+            const pantallas = obtenerPantallas();
             const el = document.getElementById(id);
             if (!el) return;
-            contenedor.scrollTo({ top: el.offsetTop, left: 0, behavior: 'smooth' });
-            vibrar(10);
-            pausarAutoAvance();
+            const indice = pantallas.indexOf(el);
+            if (indice === -1) return;
+            irAPantalla(indice);
             document.getElementById('menu-principal') && document.getElementById('menu-principal').classList.remove('abierto');
+        }
+
+        // Resalta el botón de acceso rápido al índice cuando estamos
+        // parados justo en la página del Índice (le da un pequeño feedback
+        // de "estás acá"); en el resto de las páginas queda con su estilo normal.
+        function actualizarIndiceVisual(idx) {
+            const pantallas = obtenerPantallas();
+            const objetivo = pantallas[idx];
+            if (!objetivo) return;
+            const btnIndice = document.getElementById('btn-indice-rapido');
+            if (btnIndice) btnIndice.classList.toggle('activo-indice', objetivo.id === 'pantalla-indice');
         }
 
         function pantallaSiguiente() { irAPantalla(indiceActualPantalla() + 1); }
         function pantallaAnterior() { irAPantalla(indiceActualPantalla() - 1); }
 
-        // Seguimiento de la pantalla actual: qué sección está realmente a la
-        // vista se usa para resaltar el índice lateral y avanzar los puntos
-        // de progreso. Es un observador aparte del que arma el contenido,
-        // con un umbral más estricto (0.55) porque acá nos interesa "cuál
-        // es la pantalla dominante ahora", no "cuál hay que empezar a armar".
-        (function configurarSeguimientoDeIndice() {
-            if (typeof IntersectionObserver !== 'function') return;
-            const pantallas = obtenerPantallas();
-            const puntos = Array.from(document.querySelectorAll('#progreso-lectura .punto-progreso'));
-            const seguidor = new IntersectionObserver((entradas) => {
-                entradas.forEach(entrada => {
-                    if (!entrada.isIntersecting) return;
-                    const idx = pantallas.indexOf(entrada.target);
-                    if (idx === -1) return;
-                    indicePantallaActual = idx;
+        // Swipe horizontal: se mide con touchstart/touchend (nunca
+        // touchmove) comparando dónde arrancó y dónde terminó el dedo en
+        // el eje X. Nada de arrastrar la pista en vivo ni de
+        // preventDefault, que es lo que suele trabar el touch en Android.
+        // Un gesto mayormente vertical (o que arranca en un elemento con
+        // su propio scroll, como el Índice o el chat) se ignora, así no
+        // compite con el scroll interno de esos paneles.
+        (function configurarSwipeManual() {
+            const SELECTOR_IGNORAR = 'button, .btn, .btn-azar, .btn-indice-rapido, .nav-flecha, .tarjeta-indice, ' +
+                '.lista-indice, .menu-principal, .reproductor-flotante, .modal-cristal, .muro-pantalla, ' +
+                'input, textarea, a, .icono-interactivo, .puerta, .chat-flotante, .gratitud-flotante, ' +
+                '.deseos-flotante, .preguntas-flotante, .reloj-flotante, .muro-flotante';
 
-                    if (puntos[idx]) {
-                        puntos.forEach(p => p.classList.remove('activo-punto'));
-                        puntos[idx].classList.add('activo-punto');
-                    }
+            let inicioY = null, inicioX = null;
 
-                    document.querySelectorAll('#indice-navegacion .item-indice').forEach(btn => {
-                        btn.classList.toggle('activo-indice', btn.dataset.destino === entrada.target.id);
-                    });
-                });
-            }, { root: contenedor, threshold: 0.55 });
-            pantallas.forEach(sec => seguidor.observe(sec));
+            contenedor.addEventListener('touchstart', (e) => {
+                if (!contenedor.classList.contains('activo') || !e.touches[0]) { inicioX = null; return; }
+                if (e.target && e.target.closest && e.target.closest(SELECTOR_IGNORAR)) { inicioX = null; return; }
+                inicioY = e.touches[0].clientY;
+                inicioX = e.touches[0].clientX;
+                pausarAutoAvance();
+            }, { passive: true });
+
+            contenedor.addEventListener('touchend', (e) => {
+                if (inicioX === null || !e.changedTouches[0]) return;
+                const finY = e.changedTouches[0].clientY;
+                const finX = e.changedTouches[0].clientX;
+                const deltaY = inicioY - finY;
+                const deltaX = inicioX - finX;
+                inicioY = null; inicioX = null;
+
+                // Gesto mayormente vertical: no es "pasar de hoja", se ignora.
+                if (Math.abs(deltaY) > Math.abs(deltaX)) return;
+                if (Math.abs(deltaX) < 45) return;
+
+                if (deltaX > 0) pantallaSiguiente(); else pantallaAnterior();
+            }, { passive: true });
         })();
 
-        // El scroll nativo también reinicia el temporizador de avance
-        // automático apenas la persona interactúa a mano.
-        let temporizadorScrollUsuario = null;
-        contenedor.addEventListener('scroll', () => {
-            clearTimeout(temporizadorScrollUsuario);
-            temporizadorScrollUsuario = setTimeout(pausarAutoAvance, 120);
-        }, { passive: true });
-
-        // ================== AVANCE AUTOMÁTICO (respaldo) ==================
-        // Si por lo que sea el gesto manual o los botones no responden en
-        // algún celular, la pantalla igual avanza sola cada ciertos segundos.
+        // Rueda del mouse / trackpad (desktop): scroll hacia abajo o hacia
+        // la derecha avanza una página, hacia arriba o la izquierda retrocede.
+        (function configurarRuedaMouse() {
+            let bloqueada = false;
+            contenedor.addEventListener('wheel', (e) => {
+                if (!contenedor.classList.contains('activo')) return;
+                if (e.target && e.target.closest && e.target.closest(
+                    '.mensajes-chat, .lista-gratitud, .lista-deseos, .cuerpo-preguntas, .muro-pantalla, .lista-indice, input, textarea, select'
+                )) return;
+                const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+                if (Math.abs(delta) < 8 || bloqueada) return;
+                bloqueada = true;
+                if (delta > 0) pantallaSiguiente(); else pantallaAnterior();
+                setTimeout(() => { bloqueada = false; }, 700);
+            }, { passive: true });
+        })();
         // Se pausa apenas la persona interactúa (botón, flecha, swipe) y
-        // se detiene al llegar a la última pantalla.
+        // se detiene al llegar a la última página.
         let temporizadorAutoAvance = null;
         const INTERVALO_AUTO_AVANCE = 9000;
 

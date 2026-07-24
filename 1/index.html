@@ -777,11 +777,13 @@
         }
         .tarjeta-indice {
             display: flex; align-items: center; gap: 14px;
+            width: 100%; box-sizing: border-box;
             padding: 15px 18px; border-radius: 18px;
             background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             cursor: pointer; touch-action: manipulation; pointer-events: auto;
             text-align: left; -webkit-user-select: none; user-select: none;
+            font-family: var(--fuente-texto); margin: 0; appearance: none; -webkit-appearance: none;
             transition: transform 0.2s ease, background 0.2s ease;
         }
         .tarjeta-indice:active { transform: scale(0.97); background: rgba(255,255,255,0.12); }
@@ -791,8 +793,9 @@
             display: flex; align-items: center; justify-content: center;
             font-family: var(--fuente-titulo); font-size: 1.05rem; color: #ffe3ec;
         }
+        .tarjeta-indice > span:last-child { display: flex; flex-direction: column; gap: 2px; }
         .tarjeta-indice .titulo-indice { font-family: var(--fuente-texto); color: #fff; font-size: 0.95rem; font-weight: 600; }
-        .tarjeta-indice .detalle-indice { font-family: var(--fuente-texto); color: rgba(255,255,255,0.5); font-size: 0.75rem; margin-top: 2px; }
+        .tarjeta-indice .detalle-indice { font-family: var(--fuente-texto); color: rgba(255,255,255,0.5); font-size: 0.75rem; }
 
         /* Botón de acceso rápido: vuelve al Índice desde cualquier página del libro */
         .btn-indice-rapido {
@@ -1736,13 +1739,13 @@
                 const icono = destino.tipo === 'capitulo' ? destino.etiqueta
                     : destino.tipo === 'cuenta' ? '⏰' : '💌';
                 return `
-                    <div class="tarjeta-indice" data-destino="${destino.id}" role="button" tabindex="0" aria-label="Ir a ${destino.titulo}">
-                        <div class="numero-indice">${icono}</div>
-                        <div>
-                            <div class="titulo-indice">${destino.titulo}</div>
-                            <div class="detalle-indice">${destino.detalle}</div>
-                        </div>
-                    </div>`;
+                    <button type="button" class="tarjeta-indice" data-destino="${destino.id}" aria-label="Ir a ${destino.titulo}">
+                        <span class="numero-indice">${icono}</span>
+                        <span>
+                            <span class="titulo-indice">${destino.titulo}</span>
+                            <span class="detalle-indice">${destino.detalle}</span>
+                        </span>
+                    </button>`;
             }).join('');
 
             pantallaIndice.innerHTML = `
@@ -1751,8 +1754,22 @@
                 <div class="lista-indice">${tarjetas}</div>
             `;
 
+            // Botón real + touchend con preventDefault: en Android, cuando hay
+            // otro listener de touch en un ancestro (acá, el swipe del libro
+            // en #contenedor), el "click" sintético a veces se pierde o llega
+            // tarde. Resolviendo la acción directo en touchend evitamos
+            // depender de esa síntesis, y el preventDefault frena el click
+            // fantasma que vendría después (así no se ejecuta doble).
             pantallaIndice.querySelectorAll('.tarjeta-indice').forEach(tarjeta => {
-                tarjeta.addEventListener('click', () => irAId(tarjeta.dataset.destino));
+                let yaEjecutado = false;
+                const ejecutar = () => {
+                    if (yaEjecutado) return;
+                    yaEjecutado = true;
+                    irAId(tarjeta.dataset.destino);
+                    setTimeout(() => { yaEjecutado = false; }, 500);
+                };
+                tarjeta.addEventListener('touchend', (e) => { e.preventDefault(); ejecutar(); }, { passive: false });
+                tarjeta.addEventListener('click', ejecutar);
             });
         })();
 
@@ -3078,15 +3095,14 @@
         // Se pausa apenas la persona interactúa (botón, flecha, swipe) y
         // se detiene al llegar a la última página.
         let temporizadorAutoAvance = null;
-        const INTERVALO_AUTO_AVANCE = 9000;
+        const INTERVALO_AUTO_AVANCE = 4500;
 
         function programarAutoAvance() {
             clearTimeout(temporizadorAutoAvance);
             temporizadorAutoAvance = setTimeout(() => {
                 const pantallas = obtenerPantallas();
                 if (indicePantallaActual < pantallas.length - 1) {
-                    pantallaSiguiente();
-                    programarAutoAvance();
+                    pantallaSiguiente(); // pantallaSiguiente -> irAPantalla ya reprograma el próximo tick al final
                 }
             }, INTERVALO_AUTO_AVANCE);
         }

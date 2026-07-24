@@ -56,24 +56,34 @@
             overscroll-behavior: none;
             position: relative;
             z-index: 10;
-            touch-action: pan-y; /* el eje que navega es X (JS); dejamos pan-y libre por si algo interno scrollea vertical (chat, muro) */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .contenedor-scroll::-webkit-scrollbar { display: none; }
+
+        /* Scroll horizontal 100% nativo (CSS Scroll Snap sobre el eje X).
+           Antes esto se manejaba a mano con touchstart/touchend + transform,
+           pero en Android real ese listener manual competía con el touch
+           nativo del navegador y terminaba comiéndose los toques (funcionaba
+           en mouse/modo escritorio porque ahí no hay touch de por medio).
+           Dejando que el navegador maneje el gesto con su propio motor de
+           scroll —el mismo que usa para cualquier scroll normal— se evita
+           ese conflicto de raíz. Recién se activa con la clase .activo,
+           para no romper la introducción con la puerta. */
+        .contenedor-scroll.activo {
+            overflow-x: scroll;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
         }
 
-        /* Libro horizontal: cada "página" (.pantalla) es una tapa de 100vw
-           puesta en fila, y la "pista" se corre con transform: translateX.
-           No usamos scroll nativo en absoluto (ni vertical ni horizontal):
-           en el Chrome real de Android la barra de direcciones cambia de
-           alto en vivo durante el gesto y eso puede trabar cualquier
-           scroll-snap nativo. Manejando el paginado 100% por código (sin
-           overflow scrolleable) ese problema desaparece de raíz. */
         .pista-pantallas {
             height: 100%;
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
             width: max-content;
-            transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
-            will-change: transform;
         }
 
         .pantalla {
@@ -85,6 +95,8 @@
             justify-content: center; align-items: center;
             position: relative;
             background: transparent;
+            scroll-snap-align: start;
+            scroll-snap-stop: normal;
         }
 
         #canvas-particulas {
@@ -820,6 +832,9 @@
             border-color: rgba(255,255,255,0.7);
             box-shadow: 0 0 14px rgba(255,154,158,0.6);
         }
+        .btn-auto-avance {
+            top: calc(84px + 54px + env(safe-area-inset-top, 0px));
+        }
 
         /* Legibilidad: sombras suaves para texto dinámico sobre fondos animados */
         .texto-romantico, .capitulo-titulo, .cuenta-titulo, .cuenta-subtitulo,
@@ -1322,6 +1337,9 @@
 
     <!-- Acceso rápido de vuelta al Índice (tabla de contenidos), visible desde cualquier página del libro -->
     <button id="btn-indice-rapido" class="btn-indice-rapido" onclick="irAId('pantalla-indice')" title="Volver al índice" aria-label="Volver al índice">📖</button>
+
+    <!-- Reproducir / pausar el avance automático de los mensajes -->
+    <button id="btn-auto-avance" class="btn-indice-rapido btn-auto-avance" onclick="toggleAutoAvance(event)" title="Pausar avance automático" aria-label="Pausar avance automático">⏸️</button>
 
     <!-- Navegación garantizada entre pantallas: funciona siempre, aunque el swipe nativo falle en algún celular -->
     <div class="nav-pantallas" id="nav-pantallas">
@@ -2722,6 +2740,10 @@
                             btnIndiceRapido.classList.add('mostrar');
                             setTimeout(() => btnIndiceRapido.classList.add('visible-suave'), 100);
 
+                            const btnAutoAvance = document.getElementById('btn-auto-avance');
+                            btnAutoAvance.classList.add('mostrar');
+                            setTimeout(() => btnAutoAvance.classList.add('visible-suave'), 150);
+
                             const btnAzar = document.getElementById('btn-azar');
                             btnAzar.style.display = 'flex'; setTimeout(() => btnAzar.classList.add('mostrar'), 100);
 
@@ -2984,13 +3006,13 @@
         }
 
         // ============================================================
-        // NAVEGACIÓN ENTRE PÁGINAS (libro horizontal, 100% por código)
-        // La "pista" es una fila de páginas (una por .pantalla) que se
-        // mueve con transform: translateX. No hay scroll nativo en juego
-        // en ningún eje: el paginado horizontal se controla enteramente
-        // acá, así el gesto de "pasar la hoja" funciona igual en
-        // cualquier navegador/celular, sin depender de cómo cada uno
-        // maneje el scroll-snap o la barra de direcciones dinámica.
+        // NAVEGACIÓN ENTRE PÁGINAS (scroll horizontal nativo + botones)
+        // El paginado lo maneja el navegador con CSS Scroll Snap (eje X).
+        // Las funciones de acá abajo solo llevan el foco calculando
+        // offsetLeft + contenedor.scrollTo() (nada de scrollIntoView ni
+        // de transform a mano): así el swipe, los botones ‹ › y el
+        // auto-avance usan todos el mismo motor de scroll nativo, que es
+        // el que mejor funciona en Android real.
         // ============================================================
         let indicePantallaActual = 0;
 
@@ -3006,26 +3028,22 @@
             const pantallas = obtenerPantallas();
             if (!pantallas.length) return;
             const destino = Math.max(0, Math.min(pantallas.length - 1, indice));
-            indicePantallaActual = destino;
-            pista.style.transform = `translateX(-${destino * 100}vw)`;
+            contenedor.scrollTo({ left: pantallas[destino].offsetLeft, top: 0, behavior: 'smooth' });
             vibrar(10);
             pausarAutoAvance();
-            actualizarIndiceVisual(destino);
         }
 
         function irAId(id) {
-            const pantallas = obtenerPantallas();
             const el = document.getElementById(id);
             if (!el) return;
-            const indice = pantallas.indexOf(el);
-            if (indice === -1) return;
-            irAPantalla(indice);
+            contenedor.scrollTo({ left: el.offsetLeft, top: 0, behavior: 'smooth' });
+            vibrar(10);
+            pausarAutoAvance();
             document.getElementById('menu-principal') && document.getElementById('menu-principal').classList.remove('abierto');
         }
 
         // Resalta el botón de acceso rápido al índice cuando estamos
-        // parados justo en la página del Índice (le da un pequeño feedback
-        // de "estás acá"); en el resto de las páginas queda con su estilo normal.
+        // parados justo en la página del Índice.
         function actualizarIndiceVisual(idx) {
             const pantallas = obtenerPantallas();
             const objetivo = pantallas[idx];
@@ -3037,68 +3055,59 @@
         function pantallaSiguiente() { irAPantalla(indiceActualPantalla() + 1); }
         function pantallaAnterior() { irAPantalla(indiceActualPantalla() - 1); }
 
-        // Swipe horizontal: se mide con touchstart/touchend (nunca
-        // touchmove) comparando dónde arrancó y dónde terminó el dedo en
-        // el eje X. Nada de arrastrar la pista en vivo ni de
-        // preventDefault, que es lo que suele trabar el touch en Android.
-        // Un gesto mayormente vertical (o que arranca en un elemento con
-        // su propio scroll, como el Índice o el chat) se ignora, así no
-        // compite con el scroll interno de esos paneles.
-        (function configurarSwipeManual() {
-            const SELECTOR_IGNORAR = 'button, .btn, .btn-azar, .btn-indice-rapido, .nav-flecha, .tarjeta-indice, ' +
-                '.lista-indice, .menu-principal, .reproductor-flotante, .modal-cristal, .muro-pantalla, ' +
-                'input, textarea, a, .icono-interactivo, .puerta, .chat-flotante, .gratitud-flotante, ' +
-                '.deseos-flotante, .preguntas-flotante, .reloj-flotante, .muro-flotante';
-
-            let inicioY = null, inicioX = null;
-
-            contenedor.addEventListener('touchstart', (e) => {
-                if (!contenedor.classList.contains('activo') || !e.touches[0]) { inicioX = null; return; }
-                if (e.target && e.target.closest && e.target.closest(SELECTOR_IGNORAR)) { inicioX = null; return; }
-                inicioY = e.touches[0].clientY;
-                inicioX = e.touches[0].clientX;
-                pausarAutoAvance();
-            }, { passive: true });
-
-            contenedor.addEventListener('touchend', (e) => {
-                if (inicioX === null || !e.changedTouches[0]) return;
-                const finY = e.changedTouches[0].clientY;
-                const finX = e.changedTouches[0].clientX;
-                const deltaY = inicioY - finY;
-                const deltaX = inicioX - finX;
-                inicioY = null; inicioX = null;
-
-                // Gesto mayormente vertical: no es "pasar de hoja", se ignora.
-                if (Math.abs(deltaY) > Math.abs(deltaX)) return;
-                if (Math.abs(deltaX) < 45) return;
-
-                if (deltaX > 0) pantallaSiguiente(); else pantallaAnterior();
-            }, { passive: true });
+        // Seguimiento de la página actual: como ahora el swipe es scroll
+        // nativo (la persona puede deslizar libre sin pasar por
+        // irAPantalla), necesitamos un observer aparte para saber en qué
+        // página quedamos después de cada gesto, y así actualizar el botón
+        // de índice y el corte del auto-avance.
+        (function configurarSeguimientoDePagina() {
+            if (typeof IntersectionObserver !== 'function') return;
+            const pantallas = obtenerPantallas();
+            const seguidor = new IntersectionObserver((entradas) => {
+                entradas.forEach(entrada => {
+                    if (!entrada.isIntersecting || entrada.intersectionRatio < 0.6) return;
+                    const idx = pantallas.indexOf(entrada.target);
+                    if (idx === -1) return;
+                    indicePantallaActual = idx;
+                    actualizarIndiceVisual(idx);
+                });
+            }, { root: contenedor, threshold: 0.6 });
+            pantallas.forEach(sec => seguidor.observe(sec));
         })();
 
-        // Rueda del mouse / trackpad (desktop): scroll hacia abajo o hacia
-        // la derecha avanza una página, hacia arriba o la izquierda retrocede.
+        // El scroll nativo también reinicia el auto-avance apenas la
+        // persona interactúa a mano (swipe, trackpad, lo que sea).
+        let temporizadorScrollUsuario = null;
+        contenedor.addEventListener('scroll', () => {
+            clearTimeout(temporizadorScrollUsuario);
+            temporizadorScrollUsuario = setTimeout(() => { if (autoAvanceActivo) pausarAutoAvance(); }, 120);
+        }, { passive: true });
+
+        // Rueda del mouse (desktop): el scroll nativo es horizontal, pero
+        // la rueda vertical del mouse no se traduce sola a ese eje en la
+        // mayoría de los navegadores, así que la convertimos a mano.
         (function configurarRuedaMouse() {
-            let bloqueada = false;
             contenedor.addEventListener('wheel', (e) => {
                 if (!contenedor.classList.contains('activo')) return;
                 if (e.target && e.target.closest && e.target.closest(
                     '.mensajes-chat, .lista-gratitud, .lista-deseos, .cuerpo-preguntas, .muro-pantalla, .lista-indice, input, textarea, select'
                 )) return;
                 const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-                if (Math.abs(delta) < 8 || bloqueada) return;
-                bloqueada = true;
-                if (delta > 0) pantallaSiguiente(); else pantallaAnterior();
-                setTimeout(() => { bloqueada = false; }, 700);
+                if (Math.abs(delta) < 4) return;
+                contenedor.scrollBy({ left: delta, top: 0, behavior: 'auto' });
             }, { passive: true });
         })();
-        // Se pausa apenas la persona interactúa (botón, flecha, swipe) y
-        // se detiene al llegar a la última página.
+
+        // ================== AUTO-AVANCE (reproducir / pausar mensajes) ==================
+        // Arranca activo por defecto; la persona puede pausarlo o
+        // reanudarlo con el botón ▶️/⏸️ flotante.
+        let autoAvanceActivo = true;
         let temporizadorAutoAvance = null;
         const INTERVALO_AUTO_AVANCE = 4500;
 
         function programarAutoAvance() {
             clearTimeout(temporizadorAutoAvance);
+            if (!autoAvanceActivo) return;
             temporizadorAutoAvance = setTimeout(() => {
                 const pantallas = obtenerPantallas();
                 if (indicePantallaActual < pantallas.length - 1) {
@@ -3109,7 +3118,20 @@
 
         function pausarAutoAvance() {
             clearTimeout(temporizadorAutoAvance);
-            programarAutoAvance();
+            if (autoAvanceActivo) programarAutoAvance();
+        }
+
+        // Botón ▶️/⏸️: la persona decide si los mensajes pasan solos o no.
+        function toggleAutoAvance(event) {
+            if (event) event.stopPropagation();
+            autoAvanceActivo = !autoAvanceActivo;
+            const btn = document.getElementById('btn-auto-avance');
+            if (btn) {
+                btn.textContent = autoAvanceActivo ? '⏸️' : '▶️';
+                btn.setAttribute('aria-label', autoAvanceActivo ? 'Pausar avance automático' : 'Reproducir avance automático');
+            }
+            if (autoAvanceActivo) { vibrar(10); programarAutoAvance(); }
+            else { vibrar(10); clearTimeout(temporizadorAutoAvance); }
         }
 
         // ================== RINCÓN DE LA GRATITUD ==================

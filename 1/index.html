@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -56,24 +57,34 @@
             overscroll-behavior: none;
             position: relative;
             z-index: 10;
-            touch-action: pan-y; /* el eje que navega es X (JS); dejamos pan-y libre por si algo interno scrollea vertical (chat, muro) */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .contenedor-scroll::-webkit-scrollbar { display: none; }
+
+        /* Scroll horizontal 100% nativo (CSS Scroll Snap sobre el eje X).
+           Antes esto se manejaba a mano con touchstart/touchend + transform,
+           pero en Android real ese listener manual competía con el touch
+           nativo del navegador y terminaba comiéndose los toques (funcionaba
+           en mouse/modo escritorio porque ahí no hay touch de por medio).
+           Dejando que el navegador maneje el gesto con su propio motor de
+           scroll —el mismo que usa para cualquier scroll normal— se evita
+           ese conflicto de raíz. Recién se activa con la clase .activo,
+           para no romper la introducción con la puerta. */
+        .contenedor-scroll.activo {
+            overflow-x: scroll;
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-x;
         }
 
-        /* Libro horizontal: cada "página" (.pantalla) es una tapa de 100vw
-           puesta en fila, y la "pista" se corre con transform: translateX.
-           No usamos scroll nativo en absoluto (ni vertical ni horizontal):
-           en el Chrome real de Android la barra de direcciones cambia de
-           alto en vivo durante el gesto y eso puede trabar cualquier
-           scroll-snap nativo. Manejando el paginado 100% por código (sin
-           overflow scrolleable) ese problema desaparece de raíz. */
         .pista-pantallas {
             height: 100%;
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
             width: max-content;
-            transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
-            will-change: transform;
         }
 
         .pantalla {
@@ -85,7 +96,13 @@
             justify-content: center; align-items: center;
             position: relative;
             background: transparent;
+            scroll-snap-align: start;
+            scroll-snap-stop: normal;
+            content-visibility: auto;
+            contain-intrinsic-size: 100vw 100vh;
         }
+        /* La pantalla visible nunca debe saltarse el render, aunque el navegador la considere "lejos" */
+        .pantalla.visible { content-visibility: visible; }
 
         #canvas-particulas {
             position: fixed;
@@ -120,6 +137,18 @@
             pointer-events: none;
             z-index: 0;
             animation: flotarCirculo ease-in-out infinite alternate;
+            will-change: transform;
+        }
+        /* En celulares el blur grande es carísimo para la GPU: se reduce el radio */
+        @media (max-width: 640px) {
+            .circulo-flotante { filter: blur(18px); }
+        }
+        /* Gente sensible al movimiento: se apagan las animaciones decorativas no esenciales */
+        @media (prefers-reduced-motion: reduce) {
+            .circulo-flotante, .brillo-flotante, .fondo-animado, .portada-capitulo::before,
+            .pantalla-cuenta-regresiva::before, .final-brillo, .burbuja-menu, .burbuja-chat,
+            .burbuja-reloj, .btn-azar { animation: none !important; }
+            .puerta { transition-duration: 0.4s !important; }
         }
         @keyframes flotarCirculo {
             0% { transform: translate(0, 0) scale(1); }
@@ -576,6 +605,19 @@
         .tarjeta-gratitud .gr-autor { font-size: 0.75rem; color: #ffd666; font-weight: bold; margin-bottom: 3px; }
         .tarjeta-gratitud .gr-texto { font-size: 0.9rem; color: white; line-height: 1.4; }
         .tarjeta-gratitud .gr-fecha { font-size: 0.68rem; color: rgba(255,255,255,0.4); margin-top: 4px; }
+        .fila-acciones-item { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
+        .btn-accion-item {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+            color: rgba(255,255,255,0.85); font-size: 0.72rem; padding: 5px 10px; border-radius: 12px;
+            cursor: pointer; touch-action: manipulation; font-family: var(--fuente-texto);
+        }
+        .btn-accion-item:active { transform: scale(0.94); }
+        .btn-accion-item.borrar { color: #ff9a9e; border-color: rgba(255,154,158,0.4); }
+        .textarea-edicion-item {
+            width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px; padding: 8px 10px; color: white; font-family: var(--fuente-texto); font-size: 0.9rem;
+            resize: vertical; outline: none; line-height: 1.4;
+        }
         .input-gratitud-area { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
         #input-gratitud {
             flex: 1; min-width: 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
@@ -626,7 +668,10 @@
             background: rgba(178,255,201,0.08); font-family: var(--fuente-texto); cursor: pointer; touch-action: manipulation;
         }
         .fila-deseo .check-deseo { font-size: 1.2rem; flex-shrink: 0; }
-        .fila-deseo .texto-deseo { font-size: 0.88rem; color: white; line-height: 1.35; }
+        .fila-deseo { flex-wrap: wrap; }
+        .fila-deseo .texto-deseo { font-size: 0.88rem; color: white; line-height: 1.35; flex: 1; }
+        .fila-deseo .fila-acciones-item { flex-basis: 100%; }
+        .fila-deseo .textarea-edicion-item { flex-basis: 100%; }
         .fila-deseo.cumplido .texto-deseo { text-decoration: line-through; color: rgba(255,255,255,0.45); }
         .input-deseos-area { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
         #input-deseo {
@@ -819,6 +864,9 @@
             background: rgba(255, 154, 158, 0.55);
             border-color: rgba(255,255,255,0.7);
             box-shadow: 0 0 14px rgba(255,154,158,0.6);
+        }
+        .btn-auto-avance {
+            top: calc(84px + 54px + env(safe-area-inset-top, 0px));
         }
 
         /* Legibilidad: sombras suaves para texto dinámico sobre fondos animados */
@@ -1234,7 +1282,7 @@
         <section class="pantalla pantalla-puerta">
             <div class="marco-exterior" id="marco-exterior">
                 <div id="luz-interior" class="interior-casa" onclick="revelarSecreto(event)">
-                    <img class="foto-puerta" src="https://i.postimg.cc/QtLY0Cnx/78df8d38-6373-43d9-9323-70ba109c8c91.png" alt="Carito">
+                    <img class="foto-puerta" src="https://i.postimg.cc/QtLY0Cnx/78df8d38-6373-43d9-9323-70ba109c8c91.png" alt="Carito" loading="lazy" decoding="async">
                 </div>
                 <div id="puerta-id" class="puerta" onclick="interaccionPuerta(event)">
                     <div class="panel"></div>
@@ -1322,6 +1370,9 @@
 
     <!-- Acceso rápido de vuelta al Índice (tabla de contenidos), visible desde cualquier página del libro -->
     <button id="btn-indice-rapido" class="btn-indice-rapido" onclick="irAId('pantalla-indice')" title="Volver al índice" aria-label="Volver al índice">📖</button>
+
+    <!-- Reproducir / pausar el avance automático de los mensajes -->
+    <button id="btn-auto-avance" class="btn-indice-rapido btn-auto-avance" onclick="toggleAutoAvance(event)" title="Pausar avance automático" aria-label="Pausar avance automático">⏸️</button>
 
     <!-- Navegación garantizada entre pantallas: funciona siempre, aunque el swipe nativo falle en algún celular -->
     <div class="nav-pantallas" id="nav-pantallas">
@@ -1495,7 +1546,7 @@
     <!-- FIREBASE (Proyecto Carolina) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDDvrgXpSxaraqTj83ingY3xa-AT8ywxV4",
@@ -1519,6 +1570,7 @@
         window.serverTimestamp = serverTimestamp;
         window.doc = doc;
         window.updateDoc = updateDoc;
+        window.deleteDoc = deleteDoc;
         window.setDoc = setDoc;
 
         console.log("🔥 Conectado con éxito a Carolina");
@@ -1604,6 +1656,14 @@
         const frasesRomanticas = capitulos.flatMap(cap => cap.frases);
 
         const coloresPasteles = ['#ffdde1', '#ee9ca7', '#ffecd2', '#fcb69f', '#cfd9df', '#e2ebf0', '#fbc2eb', '#a18cd1', '#ff9a9e', '#fecfef', '#f6d5f7', '#fbc7d4'];
+
+        // Optimización mobile: en pantallas chicas o táctiles se generan menos
+        // elementos decorativos por pantalla (los círculos con blur y los brillos
+        // son caros para GPUs de gama media/baja). Se calcula una sola vez.
+        const RECURSOS_LIMITADOS = window.innerWidth <= 640 ||
+            (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches);
+        const PREFIERE_MENOS_MOVIMIENTO = typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         const contenedor = document.getElementById('contenedor');
         const pista = document.getElementById('pista-pantallas');
@@ -1719,7 +1779,7 @@
             <div class="final-contenido">
                 <div class="final-lineas" id="final-lineas"></div>
                 <div class="final-foto">
-                    <img src="https://i.postimg.cc/QtLY0Cnx/78df8d38-6373-43d9-9323-70ba109c8c91.png" alt="Carito llena de mensajes de amor" loading="lazy">
+                    <img src="https://i.postimg.cc/QtLY0Cnx/78df8d38-6373-43d9-9323-70ba109c8c91.png" alt="Carito llena de mensajes de amor" loading="lazy" decoding="async">
                 </div>
                 <div class="final-firma">Tu Nico,<br>por siempre tuyo</div>
                 <button class="beso-boton" id="boton-beso" onclick="enviarBeso()">💋 Tocá para un beso</button>
@@ -1787,8 +1847,20 @@
         }
 
         function construirPantalla(seccion, index) {
+            if (PREFIERE_MENOS_MOVIMIENTO) {
+                // Se saltea toda la decoración animada: solo queda la tarjeta con el mensaje
+                const tarjetaSimple = document.createElement('div');
+                tarjetaSimple.className = 'tarjeta-cristal';
+                const textoSimple = document.createElement('h1');
+                textoSimple.className = 'texto-romantico';
+                tarjetaSimple.appendChild(textoSimple);
+                seccion.appendChild(tarjetaSimple);
+                textoSimple.innerText = frasesRomanticas[index];
+                return;
+            }
+
             // Círculos difuminados flotando de fondo (efecto aurora romántico)
-            const numCirculos = 3;
+            const numCirculos = RECURSOS_LIMITADOS ? 2 : 3;
             const coloresCirculo = ['rgba(255,255,255,0.55)', 'rgba(255,105,180,0.35)', 'rgba(255,219,235,0.5)'];
             for (let i = 0; i < numCirculos; i++) {
                 const circulo = document.createElement('div');
@@ -1807,7 +1879,7 @@
 
             // Brillitos/corazones flotando suavemente
             const simbolos = ['✨', '💗', '🤍', '💫'];
-            const numBrillos = Math.floor(Math.random() * 3) + 3;
+            const numBrillos = RECURSOS_LIMITADOS ? (Math.floor(Math.random() * 2) + 2) : (Math.floor(Math.random() * 3) + 3);
             for (let i = 0; i < numBrillos; i++) {
                 const brillo = document.createElement('div');
                 brillo.className = 'brillo-flotante';
@@ -1820,7 +1892,7 @@
             }
 
             const frasesDecoFondo = ['Amo a Carito', 'Sos el amor de mi vida', 'Nico y Caro', 'Por siempre, siempre, siempre'];
-            const numAmoCarito = Math.floor(Math.random() * 2) + 1;
+            const numAmoCarito = RECURSOS_LIMITADOS ? Math.floor(Math.random() * 2) : (Math.floor(Math.random() * 2) + 1);
             for(let i=0; i<numAmoCarito; i++) {
                 const deco = document.createElement('div');
                 deco.className = 'deco-amo-carito';
@@ -1922,9 +1994,12 @@
         // ============================================================
         function crearLluvia(config) {
             const {
-                contenedorClase, itemClase, cantidad, generarItem,
+                contenedorClase, itemClase, cantidad: cantidadPedida, generarItem,
                 duracionBase = 2.6, duracionVariable = 2.0, demoraMax = 1.6, giroMax = 70
             } = config;
+            // En celulares de gama media/baja, menos partículas simultáneas
+            // (cada una toca un sonido con Web Audio) evita que se trabe la animación.
+            const cantidad = RECURSOS_LIMITADOS ? Math.round(cantidadPedida * 0.6) : cantidadPedida;
 
             const contenedor = document.createElement('div');
             contenedor.className = contenedorClase;
@@ -2722,6 +2797,10 @@
                             btnIndiceRapido.classList.add('mostrar');
                             setTimeout(() => btnIndiceRapido.classList.add('visible-suave'), 100);
 
+                            const btnAutoAvance = document.getElementById('btn-auto-avance');
+                            btnAutoAvance.classList.add('mostrar');
+                            setTimeout(() => btnAutoAvance.classList.add('visible-suave'), 150);
+
                             const btnAzar = document.getElementById('btn-azar');
                             btnAzar.style.display = 'flex'; setTimeout(() => btnAzar.classList.add('mostrar'), 100);
 
@@ -2909,6 +2988,83 @@
         function abrirMuro(event) { if (event) event.stopPropagation(); requerirIdentidad('muro'); }
         function cerrarMuro() { document.getElementById('modal-muro').classList.add('oculto'); }
 
+        // ================== EDICIÓN Y BORRADO (Muro, Gratitud, Deseos) ==================
+        // Cada tarjeta/fila que le pertenece a la identidad actual (nico/carito)
+        // recibe botones de editar y borrar. Reutilizable para las 3 colecciones.
+        function crearFilaAcciones(coleccion, id, textoEl, mensajeConfirmacionBorrado) {
+            const fila = document.createElement('div');
+            fila.className = 'fila-acciones-item';
+            const btnEditar = document.createElement('button');
+            btnEditar.type = 'button'; btnEditar.className = 'btn-accion-item';
+            btnEditar.innerText = '✏️ Editar'; btnEditar.setAttribute('aria-label', 'Editar este mensaje');
+            btnEditar.onclick = (e) => { e.stopPropagation(); iniciarEdicionInline(coleccion, id, textoEl, fila); };
+            const btnBorrar = document.createElement('button');
+            btnBorrar.type = 'button'; btnBorrar.className = 'btn-accion-item borrar';
+            btnBorrar.innerText = '🗑️ Borrar'; btnBorrar.setAttribute('aria-label', 'Borrar este mensaje');
+            btnBorrar.onclick = (e) => { e.stopPropagation(); borrarItem(coleccion, id, mensajeConfirmacionBorrado); };
+            fila.appendChild(btnEditar); fila.appendChild(btnBorrar);
+            return fila;
+        }
+
+        function iniciarEdicionInline(coleccion, id, textoEl, filaAccionesOriginal) {
+            const contenedorPadre = textoEl.parentElement;
+            if (!contenedorPadre) return;
+
+            const textarea = document.createElement('textarea');
+            textarea.className = 'textarea-edicion-item';
+            textarea.value = textoEl.innerText;
+            textarea.rows = 2;
+            textarea.maxLength = 300;
+
+            const filaBotones = document.createElement('div');
+            filaBotones.className = 'fila-acciones-item';
+            const btnGuardar = document.createElement('button');
+            btnGuardar.type = 'button'; btnGuardar.className = 'btn-accion-item'; btnGuardar.innerText = 'Guardar';
+            const btnCancelar = document.createElement('button');
+            btnCancelar.type = 'button'; btnCancelar.className = 'btn-accion-item'; btnCancelar.innerText = 'Cancelar';
+
+            function restaurarVistaOriginal() {
+                if (textarea.parentElement) textarea.replaceWith(textoEl);
+                if (filaBotones.parentElement) filaBotones.remove();
+                if (filaAccionesOriginal) filaAccionesOriginal.style.display = '';
+            }
+
+            btnCancelar.onclick = (e) => { e.stopPropagation(); restaurarVistaOriginal(); };
+            btnGuardar.onclick = async (e) => {
+                e.stopPropagation();
+                const nuevoTexto = textarea.value.trim();
+                if (!nuevoTexto) return;
+                vibrar(12);
+                btnGuardar.disabled = true; btnGuardar.innerText = 'Guardando...';
+                try {
+                    await window.updateDoc(window.doc(window.db, coleccion, id), { texto: nuevoTexto });
+                    // El listener onSnapshot de cada lista re-renderiza solo con el nuevo texto
+                } catch (err) {
+                    console.error('Error editando mensaje:', err);
+                    btnGuardar.disabled = false; btnGuardar.innerText = 'Guardar';
+                }
+            };
+            textarea.addEventListener('click', (e) => e.stopPropagation());
+            textarea.addEventListener('keydown', (e) => e.stopPropagation());
+
+            filaBotones.appendChild(btnGuardar);
+            filaBotones.appendChild(btnCancelar);
+            if (filaAccionesOriginal) filaAccionesOriginal.style.display = 'none';
+            textoEl.replaceWith(textarea);
+            contenedorPadre.insertBefore(filaBotones, textarea.nextSibling);
+            textarea.focus();
+        }
+
+        async function borrarItem(coleccion, id, mensajeConfirmacion) {
+            const confirmado = window.confirm(mensajeConfirmacion || '¿Borrar este mensaje para siempre?');
+            if (!confirmado) return;
+            vibrar(15);
+            try {
+                await window.deleteDoc(window.doc(window.db, coleccion, id));
+                // El listener onSnapshot de cada lista quita la tarjeta solo
+            } catch (err) { console.error('Error borrando mensaje:', err); }
+        }
+
         function abrirMuroInterno() {
             const modal = document.getElementById('modal-muro');
             modal.classList.remove('oculto');
@@ -2924,8 +3080,8 @@
                         return;
                     }
                     contenedor.innerHTML = '';
-                    snapshot.forEach((doc) => {
-                        const nota = doc.data();
+                    snapshot.forEach((docSnap) => {
+                        const nota = docSnap.data();
                         const div = document.createElement('div');
                         div.className = `tarjeta-nota ${nota.autor === "carito" ? 'nota-carito' : 'nota-nico'}`;
                         const autorEl = document.createElement('div');
@@ -2938,6 +3094,9 @@
                         fechaEl.className = 'nota-fecha';
                         fechaEl.innerText = nota.fecha || '';
                         div.appendChild(autorEl); div.appendChild(textoEl); div.appendChild(fechaEl);
+                        if (nota.autor === miIdentidad) {
+                            div.appendChild(crearFilaAcciones('muro', docSnap.id, textoEl, '¿Borrar este recuerdo para siempre?'));
+                        }
                         contenedor.appendChild(div);
                     });
                 }, (error) => {
@@ -2984,13 +3143,13 @@
         }
 
         // ============================================================
-        // NAVEGACIÓN ENTRE PÁGINAS (libro horizontal, 100% por código)
-        // La "pista" es una fila de páginas (una por .pantalla) que se
-        // mueve con transform: translateX. No hay scroll nativo en juego
-        // en ningún eje: el paginado horizontal se controla enteramente
-        // acá, así el gesto de "pasar la hoja" funciona igual en
-        // cualquier navegador/celular, sin depender de cómo cada uno
-        // maneje el scroll-snap o la barra de direcciones dinámica.
+        // NAVEGACIÓN ENTRE PÁGINAS (scroll horizontal nativo + botones)
+        // El paginado lo maneja el navegador con CSS Scroll Snap (eje X).
+        // Las funciones de acá abajo solo llevan el foco calculando
+        // offsetLeft + contenedor.scrollTo() (nada de scrollIntoView ni
+        // de transform a mano): así el swipe, los botones ‹ › y el
+        // auto-avance usan todos el mismo motor de scroll nativo, que es
+        // el que mejor funciona en Android real.
         // ============================================================
         let indicePantallaActual = 0;
 
@@ -3006,26 +3165,22 @@
             const pantallas = obtenerPantallas();
             if (!pantallas.length) return;
             const destino = Math.max(0, Math.min(pantallas.length - 1, indice));
-            indicePantallaActual = destino;
-            pista.style.transform = `translateX(-${destino * 100}vw)`;
+            contenedor.scrollTo({ left: pantallas[destino].offsetLeft, top: 0, behavior: 'smooth' });
             vibrar(10);
             pausarAutoAvance();
-            actualizarIndiceVisual(destino);
         }
 
         function irAId(id) {
-            const pantallas = obtenerPantallas();
             const el = document.getElementById(id);
             if (!el) return;
-            const indice = pantallas.indexOf(el);
-            if (indice === -1) return;
-            irAPantalla(indice);
+            contenedor.scrollTo({ left: el.offsetLeft, top: 0, behavior: 'smooth' });
+            vibrar(10);
+            pausarAutoAvance();
             document.getElementById('menu-principal') && document.getElementById('menu-principal').classList.remove('abierto');
         }
 
         // Resalta el botón de acceso rápido al índice cuando estamos
-        // parados justo en la página del Índice (le da un pequeño feedback
-        // de "estás acá"); en el resto de las páginas queda con su estilo normal.
+        // parados justo en la página del Índice.
         function actualizarIndiceVisual(idx) {
             const pantallas = obtenerPantallas();
             const objetivo = pantallas[idx];
@@ -3037,68 +3192,59 @@
         function pantallaSiguiente() { irAPantalla(indiceActualPantalla() + 1); }
         function pantallaAnterior() { irAPantalla(indiceActualPantalla() - 1); }
 
-        // Swipe horizontal: se mide con touchstart/touchend (nunca
-        // touchmove) comparando dónde arrancó y dónde terminó el dedo en
-        // el eje X. Nada de arrastrar la pista en vivo ni de
-        // preventDefault, que es lo que suele trabar el touch en Android.
-        // Un gesto mayormente vertical (o que arranca en un elemento con
-        // su propio scroll, como el Índice o el chat) se ignora, así no
-        // compite con el scroll interno de esos paneles.
-        (function configurarSwipeManual() {
-            const SELECTOR_IGNORAR = 'button, .btn, .btn-azar, .btn-indice-rapido, .nav-flecha, .tarjeta-indice, ' +
-                '.lista-indice, .menu-principal, .reproductor-flotante, .modal-cristal, .muro-pantalla, ' +
-                'input, textarea, a, .icono-interactivo, .puerta, .chat-flotante, .gratitud-flotante, ' +
-                '.deseos-flotante, .preguntas-flotante, .reloj-flotante, .muro-flotante';
-
-            let inicioY = null, inicioX = null;
-
-            contenedor.addEventListener('touchstart', (e) => {
-                if (!contenedor.classList.contains('activo') || !e.touches[0]) { inicioX = null; return; }
-                if (e.target && e.target.closest && e.target.closest(SELECTOR_IGNORAR)) { inicioX = null; return; }
-                inicioY = e.touches[0].clientY;
-                inicioX = e.touches[0].clientX;
-                pausarAutoAvance();
-            }, { passive: true });
-
-            contenedor.addEventListener('touchend', (e) => {
-                if (inicioX === null || !e.changedTouches[0]) return;
-                const finY = e.changedTouches[0].clientY;
-                const finX = e.changedTouches[0].clientX;
-                const deltaY = inicioY - finY;
-                const deltaX = inicioX - finX;
-                inicioY = null; inicioX = null;
-
-                // Gesto mayormente vertical: no es "pasar de hoja", se ignora.
-                if (Math.abs(deltaY) > Math.abs(deltaX)) return;
-                if (Math.abs(deltaX) < 45) return;
-
-                if (deltaX > 0) pantallaSiguiente(); else pantallaAnterior();
-            }, { passive: true });
+        // Seguimiento de la página actual: como ahora el swipe es scroll
+        // nativo (la persona puede deslizar libre sin pasar por
+        // irAPantalla), necesitamos un observer aparte para saber en qué
+        // página quedamos después de cada gesto, y así actualizar el botón
+        // de índice y el corte del auto-avance.
+        (function configurarSeguimientoDePagina() {
+            if (typeof IntersectionObserver !== 'function') return;
+            const pantallas = obtenerPantallas();
+            const seguidor = new IntersectionObserver((entradas) => {
+                entradas.forEach(entrada => {
+                    if (!entrada.isIntersecting || entrada.intersectionRatio < 0.6) return;
+                    const idx = pantallas.indexOf(entrada.target);
+                    if (idx === -1) return;
+                    indicePantallaActual = idx;
+                    actualizarIndiceVisual(idx);
+                });
+            }, { root: contenedor, threshold: 0.6 });
+            pantallas.forEach(sec => seguidor.observe(sec));
         })();
 
-        // Rueda del mouse / trackpad (desktop): scroll hacia abajo o hacia
-        // la derecha avanza una página, hacia arriba o la izquierda retrocede.
+        // El scroll nativo también reinicia el auto-avance apenas la
+        // persona interactúa a mano (swipe, trackpad, lo que sea).
+        let temporizadorScrollUsuario = null;
+        contenedor.addEventListener('scroll', () => {
+            clearTimeout(temporizadorScrollUsuario);
+            temporizadorScrollUsuario = setTimeout(() => { if (autoAvanceActivo) pausarAutoAvance(); }, 120);
+        }, { passive: true });
+
+        // Rueda del mouse (desktop): el scroll nativo es horizontal, pero
+        // la rueda vertical del mouse no se traduce sola a ese eje en la
+        // mayoría de los navegadores, así que la convertimos a mano.
         (function configurarRuedaMouse() {
-            let bloqueada = false;
             contenedor.addEventListener('wheel', (e) => {
                 if (!contenedor.classList.contains('activo')) return;
                 if (e.target && e.target.closest && e.target.closest(
                     '.mensajes-chat, .lista-gratitud, .lista-deseos, .cuerpo-preguntas, .muro-pantalla, .lista-indice, input, textarea, select'
                 )) return;
                 const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-                if (Math.abs(delta) < 8 || bloqueada) return;
-                bloqueada = true;
-                if (delta > 0) pantallaSiguiente(); else pantallaAnterior();
-                setTimeout(() => { bloqueada = false; }, 700);
+                if (Math.abs(delta) < 4) return;
+                contenedor.scrollBy({ left: delta, top: 0, behavior: 'auto' });
             }, { passive: true });
         })();
-        // Se pausa apenas la persona interactúa (botón, flecha, swipe) y
-        // se detiene al llegar a la última página.
+
+        // ================== AUTO-AVANCE (reproducir / pausar mensajes) ==================
+        // Arranca activo por defecto; la persona puede pausarlo o
+        // reanudarlo con el botón ▶️/⏸️ flotante.
+        let autoAvanceActivo = true;
         let temporizadorAutoAvance = null;
         const INTERVALO_AUTO_AVANCE = 4500;
 
         function programarAutoAvance() {
             clearTimeout(temporizadorAutoAvance);
+            if (!autoAvanceActivo) return;
             temporizadorAutoAvance = setTimeout(() => {
                 const pantallas = obtenerPantallas();
                 if (indicePantallaActual < pantallas.length - 1) {
@@ -3109,7 +3255,20 @@
 
         function pausarAutoAvance() {
             clearTimeout(temporizadorAutoAvance);
-            programarAutoAvance();
+            if (autoAvanceActivo) programarAutoAvance();
+        }
+
+        // Botón ▶️/⏸️: la persona decide si los mensajes pasan solos o no.
+        function toggleAutoAvance(event) {
+            if (event) event.stopPropagation();
+            autoAvanceActivo = !autoAvanceActivo;
+            const btn = document.getElementById('btn-auto-avance');
+            if (btn) {
+                btn.textContent = autoAvanceActivo ? '⏸️' : '▶️';
+                btn.setAttribute('aria-label', autoAvanceActivo ? 'Pausar avance automático' : 'Reproducir avance automático');
+            }
+            if (autoAvanceActivo) { vibrar(10); programarAutoAvance(); }
+            else { vibrar(10); clearTimeout(temporizadorAutoAvance); }
         }
 
         // ================== RINCÓN DE LA GRATITUD ==================
@@ -3151,6 +3310,9 @@
                         fechaEl.className = 'gr-fecha';
                         fechaEl.innerText = nota.fecha || '';
                         div.appendChild(autorEl); div.appendChild(textoEl); div.appendChild(fechaEl);
+                        if (nota.autor === miIdentidad) {
+                            div.appendChild(crearFilaAcciones('gratitud', docSnap.id, textoEl, '¿Borrar este "te amo por" para siempre?'));
+                        }
                         lista.appendChild(div);
                     });
                 }, (error) => {
@@ -3215,6 +3377,9 @@
                         texto.className = 'texto-deseo';
                         texto.innerText = deseo.texto;
                         fila.appendChild(check); fila.appendChild(texto);
+                        if (deseo.autor === miIdentidad) {
+                            fila.appendChild(crearFilaAcciones('deseos', docSnap.id, texto, '¿Borrar este sueño para siempre?'));
+                        }
                         lista.appendChild(fila);
                     });
                 }, (error) => {

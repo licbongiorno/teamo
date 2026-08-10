@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,6 +7,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#05080a">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://dl.dropboxusercontent.com">
+    <link rel="preconnect" href="https://i.postimg.cc">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9D%A4%EF%B8%8F%3C/text%3E%3C/svg%3E">
     <title>Para Carito, el amor de mi vida</title>
     <meta name="description" content="Una cartita interactiva para Carito, el amor de mi vida.">
@@ -137,7 +143,6 @@
             pointer-events: none;
             z-index: 0;
             animation: flotarCirculo ease-in-out infinite alternate;
-            will-change: transform;
         }
         /* En celulares el blur grande es carísimo para la GPU: se reduce el radio */
         @media (max-width: 640px) {
@@ -150,6 +155,16 @@
             .burbuja-reloj, .btn-azar { animation: none !important; }
             .puerta { transition-duration: 0.4s !important; }
         }
+
+        .aviso-conexion {
+            position: fixed; top: 0; left: 0; right: 0;
+            padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px;
+            background: rgba(120, 30, 30, 0.92); color: #ffe3e3;
+            font-family: var(--fuente-texto); font-size: 0.8rem; text-align: center;
+            z-index: 20000; transform: translateY(-100%); transition: transform 0.35s ease;
+            pointer-events: none;
+        }
+        .aviso-conexion.mostrar { transform: translateY(0); }
         @keyframes flotarCirculo {
             0% { transform: translate(0, 0) scale(1); }
             100% { transform: translate(var(--flotar-x, 20px), var(--flotar-y, -25px)) scale(1.1); }
@@ -1277,6 +1292,8 @@
 
     <canvas id="canvas-particulas"></canvas>
 
+    <div id="aviso-conexion" class="aviso-conexion" role="status" aria-live="polite">📡 Sin conexión — reconectando...</div>
+
     <div id="contenedor" class="contenedor-scroll">
         <div id="pista-pantallas" class="pista-pantallas">
         <section class="pantalla pantalla-puerta">
@@ -1393,7 +1410,7 @@
                 <span class="titulo-gratitud">Hoy te amo por... 💛</span>
                 <button class="btn-cerrar-gratitud" onclick="toggleGratitud(event)">✕</button>
             </div>
-            <div class="lista-gratitud" id="lista-gratitud"></div>
+            <div class="lista-gratitud" id="lista-gratitud" role="log" aria-live="polite"></div>
             <div class="input-gratitud-area">
                 <input type="text" id="input-gratitud" placeholder="Hoy te amo por..." maxlength="140" autocomplete="off" onkeypress="verificarEnterGratitud(event)">
                 <button class="btn-enviar-gratitud" onclick="guardarGratitud()">➤</button>
@@ -1409,7 +1426,7 @@
                 <span class="titulo-deseos">Nuestra lista de deseos 🌠</span>
                 <button class="btn-cerrar-deseos" onclick="toggleDeseos(event)">✕</button>
             </div>
-            <div class="lista-deseos" id="lista-deseos"></div>
+            <div class="lista-deseos" id="lista-deseos" role="list" aria-live="polite"></div>
             <div class="input-deseos-area">
                 <input type="text" id="input-deseo" placeholder="Un sueño para cumplir juntos..." maxlength="140" autocomplete="off" onkeypress="verificarEnterDeseo(event)">
                 <button class="btn-enviar-deseo" onclick="agregarDeseo()">➤</button>
@@ -1519,7 +1536,7 @@
                 <span class="titulo-chat">Nuestro Chat 💬</span>
                 <button class="btn-cerrar-chat" onclick="toggleChat(event)">✕</button>
             </div>
-            <div class="mensajes-chat" id="mensajes-chat"></div>
+            <div class="mensajes-chat" id="mensajes-chat" role="log" aria-live="polite"></div>
             <div class="input-chat-area">
                 <input type="text" id="input-chat" placeholder="Escribí un mensajito..." autocomplete="off" onkeypress="verificarEnterChat(event)">
                 <button class="btn-enviar-chat" onclick="enviarMensajeChat()">➤</button>
@@ -1540,7 +1557,7 @@
             <button class="btn-publicar-muro" onclick="guardarEnMuro()">Inmortalizar mensaje ✨</button>
         </div>
 
-        <div class="muro-grid" id="contenedor-tarjetas-muro"></div>
+        <div class="muro-grid" id="contenedor-tarjetas-muro" role="list" aria-live="polite"></div>
     </div>
 
     <!-- FIREBASE (Proyecto Carolina) -->
@@ -1664,6 +1681,16 @@
             (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches);
         const PREFIERE_MENOS_MOVIMIENTO = typeof window.matchMedia === 'function' &&
             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Debounce genérico: evita recalcular canvas/layout en cada pixel de un
+        // resize (el navegador puede disparar decenas de eventos por segundo).
+        function debounce(fn, espera = 150) {
+            let temporizador = null;
+            return (...args) => {
+                clearTimeout(temporizador);
+                temporizador = setTimeout(() => fn(...args), espera);
+            };
+        }
 
         const contenedor = document.getElementById('contenedor');
         const pista = document.getElementById('pista-pantallas');
@@ -2188,8 +2215,8 @@
         let mouse = { x: -1000, y: -1000 };
 
         function ajustarCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', ajustarCanvas); ajustarCanvas();
-        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('resize', debounce(ajustarCanvas, 150)); ajustarCanvas();
+        window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; }, {passive: true});
         window.addEventListener('touchmove', (e) => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }, {passive: true});
 
         // Si la pestaña queda en segundo plano, se corta el requestAnimationFrame:
@@ -2497,6 +2524,23 @@
         reproductorMusical.volume = 0.8;
         document.getElementById('btn-random').classList.add('activo'); // arranca en aleatorio
 
+        // Precarga silenciosa de la próxima canción: mientras suena la actual, el
+        // navegador ya va bajando la siguiente en segundo plano, así el cambio
+        // de pista no tiene que esperar a que arranque la descarga desde cero.
+        let indiceSiguientePrecargado = null;
+        let audioPrecarga = null;
+        function precargarSiguienteCancion() {
+            if (canciones.length <= 1) return;
+            let indice;
+            do { indice = Math.floor(Math.random() * canciones.length); }
+            while (indice === indiceCancionActiva);
+            indiceSiguientePrecargado = indice;
+            audioPrecarga = new Audio();
+            audioPrecarga.preload = 'auto';
+            audioPrecarga.src = canciones[indice].src;
+        }
+        precargarSiguienteCancion();
+
         function actualizarInfoCancion() {
             let titulo = canciones[indiceCancionActiva].nombre;
             // truncar si es muy largo
@@ -2601,18 +2645,25 @@
 
         function cambiarCancion(direccion) {
             if (esRandom) {
-                let nuevoIndice;
-                do {
-                    nuevoIndice = Math.floor(Math.random() * canciones.length);
-                } while (nuevoIndice === indiceCancionActiva && canciones.length > 1);
-                indiceCancionActiva = nuevoIndice;
+                // Si ya tenemos la siguiente precargada, la usamos directo (sin corte);
+                // si no (primer cambio, o algo falló), se elige una al azar como antes.
+                if (indiceSiguientePrecargado !== null && indiceSiguientePrecargado !== indiceCancionActiva) {
+                    indiceCancionActiva = indiceSiguientePrecargado;
+                } else {
+                    let nuevoIndice;
+                    do {
+                        nuevoIndice = Math.floor(Math.random() * canciones.length);
+                    } while (nuevoIndice === indiceCancionActiva && canciones.length > 1);
+                    indiceCancionActiva = nuevoIndice;
+                }
             } else {
                 indiceCancionActiva = (indiceCancionActiva + direccion + canciones.length) % canciones.length;
             }
-            
+
             reproductorMusical.src = canciones[indiceCancionActiva].src;
             actualizarInfoCancion();
-            
+            precargarSiguienteCancion();
+
             if(pasoActual >= 2) {
                 reproductorMusical.play().catch(e => console.log("Error cambiando pista:", e));
                 document.getElementById('btn-play-pause').innerText = "⏸";
@@ -2679,6 +2730,19 @@
                 if (navigator.vibrate) navigator.vibrate(patron);
             } catch (e) { /* silencioso */ }
         }
+
+        // Aviso automático de conexión: no bloquea nada, solo informa. Los
+        // onSnapshot de Firestore se reconectan solos apenas vuelve el wifi/datos.
+        (function configurarAvisoConexion() {
+            const aviso = document.getElementById('aviso-conexion');
+            if (!aviso) return;
+            function actualizar() {
+                aviso.classList.toggle('mostrar', !navigator.onLine);
+            }
+            window.addEventListener('online', actualizar);
+            window.addEventListener('offline', actualizar);
+            actualizar();
+        })();
 
         // Mensaje secreto: tocando el corazón de la casa iluminada aparece una frase distinta cada vez
         const secretosCasa = [
@@ -2957,10 +3021,12 @@
             }
         }
 
+        let enviandoChatMsg = false;
         async function enviarMensajeChat() {
             const input = document.getElementById('input-chat');
             const texto = input.value.trim();
-            if (!texto || !miIdentidad) return;
+            if (!texto || !miIdentidad || enviandoChatMsg) return;
+            enviandoChatMsg = true;
             vibrar(12);
             input.value = '';
 
@@ -2979,6 +3045,8 @@
                     contenedor.appendChild(aviso);
                     contenedor.scrollTop = contenedor.scrollHeight;
                 }
+            } finally {
+                enviandoChatMsg = false;
             }
         }
 
@@ -3325,10 +3393,12 @@
 
         function verificarEnterGratitud(e) { if (e.key === "Enter") guardarGratitud(); }
 
+        let enviandoGratitud = false;
         async function guardarGratitud() {
             const input = document.getElementById('input-gratitud');
             const texto = input.value.trim();
-            if (!texto || !miIdentidad) return;
+            if (!texto || !miIdentidad || enviandoGratitud) return;
+            enviandoGratitud = true;
             vibrar(15);
             input.value = '';
             try {
@@ -3339,6 +3409,7 @@
                     timestamp: window.serverTimestamp()
                 });
             } catch (e) { console.error("Error gratitud:", e); }
+            finally { enviandoGratitud = false; }
         }
 
         // ================== LISTA DE DESEOS JUNTOS (BUCKET LIST) ==================
@@ -3392,10 +3463,12 @@
 
         function verificarEnterDeseo(e) { if (e.key === "Enter") agregarDeseo(); }
 
+        let enviandoDeseo = false;
         async function agregarDeseo() {
             const input = document.getElementById('input-deseo');
             const texto = input.value.trim();
-            if (!texto || !miIdentidad) return;
+            if (!texto || !miIdentidad || enviandoDeseo) return;
+            enviandoDeseo = true;
             vibrar(15);
             input.value = '';
             try {
@@ -3406,6 +3479,7 @@
                     timestamp: window.serverTimestamp()
                 });
             } catch (e) { console.error("Error deseo:", e); }
+            finally { enviandoDeseo = false; }
         }
 
         async function marcarDeseo(id, estabaCumplido) {
@@ -3815,6 +3889,7 @@
         // Usa la misma fecha que la cuenta regresiva (fechaEncuentro).
         // Antes de esa fecha habla en futuro ("Así será"); después, en pasado ("Así fue").
         let cieloAnimId = null;
+        const dibujarConstelacionDebounced = debounce(() => dibujarConstelacion(), 150);
 
         function abrirCielo(event) {
             if (event) event.stopPropagation();
@@ -3833,12 +3908,12 @@
             }
 
             dibujarConstelacion();
-            window.addEventListener('resize', dibujarConstelacion);
+            window.addEventListener('resize', dibujarConstelacionDebounced);
         }
 
         function cerrarCielo() {
             document.getElementById('modal-cielo').classList.add('oculto');
-            window.removeEventListener('resize', dibujarConstelacion);
+            window.removeEventListener('resize', dibujarConstelacionDebounced);
             if (cieloAnimId) cancelAnimationFrame(cieloAnimId);
         }
 

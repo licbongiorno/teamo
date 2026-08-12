@@ -62,6 +62,18 @@
         }
         .contenedor-scroll::-webkit-scrollbar { display: none; }
 
+        /* Scrollbar fina y prolija para los paneles flotantes (chat, gratitud, deseos, etc.) */
+        .mensajes-chat, .lista-gratitud, .lista-deseos, .cuerpo-preguntas, .muro-pantalla {
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent;
+        }
+        .mensajes-chat::-webkit-scrollbar, .lista-gratitud::-webkit-scrollbar,
+        .lista-deseos::-webkit-scrollbar, .cuerpo-preguntas::-webkit-scrollbar,
+        .muro-pantalla::-webkit-scrollbar { width: 5px; }
+        .mensajes-chat::-webkit-scrollbar-thumb, .lista-gratitud::-webkit-scrollbar-thumb,
+        .lista-deseos::-webkit-scrollbar-thumb, .cuerpo-preguntas::-webkit-scrollbar-thumb,
+        .muro-pantalla::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.22); border-radius: 10px; }
+        .mensajes-chat, .lista-gratitud, .lista-deseos, .cuerpo-preguntas, .muro-pantalla { scroll-behavior: smooth; }
+
         /* Scroll horizontal 100% nativo (CSS Scroll Snap sobre el eje X).
            Antes esto se manejaba a mano con touchstart/touchend + transform,
            pero en Android real ese listener manual competía con el touch
@@ -537,6 +549,12 @@
         .msg-nico { background: rgba(161, 196, 253, 0.18); }
         .msg-propio { border-bottom-right-radius: 4px; align-self: flex-end; }
         .msg-otro { border-bottom-left-radius: 4px; align-self: flex-start; }
+        .separador-fecha-chat {
+            align-self: center; font-size: 0.68rem; letter-spacing: 0.02em; color: rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.08); padding: 4px 13px; border-radius: 12px;
+            font-family: var(--fuente-texto); margin: 4px 0 2px; animation: aparecerSuave 0.3s forwards;
+            text-transform: capitalize;
+        }
         .input-chat-area { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
         #input-chat {
             flex: 1; min-width: 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
@@ -661,17 +679,28 @@
         }
         .titulo-deseos { font-size: 0.95rem; font-weight: bold; }
         .btn-cerrar-deseos { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
+        .tabs-deseos { display: flex; gap: 6px; padding: 10px 14px 0; }
+        .tab-deseo {
+            flex: 1; text-align: center; padding: 7px 4px; border-radius: 12px; font-size: 0.75rem;
+            font-family: var(--fuente-texto); color: rgba(255,255,255,0.55); background: rgba(255,255,255,0.05);
+            cursor: pointer; touch-action: manipulation; border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.25s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .tab-deseo.activo { color: #05080a; background: linear-gradient(135deg, #b2ffc9, #a8edea); font-weight: bold; border-color: transparent; }
         .lista-deseos { flex: 1; padding: 14px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 8px; }
         .lista-deseos .sin-mensajes { font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; text-align: center; margin: auto; }
         .fila-deseo {
             display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px;
             background: rgba(178,255,201,0.08); font-family: var(--fuente-texto); cursor: pointer; touch-action: manipulation;
+            animation: aparecerSuave 0.3s forwards; transition: transform 0.2s ease, background 0.2s ease;
         }
+        .fila-deseo:active { transform: scale(0.98); }
         .fila-deseo .check-deseo { font-size: 1.2rem; flex-shrink: 0; }
         .fila-deseo { flex-wrap: wrap; }
         .fila-deseo .texto-deseo { font-size: 0.88rem; color: white; line-height: 1.35; flex: 1; }
         .fila-deseo .fila-acciones-item { flex-basis: 100%; }
         .fila-deseo .textarea-edicion-item { flex-basis: 100%; }
+        .fila-deseo.cumplido { background: rgba(178,255,201,0.04); }
         .fila-deseo.cumplido .texto-deseo { text-decoration: line-through; color: rgba(255,255,255,0.45); }
         .input-deseos-area { padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.08); }
         #input-deseo {
@@ -885,20 +914,31 @@
         }
         .menu-principal.mostrar { display: flex; }
         .burbuja-menu {
-            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
-            border: 1px solid rgba(255,182,193,0.5); box-shadow: 0 5px 20px rgba(255,154,158,0.3);
-            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
-            animation: aparecerSuave 0.8s forwards, latidoBurbuja 3s infinite;
+            width: 52px; height: 52px; border-radius: 50%;
+            background: radial-gradient(circle at 32% 28%, rgba(167,139,250,0.55), rgba(0,0,0,0.75) 68%);
+            border: 1px solid rgba(196,181,253,0.55); box-shadow: 0 5px 22px rgba(139,124,246,0.35);
+            display: flex; align-items: center; justify-content: center; font-size: 1.35rem; cursor: pointer;
+            animation: aparecerSuave 0.8s forwards, latidoBurbuja 3.4s infinite;
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); touch-action: manipulation;
             transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .burbuja-menu:active { transform: scale(0.9); }
-        .menu-principal.abierto .burbuja-menu { transform: rotate(90deg); }
-        .menu-principal.abierto .burbuja-menu:active { transform: rotate(90deg) scale(0.9); }
+        .menu-principal.abierto .burbuja-menu { transform: rotate(20deg); }
+        .menu-principal.abierto .burbuja-menu:active { transform: rotate(20deg) scale(0.9); }
         .panel-menu-opciones {
-            background: rgba(15, 10, 20, 0.92); border: 1px solid rgba(255,182,193,0.25);
-            border-radius: 22px; padding: 10px; display: flex; flex-direction: column; gap: 6px;
-            width: min(72vw, 230px); box-sizing: border-box;
+            background:
+                radial-gradient(1.5px 1.5px at 12% 18%, rgba(255,255,255,0.85) 1px, transparent 0),
+                radial-gradient(1px 1px at 78% 12%, rgba(255,255,255,0.6) 1px, transparent 0),
+                radial-gradient(1.5px 1.5px at 88% 42%, rgba(255,255,255,0.7) 1px, transparent 0),
+                radial-gradient(1px 1px at 34% 88%, rgba(255,255,255,0.55) 1px, transparent 0),
+                radial-gradient(1.5px 1.5px at 62% 68%, rgba(255,255,255,0.65) 1px, transparent 0),
+                radial-gradient(1px 1px at 8% 62%, rgba(255,255,255,0.5) 1px, transparent 0),
+                radial-gradient(ellipse at 25% 10%, rgba(139,124,246,0.22), transparent 55%),
+                radial-gradient(ellipse at 85% 85%, rgba(255,154,158,0.14), transparent 55%),
+                rgba(9, 7, 16, 0.94);
+            border: 1px solid rgba(196,181,253,0.28);
+            border-radius: 26px; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+            width: min(82vw, 300px); box-sizing: border-box;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
             transform-origin: top left; opacity: 0; transform: scale(0.9) translateY(-10px);
             max-height: 0; overflow: hidden; padding-top: 0; padding-bottom: 0; margin: 0; border-width: 0;
@@ -907,33 +947,54 @@
         }
         .menu-principal.abierto .panel-menu-opciones {
             opacity: 1; transform: scale(1) translateY(0);
-            max-height: min(76vh, 640px); padding: 10px; border-width: 1px;
+            max-height: min(80vh, 680px); padding: 16px; border-width: 1px;
             overflow-y: auto; -webkit-overflow-scrolling: touch;
             pointer-events: auto;
         }
-        .opcion-menu {
-            display: flex; align-items: center; gap: 10px;
-            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 14px; padding: 11px 14px; color: white;
-            font-family: var(--fuente-texto); font-size: 0.9rem; text-align: left;
-            cursor: pointer; touch-action: manipulation; width: 100%; box-sizing: border-box;
-            transition: background 0.2s ease, transform 0.2s ease;
+        .universo-titulo {
+            font-family: var(--fuente-titulo); font-size: 1.3rem; color: #fff; text-align: center;
+            margin: 2px 0 0;
         }
-        .opcion-menu span { font-size: 1.2rem; flex-shrink: 0; }
-        .opcion-menu:active { transform: scale(0.96); background: rgba(255,154,158,0.2); }
+        .universo-subtitulo {
+            font-family: var(--fuente-texto); font-size: 0.68rem; color: rgba(255,255,255,0.5);
+            text-align: center; font-style: italic; margin: -4px 0 4px; letter-spacing: 0.02em;
+        }
+        .constelacion-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 10px;
+        }
+        .constelacion-grid .opcion-menu:nth-child(even) { margin-top: 16px; }
+        .opcion-menu {
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+            aspect-ratio: 1; border-radius: 50%; color: white;
+            font-family: var(--fuente-texto); text-align: center;
+            cursor: pointer; touch-action: manipulation; box-sizing: border-box;
+            border: 1px solid rgba(255,255,255,0.16);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+            animation: latidoBurbuja 4s infinite;
+        }
+        .opcion-menu span.planeta-icono { font-size: 1.5rem; flex-shrink: 0; }
+        .opcion-menu span.planeta-nombre { font-size: 0.62rem; line-height: 1.15; padding: 0 6px; font-weight: 600; letter-spacing: 0.01em; }
+        .opcion-menu:active { transform: scale(0.92); }
+        .planeta-musica { background: radial-gradient(circle at 32% 28%, rgba(255,214,168,0.5), rgba(255,138,158,0.28) 70%); box-shadow: 0 0 16px rgba(255,154,158,0.25); }
+        .planeta-chat { background: radial-gradient(circle at 32% 28%, rgba(196,228,255,0.5), rgba(129,178,255,0.26) 70%); box-shadow: 0 0 16px rgba(161,196,253,0.25); }
+        .planeta-muro { background: radial-gradient(circle at 32% 28%, rgba(255,224,178,0.48), rgba(180,120,60,0.3) 70%); box-shadow: 0 0 16px rgba(212,163,115,0.25); }
+        .planeta-gratitud { background: radial-gradient(circle at 32% 28%, rgba(255,226,159,0.5), rgba(255,169,159,0.28) 70%); box-shadow: 0 0 16px rgba(255,214,102,0.25); }
+        .planeta-deseos { background: radial-gradient(circle at 32% 28%, rgba(178,255,201,0.48), rgba(168,237,234,0.28) 70%); box-shadow: 0 0 16px rgba(178,255,201,0.25); }
+        .planeta-preguntas { background: radial-gradient(circle at 32% 28%, rgba(216,196,255,0.5), rgba(167,139,250,0.3) 70%); box-shadow: 0 0 16px rgba(167,139,250,0.25); }
+        .planeta-reloj { background: radial-gradient(circle at 32% 28%, rgba(255,214,178,0.5), rgba(255,138,101,0.3) 70%); box-shadow: 0 0 16px rgba(255,138,101,0.25); }
         .separador-romantico {
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            color: rgba(255,182,193,0.55); font-size: 0.7rem; margin: 4px 0 2px; letter-spacing: 2px;
+            color: rgba(196,181,253,0.55); font-size: 0.7rem; margin: 4px 0 2px; letter-spacing: 2px;
         }
         .fila-iconos-interactivos { display: flex; justify-content: center; gap: 14px; padding: 4px 0 2px; }
         .icono-interactivo {
-            width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(255,182,193,0.35);
+            width: 50px; height: 50px; border-radius: 50%; border: 1px solid rgba(196,181,253,0.35);
             background: rgba(255,255,255,0.06); font-size: 1.5rem; cursor: pointer; touch-action: manipulation;
             display: flex; align-items: center; justify-content: center;
             transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease;
             animation: latidoBurbuja 3.2s infinite;
         }
-        .icono-interactivo:active { transform: scale(0.82); background: rgba(255,154,158,0.25); }
+        .icono-interactivo:active { transform: scale(0.82); background: rgba(167,139,250,0.25); }
 
         /* --- Muro en el tiempo --- */
         .muro-pantalla { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; box-sizing: border-box; }
@@ -1338,16 +1399,20 @@
         <div class="burbuja-reproductor" id="burbuja-reproductor" onclick="toggleReproductor(event)" title="Nuestra música" role="button" aria-label="Abrir reproductor de música">🎵</div>
     </div>
 
-    <!-- Menú principal: agrupa todos los accesos (menos la música) en un solo desplegable -->
+    <!-- Universo: agrupa todos los accesos (menos la música) en una constelación explorable -->
     <div id="menu-principal" class="menu-principal">
         <div class="panel-menu-opciones" id="panel-menu-opciones">
-            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'musica')"><span>🎵</span> Música</button>
-            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'chat')"><span>💬</span> Chat</button>
-            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'muro')"><span>📜</span> Muro en el tiempo</button>
-            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'gratitud')"><span>💛</span> Rincón de gratitud</button>
-            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'deseos')"><span>🌠</span> Lista de deseos</button>
-            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'preguntas')"><span>💭</span> Preguntas para nosotros</button>
-            <button class="opcion-menu" onclick="ejecutarOpcionMenu(event, 'reloj')"><span>⏰</span> Cuenta regresiva</button>
+            <div class="universo-titulo">🌌 Nuestro universo</div>
+            <div class="universo-subtitulo">Tocá una estrella para explorar</div>
+            <div class="constelacion-grid">
+                <button class="opcion-menu planeta-musica" onclick="ejecutarOpcionMenu(event, 'musica')"><span class="planeta-icono">🎵</span><span class="planeta-nombre">Música</span></button>
+                <button class="opcion-menu planeta-chat" onclick="ejecutarOpcionMenu(event, 'chat')"><span class="planeta-icono">💬</span><span class="planeta-nombre">Chat</span></button>
+                <button class="opcion-menu planeta-muro" onclick="ejecutarOpcionMenu(event, 'muro')"><span class="planeta-icono">📜</span><span class="planeta-nombre">Muro en el tiempo</span></button>
+                <button class="opcion-menu planeta-gratitud" onclick="ejecutarOpcionMenu(event, 'gratitud')"><span class="planeta-icono">💛</span><span class="planeta-nombre">Gratitud</span></button>
+                <button class="opcion-menu planeta-deseos" onclick="ejecutarOpcionMenu(event, 'deseos')"><span class="planeta-icono">🌠</span><span class="planeta-nombre">Deseos</span></button>
+                <button class="opcion-menu planeta-preguntas" onclick="ejecutarOpcionMenu(event, 'preguntas')"><span class="planeta-icono">💭</span><span class="planeta-nombre">Preguntas</span></button>
+                <button class="opcion-menu planeta-reloj" onclick="ejecutarOpcionMenu(event, 'reloj')"><span class="planeta-icono">⏰</span><span class="planeta-nombre">Cuenta regresiva</span></button>
+            </div>
             <div class="separador-romantico"><span>♥</span><span>·</span><span>✦</span><span>·</span><span>♥</span></div>
             <div class="fila-iconos-interactivos">
                 <button class="icono-interactivo" onclick="lanzarLluviaTeAmo(event)" title="Te amo" aria-label="Te amo en todos los idiomas">❤️</button>
@@ -1361,7 +1426,7 @@
                 <button class="icono-interactivo" onclick="lanzarLluviaEstrellas(event)" title="Estrellas" aria-label="Lluvia de estrellas">✨</button>
             </div>
         </div>
-        <div class="burbuja-menu" id="burbuja-menu" onclick="toggleMenuPrincipal(event)" title="Menú" role="button" aria-label="Abrir menú de opciones">☰</div>
+        <div class="burbuja-menu" id="burbuja-menu" onclick="toggleMenuPrincipal(event)" title="Nuestro universo" role="button" aria-label="Abrir nuestro universo">🌌</div>
     </div>
 
     <button id="btn-azar" class="btn-azar" onclick="viajarAlAzar()">
@@ -1372,7 +1437,7 @@
     <button id="btn-indice-rapido" class="btn-indice-rapido" onclick="irAId('pantalla-indice')" title="Volver al índice" aria-label="Volver al índice">📖</button>
 
     <!-- Reproducir / pausar el avance automático de los mensajes -->
-    <button id="btn-auto-avance" class="btn-indice-rapido btn-auto-avance" onclick="toggleAutoAvance(event)" title="Pausar avance automático" aria-label="Pausar avance automático">⏸️</button>
+    <button id="btn-auto-avance" class="btn-indice-rapido btn-auto-avance" onclick="toggleAutoAvance(event)" title="Reproducir avance automático" aria-label="Reproducir avance automático">▶️</button>
 
     <!-- Navegación garantizada entre pantallas: funciona siempre, aunque el swipe nativo falle en algún celular -->
     <div class="nav-pantallas" id="nav-pantallas">
@@ -1408,6 +1473,10 @@
             <div class="header-deseos">
                 <span class="titulo-deseos">Nuestra lista de deseos 🌠</span>
                 <button class="btn-cerrar-deseos" onclick="toggleDeseos(event)">✕</button>
+            </div>
+            <div class="tabs-deseos">
+                <div class="tab-deseo activo" id="tab-deseo-pendientes" onclick="cambiarTabDeseos('pendientes')">🤍 Por cumplir</div>
+                <div class="tab-deseo" id="tab-deseo-cumplidos" onclick="cambiarTabDeseos('cumplidos')">💗 Cumplidos</div>
             </div>
             <div class="lista-deseos" id="lista-deseos"></div>
             <div class="input-deseos-area">
@@ -2776,10 +2845,6 @@
                 } 
                 else if (pasoActual === 2) {
                     document.getElementById('pregunta2').classList.remove('mostrar'); document.getElementById('luz-interior').classList.add('iluminar');
-                    
-                    reproductorMusical.play().catch(e => console.error("Error reproduciendo audio nativo:", e));
-                    document.getElementById('burbuja-reproductor').classList.add('sonando');
-                    actualizarInfoCancion();
 
                     setTimeout(() => {
                         document.getElementById('puerta-id').classList.add('abierta');
@@ -2791,7 +2856,6 @@
                             document.getElementById('scroll-aviso').style.display = 'block';
 
                             document.getElementById('nav-pantallas').classList.add('mostrar');
-                            programarAutoAvance();
 
                             const btnIndiceRapido = document.getElementById('btn-indice-rapido');
                             btnIndiceRapido.classList.add('mostrar');
@@ -2804,16 +2868,11 @@
                             const btnAzar = document.getElementById('btn-azar');
                             btnAzar.style.display = 'flex'; setTimeout(() => btnAzar.classList.add('mostrar'), 100);
 
+                            // El reproductor aparece como burbuja nada más: la música la arrancan
+                            // ellos cuando quieran, tocándola y dándole play manualmente.
                             const repFlotante = document.getElementById('reproductor-flotante');
                             repFlotante.style.display = 'flex';
-                            setTimeout(() => {
-                                repFlotante.classList.add('mostrar');
-                                // Se abre solo un instante para mostrar qué está sonando, y luego se recoge a burbuja
-                                setTimeout(() => {
-                                    repFlotante.classList.add('abierto');
-                                    setTimeout(() => repFlotante.classList.remove('abierto'), 3200);
-                                }, 350);
-                            }, 100);
+                            setTimeout(() => repFlotante.classList.add('mostrar'), 100);
 
                             const chatFlotante = document.getElementById('chat-flotante');
                             chatFlotante.style.display = 'flex';
@@ -2941,8 +3000,18 @@
                         return;
                     }
                     contenedor.innerHTML = '';
+                    let ultimaEtiquetaFecha = null;
                     snapshot.forEach((doc) => {
                         const msg = doc.data();
+                        const fechaMsg = msg.timestamp && msg.timestamp.toDate ? msg.timestamp.toDate() : new Date();
+                        const etiqueta = etiquetaFechaChat(fechaMsg);
+                        if (etiqueta !== ultimaEtiquetaFecha) {
+                            const separador = document.createElement('div');
+                            separador.className = 'separador-fecha-chat';
+                            separador.innerText = etiqueta;
+                            contenedor.appendChild(separador);
+                            ultimaEtiquetaFecha = etiqueta;
+                        }
                         const div = document.createElement('div');
                         div.className = `burbuja-msg ${msg.autor === "carito" ? 'msg-carito' : 'msg-nico'} ${msg.autor === miIdentidad ? 'msg-propio' : 'msg-otro'}`;
                         div.innerText = msg.texto;
@@ -2983,6 +3052,20 @@
         }
 
         function verificarEnterChat(e) { if (e.key === "Enter") enviarMensajeChat(); }
+
+        // Devuelve "Hoy", "Ayer" o la fecha en formato "12 de agosto" (con año si no es el actual),
+        // igual que los separadores de fecha de WhatsApp.
+        function etiquetaFechaChat(fecha) {
+            const hoy = new Date();
+            const ayer = new Date();
+            ayer.setDate(hoy.getDate() - 1);
+            const mismoDia = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+            if (mismoDia(fecha, hoy)) return 'Hoy';
+            if (mismoDia(fecha, ayer)) return 'Ayer';
+            const opciones = { day: 'numeric', month: 'long' };
+            if (fecha.getFullYear() !== hoy.getFullYear()) opciones.year = 'numeric';
+            return fecha.toLocaleDateString('es-AR', opciones);
+        }
 
         // --- Lógica del Muro en el Tiempo ---
         function abrirMuro(event) { if (event) event.stopPropagation(); requerirIdentidad('muro'); }
@@ -3236,9 +3319,9 @@
         })();
 
         // ================== AUTO-AVANCE (reproducir / pausar mensajes) ==================
-        // Arranca activo por defecto; la persona puede pausarlo o
-        // reanudarlo con el botón ▶️/⏸️ flotante.
-        let autoAvanceActivo = true;
+        // Arranca en pausa por defecto: las pantallas NO pasan solas.
+        // La persona decide cuándo darle play con el botón ▶️/⏸️ flotante.
+        let autoAvanceActivo = false;
         let temporizadorAutoAvance = null;
         const INTERVALO_AUTO_AVANCE = 4500;
 
@@ -3352,6 +3435,9 @@
             }
         }
 
+        let deseosCache = [];
+        let pestanaDeseosActiva = 'pendientes'; // 'pendientes' o 'cumplidos'
+
         function abrirDeseosInterno() {
             document.getElementById('deseos-flotante').classList.add('abierto');
 
@@ -3359,35 +3445,61 @@
                 deseosIniciado = true;
                 const q = window.query(window.collection(window.db, "deseos"), window.orderBy("timestamp", "asc"));
                 window.onSnapshot(q, (snapshot) => {
-                    const lista = document.getElementById('lista-deseos');
-                    if (snapshot.empty) {
-                        lista.innerHTML = '<p class="sin-mensajes">Todavía no hay sueños anotados... agreguen el primero 🌠</p>';
-                        return;
-                    }
-                    lista.innerHTML = '';
+                    deseosCache = [];
                     snapshot.forEach((docSnap) => {
-                        const deseo = docSnap.data();
-                        const fila = document.createElement('div');
-                        fila.className = `fila-deseo ${deseo.cumplido ? 'cumplido' : ''}`;
-                        fila.onclick = () => marcarDeseo(docSnap.id, !!deseo.cumplido);
-                        const check = document.createElement('span');
-                        check.className = 'check-deseo';
-                        check.innerText = deseo.cumplido ? '💗' : '🤍';
-                        const texto = document.createElement('span');
-                        texto.className = 'texto-deseo';
-                        texto.innerText = deseo.texto;
-                        fila.appendChild(check); fila.appendChild(texto);
-                        if (deseo.autor === miIdentidad) {
-                            fila.appendChild(crearFilaAcciones('deseos', docSnap.id, texto, '¿Borrar este sueño para siempre?'));
-                        }
-                        lista.appendChild(fila);
+                        deseosCache.push({ id: docSnap.id, data: docSnap.data() });
                     });
+                    renderizarDeseos();
                 }, (error) => {
                     console.error('Error escuchando los deseos:', error);
                     const lista = document.getElementById('lista-deseos');
                     if (lista) lista.innerHTML = `<p class="sin-mensajes">⚠️ No se pudo conectar (${error.code || 'error'}).</p>`;
                 });
             }
+        }
+
+        function cambiarTabDeseos(tab) {
+            if (tab === pestanaDeseosActiva) return;
+            vibrar(10);
+            pestanaDeseosActiva = tab;
+            document.getElementById('tab-deseo-pendientes').classList.toggle('activo', tab === 'pendientes');
+            document.getElementById('tab-deseo-cumplidos').classList.toggle('activo', tab === 'cumplidos');
+            renderizarDeseos();
+        }
+
+        function renderizarDeseos() {
+            const lista = document.getElementById('lista-deseos');
+            if (!lista) return;
+            const mostrarCumplidos = pestanaDeseosActiva === 'cumplidos';
+            const filtrados = deseosCache.filter(d => !!d.data.cumplido === mostrarCumplidos);
+
+            if (deseosCache.length === 0) {
+                lista.innerHTML = '<p class="sin-mensajes">Todavía no hay sueños anotados... agreguen el primero 🌠</p>';
+                return;
+            }
+            if (filtrados.length === 0) {
+                lista.innerHTML = mostrarCumplidos
+                    ? '<p class="sin-mensajes">Todavía no cumplieron ningún sueño juntos... ¡vamos! 💫</p>'
+                    : '<p class="sin-mensajes">No hay sueños pendientes. ¡Anoten uno nuevo! 🌠</p>';
+                return;
+            }
+            lista.innerHTML = '';
+            filtrados.forEach(({ id, data: deseo }) => {
+                const fila = document.createElement('div');
+                fila.className = `fila-deseo ${deseo.cumplido ? 'cumplido' : ''}`;
+                fila.onclick = () => marcarDeseo(id, !!deseo.cumplido);
+                const check = document.createElement('span');
+                check.className = 'check-deseo';
+                check.innerText = deseo.cumplido ? '💗' : '🤍';
+                const texto = document.createElement('span');
+                texto.className = 'texto-deseo';
+                texto.innerText = deseo.texto;
+                fila.appendChild(check); fila.appendChild(texto);
+                if (deseo.autor === miIdentidad) {
+                    fila.appendChild(crearFilaAcciones('deseos', id, texto, '¿Borrar este sueño para siempre?'));
+                }
+                lista.appendChild(fila);
+            });
         }
 
         function verificarEnterDeseo(e) { if (e.key === "Enter") agregarDeseo(); }

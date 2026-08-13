@@ -4409,5 +4409,45 @@
         }
         iniciarCicloFrasesDeAmor();
     </script>
+
+    <!-- ============================================================
+         PANEL DE DIAGNÓSTICO TEMPORAL (borrar después de resolver el bug)
+         Muestra en pantalla, en vivo, qué elemento recibe cada toque.
+         ============================================================ -->
+    <div id="debug-touch-panel" style="
+        position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647;
+        background: rgba(0,0,0,0.92); color: #0f0; font-family: monospace;
+        font-size: 11px; line-height: 1.5; padding: 8px 10px;
+        max-height: 40vh; overflow-y: auto; pointer-events: none;
+        white-space: pre-wrap; word-break: break-all;
+        border-bottom: 2px solid #0f0;
+    ">Esperando toques…</div>
+    <script>
+        (function () {
+            const panel = document.getElementById('debug-touch-panel');
+            let log = [];
+            function describir(el) {
+                if (!el) return 'null';
+                const clase = (el.className && typeof el.className === 'string') ? el.className : '(sin clase)';
+                return el.tagName + '.' + clase;
+            }
+            function registrar(tipo, x, y) {
+                const enElPunto = document.elementFromPoint(x, y);
+                const linea = '[' + tipo + '] en (' + Math.round(x) + ',' + Math.round(y) + ') → ' + describir(enElPunto);
+                log.unshift(linea);
+                log = log.slice(0, 12);
+                panel.textContent = log.join('\n');
+            }
+            ['pointerdown', 'pointerup', 'click', 'touchstart', 'touchend'].forEach(function (tipo) {
+                document.addEventListener(tipo, function (e) {
+                    let x, y;
+                    if (e.touches && e.touches[0]) { x = e.touches[0].clientX; y = e.touches[0].clientY; }
+                    else if (e.changedTouches && e.changedTouches[0]) { x = e.changedTouches[0].clientX; y = e.changedTouches[0].clientY; }
+                    else { x = e.clientX; y = e.clientY; }
+                    registrar(tipo + ' (target real: ' + describir(e.target) + ')', x, y);
+                }, { capture: true, passive: true });
+            });
+        })();
+    </script>
 </body>
 </html>

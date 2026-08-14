@@ -16,8 +16,9 @@
     <meta property="og:type" content="website">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com;
-        connect-src 'self' data: blob: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com https://www.gstatic.com;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com https://www.youtube.com https://s.ytimg.com;
+        frame-src 'self' https://www.youtube.com;
+        connect-src 'self' data: blob: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com https://www.gstatic.com https://www.youtube.com;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
         img-src 'self' data: https:;
@@ -1663,6 +1664,9 @@
         </div>
         <div class="burbuja-reproductor" id="burbuja-reproductor" onclick="toggleReproductor(event)" title="Nuestra música" role="button" aria-label="Abrir reproductor de música">🎵</div>
     </div>
+    <!-- Player de YouTube embebido: queda oculto visualmente pero vive en la misma página,
+         no abre la app ni una pestaña nueva. Reproduce nuestra playlist de YouTube Music. -->
+    <div id="yt-audio-player" style="position:fixed; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; left:-9999px;" aria-hidden="true"></div>
 
     <!-- Botón para volver a la constelación desde el libro o cualquier panel -->
     <div id="menu-principal" class="menu-principal">
@@ -1793,7 +1797,7 @@
                 <div class="fr-bloque"><span class="fr-valor" id="fr-min">00</span><span class="fr-etiqueta">min</span></div>
                 <div class="fr-bloque"><span class="fr-valor" id="fr-seg">00</span><span class="fr-etiqueta">seg</span></div>
             </div>
-            <div class="fr-fecha" id="fr-fecha">25 de agosto de 2026, 13 hs</div>
+            <div class="fr-fecha" id="fr-fecha">25 de agosto de 2026, 12 hs</div>
             <a class="btn-ver-boleto" href="https://drive.google.com/uc?export=download&id=1cq1pwYt6iyr96WBC2oJldx05mWZojnXR" target="_blank" rel="noopener" style="text-decoration: none; display: inline-block;">🎫 Ver mi boleto real</a>
         </div>
         <div class="burbuja-reloj" id="burbuja-reloj" onclick="toggleReloj(event)" title="Cuenta regresiva" role="button" aria-label="Ver cuenta regresiva">⏰</div>
@@ -1819,7 +1823,7 @@
                         <div class="pase-dato"><span class="etiqueta">Pasajero</span><span class="valor">Nico & Carito</span></div>
                         <div class="pase-dato"><span class="etiqueta">Vuelo</span><span class="valor">6 AÑOS</span></div>
                         <div class="pase-dato"><span class="etiqueta">Fecha</span><span class="valor">25 AGO 2026</span></div>
-                        <div class="pase-dato"><span class="etiqueta">Hora</span><span class="valor">13:00 hs</span></div>
+                        <div class="pase-dato"><span class="etiqueta">Hora</span><span class="valor">12:00 hs</span></div>
                         <div class="pase-dato"><span class="etiqueta">Puerta</span><span class="valor">CORAZÓN</span></div>
                         <div class="pase-dato"><span class="etiqueta">Asiento</span><span class="valor">JUNTOS</span></div>
                     </div>
@@ -2072,7 +2076,7 @@
                     <div class="cuenta-bloque"><span class="cuenta-valor" id="cr-min">00</span><span class="cuenta-etiqueta">min</span></div>
                     <div class="cuenta-bloque"><span class="cuenta-valor" id="cr-seg">00</span><span class="cuenta-etiqueta">seg</span></div>
                 </div>
-                <div class="cuenta-fecha" id="cuenta-fecha">25 de agosto de 2026, 13 hs</div>
+                <div class="cuenta-fecha" id="cuenta-fecha">25 de agosto de 2026, 12 hs</div>
                 <p class="cuenta-frase" id="cuenta-frase">Cada segundo que pasa, estoy más cerca de abrazarte 💫</p>
                 <button class="btn-ver-boleto" onclick="abrirBoleto(event)">✈️ Ver nuestro pasaje</button>
                 <p class="cuenta-mensaje" id="cuenta-mensaje"></p>
@@ -2634,7 +2638,7 @@
         }, { passive: true });
 
         // CUENTA REGRESIVA: 25 de agosto de 2026 a las 13hs, la primera vez que se ven en persona
-        const fechaEncuentro = new Date(2026, 7, 25, 13, 0, 0);
+        const fechaEncuentro = new Date(2026, 7, 25, 12, 0, 0);
         let intervaloCuentaRegresiva = null;
 
         let modoAscendenteActivado = false;
@@ -2659,11 +2663,11 @@
                     modoAscendenteActivado = true;
                     setTextoSiExiste('cuenta-subtitulo', 'Desde que nos vimos');
                     setTextoSiExiste('cuenta-titulo', 'Nuestra historia en el mundo real');
-                    setTextoSiExiste('cuenta-fecha', 'Empezó el 25 de agosto de 2026, 13 hs');
+                    setTextoSiExiste('cuenta-fecha', 'Empezó el 25 de agosto de 2026, 12 hs');
                     setTextoSiExiste('cuenta-frase', 'Cada segundo que pasa, esto es más real 💫');
                     setTextoSiExiste('fr-subtitulo', 'Desde que nos vimos');
                     setTextoSiExiste('fr-titulo', 'Nuestro segundo cero');
-                    setTextoSiExiste('fr-fecha', 'Empezó el 25 de agosto de 2026, 13 hs');
+                    setTextoSiExiste('fr-fecha', 'Empezó el 25 de agosto de 2026, 12 hs');
                     const msj = document.getElementById('cuenta-mensaje');
                     if (msj) {
                         msj.innerText = '¡Hoy es el día! 🎉';
@@ -2778,74 +2782,32 @@
             } catch (e) { /* silencioso */ }
         }
 
-        // REPRODUCTOR MUSICA
-        const canciones = [
-            { src: "https://dl.dropboxusercontent.com/scl/fi/yl60jkydjx61e8kos5h6h/A-Thousand-Years-Christina-Perri-Sub.-Espa-ol-Lyrics.mp3?rlkey=e2lmd44a0kvm3cimimdf36xls&st=syx967jx&dl=1", nombre: "A Thousand Years Christina Perri" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/q4lsxzk5x1mvje8097db5/Aerosmith-I-Don-t-Want-Miss-a-Thing-Sub.-Espa-ol-Lyrics.mp3?rlkey=xsn5z7zt5ebiuutlzq996fbki&st=hirxl3aj&dl=1", nombre: "Aerosmith I Don t Want Miss a Thing" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/ot4numpjk4bxdr0nc1kyq/Alejandro-Sanz-Camila-Cabello-Mi-Persona-Favorita-V-deo-Oficial.mp3?rlkey=n9ws42u3bjsv0pmzqlgz3kuxw&st=1xqhw2o3&dl=1", nombre: "Alejandro Sanz Camila Cabello Mi Persona Favorita V deo Oficial" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/jrfeo2uvx4xybq7breiid/Alicia-Keys-Fallin-Official-HD-Video.mp3?rlkey=6v2aghxbw7fwbpvkx24vvljql&st=gkz00q6v&dl=1", nombre: "Alicia Keys Fallin" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/q083kk90h35448pgi2nt6/Andrea-Bocelli-Marta-Sanchez-Vivo-Por-Ella.mp3?rlkey=rjy0hq7e167na5x4x0a9xlbw9&st=kwon53cs&dl=1", nombre: "Andrea Bocelli Marta Sanchez Vivo Por Ella" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/bxb6qua70ci9iw1priuew/Bee-Gees-How-Deep-Is-Your-Love-Official-Video.mp3?rlkey=hmjcpgq903qut34711n30ss33&st=d54qkji1&dl=1", nombre: "Bee Gees How Deep Is Your Love" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/x6kys9xv4wvi9kqzzun7b/Billy-Joel-Just-the-Way-You-Are-Live-1977.mp3?rlkey=4dtg1trj8i66npnoo7oom44jo&st=sox42kc8&dl=1", nombre: "Billy Joel Just the Way You Are Live 1977" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/fejk45rs5hbhfw2nsk9dx/Bryan-Adams-Everything-I-Do-I-Do-It-For-You.mp3?rlkey=gyrj618r6al4d9xrjbkc33r4b&st=o6kyfit1&dl=1", nombre: "Bryan Adams Everything I Do I Do It For You" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/4srs6smco8lrpshjencki/Bryan-Adams-Heaven.mp3?rlkey=zh6opxdhtj0d7v6fpzd45mzqw&st=3vh4cv2w&dl=1", nombre: "Bryan Adams Heaven" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/8vdt4kjdizvz227yzh8m6/Caf-Tacvba-Eres-MTV-Unplugged.mp3?rlkey=1s1nuiraanjw350yhfvcwnbcz&st=kiulj08o&dl=1", nombre: "Caf Tacvba Eres MTV Unplugged" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/47ih2s6haxpcgdqhn3bt5/Carla-Morrison-Te-regalo-letra.mp3?rlkey=zqezdeww7yew3w0w9syht35m4&st=gwtj7c3q&dl=1", nombre: "Carla Morrison Te regalo letra" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/fl912b0nek6uapmfrxt7o/Carlos-Baute-Colgando-en-Tus-Manos-con-Marta-S-nchez-Letra.mp3?rlkey=tgf2al8nej25tivt01y4xzt3p&st=svw9h0pp&dl=1", nombre: "Carlos Baute Colgando en Tus Manos con Marta S nchez" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/8jwl1vs3ank93aa7mfnip/C-line-Dion-The-Power-Of-Love-Official-Remastered-HD-Video.mp3?rlkey=9m0ylporynwac9riacd6umyga&st=nutjcf03&dl=1", nombre: "C line Dion The Power Of Love" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/ergemcfbe90rk2i3x68xz/CONTIGO-EN-LA-DISTANCIA-CHRISTINA-AGUILERA.mp3?rlkey=7bcsk1hpez84a9maewjjdi2yl&st=yt28e7ev&dl=1", nombre: "CONTIGO EN LA DISTANCIA CHRISTINA AGUILERA" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/7y5xru5zxqqkafs1mb4h5/Cristian-Castro-Por-Amarte-As-LetraLyrics.mp3?rlkey=uabxnbawmgsn6va6gj6okx5c9&st=4aox01mf&dl=1", nombre: "Cristian Castro Por Amarte As" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/tft9s672uux7ul5c2k2g6/D-a-Tras-D-a.mp3?rlkey=l8829qe6ti7cjiasie7anwwe7&st=hco6fyof&dl=1", nombre: "D a Tras D a" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/lqxk0tr3d0whxxq4ujkrg/Elton-John-Your-Song-Live-at-the-Royal-Opera-House-2002-HD.mp3?rlkey=85szp40oyqiwaifqe6ij108h9&st=qs4rsay4&dl=1", nombre: "Elton John Your Song Live at the Royal Opera House 2002" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/08amrsrj6wk5krn68o3rf/Elvis-Costello-She.mp3?rlkey=sik9h3s2u1a760494laa7nc2q&st=qtm2yjnl&dl=1", nombre: "Elvis Costello She" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/5cbxjqsvqusayv1xmd05x/Elvis-Crespo-Suavemente.mp3?rlkey=lqitit6ruvznelx7t3x9op8p9&st=jl16jkb5&dl=1", nombre: "Elvis Crespo Suavemente" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/9gjxnpb95zp0uhh9usdeh/Eric-Clapton-Wonderful-Tonight-Official-Live.mp3?rlkey=ujwzywf0wgn4j9nn2sgnmy60c&st=hthi9d3g&dl=1", nombre: "Eric Clapton Wonderful Tonight Live" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/w01tt8nfdh5njpwto5898/Eterno-Amor.mp3?rlkey=84qzmxjk0gyvshdgaqs0pr8nb&st=jd8c9cqy&dl=1", nombre: "Eterno Amor" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/6w2ribkmzx6iivlckkmqx/Extreme-More-Than-Words-Official-Music-Video.mp3?rlkey=f47m0k6s9hzins6stj24w7jir&st=wulyf3wb&dl=1", nombre: "Extreme More Than Words Music" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/sjd3ph8a61r00rzjdfy7i/Franco-De-Vita-Tan-S-lo-T-Live-ft.-Alejandra-Guzm-n.mp3?rlkey=93spthi1dwa54xi9f0uzz7mx8&st=gx9fgnqb&dl=1", nombre: "Franco De Vita Tan S lo T Live ft. Alejandra Guzm n" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/m3lskavmglir393eh1yzr/Isn-t-She-Lovely.mp3?rlkey=u4907hhngguokb4vgflwe7wjc&st=vkujbzgv&dl=1", nombre: "Isn t She Lovely" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/3l6y9owlbqa5xxqxhsibm/Juan-Gabriel-Abr-zame-Muy-Fuerte-Letra.mp3?rlkey=n7antjbpisofazgs6tmv6x01v&st=w72gir9y&dl=1", nombre: "Juan Gabriel Abr zame Muy Fuerte" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/opcwrq0xt11d4rwisx6vu/Juanes-Nelly-Furtado-Fotograf-a-Official-Music-Video.mp3?rlkey=qlym8yofvv2x5z2h57cvg3ciz&st=te3t37eb&dl=1", nombre: "Juanes Nelly Furtado Fotograf a Music" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/pm4nb7a6dk7su6y9ysqt3/Los-Nocheros-Entre-La-Tierra-Y-Cielo.mp3?rlkey=2lbl3vq15kvryj2vnuxw5q982&st=ndbloc60&dl=1", nombre: "Los Nocheros Entre La Tierra Y Cielo" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/wvkyk87i4wfisxl71czqp/Louis-Armstrong-What-A-Wonderful-World-Official-Video.mp3?rlkey=gf3u8nz2w4aykkfithc803oeh&st=8mc7z3p6&dl=1", nombre: "Louis Armstrong What A Wonderful World" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/1z1kxlveapxkl4632iapp/Luck-Ra-Chayanne-UN-SIGLO-SIN-TI-Official-Video.mp3?rlkey=1rp72s64q0t2j0ac3qi7qsq5d&st=zq77s7x6&dl=1", nombre: "Luck Ra Chayanne UN SIGLO SIN TI" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/2pucmfb375w8l33crwljz/Man-Bendita-Tu-Luz-Video-Oficial.mp3?rlkey=mbuphis9so8xcw6vogf5zz8oj&st=dp4pl263&dl=1", nombre: "Man Bendita Tu Luz Oficial" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/rdkhev17b95tma89nkhlz/Mi-Coraz-n-Encantado-Letra.mp3?rlkey=js5e2onxua6kyyvvc1fti6rwo&st=fyornsbd&dl=1", nombre: "Mi Coraz n Encantado" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/o7ncjjrq7baxc5pedoyqn/Natalia-Lafourcade-Hasta-la-Ra-z.mp3?rlkey=lxkjxiok8unpw98p7o8lqurqv&st=qrexoqc1&dl=1", nombre: "Natalia Lafourcade Hasta la Ra z" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/vsjf5yuf2hoyoc9k0r712/Noelia-Tu.mp3?rlkey=6sbq4937ddtqgg8farvj0j9j7&st=w1joymnr&dl=1", nombre: "Noelia Tu" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/317r48oi6fqya1gwh48vd/Nos-Veremos-Otra-Vez.mp3?rlkey=9qr8gczav7ui7qmsfegw2utrh&st=fcpuh4f9&dl=1", nombre: "Nos Veremos Otra Vez" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/678pl82mua36i49c88zt7/Pablo-Albor-n-Solamente-t-Letra.mp3?rlkey=73nwq8rqm6e9pimpdxfrfqnhl&st=w7n9xeto&dl=1", nombre: "Pablo Albor n Solamente t" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/162g1v54a3x86kavdyysw/Richard-Marx-Right-Here-Waiting-Official-Music-Video.mp3?rlkey=gkolhfnalznqlpn1xavkf88ci&st=1rado01t&dl=1", nombre: "Richard Marx Right Here Waiting Music" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/q52prx2wmf9c1jvgtqu6j/Robbie-Williams-Angel-en-Espa-ol-Letra.mp3?rlkey=mra6zi9ywf0szm2oao0hz6yet&st=cjwk834f&dl=1", nombre: "Robbie Williams Angel en" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/thh2s2s7nadtcs9ez2uq0/Roxette-Un-Dia-Sin-Ti-Official-Video.mp3?rlkey=1karaze93hih47dgo54vdm796&st=2ccbhv8c&dl=1", nombre: "Roxette Un Dia Sin Ti" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/euwutuhzr2a6h054a7w3e/Sin-Bandera-Entra-En-Mi-Vida-Official-Video.mp3?rlkey=egoflaljp51n7ijk6xncdle2o&st=nduwesvr&dl=1", nombre: "Sin Bandera Entra En Mi Vida" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/6ipb17g3gsgitzvj3r2ll/Sin-Bandera-Kilometros.mp3?rlkey=94lefeitswdxrkdyv72g2qv5g&st=5h6ts00y&dl=1", nombre: "Sin Bandera Kilometros" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/8nmj780w4hpjf52n1a7zg/Tiziano-Ferro-El-Regalo-Mas-Grande.mp3?rlkey=9td8slvkdirdyhzpltk0shhdo&st=memusxu3&dl=1", nombre: "Tiziano Ferro El Regalo Mas Grande" },
-            { src: "https://dl.dropboxusercontent.com/scl/fi/78vav8osvu1k7o5v5iw2k/Whitney-Houston-Saving-All-My-Love-For-You-Official-HD-Video.mp3?rlkey=579qx6kqhn25hk8qa4deukikw&st=8d1u6p4f&dl=1", nombre: "Whitney Houston Saving All My Love For You" },
-        ];
-        
-        let indiceCancionActiva = 0;
-        let esRandom = true; // Desde la 2da canción en adelante, siempre aleatorio: nunca se sabe qué sigue
+        // REPRODUCTOR MUSICA — playlist de YouTube Music embebida con el IFrame Player API.
+        // Vive dentro de la misma página (iframe invisible), nunca abre la app ni una pestaña nueva.
+        //
+        // ⚠️ IMPORTANTE: el ID de playlist que llegó ("PLU9aN4KQMAs4") es más corto de lo normal
+        // (los IDs de playlist de YouTube suelen tener 34 caracteres). Puede haberse cortado al
+        // copiar el link. Si la música no carga, entrá a la playlist desde YouTube Music en escritorio,
+        // copiá el link completo y reemplazá el valor de ID_PLAYLIST de acá abajo.
+        // Además, para que suene también en el celu/PC de Carito, la playlist tiene que estar
+        // configurada como "Pública" o "No incluida en listados" (no "Privada").
+        const ID_PLAYLIST = "PLU9aN4KQMAs4";
+
+        let ytPlayer = null;
+        let ytListo = false;
+        let esRandom = true; // Arranca en aleatorio, igual que antes
         let esRepetir = false;
-        
-        // La primera canción también es al azar (antes arrancaba siempre en la misma)
-        indiceCancionActiva = Math.floor(Math.random() * canciones.length);
+        let intentoAutoplayPendiente = false;
 
-        const reproductorMusical = new Audio();
-        reproductorMusical.src = canciones[indiceCancionActiva].src;
-        reproductorMusical.volume = 0.8;
-        document.getElementById('btn-random').classList.add('activo'); // arranca en aleatorio
-
-        function actualizarInfoCancion() {
-            let titulo = canciones[indiceCancionActiva].nombre;
-            // truncar si es muy largo
-            if(titulo.length > 25) titulo = titulo.substring(0, 22) + "...";
-            document.getElementById('info-cancion').innerText = "🎵 " + titulo;
-        }
-        actualizarInfoCancion(); // Init text
+        // Carga async del script oficial de YouTube IFrame API
+        (function cargarYouTubeAPI() {
+            const tag = document.createElement('script');
+            tag.src = "https://www.youtube.com/iframe_api";
+            document.head.appendChild(tag);
+        })();
 
         function formatearTiempo(segundos) {
-            if (isNaN(segundos) || segundos === Infinity) return "0:00";
+            if (isNaN(segundos) || segundos === Infinity || segundos == null) return "0:00";
             const min = Math.floor(segundos / 60);
             const seg = Math.floor(segundos % 60).toString().padStart(2, '0');
             return `${min}:${seg}`;
@@ -2856,72 +2818,103 @@
         const tiempoTotalEl = document.getElementById('tiempo-total');
         let arrastrandoBarra = false;
 
-        reproductorMusical.addEventListener('loadedmetadata', () => {
-            barraProgreso.max = reproductorMusical.duration;
-            tiempoTotalEl.innerText = formatearTiempo(reproductorMusical.duration);
-        });
+        function actualizarInfoCancion() {
+            if (!ytPlayer || typeof ytPlayer.getVideoData !== 'function') return;
+            let titulo = (ytPlayer.getVideoData().title || 'Cargando...').trim();
+            if (titulo.length > 25) titulo = titulo.substring(0, 22) + "...";
+            document.getElementById('info-cancion').innerText = "🎵 " + titulo;
+        }
 
-        reproductorMusical.addEventListener('timeupdate', () => {
-            if (!arrastrandoBarra) {
-                barraProgreso.value = reproductorMusical.currentTime;
-                tiempoActualEl.innerText = formatearTiempo(reproductorMusical.currentTime);
+        // Llamado automáticamente por el script de YouTube apenas está listo
+        window.onYouTubeIframeAPIReady = function () {
+            ytPlayer = new YT.Player('yt-audio-player', {
+                height: '1',
+                width: '1',
+                playerVars: {
+                    listType: 'playlist',
+                    list: ID_PLAYLIST,
+                    autoplay: 0,
+                    controls: 0,
+                    disablekb: 1,
+                    playsinline: 1,
+                    modestbranding: 1,
+                    rel: 0
+                },
+                events: {
+                    onReady: onYtPlayerListo,
+                    onStateChange: onYtEstadoCambio,
+                    onError: onYtError
+                }
+            });
+        };
+
+        function onYtPlayerListo() {
+            ytListo = true;
+            ytPlayer.setVolume(80);
+            ytPlayer.setShuffle(esRandom); // arranca en aleatorio
+            document.getElementById('btn-random').classList.add('activo');
+            actualizarInfoCancion();
+            setInterval(actualizarBarraProgreso, 500);
+            // Si el usuario ya había tocado play mientras la API cargaba, reproducimos ahora
+            if (intentoAutoplayPendiente) {
+                intentoAutoplayPendiente = false;
+                ytPlayer.playVideo();
             }
-        });
+        }
 
-        barraProgreso.addEventListener('input', () => {
-            arrastrandoBarra = true;
-            tiempoActualEl.innerText = formatearTiempo(barraProgreso.value);
-        });
-
-        barraProgreso.addEventListener('change', () => {
-            reproductorMusical.currentTime = barraProgreso.value;
-            arrastrandoBarra = false;
-        });
-
-        reproductorMusical.addEventListener('ended', () => {
-            if (!esRepetir) {
-                cambiarCancion(1);
-            } // Si esRepetir es true, la propiedad 'loop' del audio se encarga
-        });
-
-        // Manejo de errores: si una canción no carga (link caído, formato no soportado, etc.)
-        // saltamos automáticamente a la siguiente en vez de romper el reproductor.
-        let fallosConsecutivos = 0;
-        let saltandoPorError = false;
-
-        reproductorMusical.addEventListener('error', () => {
-            if (saltandoPorError) return;
-            fallosConsecutivos++;
-            console.warn('No se pudo cargar la canción:', canciones[indiceCancionActiva]?.nombre);
-
-            if (fallosConsecutivos >= canciones.length) {
-                document.getElementById('info-cancion').innerText = '🎵 Música no disponible';
-                document.getElementById('burbuja-reproductor').classList.remove('sonando');
-                fallosConsecutivos = 0;
-                return;
+        function actualizarBarraProgreso() {
+            if (!ytListo || arrastrandoBarra) return;
+            const duracion = ytPlayer.getDuration();
+            const actual = ytPlayer.getCurrentTime();
+            if (duracion > 0) {
+                barraProgreso.max = duracion;
+                barraProgreso.value = actual;
+                tiempoTotalEl.innerText = formatearTiempo(duracion);
+                tiempoActualEl.innerText = formatearTiempo(actual);
             }
+        }
 
-            saltandoPorError = true;
-            setTimeout(() => {
-                cambiarCancion(1);
-                saltandoPorError = false;
-            }, 150);
-        });
+        function onYtEstadoCambio(event) {
+            const btn = document.getElementById('btn-play-pause');
+            const burbuja = document.getElementById('burbuja-reproductor');
+            if (event.data === YT.PlayerState.PLAYING) {
+                btn.innerText = "⏸";
+                burbuja.classList.add('sonando');
+                actualizarInfoCancion();
+            } else if (event.data === YT.PlayerState.PAUSED) {
+                btn.innerText = "▶";
+                burbuja.classList.remove('sonando');
+            } else if (event.data === YT.PlayerState.ENDED) {
+                if (esRepetir) {
+                    ytPlayer.seekTo(0);
+                    ytPlayer.playVideo();
+                } else {
+                    burbuja.classList.remove('sonando');
+                }
+            } else if (event.data === YT.PlayerState.CUED) {
+                actualizarInfoCancion();
+            }
+        }
 
-        reproductorMusical.addEventListener('playing', () => { fallosConsecutivos = 0; });
+        function onYtError() {
+            // Si un video de la playlist no está disponible, saltamos al siguiente
+            console.warn('No se pudo cargar una canción de la playlist, saltando a la siguiente.');
+            setTimeout(() => { if (ytListo) ytPlayer.nextVideo(); }, 150);
+        }
 
         function togglePlayPause() {
             vibrar(12);
-            const btn = document.getElementById('btn-play-pause');
-            const burbuja = document.getElementById('burbuja-reproductor');
-            if (reproductorMusical.paused) {
-                reproductorMusical.play().catch(e => console.log(e));
-                btn.innerText = "⏸";
-                burbuja.classList.add('sonando');
+            if (!ytListo) {
+                // La API de YouTube puede tardar unos instantes en cargar la primera vez
+                intentoAutoplayPendiente = true;
+                document.getElementById('info-cancion').innerText = "🎵 Cargando...";
+                return;
+            }
+            const estado = ytPlayer.getPlayerState();
+            if (estado === YT.PlayerState.PLAYING) {
+                ytPlayer.pauseVideo();
             } else {
-                reproductorMusical.pause();
-                btn.innerText = "▶";
-                burbuja.classList.remove('sonando');
+                ytPlayer.playVideo();
             }
         }
 
@@ -2932,36 +2925,30 @@
 
         function toggleRepeat() {
             esRepetir = !esRepetir;
-            reproductorMusical.loop = esRepetir;
             const btn = document.getElementById('btn-repeat');
-            if(esRepetir) btn.classList.add('activo');
+            if (esRepetir) btn.classList.add('activo');
             else btn.classList.remove('activo');
         }
 
         function cambiarCancion(direccion) {
-            if (esRandom) {
-                let nuevoIndice;
-                do {
-                    nuevoIndice = Math.floor(Math.random() * canciones.length);
-                } while (nuevoIndice === indiceCancionActiva && canciones.length > 1);
-                indiceCancionActiva = nuevoIndice;
-            } else {
-                indiceCancionActiva = (indiceCancionActiva + direccion + canciones.length) % canciones.length;
-            }
-            
-            reproductorMusical.src = canciones[indiceCancionActiva].src;
-            actualizarInfoCancion();
-            
-            if(pasoActual >= 2) {
-                reproductorMusical.play().catch(e => console.log("Error cambiando pista:", e));
-                document.getElementById('btn-play-pause').innerText = "⏸";
-                document.getElementById('burbuja-reproductor').classList.add('sonando');
-            }
+            if (!ytListo) return;
+            if (direccion > 0) ytPlayer.nextVideo();
+            else ytPlayer.previousVideo();
         }
 
         function cambiarVolumen(vol) {
-            reproductorMusical.volume = vol;
+            if (ytListo) ytPlayer.setVolume(Math.round(vol * 100));
         }
+
+        barraProgreso.addEventListener('input', () => {
+            arrastrandoBarra = true;
+            tiempoActualEl.innerText = formatearTiempo(barraProgreso.value);
+        });
+
+        barraProgreso.addEventListener('change', () => {
+            if (ytListo) ytPlayer.seekTo(Number(barraProgreso.value), true);
+            arrastrandoBarra = false;
+        });
 
         // BURBUJA DEL REPRODUCTOR: se abre/cierra sin invadir nunca el resto de la pantalla
         let temporizadorAutoColapso = null;

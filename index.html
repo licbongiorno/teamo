@@ -24,6 +24,10 @@
         img-src 'self' data: https:;
     ">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://www.youtube.com">
+    <link rel="preconnect" href="https://s.ytimg.com">
+    <link rel="preconnect" href="https://i.ytimg.com">
+    <link rel="dns-prefetch" href="https://www.youtube.com">
     <style>
         :root {
             --color-bg-oscuro: #0b0a17;
@@ -1666,7 +1670,7 @@
     </div>
     <!-- Player de YouTube embebido: queda oculto visualmente pero vive en la misma página,
          no abre la app ni una pestaña nueva. Reproduce nuestra playlist de YouTube Music. -->
-    <div id="yt-audio-player" style="position:fixed; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; left:-9999px;" aria-hidden="true"></div>
+    <div id="yt-audio-player" style="position:fixed; bottom:0; right:0; width:1px; height:1px; opacity:0.01; pointer-events:none; overflow:hidden; z-index:-1;" aria-hidden="true"></div>
 
     <!-- Botón para volver a la constelación desde el libro o cualquier panel -->
     <div id="menu-principal" class="menu-principal">
@@ -2820,9 +2824,33 @@
 
         function actualizarInfoCancion() {
             if (!ytPlayer || typeof ytPlayer.getVideoData !== 'function') return;
-            let titulo = (ytPlayer.getVideoData().title || 'Cargando...').trim();
+            const datos = ytPlayer.getVideoData();
+            let titulo = (datos.title || 'Cargando...').trim();
             if (titulo.length > 25) titulo = titulo.substring(0, 22) + "...";
             document.getElementById('info-cancion').innerText = "🎵 " + titulo;
+
+            // Actualiza también la notificación / pantalla de bloqueo (Media Session API)
+            if ('mediaSession' in navigator && datos.title) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: datos.title,
+                    artist: datos.author || 'Nuestra playlist',
+                    album: 'Nuestro Universo 💕',
+                    artwork: [{ src: 'https://i.ytimg.com/vi/' + datos.video_id + '/hqdefault.jpg', sizes: '480x360', type: 'image/jpeg' }]
+                });
+            }
+        }
+
+        // Registra los controles de reproducción del sistema operativo (notificación,
+        // pantalla de bloqueo, auriculares bluetooth) para que la música se banque mejor
+        // los cambios de app / bloqueos de pantalla en el celular.
+        function configurarMediaSession() {
+            if (!('mediaSession' in navigator)) return;
+            try {
+                navigator.mediaSession.setActionHandler('play', () => { ytPlayer.playVideo(); });
+                navigator.mediaSession.setActionHandler('pause', () => { ytPlayer.pauseVideo(); });
+                navigator.mediaSession.setActionHandler('previoustrack', () => { cambiarCancion(-1); });
+                navigator.mediaSession.setActionHandler('nexttrack', () => { cambiarCancion(1); });
+            } catch (e) { console.warn('Media Session no soportada del todo:', e); }
         }
 
         // Llamado automáticamente por el script de YouTube apenas está listo
@@ -2838,7 +2866,8 @@
                     disablekb: 1,
                     playsinline: 1,
                     modestbranding: 1,
-                    rel: 0
+                    rel: 0,
+                    origin: window.location.origin
                 },
                 events: {
                     onReady: onYtPlayerListo,
@@ -2851,9 +2880,22 @@
         function onYtPlayerListo() {
             ytListo = true;
             ytPlayer.setVolume(80);
-            ytPlayer.setShuffle(esRandom); // arranca en aleatorio
+            ytPlayer.setShuffle(esRandom); // el orden de next/previous queda aleatorio
+
+            // Elegimos al azar con qué canción arrancar (si no, siempre carga la primera de la lista)
+            try {
+                const lista = ytPlayer.getPlaylist();
+                if (lista && lista.length > 1) {
+                    const indiceAzar = Math.floor(Math.random() * lista.length);
+                    // cuePlaylist con "index" recarga la playlist arrancando en esa posición,
+                    // sin reproducir todavía (autoplay real solo cuando el usuario toca play)
+                    ytPlayer.cuePlaylist({ listType: 'playlist', list: ID_PLAYLIST, index: indiceAzar });
+                }
+            } catch (e) { console.warn('No se pudo randomizar la canción inicial:', e); }
+
             document.getElementById('btn-random').classList.add('activo');
             actualizarInfoCancion();
+            configurarMediaSession();
             setInterval(actualizarBarraProgreso, 500);
             // Si el usuario ya había tocado play mientras la API cargaba, reproducimos ahora
             if (intentoAutoplayPendiente) {
@@ -2881,9 +2923,11 @@
                 btn.innerText = "⏸";
                 burbuja.classList.add('sonando');
                 actualizarInfoCancion();
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
             } else if (event.data === YT.PlayerState.PAUSED) {
                 btn.innerText = "▶";
                 burbuja.classList.remove('sonando');
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
             } else if (event.data === YT.PlayerState.ENDED) {
                 if (esRepetir) {
                     ytPlayer.seekTo(0);

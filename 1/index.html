@@ -895,100 +895,10 @@
         .fr-etiqueta { font-family: var(--fuente-texto); font-size: 0.65rem; color: rgba(255,255,255,0.6); text-transform: uppercase; }
         .fr-fecha { font-family: var(--fuente-texto); font-size: 0.75rem; font-style: italic; color: rgba(255,255,255,0.5); margin-top: 14px; }
 
-        /* --- Sanación: seguimiento del tratamiento de Carito --- */
-        .sanacion-flotante {
-            position: fixed;
-            bottom: calc(clamp(20px, 5vh, 40px) + env(safe-area-inset-bottom, 0px) + 168px);
-            right: calc(clamp(15px, 5vw, 40px) + env(safe-area-inset-right, 0px));
-            z-index: 1001;
-            display: none; flex-direction: column; align-items: flex-end; gap: 15px;
-        }
-        .sanacion-flotante.mostrar { display: flex; }
-        .sanacion-flotante.abierto { z-index: 10050; }
-        .burbuja-sanacion {
-            width: 52px; height: 52px; border-radius: 50%; background: rgba(0,0,0,0.7);
-            border: 1px solid rgba(255,183,197,0.5); box-shadow: 0 5px 20px rgba(255,183,197,0.25);
-            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; cursor: pointer;
-            animation: aparecerSuave 0.8s forwards, latidoBurbuja 3s infinite; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            touch-action: manipulation; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .burbuja-sanacion:active { transform: scale(0.9); }
-        .panel-sanacion {
-            position: absolute; bottom: calc(100% + 15px); right: 0;
-            background: rgba(15, 10, 20, 0.92); border: 1px solid rgba(255,183,197,0.25);
-            border-radius: 24px; width: min(90vw, 360px); max-height: 80vh; overflow-y: auto;
-            padding: 22px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); text-align: center;
-            transform-origin: bottom right; opacity: 0; transform: scale(0.9) translateY(10px);
-            pointer-events: none; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .sanacion-flotante.abierto .panel-sanacion { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
-        .header-sanacion { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .titulo-sanacion { font-family: var(--fuente-titulo); font-size: 1.2rem; color: #ffb7c5; }
-        .btn-cerrar-sanacion { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
-
-        .btn-ajustar-fechas {
-            display: block; margin: 0 auto 14px; background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 6px 16px;
-            color: #f1eaff; font-size: 0.8rem; font-family: var(--fuente-texto); cursor: pointer; touch-action: manipulation;
-        }
-
-        .corazon-sanacion-contenedor {
-            width: min(160px, 45vw); margin: 0 auto 12px;
-            --venda-opacity: 1; --corazon-color: #c9b6ff; --sanacion-aura-color: #b8a6f0; --corazon-latido-escala: 1.02;
-        }
-        .svg-corazon-sanacion { width: 100%; height: auto; overflow: visible; }
-        .sanacion-corazon-base {
-            fill: var(--corazon-color); transition: fill 1.2s ease;
-            animation: latido-sanacion 2.4s ease-in-out infinite; transform-origin: 100px 100px;
-        }
-        @keyframes latido-sanacion { 0%, 100% { transform: scale(1); } 50% { transform: scale(var(--corazon-latido-escala)); } }
-        .sanacion-vendas .venda { fill: #f4ece0; opacity: var(--venda-opacity); transition: opacity 1.2s ease; }
-        .sanacion-aura { transition: opacity 1.2s ease; filter: blur(2px); }
-
-        .svg-corazon-sanacion[data-etapa="inicio"] { --venda-opacity: 1; --corazon-color: #c9b6ff; --sanacion-aura-color: #b8a6f0; --corazon-latido-escala: 1.02; }
-        .svg-corazon-sanacion[data-etapa="mitad"]  { --venda-opacity: 0.5; --corazon-color: #ffcf9a; --sanacion-aura-color: #ffb37a; --corazon-latido-escala: 1.035; }
-        .svg-corazon-sanacion[data-etapa="final"]  { --venda-opacity: 0.15; --corazon-color: #ff9a9e; --sanacion-aura-color: #ff9a9e; --corazon-latido-escala: 1.06; }
-        .svg-corazon-sanacion[data-etapa="meta"]   { --venda-opacity: 0; --corazon-color: #ffd6a8; --sanacion-aura-color: #ffe6b3; --corazon-latido-escala: 1.08; }
-        .svg-corazon-sanacion[data-etapa="meta"] .sanacion-corazon-base { filter: url(#glow-sanacion) drop-shadow(0 0 20px var(--sanacion-aura-color)); }
-
-        .sanacion-tarjeta-mensaje { padding: 12px 14px; margin: 0 0 14px; }
-        .sanacion-etapa-texto { font-family: var(--fuente-titulo); font-size: 1.1rem; color: #ffd6a8; margin: 0 0 6px; }
-        .sanacion-mensaje { font-family: var(--fuente-texto); font-size: 0.88rem; line-height: 1.5; color: #f1eaff; margin: 0; }
-
-        .sanacion-progreso-container { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; }
-        .sanacion-barra-fondo { flex: 1; height: 8px; border-radius: 10px; background: rgba(255,255,255,0.1); overflow: hidden; }
-        .sanacion-barra-relleno { height: 100%; border-radius: 10px; background: linear-gradient(90deg, #c9b6ff, #ff9a9e, #ffd6a8); transition: width 1s ease; }
-        .sanacion-porcentaje-valor { font-family: var(--fuente-titulo); color: #ffd6a8; font-size: 0.85rem; min-width: 3ch; text-align: right; }
-
-        .sanacion-cuenta-titulo { font-family: var(--fuente-texto); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.6); margin-bottom: 8px; }
-        .sanacion-cuenta-grid { display: flex; justify-content: center; gap: 16px; }
-
-        .sanacion-modo-victoria { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 10px 4px; }
-        .sanacion-victoria-corazon { font-size: 2.6rem; animation: latido-sanacion 1.6s ease-in-out infinite; }
-        .sanacion-victoria-titulo { font-family: var(--fuente-titulo); font-size: 1.2rem; color: #ffd6a8; margin: 0; }
-        .sanacion-victoria-texto { font-family: var(--fuente-texto); font-size: 0.85rem; line-height: 1.5; color: #f1eaff; margin: 0; }
-
-        .modal-fechas-tarjeta { width: min(92vw, 380px); position: relative; text-align: left; }
-        .modal-fechas-tarjeta h3 { text-align: center; }
-        .modal-fechas-tarjeta p { text-align: center; }
-        .btn-cerrar-fechas { position: absolute; top: 10px; right: 14px; background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
-        .modal-fechas-lista { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-        .modal-fecha-fila { display: grid; grid-template-columns: 1fr 1.3fr auto; align-items: center; gap: 8px; }
-        .modal-fecha-fila label { font-size: 0.82rem; color: rgba(255,255,255,0.75); font-family: var(--fuente-texto); }
-        .modal-fecha-fila input[type="date"] {
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px; padding: 6px 8px; color: white; font-family: var(--fuente-texto); font-size: 0.85rem;
-        }
-        .modal-fecha-fila button {
-            background: #ffb3c6; border: none; border-radius: 8px; padding: 6px 10px;
-            color: #1a1015; font-weight: bold; font-size: 0.78rem; font-family: var(--fuente-texto);
-            cursor: pointer; touch-action: manipulation;
-        }
-
         /* --- Constelación-corazón: agrupa muro, gratitud, deseos, preguntas, reloj y música --- */
         /* El chat tiene su propio widget fijo abajo a la derecha (como un chat de soporte),
            por eso su burbuja NO se oculta. La música se abre desde el corazón. */
-        .burbuja-muro, .burbuja-gratitud, .burbuja-deseos, .burbuja-preguntas, .burbuja-reloj, .burbuja-sanacion {
+        .burbuja-muro, .burbuja-gratitud, .burbuja-deseos, .burbuja-preguntas, .burbuja-reloj {
             display: none !important;
         }
         /* ============================================================
@@ -1003,7 +913,7 @@
            (absolute) de los paneles que cuelgan de él.
            ============================================================ */
         .burbuja-muro, .burbuja-gratitud, .burbuja-deseos,
-        .burbuja-preguntas, .burbuja-reloj, .burbuja-reproductor, .burbuja-sanacion {
+        .burbuja-preguntas, .burbuja-reloj, .burbuja-reproductor {
             visibility: hidden;
             pointer-events: none;
         }
@@ -1265,7 +1175,6 @@
         .planeta-deseos { background: radial-gradient(circle at 32% 28%, rgba(178,255,201,0.48), rgba(168,237,234,0.28) 70%); box-shadow: 0 0 16px rgba(178,255,201,0.25); }
         .planeta-preguntas { background: radial-gradient(circle at 32% 28%, rgba(216,196,255,0.5), rgba(167,139,250,0.3) 70%); box-shadow: 0 0 16px rgba(167,139,250,0.25); }
         .planeta-reloj { background: radial-gradient(circle at 32% 28%, rgba(255,214,178,0.5), rgba(255,138,101,0.3) 70%); box-shadow: 0 0 16px rgba(255,138,101,0.25); }
-        .planeta-salud { background: radial-gradient(circle at 32% 28%, rgba(255,182,193,0.5), rgba(255,105,135,0.28) 70%); box-shadow: 0 0 16px rgba(255,138,158,0.25); }
         .nucleo-corazon {
             position: absolute; left: 50%; top: 36%; transform: translate(-50%, -50%);
             width: 50px; height: 50px; border-radius: 50%;
@@ -1790,7 +1699,6 @@
             <button class="punto-corazon planeta-muro" style="left:67.1%;top:73.7%" onclick="ejecutarOpcionMenu(event, 'muro')"><span class="planeta-icono">📜</span><span class="planeta-nombre">Muro</span></button>
             <button class="punto-corazon planeta-deseos" style="left:32.9%;top:73.7%" onclick="ejecutarOpcionMenu(event, 'deseos')"><span class="planeta-icono">🌠</span><span class="planeta-nombre">Deseos</span></button>
             <button class="punto-corazon planeta-reloj" style="left:50%;top:98.3%" onclick="ejecutarOpcionMenu(event, 'reloj')"><span class="planeta-icono">⏰</span><span class="planeta-nombre">Cuenta&nbsp;regresiva</span></button>
-            <button class="punto-corazon planeta-salud" style="left:50%;top:23.4%" onclick="ejecutarOpcionMenu(event, 'sanacion')"><span class="planeta-icono">🩹</span><span class="planeta-nombre">Sanación</span></button>
             <button class="nucleo-corazon" onclick="lanzarSorpresaAleatoria(event)" title="Sorpresa" aria-label="Mandar una sorpresa al azar">🎁</button>
         </div>
     </div>
@@ -1893,91 +1801,6 @@
             <a class="btn-ver-boleto" href="https://drive.google.com/uc?export=download&id=1cq1pwYt6iyr96WBC2oJldx05mWZojnXR" target="_blank" rel="noopener" style="text-decoration: none; display: inline-block;">🎫 Ver mi boleto real</a>
         </div>
         <div class="burbuja-reloj" id="burbuja-reloj" onclick="toggleReloj(event)" title="Cuenta regresiva" role="button" aria-label="Ver cuenta regresiva">⏰</div>
-    </div>
-
-    <!-- ====== SANACIÓN: seguimiento del tratamiento de Carito ====== -->
-    <div id="sanacion-flotante" class="sanacion-flotante">
-        <div class="panel-sanacion" id="panel-sanacion">
-            <div class="header-sanacion">
-                <span class="titulo-sanacion">Tu Sanación 🩹</span>
-                <button class="btn-cerrar-sanacion" onclick="toggleSanacion(event)">✕</button>
-            </div>
-
-            <button class="btn-ajustar-fechas" onclick="abrirModalAjusteFechas(event)" title="Ajustar fechas de las quimios">⚙️ Ajustar fechas</button>
-
-            <!-- MODO NORMAL: dashboard de seguimiento -->
-            <div id="sanacion-modo-normal" class="sanacion-modo-normal">
-                <div class="corazon-sanacion-contenedor">
-                    <svg id="svg-corazon-sanacion" class="svg-corazon-sanacion" viewBox="0 0 200 200" data-etapa="inicio" aria-hidden="true">
-                        <defs>
-                            <filter id="glow-sanacion" x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur stdDeviation="8" result="blur" />
-                                <feMerge>
-                                    <feMergeNode in="blur" />
-                                    <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                            </filter>
-                            <radialGradient id="aura-sanacion" cx="50%" cy="45%" r="60%">
-                                <stop offset="0%" stop-color="var(--sanacion-aura-color)" stop-opacity="0.55" />
-                                <stop offset="100%" stop-color="var(--sanacion-aura-color)" stop-opacity="0" />
-                            </radialGradient>
-                        </defs>
-                        <circle cx="100" cy="100" r="95" fill="url(#aura-sanacion)" class="sanacion-aura" />
-                        <path class="sanacion-corazon-base" filter="url(#glow-sanacion)"
-                              d="M100,175 C40,130 10,90 10,58 C10,28 34,8 62,8 C80,8 94,18 100,34 C106,18 120,8 138,8 C166,8 190,28 190,58 C190,90 160,130 100,175 Z" />
-                        <g class="sanacion-vendas">
-                            <path class="venda venda-1" d="M35,70 L165,55 L165,70 L35,85 Z" />
-                            <path class="venda venda-2" d="M45,110 L155,95 L155,110 L45,125 Z" />
-                            <path class="venda venda-3" d="M60,140 L140,128 L140,140 L60,152 Z" />
-                        </g>
-                    </svg>
-                </div>
-
-                <div class="tarjeta-cristal sanacion-tarjeta-mensaje">
-                    <p id="sanacion-etapa-texto" class="sanacion-etapa-texto">Estás en la etapa 1 de 6</p>
-                    <p id="sanacion-mensaje" class="sanacion-mensaje"></p>
-                </div>
-
-                <div class="sanacion-progreso-container">
-                    <div class="sanacion-barra-fondo">
-                        <div id="sanacion-barra-relleno" class="sanacion-barra-relleno" style="width:0%"></div>
-                    </div>
-                    <span id="sanacion-porcentaje-valor" class="sanacion-porcentaje-valor">0%</span>
-                </div>
-
-                <div class="sanacion-cuenta-titulo">Próxima sesión en:</div>
-                <div class="sanacion-cuenta-grid">
-                    <div class="cuenta-bloque"><span class="cuenta-valor" id="sanacion-dias">00</span><span class="cuenta-etiqueta">días</span></div>
-                    <div class="cuenta-bloque"><span class="cuenta-valor" id="sanacion-horas">00</span><span class="cuenta-etiqueta">hs</span></div>
-                    <div class="cuenta-bloque"><span class="cuenta-valor" id="sanacion-minutos">00</span><span class="cuenta-etiqueta">min</span></div>
-                </div>
-            </div>
-
-            <!-- MODO VICTORIA: reemplaza el dashboard al llegar/superar la Q6 -->
-            <div id="sanacion-modo-victoria" class="sanacion-modo-victoria" style="display:none;">
-                <div class="sanacion-victoria-corazon">❤️‍🔥</div>
-                <h3 class="sanacion-victoria-titulo">¡LO LOGRASTE, CARITO DE MI VIDA!</h3>
-                <p class="sanacion-victoria-texto">Hoy empieza el resto de nuestras vidas sanas, felices y juntos para siempre. Te amo eternamente.</p>
-            </div>
-        </div>
-        <div class="burbuja-sanacion" id="burbuja-sanacion" onclick="toggleSanacion(event)" title="Tu sanación" role="button" aria-label="Ver seguimiento del tratamiento">🩹</div>
-    </div>
-
-    <!-- ====== MODAL: AJUSTE DE FECHAS DE QUIMIOTERAPIA ====== -->
-    <div id="modal-fechas-quimio" class="modal-cristal oculto">
-        <div class="tarjeta-acceso modal-fechas-tarjeta">
-            <button class="btn-cerrar-fechas" onclick="cerrarModalAjusteFechas()">✕</button>
-            <h3>Ajustar fechas del tratamiento</h3>
-            <p>Si cambiás la fecha de una sesión, las siguientes se recalculan solas, cada 21 días.</p>
-            <div class="modal-fechas-lista">
-                <div class="modal-fecha-fila"><label for="input-fecha-q1">Quimio 1</label><input type="date" id="input-fecha-q1"><button onclick="guardarNuevaFecha(0)">Guardar</button></div>
-                <div class="modal-fecha-fila"><label for="input-fecha-q2">Quimio 2</label><input type="date" id="input-fecha-q2"><button onclick="guardarNuevaFecha(1)">Guardar</button></div>
-                <div class="modal-fecha-fila"><label for="input-fecha-q3">Quimio 3</label><input type="date" id="input-fecha-q3"><button onclick="guardarNuevaFecha(2)">Guardar</button></div>
-                <div class="modal-fecha-fila"><label for="input-fecha-q4">Quimio 4</label><input type="date" id="input-fecha-q4"><button onclick="guardarNuevaFecha(3)">Guardar</button></div>
-                <div class="modal-fecha-fila"><label for="input-fecha-q5">Quimio 5</label><input type="date" id="input-fecha-q5"><button onclick="guardarNuevaFecha(4)">Guardar</button></div>
-                <div class="modal-fecha-fila"><label for="input-fecha-q6">Quimio 6</label><input type="date" id="input-fecha-q6"><button onclick="guardarNuevaFecha(5)">Guardar</button></div>
-            </div>
-        </div>
     </div>
 
     <!-- ====== MODAL: BOLETO DE AVIÓN DORADO ====== -->
@@ -2997,9 +2820,33 @@
 
         function actualizarInfoCancion() {
             if (!ytPlayer || typeof ytPlayer.getVideoData !== 'function') return;
-            let titulo = (ytPlayer.getVideoData().title || 'Cargando...').trim();
+            const datos = ytPlayer.getVideoData();
+            let titulo = (datos.title || 'Cargando...').trim();
             if (titulo.length > 25) titulo = titulo.substring(0, 22) + "...";
             document.getElementById('info-cancion').innerText = "🎵 " + titulo;
+
+            // Actualiza también la notificación / pantalla de bloqueo (Media Session API)
+            if ('mediaSession' in navigator && datos.title) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: datos.title,
+                    artist: datos.author || 'Nuestra playlist',
+                    album: 'Nuestro Universo 💕',
+                    artwork: [{ src: 'https://i.ytimg.com/vi/' + datos.video_id + '/hqdefault.jpg', sizes: '480x360', type: 'image/jpeg' }]
+                });
+            }
+        }
+
+        // Registra los controles de reproducción del sistema operativo (notificación,
+        // pantalla de bloqueo, auriculares bluetooth) para que la música se banque mejor
+        // los cambios de app / bloqueos de pantalla en el celular.
+        function configurarMediaSession() {
+            if (!('mediaSession' in navigator)) return;
+            try {
+                navigator.mediaSession.setActionHandler('play', () => { ytPlayer.playVideo(); });
+                navigator.mediaSession.setActionHandler('pause', () => { ytPlayer.pauseVideo(); });
+                navigator.mediaSession.setActionHandler('previoustrack', () => { cambiarCancion(-1); });
+                navigator.mediaSession.setActionHandler('nexttrack', () => { cambiarCancion(1); });
+            } catch (e) { console.warn('Media Session no soportada del todo:', e); }
         }
 
         // Llamado automáticamente por el script de YouTube apenas está listo
@@ -3015,7 +2862,8 @@
                     disablekb: 1,
                     playsinline: 1,
                     modestbranding: 1,
-                    rel: 0
+                    rel: 0,
+                    origin: window.location.origin
                 },
                 events: {
                     onReady: onYtPlayerListo,
@@ -3028,9 +2876,22 @@
         function onYtPlayerListo() {
             ytListo = true;
             ytPlayer.setVolume(80);
-            ytPlayer.setShuffle(esRandom); // arranca en aleatorio
+            ytPlayer.setShuffle(esRandom); // el orden de next/previous queda aleatorio
+
+            // Elegimos al azar con qué canción arrancar (si no, siempre carga la primera de la lista)
+            try {
+                const lista = ytPlayer.getPlaylist();
+                if (lista && lista.length > 1) {
+                    const indiceAzar = Math.floor(Math.random() * lista.length);
+                    // cuePlaylist con "index" recarga la playlist arrancando en esa posición,
+                    // sin reproducir todavía (autoplay real solo cuando el usuario toca play)
+                    ytPlayer.cuePlaylist({ listType: 'playlist', list: ID_PLAYLIST, index: indiceAzar });
+                }
+            } catch (e) { console.warn('No se pudo randomizar la canción inicial:', e); }
+
             document.getElementById('btn-random').classList.add('activo');
             actualizarInfoCancion();
+            configurarMediaSession();
             setInterval(actualizarBarraProgreso, 500);
             // Si el usuario ya había tocado play mientras la API cargaba, reproducimos ahora
             if (intentoAutoplayPendiente) {
@@ -3058,9 +2919,11 @@
                 btn.innerText = "⏸";
                 burbuja.classList.add('sonando');
                 actualizarInfoCancion();
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
             } else if (event.data === YT.PlayerState.PAUSED) {
                 btn.innerText = "▶";
                 burbuja.classList.remove('sonando');
+                if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
             } else if (event.data === YT.PlayerState.ENDED) {
                 if (esRepetir) {
                     ytPlayer.seekTo(0);
@@ -3317,10 +3180,6 @@
                             relojFlotante.style.display = 'flex';
                             setTimeout(() => relojFlotante.classList.add('mostrar'), 400);
 
-                            const sanacionFlotante = document.getElementById('sanacion-flotante');
-                            sanacionFlotante.style.display = 'flex';
-                            setTimeout(() => sanacionFlotante.classList.add('mostrar'), 450);
-
                             // La constelación-corazón es la nueva puerta de entrada:
                             // cada quien elige qué tocar, incluida "La Carta".
                             mostrarUniversoCorazon();
@@ -3460,7 +3319,6 @@
                 case 'deseos': toggleDeseos(event); break;
                 case 'preguntas': togglePreguntas(event); break;
                 case 'reloj': toggleReloj(event); break;
-                case 'sanacion': toggleSanacion(event); break;
             }
         }
 
@@ -4381,188 +4239,6 @@
             if (event) event.stopPropagation();
             document.getElementById('reloj-flotante').classList.toggle('abierto');
         }
-
-        // ============================================================
-        // SANACIÓN: seguimiento del tratamiento de quimioterapia
-        // ============================================================
-        class ChemoTracker {
-            constructor() {
-                this.STORAGE_KEY = 'chemoFechasCarito';
-                this.FECHAS_BASE = [
-                    '2026-08-05', '2026-08-26', '2026-09-16',
-                    '2026-10-07', '2026-10-28', '2026-11-18',
-                ];
-                this.DIAS_CICLO = 21;
-                this.fechas = this.cargarFechas();
-            }
-
-            cargarFechas() {
-                try {
-                    const guardadas = localStorage.getItem(this.STORAGE_KEY);
-                    const parsed = guardadas ? JSON.parse(guardadas) : null;
-                    if (Array.isArray(parsed) && parsed.length === 6) return parsed;
-                } catch (e) { console.warn('No se pudieron leer las fechas de quimio:', e); }
-                return [...this.FECHAS_BASE];
-            }
-
-            guardarFechas() { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.fechas)); }
-
-            actualizarFecha(indice, nuevaFechaStr) {
-                if (indice < 0 || indice > 5 || !nuevaFechaStr) return;
-                this.fechas[indice] = nuevaFechaStr;
-                let base = this._parsear(nuevaFechaStr);
-                for (let i = indice + 1; i < 6; i++) {
-                    base = this._sumarDias(base, this.DIAS_CICLO);
-                    this.fechas[i] = this._formatearISO(base);
-                }
-                this.guardarFechas();
-            }
-
-            _parsear(str) { const [y, m, d] = str.split('-').map(Number); return new Date(y, m - 1, d); }
-            _sumarDias(f, d) { const n = new Date(f); n.setDate(n.getDate() + d); return n; }
-            _formatearISO(f) {
-                const y = f.getFullYear(), m = String(f.getMonth() + 1).padStart(2, '0'), d = String(f.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
-            }
-
-            obtenerFechasComoDate() { return this.fechas.map(f => this._parsear(f)); }
-
-            obtenerNumeroSesionActual() {
-                const ahora = new Date();
-                let sesion = 1;
-                this.obtenerFechasComoDate().forEach((f, i) => { if (ahora >= f) sesion = i + 1; });
-                return Math.min(sesion, 6);
-            }
-
-            obtenerProximaSesionIndice() {
-                const ahora = new Date();
-                const fechas = this.obtenerFechasComoDate();
-                for (let i = 0; i < fechas.length; i++) if (fechas[i] > ahora) return i;
-                return -1;
-            }
-
-            tratamientoCompleto() { return new Date() >= this.obtenerFechasComoDate()[5]; }
-
-            calcularPorcentaje() {
-                if (this.tratamientoCompleto()) return 100;
-                return Math.round((this.obtenerNumeroSesionActual() / 6) * 100);
-            }
-
-            obtenerTiempoRestante() {
-                const idx = this.obtenerProximaSesionIndice();
-                if (idx === -1) return null;
-                const objetivo = this.obtenerFechasComoDate()[idx];
-                let diff = objetivo - new Date();
-                if (diff < 0) diff = 0;
-                return {
-                    dias: Math.floor(diff / 86400000),
-                    horas: Math.floor((diff / 3600000) % 24),
-                    minutos: Math.floor((diff / 60000) % 60),
-                };
-            }
-        }
-
-        const chemoTracker = new ChemoTracker();
-
-        const MENSAJES_SANACION = {
-            1: "El primer paso de este camino. Sos la mujer más valiente del mundo y estoy a tu lado en cada segundo.",
-            2: "Un paso más cerca de la meta. Tu fuerza me inspira todos los días, mi amor.",
-            3: "Llegamos a la mitad. Mirá todo lo que ya superaste, mi vida. Te amo con el alma.",
-            4: "Más de la mitad del camino recorrido. Tu luz brilla más fuerte que cualquier proceso.",
-            5: "¡Casi lo logramos! Falta solo un suspiro. Estoy tan orgulloso de vos, mi reina.",
-            6: "El último escalón. Hoy celebramos tu fortaleza infinita.",
-        };
-
-        let intervaloSanacion = null;
-        let victoriaSanacionCelebrada = false;
-
-        function obtenerEstadoVisualSanacion(sesion) {
-            if (sesion <= 2) return 'inicio';
-            if (sesion <= 4) return 'mitad';
-            if (sesion === 5) return 'final';
-            return 'meta';
-        }
-
-        function renderizarSanacion() {
-            const modoNormal = document.getElementById('sanacion-modo-normal');
-            const modoVictoria = document.getElementById('sanacion-modo-victoria');
-            if (!modoNormal || !modoVictoria) return;
-
-            if (chemoTracker.tratamientoCompleto()) {
-                modoNormal.style.display = 'none';
-                modoVictoria.style.display = 'flex';
-                if (!victoriaSanacionCelebrada) {
-                    victoriaSanacionCelebrada = true;
-                    if (typeof lanzarExplosionCanvas === 'function') lanzarExplosionCanvas();
-                    if (typeof lanzarLluviaFlores === 'function') lanzarLluviaFlores();
-                }
-                if (intervaloSanacion) { clearInterval(intervaloSanacion); intervaloSanacion = null; }
-                return;
-            }
-
-            modoNormal.style.display = 'flex';
-            modoVictoria.style.display = 'none';
-
-            const sesionActual = chemoTracker.obtenerNumeroSesionActual();
-            const porcentaje = chemoTracker.calcularPorcentaje();
-
-            document.getElementById('sanacion-etapa-texto').innerText = `Estás en la etapa ${sesionActual} de 6`;
-            document.getElementById('sanacion-mensaje').innerText = MENSAJES_SANACION[sesionActual];
-            document.getElementById('sanacion-porcentaje-valor').innerText = `${porcentaje}%`;
-            document.getElementById('sanacion-barra-relleno').style.width = `${porcentaje}%`;
-            document.getElementById('svg-corazon-sanacion').setAttribute('data-etapa', obtenerEstadoVisualSanacion(sesionActual));
-
-            const restante = chemoTracker.obtenerTiempoRestante();
-            if (restante) {
-                document.getElementById('sanacion-dias').innerText = String(restante.dias).padStart(2, '0');
-                document.getElementById('sanacion-horas').innerText = String(restante.horas).padStart(2, '0');
-                document.getElementById('sanacion-minutos').innerText = String(restante.minutos).padStart(2, '0');
-            }
-        }
-
-        function iniciarSanacion() {
-            renderizarSanacion();
-            if (!intervaloSanacion && !chemoTracker.tratamientoCompleto()) {
-                intervaloSanacion = setInterval(renderizarSanacion, 60000);
-            }
-        }
-
-        function toggleSanacion(event) {
-            if (event) event.stopPropagation();
-            document.getElementById('sanacion-flotante').classList.toggle('abierto');
-            renderizarSanacion();
-        }
-
-        function abrirModalAjusteFechas(event) {
-            if (event) event.stopPropagation();
-            chemoTracker.fechas.forEach((f, i) => {
-                const input = document.getElementById(`input-fecha-q${i + 1}`);
-                if (input) input.value = f;
-            });
-            document.getElementById('modal-fechas-quimio').classList.remove('oculto');
-        }
-
-        function cerrarModalAjusteFechas() {
-            document.getElementById('modal-fechas-quimio').classList.add('oculto');
-        }
-
-        function guardarNuevaFecha(indiceSesion) {
-            const input = document.getElementById(`input-fecha-q${indiceSesion + 1}`);
-            if (!input || !input.value) return;
-            chemoTracker.actualizarFecha(indiceSesion, input.value);
-            chemoTracker.fechas.forEach((f, i) => {
-                const inp = document.getElementById(`input-fecha-q${i + 1}`);
-                if (inp) inp.value = f;
-            });
-            victoriaSanacionCelebrada = false; // por si la nueva fecha entra o sale del modo victoria
-            if (typeof vibrar === 'function') vibrar(10);
-            renderizarSanacion();
-            if (!intervaloSanacion && !chemoTracker.tratamientoCompleto()) {
-                intervaloSanacion = setInterval(renderizarSanacion, 60000);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', iniciarSanacion);
 
         // BOLETO DE AVIÓN DORADO
         // ============================================================

@@ -24,6 +24,10 @@
         img-src 'self' data: https:;
     ">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://www.youtube.com">
+    <link rel="preconnect" href="https://s.ytimg.com">
+    <link rel="preconnect" href="https://i.ytimg.com">
+    <link rel="dns-prefetch" href="https://www.youtube.com">
     <style>
         :root {
             --color-bg-oscuro: #0b0a17;
@@ -1666,7 +1670,7 @@
     </div>
     <!-- Player de YouTube embebido: queda oculto visualmente pero vive en la misma página,
          no abre la app ni una pestaña nueva. Reproduce nuestra playlist de YouTube Music. -->
-    <div id="yt-audio-player" style="position:fixed; width:1px; height:1px; opacity:0; pointer-events:none; overflow:hidden; left:-9999px;" aria-hidden="true"></div>
+    <div id="yt-audio-player" style="position:fixed; bottom:0; right:0; width:1px; height:1px; opacity:0.01; pointer-events:none; overflow:hidden; z-index:-1;" aria-hidden="true"></div>
 
     <!-- Botón para volver a la constelación desde el libro o cualquier panel -->
     <div id="menu-principal" class="menu-principal">

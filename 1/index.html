@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1860,7 +1861,7 @@
             <button class="punto-corazon planeta-deseos" style="left:32.9%;top:73.7%" onclick="ejecutarOpcionMenu(event, 'deseos')"><span class="planeta-icono">🌠</span><span class="planeta-nombre">Deseos</span></button>
             <button class="punto-corazon planeta-reloj" style="left:50%;top:98.3%" onclick="ejecutarOpcionMenu(event, 'reloj')"><span class="planeta-icono">⏰</span><span class="planeta-nombre">Cuenta&nbsp;regresiva</span></button>
             <button class="punto-corazon planeta-ticket" style="left:50%;top:16%" onclick="ejecutarOpcionMenu(event, 'ticket')"><span class="planeta-icono">🎟️</span><span class="planeta-nombre">Ticket&nbsp;Diario</span></button>
-            <button class="punto-corazon planeta-sanacion" style="left:50%;top:36%" onclick="ejecutarOpcionMenu(event, 'sanacion')"><span class="planeta-icono">🌿</span><span class="planeta-nombre">Sanación</span></button>
+            <button class="punto-corazon planeta-sanacion" style="left:1.96%;top:23.42%" onclick="ejecutarOpcionMenu(event, 'sanacion')"><span class="planeta-icono">🌿</span><span class="planeta-nombre">Sanación</span></button>
         </div>
     </div>
 
@@ -3345,12 +3346,13 @@
         // INTERACCION
         let golpeando = false;
         let pasoActual = 1;
+        let conversacionActiva = false;
 
         function interaccionPuerta(event) {
-            if (golpeando || document.getElementById('puerta-id').classList.contains('abierta')) return;
+            if (golpeando || conversacionActiva || document.getElementById('puerta-id').classList.contains('abierta')) return;
             document.getElementById('mensaje-final').style.display = 'none';
             document.getElementById('marco-exterior').classList.add('oculto-pista');
-            pasoActual = 1; golpeando = true;
+            pasoActual = 1; golpeando = true; conversacionActiva = true;
 
             const toc1 = document.getElementById('toc1'); const toc2 = document.getElementById('toc2');
             reproducirGolpeMaderaMaciza(); vibrar(30);
@@ -3402,6 +3404,14 @@
                             elMsj.style.display = 'none';
                             pasoActual = 2;
                             responder('SI', null);
+                        }, 1800);
+                    } else {
+                        // La conversación sigue sola: vuelve a preguntar sin repetir el toc-toc
+                        setTimeout(() => {
+                            elMsj.style.display = 'none';
+                            pasoActual = 1;
+                            document.getElementById('pregunta1').classList.add('mostrar');
+                            document.getElementById('botones').classList.add('mostrar');
                         }, 1800);
                     }
                 }, 300);

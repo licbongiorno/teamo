@@ -1180,6 +1180,7 @@
         .planeta-preguntas { background: radial-gradient(circle at 32% 28%, rgba(216,196,255,0.5), rgba(167,139,250,0.3) 70%); box-shadow: 0 0 16px rgba(167,139,250,0.25); }
         .planeta-reloj { background: radial-gradient(circle at 32% 28%, rgba(255,214,178,0.5), rgba(255,138,101,0.3) 70%); box-shadow: 0 0 16px rgba(255,138,101,0.25); }
         .planeta-ticket { background: radial-gradient(circle at 32% 28%, rgba(255,214,120,0.5), rgba(230,160,60,0.3) 70%); box-shadow: 0 0 16px rgba(230,160,60,0.25); }
+        .planeta-sanacion { background: radial-gradient(circle at 32% 28%, rgba(180,255,210,0.5), rgba(120,200,170,0.3) 70%); box-shadow: 0 0 16px rgba(140,220,180,0.25); }
         /* Widget fijo abajo a la izquierda, en el mismo nivel que el chat (abajo a la derecha) */
         .sorpresa-flotante {
             position: fixed;
@@ -1569,6 +1570,93 @@
         .ticket-botones-whatsapp { display: flex; gap: 10px; width: 100%; margin-top: 4px; }
         .ticket-botones-whatsapp .btn-enviar-whatsapp { flex: 1; }
 
+        /* ============ CAMINO DE SANACIÓN ============ */
+        .modal-sanacion {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+            background: rgba(5,10,9,0.92); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;
+            box-sizing: border-box; touch-action: manipulation;
+        }
+        .btn-cerrar-sanacion {
+            position: absolute; top: calc(18px + env(safe-area-inset-top, 0px)); right: 18px;
+            background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; touch-action: manipulation; z-index: 3;
+        }
+        .sanacion-tarjeta {
+            width: min(92vw, 400px); max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+            border-radius: 22px; position: relative; touch-action: manipulation;
+            background: linear-gradient(160deg, #0f1a15, #17251d 45%, #0f1a15);
+            border: 1px solid rgba(180,255,210,0.25); box-shadow: 0 30px 70px rgba(0,0,0,0.7);
+            padding: 26px 22px; text-align: center; font-family: var(--fuente-texto); color: #eef7f1; box-sizing: border-box;
+        }
+        .sanacion-titulo { font-family: var(--fuente-titulo); font-size: 1.5rem; color: #b7f0c8; margin: 0 0 4px; }
+        .sanacion-subtitulo { font-size: 0.8rem; color: rgba(255,255,255,0.55); margin: 0 0 16px; }
+
+        /* --- Corazón de cristal --- */
+        .corazon-cristal-contenedor {
+            width: min(170px, 48vw); margin: 0 auto 6px;
+            --sanacion-luz-abajo: #a993e6; --sanacion-luz-arriba: #c9b6ff;
+        }
+        .svg-corazon-cristal { width: 100%; height: auto; overflow: visible; }
+        .corazon-cristal-latido { transform-origin: 100px 100px; animation: latidoCristal 2.6s ease-in-out infinite; }
+        @keyframes latidoCristal { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.035); } }
+        .corazon-cristal-contorno {
+            fill: rgba(255,255,255,0.03); stroke: rgba(255,255,255,0.55); stroke-width: 1.5;
+        }
+        .relleno-luz-sanacion {
+            transform-origin: 100px 183px;
+            transform: scaleY(var(--nivel-luz, 0));
+            transition: transform 1.6s cubic-bezier(0.34, 1.05, 0.64, 1), fill 1s ease;
+            opacity: 0.92;
+        }
+        .icono-vida-sanacion { font-size: 26px; opacity: 0.92; animation: latidoCristal 2.6s ease-in-out infinite; }
+        .sanacion-etapa-texto { font-family: var(--fuente-titulo); font-size: 1rem; color: #ffd6a8; margin-top: 6px; }
+
+        /* El color de la luz (--sanacion-luz-abajo / --sanacion-luz-arriba) se fija por JS
+           según la etapa, directo en el style del contenedor: más fría al empezar, más cálida
+           y dorada cerca de la meta. */
+
+        .sanacion-mensaje-card { padding: 12px 14px; margin: 10px 0 16px; }
+        #sanacion-mensaje-texto { font-family: var(--fuente-texto); font-size: 0.9rem; line-height: 1.55; color: #f1eaff; margin: 0; }
+
+        .sanacion-calendario { display: flex; flex-direction: column; gap: 14px; margin-bottom: 16px; }
+        .sanacion-parada, .sanacion-meta {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px; padding: 12px 14px;
+        }
+        .sanacion-parada-etiqueta { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.55); margin-bottom: 4px; }
+        .sanacion-parada-fecha { font-family: var(--fuente-titulo); font-size: 1.15rem; color: #ffd6a8; }
+        .sanacion-parada-cuenta { font-size: 0.78rem; color: rgba(255,255,255,0.65); margin-top: 2px; }
+
+        .btn-editar-fecha {
+            margin-top: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px; padding: 5px 14px; color: #eef7f1; font-size: 0.78rem;
+            font-family: var(--fuente-texto); cursor: pointer; touch-action: manipulation;
+        }
+        .sanacion-edicion-fecha {
+            display: flex; gap: 8px; margin-top: 10px; justify-content: center; flex-wrap: wrap;
+        }
+        .sanacion-edicion-fecha input[type="date"] {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px; padding: 6px 8px; color: white; font-family: var(--fuente-texto);
+            font-size: 0.85rem; touch-action: manipulation;
+        }
+        .sanacion-edicion-fecha button {
+            background: #b7f0c8; border: none; border-radius: 8px; padding: 6px 12px;
+            color: #0f1a15; font-weight: bold; font-size: 0.8rem; cursor: pointer; touch-action: manipulation;
+        }
+        .sanacion-edicion-nota { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin: 8px 0 0; font-style: italic; }
+
+        .btn-descargar-ics {
+            width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(180,255,210,0.35);
+            border-radius: 14px; padding: 12px; color: #b7f0c8; font-family: var(--fuente-texto);
+            font-size: 0.85rem; cursor: pointer; touch-action: manipulation;
+        }
+
+        .sanacion-vista-victoria { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 14px 6px; }
+        .sanacion-victoria-icono { font-size: 3rem; animation: latidoCristal 2s ease-in-out infinite; }
+        .sanacion-victoria-titulo { font-family: var(--fuente-titulo); font-size: 1.3rem; color: #ffd6a8; margin: 0; }
+        .sanacion-victoria-texto { font-size: 0.88rem; line-height: 1.6; color: #f1eaff; margin: 0; }
+
         /* ============ CIELO DE NUESTRO PRIMER DÍA ============ */
         .btn-ver-cielo {
             margin-top: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
@@ -1772,6 +1860,7 @@
             <button class="punto-corazon planeta-deseos" style="left:32.9%;top:73.7%" onclick="ejecutarOpcionMenu(event, 'deseos')"><span class="planeta-icono">🌠</span><span class="planeta-nombre">Deseos</span></button>
             <button class="punto-corazon planeta-reloj" style="left:50%;top:98.3%" onclick="ejecutarOpcionMenu(event, 'reloj')"><span class="planeta-icono">⏰</span><span class="planeta-nombre">Cuenta&nbsp;regresiva</span></button>
             <button class="punto-corazon planeta-ticket" style="left:50%;top:16%" onclick="ejecutarOpcionMenu(event, 'ticket')"><span class="planeta-icono">🎟️</span><span class="planeta-nombre">Ticket&nbsp;Diario</span></button>
+            <button class="punto-corazon planeta-sanacion" style="left:50%;top:36%" onclick="ejecutarOpcionMenu(event, 'sanacion')"><span class="planeta-icono">🌿</span><span class="planeta-nombre">Sanación</span></button>
         </div>
     </div>
 
@@ -1938,6 +2027,78 @@
         </div>
     </div>
 
+    <!-- ====== MODAL: CAMINO DE SANACIÓN ====== -->
+    <div id="modal-sanacion" class="modal-sanacion oculto">
+        <button class="btn-cerrar-sanacion" onclick="cerrarSanacion()">✕</button>
+        <div class="sanacion-tarjeta" id="sanacion-tarjeta">
+
+            <!-- Vista normal: corazón de cristal + calendario + mensaje del día -->
+            <div id="sanacion-vista-normal">
+                <div class="sanacion-titulo">Camino de Sanación 🌿</div>
+                <div class="sanacion-subtitulo">Un pasito a la vez. Estoy con vos en cada uno.</div>
+
+                <div class="corazon-cristal-contenedor">
+                    <svg id="svg-corazon-cristal" class="svg-corazon-cristal" viewBox="0 0 200 200" data-etapa="1" aria-hidden="true">
+                        <defs>
+                            <clipPath id="clip-corazon-cristal">
+                                <path d="M100,175 C40,130 10,90 10,58 C10,28 34,8 62,8 C80,8 94,18 100,34 C106,18 120,8 138,8 C166,8 190,28 190,58 C190,90 160,130 100,175 Z" />
+                            </clipPath>
+                            <linearGradient id="luz-sanacion" x1="0" y1="1" x2="0" y2="0">
+                                <stop offset="0%" stop-color="var(--sanacion-luz-abajo)" />
+                                <stop offset="100%" stop-color="var(--sanacion-luz-arriba)" />
+                            </linearGradient>
+                            <filter id="glow-cristal" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="6" result="blur" />
+                                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                        </defs>
+                        <g class="corazon-cristal-latido">
+                            <path class="corazon-cristal-contorno" d="M100,175 C40,130 10,90 10,58 C10,28 34,8 62,8 C80,8 94,18 100,34 C106,18 120,8 138,8 C166,8 190,28 190,58 C190,90 160,130 100,175 Z" />
+                            <g clip-path="url(#clip-corazon-cristal)">
+                                <rect id="relleno-luz-sanacion" class="relleno-luz-sanacion" x="0" y="0" width="200" height="200" fill="url(#luz-sanacion)" filter="url(#glow-cristal)" />
+                            </g>
+                            <text x="100" y="106" text-anchor="middle" class="icono-vida-sanacion">🌿</text>
+                        </g>
+                    </svg>
+                    <div class="sanacion-etapa-texto" id="sanacion-etapa-texto">Sesión 1 de 6</div>
+                </div>
+
+                <div class="tarjeta-cristal sanacion-mensaje-card" id="sanacion-mensaje-card">
+                    <p id="sanacion-mensaje-texto"></p>
+                </div>
+
+                <div class="sanacion-calendario">
+                    <div class="sanacion-parada">
+                        <div class="sanacion-parada-etiqueta">Próxima parada</div>
+                        <div class="sanacion-parada-fecha" id="sanacion-proxima-fecha">—</div>
+                        <div class="sanacion-parada-cuenta" id="sanacion-proxima-cuenta"></div>
+                        <button class="btn-editar-fecha" onclick="toggleEdicionFecha()" title="Editar la fecha de la próxima sesión">✏️ Editar fecha</button>
+                        <div class="sanacion-edicion-fecha oculto" id="sanacion-edicion-fecha">
+                            <input type="date" id="input-proxima-fecha" touch-action="manipulation">
+                            <button onclick="guardarProximaFecha()">Guardar</button>
+                        </div>
+                        <p class="sanacion-edicion-nota">Si la cambiás, el resto de las fechas se recalculan solas cada 21 días.</p>
+                    </div>
+
+                    <div class="sanacion-meta">
+                        <div class="sanacion-parada-etiqueta">La línea de meta</div>
+                        <div class="sanacion-parada-fecha" id="sanacion-meta-fecha">—</div>
+                        <div class="sanacion-parada-cuenta" id="sanacion-meta-cuenta"></div>
+                    </div>
+                </div>
+
+                <button class="btn-descargar-ics" onclick="descargarICS()">📅 Agregar el esquema a Google Calendar</button>
+            </div>
+
+            <!-- Vista victoria: se muestra sola al llegar/superar la Q6 -->
+            <div id="sanacion-vista-victoria" class="sanacion-vista-victoria" style="display:none;">
+                <div class="sanacion-victoria-icono">🌸</div>
+                <h3 class="sanacion-victoria-titulo">¡Lo lograste, mi amor!</h3>
+                <p class="sanacion-victoria-texto">Hoy brillás con toda tu luz. Este camino ya es parte de nuestra historia, y lo que viene es solo vida, salud y nosotros dos. Te amo eternamente.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- ====== MODAL: EL CIELO DE NUESTRO PRIMER DÍA ====== -->
     <div id="modal-cielo" class="modal-cielo oculto">
         <button class="btn-cerrar-cielo" onclick="cerrarCielo()">✕</button>
@@ -1993,7 +2154,7 @@
     <!-- FIREBASE (Proyecto Carolina) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDDvrgXpSxaraqTj83ingY3xa-AT8ywxV4",
@@ -2007,6 +2168,12 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // Persistencia offline: si la señal en la clínica es débil o nula, la app sigue
+        // mostrando la última fecha/mensaje que se sincronizó, sin pantalla en blanco.
+        enableIndexedDbPersistence(db).catch((err) => {
+            console.warn('No se pudo activar la persistencia offline de Firestore:', err.code);
+        });
 
         window.db = db;
         window.collection = collection;
@@ -3408,6 +3575,7 @@
             if (accion === 'gratitud') abrirGratitudInterno();
             if (accion === 'deseos') abrirDeseosInterno();
             if (accion === 'ticket') abrirTicketInterno();
+            if (accion === 'sanacion') abrirSanacionInterno();
         }
 
         // --- Lógica del chat privado ---
@@ -3429,6 +3597,7 @@
                 case 'preguntas': togglePreguntas(event); break;
                 case 'reloj': toggleReloj(event); break;
                 case 'ticket': toggleTicket(event); break;
+                case 'sanacion': toggleSanacion(event); break;
             }
         }
 
@@ -4818,6 +4987,282 @@
             if (!numero || !window.ticketTextoActual) return;
             const url = `https://wa.me/${numero}?text=${encodeURIComponent(window.ticketTextoActual)}`;
             window.open(url, '_blank');
+        }
+
+        // ================== CAMINO DE SANACIÓN ==================
+        class SanacionTracker {
+            constructor() {
+                this.CACHE_KEY = 'sanacionFechasCache';
+                this.FECHAS_BASE = [
+                    '2026-08-05', '2026-08-26', '2026-09-16',
+                    '2026-10-07', '2026-10-28', '2026-11-18',
+                ];
+                this.DIAS_CICLO = 21;
+                this.fechas = this.cargarCache();
+            }
+
+            cargarCache() {
+                try {
+                    const guardadas = localStorage.getItem(this.CACHE_KEY);
+                    const parsed = guardadas ? JSON.parse(guardadas) : null;
+                    if (Array.isArray(parsed) && parsed.length === 6) return parsed;
+                } catch (e) { console.warn('No se pudo leer la caché de sanación:', e); }
+                return [...this.FECHAS_BASE];
+            }
+
+            guardarCache() { localStorage.setItem(this.CACHE_KEY, JSON.stringify(this.fechas)); }
+
+            // Cambia la fecha de la sesión N y recalcula en cascada las siguientes, sumando 21 días
+            actualizarFecha(indice, nuevaFechaStr) {
+                if (indice < 0 || indice > 5 || !nuevaFechaStr) return;
+                this.fechas[indice] = nuevaFechaStr;
+                let base = this._parsear(nuevaFechaStr);
+                for (let i = indice + 1; i < 6; i++) {
+                    base = this._sumarDias(base, this.DIAS_CICLO);
+                    this.fechas[i] = this._formatearISO(base);
+                }
+                this.guardarCache();
+            }
+
+            _parsear(str) { const [y, m, d] = str.split('-').map(Number); return new Date(y, m - 1, d); }
+            _sumarDias(f, d) { const n = new Date(f); n.setDate(n.getDate() + d); return n; }
+            _formatearISO(f) {
+                const y = f.getFullYear(), m = String(f.getMonth() + 1).padStart(2, '0'), d = String(f.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+
+            obtenerFechasComoDate() { return this.fechas.map(f => this._parsear(f)); }
+
+            obtenerNumeroSesionActual() {
+                const ahora = new Date();
+                let sesion = 1;
+                this.obtenerFechasComoDate().forEach((f, i) => { if (ahora >= f) sesion = i + 1; });
+                return Math.min(sesion, 6);
+            }
+
+            obtenerProximaSesionIndice() {
+                const ahora = new Date();
+                const fechas = this.obtenerFechasComoDate();
+                for (let i = 0; i < fechas.length; i++) if (fechas[i] > ahora) return i;
+                return -1;
+            }
+
+            tratamientoCompleto() { return new Date() >= this.obtenerFechasComoDate()[5]; }
+
+            obtenerTiempoRestanteHasta(fechaDate) {
+                let diff = fechaDate - new Date();
+                if (diff < 0) diff = 0;
+                return {
+                    dias: Math.floor(diff / 86400000),
+                    horas: Math.floor((diff / 3600000) % 24),
+                };
+            }
+        }
+
+        const sanacionTracker = new SanacionTracker();
+        let sanacionFirestoreIniciada = false;
+
+        const MENSAJES_ABRAZO = "Hoy nos abrazamos más fuerte que nunca. Estoy con vos en cada gota 💖";
+        const MENSAJES_DESCANSO = "Hoy toca ir despacito: descansar, tomar mucha agua y mimarte un poco más. Yo te cuido desde acá 🤍";
+        const MENSAJE_VICTORIA_CORTO = "¡Lo lograste! Hoy brillás con toda tu luz, mi amor 💫";
+
+        function obtenerFechaHoyISOSanacion() {
+            const d = new Date();
+            const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        // Decide qué mensaje mostrar hoy: día de sesión, días de descanso posteriores, o
+        // día intermedio celebrando la vitalidad y lo cerca que está la próxima parada.
+        function obtenerContextoSanacion() {
+            const hoyISO = obtenerFechaHoyISOSanacion();
+
+            if (sanacionTracker.fechas.includes(hoyISO)) {
+                return { tipo: 'abrazo', mensaje: MENSAJES_ABRAZO };
+            }
+            if (sanacionTracker.tratamientoCompleto()) {
+                return { tipo: 'victoria', mensaje: MENSAJE_VICTORIA_CORTO };
+            }
+
+            const hoyDate = sanacionTracker._parsear(hoyISO);
+            for (const f of sanacionTracker.fechas) {
+                const fechaSesion = sanacionTracker._parsear(f);
+                const diffDias = Math.round((hoyDate - fechaSesion) / 86400000);
+                if (diffDias >= 1 && diffDias <= 2) {
+                    return { tipo: 'descanso', mensaje: MENSAJES_DESCANSO };
+                }
+            }
+
+            const idxProxima = sanacionTracker.obtenerProximaSesionIndice();
+            const restante = idxProxima !== -1
+                ? sanacionTracker.obtenerTiempoRestanteHasta(sanacionTracker.obtenerFechasComoDate()[idxProxima])
+                : null;
+            const diasFaltan = restante ? restante.dias : 0;
+            const plural = diasFaltan === 1 ? '' : 's';
+            return {
+                tipo: 'vitalidad',
+                mensaje: `Un día más lleno de luz. Estás a ${diasFaltan} día${plural} de tu próxima parada, cada vez más cerca de la meta ✨`
+            };
+        }
+
+        function formatearFechaLarga(fechaDate) {
+            const opciones = { day: 'numeric', month: 'long', year: 'numeric' };
+            return fechaDate.toLocaleDateString('es-AR', opciones);
+        }
+
+        function renderizarSanacion() {
+            const vistaNormal = document.getElementById('sanacion-vista-normal');
+            const vistaVictoria = document.getElementById('sanacion-vista-victoria');
+            if (!vistaNormal || !vistaVictoria) return;
+
+            if (sanacionTracker.tratamientoCompleto()) {
+                vistaNormal.style.display = 'none';
+                vistaVictoria.style.display = 'flex';
+                return;
+            }
+            vistaNormal.style.display = 'block';
+            vistaVictoria.style.display = 'none';
+
+            const sesionActual = sanacionTracker.obtenerNumeroSesionActual();
+            document.getElementById('sanacion-etapa-texto').innerText = `Sesión ${sesionActual} de 6`;
+            document.getElementById('svg-corazon-cristal').setAttribute('data-etapa', String(sesionActual));
+
+            // El corazón de cristal se va llenando de luz: nivel 0 a 1 según la sesión actual
+            const relleno = document.getElementById('relleno-luz-sanacion');
+            relleno.style.setProperty('--nivel-luz', (sesionActual / 6).toFixed(3));
+
+            // Colores: de frío/lila (sesión 1) a cálido/dorado (sesión 6)
+            const paletaPorEtapa = {
+                1: ['#8f7bd1', '#b7a6f0'], 2: ['#9e8bdc', '#c9b6ff'], 3: ['#d29fd0', '#ffc6de'],
+                4: ['#e8ab8a', '#ffcf9a'], 5: ['#f0b97a', '#ffdca0'], 6: ['#f7cd8a', '#ffe9c9'],
+            };
+            const colores = paletaPorEtapa[sesionActual] || paletaPorEtapa[1];
+            const contenedor = document.querySelector('.corazon-cristal-contenedor');
+            contenedor.style.setProperty('--sanacion-luz-abajo', colores[0]);
+            contenedor.style.setProperty('--sanacion-luz-arriba', colores[1]);
+
+            // Mensaje contextual del día
+            const contexto = obtenerContextoSanacion();
+            document.getElementById('sanacion-mensaje-texto').innerText = contexto.mensaje;
+
+            // Próxima parada
+            const idxProxima = sanacionTracker.obtenerProximaSesionIndice();
+            if (idxProxima !== -1) {
+                const fechaProxima = sanacionTracker.obtenerFechasComoDate()[idxProxima];
+                document.getElementById('sanacion-proxima-fecha').innerText = formatearFechaLarga(fechaProxima);
+                const restante = sanacionTracker.obtenerTiempoRestanteHasta(fechaProxima);
+                document.getElementById('sanacion-proxima-cuenta').innerText =
+                    restante.dias === 0 ? 'Es hoy 💖' : `Faltan ${restante.dias} día${restante.dias === 1 ? '' : 's'}`;
+            }
+
+            // Línea de meta
+            const fechaMeta = sanacionTracker.obtenerFechasComoDate()[5];
+            document.getElementById('sanacion-meta-fecha').innerText = formatearFechaLarga(fechaMeta);
+            const restanteMeta = sanacionTracker.obtenerTiempoRestanteHasta(fechaMeta);
+            document.getElementById('sanacion-meta-cuenta').innerText =
+                restanteMeta.dias === 0 ? 'Es hoy 🌟' : `Faltan ${restanteMeta.dias} día${restanteMeta.dias === 1 ? '' : 's'}`;
+        }
+
+        function toggleSanacion(event) {
+            if (event) event.stopPropagation();
+            const modal = document.getElementById('modal-sanacion');
+            if (!modal.classList.contains('oculto')) {
+                cerrarSanacion();
+            } else {
+                requerirIdentidad('sanacion');
+            }
+        }
+
+        function abrirSanacionInterno() {
+            vibrar(15);
+            const modal = document.getElementById('modal-sanacion');
+            modal.classList.remove('oculto');
+            renderizarSanacion();
+
+            if (!sanacionFirestoreIniciada) {
+                sanacionFirestoreIniciada = true;
+                suscribirSanacionFirestore();
+            }
+        }
+
+        function cerrarSanacion() {
+            document.getElementById('modal-sanacion').classList.add('oculto');
+            document.getElementById('sanacion-edicion-fecha').classList.add('oculto');
+        }
+
+        function toggleEdicionFecha() {
+            vibrar(10);
+            const idx = sanacionTracker.obtenerProximaSesionIndice();
+            if (idx === -1) return; // ya no hay próxima sesión que editar
+            const input = document.getElementById('input-proxima-fecha');
+            input.value = sanacionTracker.fechas[idx];
+            document.getElementById('sanacion-edicion-fecha').classList.toggle('oculto');
+        }
+
+        function guardarProximaFecha() {
+            const idx = sanacionTracker.obtenerProximaSesionIndice();
+            const input = document.getElementById('input-proxima-fecha');
+            if (idx === -1 || !input.value) return;
+
+            sanacionTracker.actualizarFecha(idx, input.value);
+            vibrar([15, 30, 15]);
+            document.getElementById('sanacion-edicion-fecha').classList.add('oculto');
+            renderizarSanacion();
+            guardarSanacionEnFirestore();
+        }
+
+        // Firestore: colección "sanacion", un solo documento "tratamiento" que sincroniza
+        // las fechas entre los dos celulares en tiempo real (con caché local para offline).
+        async function guardarSanacionEnFirestore() {
+            if (!window.db || typeof window.setDoc !== 'function') return;
+            try {
+                await window.setDoc(window.doc(window.db, "sanacion", "tratamiento"), {
+                    fechas: sanacionTracker.fechas,
+                    actualizadoPor: (typeof miIdentidad !== 'undefined' && miIdentidad) ? miIdentidad : 'desconocido',
+                    actualizadoEn: window.serverTimestamp()
+                }, { merge: true });
+            } catch (e) { console.warn('No se pudo sincronizar la sanación con Firestore:', e); }
+        }
+
+        function suscribirSanacionFirestore() {
+            if (!window.db || typeof window.onSnapshot !== 'function' || typeof window.doc !== 'function') return;
+            try {
+                window.onSnapshot(window.doc(window.db, "sanacion", "tratamiento"), (snap) => {
+                    if (snap.exists()) {
+                        const data = snap.data();
+                        if (Array.isArray(data.fechas) && data.fechas.length === 6) {
+                            sanacionTracker.fechas = data.fechas;
+                            sanacionTracker.guardarCache();
+                            renderizarSanacion();
+                        }
+                    }
+                });
+            } catch (e) { console.warn('No se pudo suscribir la sanación a Firestore:', e); }
+        }
+
+        // Genera un .ics con las 6 sesiones para agregar el esquema completo a Google Calendar
+        function descargarICS() {
+            vibrar(10);
+            const nombres = ['Primera sesión', 'Segunda sesión', 'Tercera sesión', 'Cuarta sesión', 'Quinta sesión', 'Sexta sesión (última) 🌸'];
+            let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Nuestro Universo//Camino de Sanacion//ES\r\nCALSCALE:GREGORIAN\r\n';
+            sanacionTracker.obtenerFechasComoDate().forEach((f, i) => {
+                const y = f.getFullYear(), m = String(f.getMonth() + 1).padStart(2, '0'), d = String(f.getDate()).padStart(2, '0');
+                const fechaICS = `${y}${m}${d}`;
+                ics += 'BEGIN:VEVENT\r\n';
+                ics += `UID:sanacion-${i + 1}-${fechaICS}@nuestrouniverso\r\n`;
+                ics += `DTSTART;VALUE=DATE:${fechaICS}\r\n`;
+                ics += `SUMMARY:🌿 ${nombres[i]} - Camino de Sanación\r\n`;
+                ics += `DESCRIPTION:Estoy con vos en cada paso de este camino. Te amo.\r\n`;
+                ics += 'END:VEVENT\r\n';
+            });
+            ics += 'END:VCALENDAR\r\n';
+
+            const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'camino-de-sanacion.ics';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
         }
 
         // ================== RELOJ / CUENTA REGRESIVA FLOTANTE ==================

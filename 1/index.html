@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1647,10 +1646,9 @@
         }
         .sanacion-edicion-nota { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin: 8px 0 0; font-style: italic; }
 
-        .btn-descargar-ics {
-            width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(180,255,210,0.35);
-            border-radius: 14px; padding: 12px; color: #b7f0c8; font-family: var(--fuente-texto);
-            font-size: 0.85rem; cursor: pointer; touch-action: manipulation;
+        .sanacion-frase-motivadora {
+            padding: 14px 16px; font-family: var(--fuente-titulo); font-style: italic;
+            font-size: 1rem; color: #ffd6a8; line-height: 1.4;
         }
 
         .sanacion-vista-victoria { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 14px 6px; }
@@ -2088,7 +2086,7 @@
                     </div>
                 </div>
 
-                <button class="btn-descargar-ics" onclick="descargarICS()">📅 Agregar el esquema a Google Calendar</button>
+                <div class="tarjeta-cristal sanacion-frase-motivadora" id="sanacion-frase-motivadora"></div>
             </div>
 
             <!-- Vista victoria: se muestra sola al llegar/superar la Q6 -->
@@ -5187,6 +5185,7 @@
             vibrar(15);
             const modal = document.getElementById('modal-sanacion');
             modal.classList.remove('oculto');
+            elegirFraseMotivadoraSanacion();
             renderizarSanacion();
 
             if (!sanacionFirestoreIniciada) {
@@ -5250,29 +5249,30 @@
             } catch (e) { console.warn('No se pudo suscribir la sanación a Firestore:', e); }
         }
 
-        // Genera un .ics con las 6 sesiones para agregar el esquema completo a Google Calendar
-        function descargarICS() {
-            vibrar(10);
-            const nombres = ['Primera sesión', 'Segunda sesión', 'Tercera sesión', 'Cuarta sesión', 'Quinta sesión', 'Sexta sesión (última) 🌸'];
-            let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Nuestro Universo//Camino de Sanacion//ES\r\nCALSCALE:GREGORIAN\r\n';
-            sanacionTracker.obtenerFechasComoDate().forEach((f, i) => {
-                const y = f.getFullYear(), m = String(f.getMonth() + 1).padStart(2, '0'), d = String(f.getDate()).padStart(2, '0');
-                const fechaICS = `${y}${m}${d}`;
-                ics += 'BEGIN:VEVENT\r\n';
-                ics += `UID:sanacion-${i + 1}-${fechaICS}@nuestrouniverso\r\n`;
-                ics += `DTSTART;VALUE=DATE:${fechaICS}\r\n`;
-                ics += `SUMMARY:🌿 ${nombres[i]} - Camino de Sanación\r\n`;
-                ics += `DESCRIPTION:Estoy con vos en cada paso de este camino. Te amo.\r\n`;
-                ics += 'END:VEVENT\r\n';
-            });
-            ics += 'END:VCALENDAR\r\n';
+        // Frases motivadoras: una distinta cada vez que se abre el panel, para acompañar
+        // sin agobiar con fechas ni trámites — solo aliento para seguir.
+        const FRASES_MOTIVADORAS_SANACION = [
+            "La fuerza está en seguir.",
+            "Un paso hoy, un paso mañana: así se llega.",
+            "Cada día que pasa es un día menos y un día más fuerte.",
+            "No hace falta ser invencible, alcanza con no rendirse.",
+            "Vas más lejos de lo que creés.",
+            "Respirá. Estás avanzando, aunque hoy no lo sientas.",
+            "Lo estás haciendo mejor de lo que pensás.",
+            "Hoy también sos valiente, aunque no lo parezca.",
+            "El cuerpo se cansa, el amor no.",
+            "Falta menos que ayer.",
+            "Esto también va a pasar, y vas a estar del otro lado.",
+            "Tu fuerza inspira más de lo que imaginás.",
+            "Un día a la vez. Ese es todo el secreto.",
+            "No estás sola en ningún paso de esto.",
+            "Cada sesión es una prueba más de lo fuerte que sos.",
+        ];
 
-            const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'camino-de-sanacion.ics';
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 2000);
+        function elegirFraseMotivadoraSanacion() {
+            const idx = Math.floor(Math.random() * FRASES_MOTIVADORAS_SANACION.length);
+            const el = document.getElementById('sanacion-frase-motivadora');
+            if (el) el.innerText = FRASES_MOTIVADORAS_SANACION[idx];
         }
 
         // ================== RELOJ / CUENTA REGRESIVA FLOTANTE ==================

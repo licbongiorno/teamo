@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0a17">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
+<title>Nuestros Juegos 🎮</title>
+<meta name="description" content="Juegos para jugar en simultáneo, cada uno desde su dispositivo.">
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com;
+    connect-src 'self' data: blob: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com https://www.gstatic.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: https:;
+">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400;0,700&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg-oscuro:#180f1e;
+    --panel: rgba(255,255,255,0.06);
+    --borde: rgba(255,255,255,0.14);
+    --rosa:#ffb3c6;
+    --lila:#c9b6ff;
+    --celeste:#a8d8ff;
+    --verde:#a8edea;
+    --texto:#fdf6f0;
+    --fuente-titulo:'Dancing Script', cursive;
+    --fuente-texto:'Montserrat', sans-serif;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none;}
+html,body{
+    margin:0; padding:0; min-height:100%;
+    background: radial-gradient(ellipse 140% 90% at 50% 0%, #241a33 0%, var(--bg-oscuro) 55%, #0b0812 100%);
+    color:var(--texto); font-family:var(--fuente-texto);
+    overscroll-behavior:none; -webkit-text-size-adjust:100%;
+}
+input, textarea { -webkit-user-select:text; user-select:text; }
+.contenedor{ max-width:640px; margin:0 auto; padding:18px 16px 90px; min-height:100vh; min-height:100dvh; }
+.encabezado{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:18px; }
+.btn-volver{
+    background:var(--panel); border:1px solid var(--borde); color:var(--texto);
+    border-radius:14px; padding:8px 14px; font-size:0.85rem; cursor:pointer; text-decoration:none;
+    display:inline-flex; align-items:center; gap:6px;
+}
+.titulo-app{ font-family:var(--fuente-titulo); font-size:2rem; text-align:center; margin:4px 0 2px;
+    background:linear-gradient(90deg,var(--rosa),var(--lila),var(--celeste));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.subtitulo-app{ text-align:center; font-size:0.82rem; opacity:0.72; margin-bottom:10px; }
+.chip-identidad{ font-size:0.72rem; opacity:0.8; text-align:center; margin-bottom:14px; }
+
+.tarjetas-juegos{ display:flex; flex-direction:column; gap:14px; }
+.tarjeta-juego{
+    background:var(--panel); border:1px solid var(--borde); border-radius:20px; padding:18px;
+    display:flex; align-items:center; gap:14px; cursor:pointer;
+    transition:transform 0.2s ease, background 0.2s ease;
+}
+.tarjeta-juego:active{ transform:scale(0.97); background:rgba(255,255,255,0.1); }
+.tarjeta-juego .icono-juego{ font-size:2.2rem; flex-shrink:0; width:54px; text-align:center; }
+.tarjeta-juego .info-juego{ flex:1; }
+.tarjeta-juego h3{ margin:0 0 3px; font-size:1.05rem; }
+.tarjeta-juego p{ margin:0; font-size:0.78rem; opacity:0.7; line-height:1.35; }
+
+.pantalla-juego{ display:none; }
+.pantalla-juego.activa{ display:block; animation:aparecer 0.3s ease; }
+@keyframes aparecer{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+.panel{ background:var(--panel); border:1px solid var(--borde); border-radius:18px; padding:16px; margin-bottom:14px; }
+.fila-superior-juego{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.titulo-juego{ font-family:var(--fuente-titulo); font-size:1.6rem; }
+.btn-cerrar-juego{ background:var(--panel); border:1px solid var(--borde); color:var(--texto); border-radius:12px;
+    width:34px; height:34px; font-size:1rem; cursor:pointer; }
+
+.btn-principal{
+    background:linear-gradient(135deg, var(--rosa), var(--lila));
+    color:#22182b; border:none; border-radius:14px; padding:12px 18px; font-weight:700;
+    font-size:0.9rem; cursor:pointer; width:100%;
+}
+.btn-principal:active{ transform:scale(0.97); }
+.btn-secundario{
+    background:transparent; border:1px solid var(--borde); color:var(--texto); border-radius:14px;
+    padding:11px 16px; font-size:0.85rem; cursor:pointer; width:100%;
+}
+.btn-fila{ display:flex; gap:8px; }
+.btn-fila > *{ flex:1; }
+.texto-centro{ text-align:center; }
+.texto-tenue{ opacity:0.65; font-size:0.8rem; }
+.oculto{ display:none !important; }
+
+/* Modal de acceso */
+.modal-fondo{
+    position:fixed; inset:0; background:rgba(5,3,10,0.82); backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center; z-index:100; padding:20px;
+}
+.modal-caja{
+    background:#1e1428; border:1px solid var(--borde); border-radius:20px; padding:26px 22px;
+    max-width:340px; width:100%; text-align:center;
+}
+.modal-caja h2{ font-family:var(--fuente-titulo); font-size:1.7rem; margin:0 0 6px; }
+.modal-caja p{ font-size:0.82rem; opacity:0.75; margin:0 0 16px; }
+.modal-caja input{
+    width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--borde);
+    background:rgba(255,255,255,0.06); color:var(--texto); font-size:1rem; text-align:center;
+    margin-bottom:10px;
+}
+.error-clave{ color:#ffb3b3; font-size:0.75rem; min-height:16px; margin-bottom:8px; }
+
+::placeholder{ color:rgba(253,246,240,0.4); }
+</style>
+</head>
+<body>
+
+<!-- ==================== MODAL DE ACCESO ==================== -->
+<div id="modal-acceso" class="modal-fondo oculto">
+    <div class="modal-caja">
+        <h2>🔒</h2>
+        <p>Escribí tu nombre (nico o carito) para entrar a jugar</p>
+        <input type="text" id="input-clave-juegos" placeholder="nico o carito" autocomplete="off" onkeydown="if(event.key==='Enter') verificarIdentidadJuegos()">
+        <div class="error-clave" id="error-clave-juegos"></div>
+        <button class="btn-principal" onclick="verificarIdentidadJuegos()">Entrar</button>
+    </div>
+</div>
+
+<div class="contenedor">
+    <div class="encabezado">
+        <a href="index.html" class="btn-volver">⬅️ Volver</a>
+        <span class="chip-identidad" id="chip-identidad"></span>
+    </div>
+
+    <!-- ==================== MENÚ DE JUEGOS ==================== -->
+    <div id="pantalla-menu" class="pantalla-juego activa">
+        <div class="titulo-app">Nuestros Juegos</div>
+        <div class="subtitulo-app">Cada uno desde su dispositivo, jugando al mismo tiempo 🎮💕</div>
+
+        <div class="tarjetas-juegos">
+            <div class="tarjeta-juego" onclick="abrirJuego('ahorcado')">
+                <div class="icono-juego">🔤</div>
+                <div class="info-juego">
+                    <h3>Ahorcado</h3>
+                    <p>Uno propone una palabra secreta, el otro la adivina letra por letra, en vivo.</p>
+                </div>
+            </div>
+            <div class="tarjeta-juego" onclick="abrirJuego('frutas')">
+                <div class="icono-juego">🍓</div>
+                <div class="info-juego">
+                    <h3>Atrapar Frutas</h3>
+                    <p>Carrera de puntos: 30 segundos atrapando frutas que caen. ¿Quién junta más?</p>
+                </div>
+            </div>
+            <div class="tarjeta-juego" onclick="abrirJuego('truco')">
+                <div class="icono-juego">🃏</div>
+                <div class="info-juego">
+                    <h3>Truco Argentino</h3>
+                    <p>El clásico de dos, con envido y truco, cada uno con sus cartas en su pantalla.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== AHORCADO ==================== -->
+    <div id="pantalla-ahorcado" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔤 Ahorcado</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-ahorcado"></div>
+    </div>
+
+    <!-- ==================== FRUTAS ==================== -->
+    <div id="pantalla-frutas" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🍓 Atrapar Frutas</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-frutas"></div>
+    </div>
+
+    <!-- ==================== TRUCO ==================== -->
+    <div id="pantalla-truco" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🃏 Truco</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-truco"></div>
+    </div>
+</div>
+
+<!-- ==================== FIREBASE ==================== -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, updateDoc, onSnapshot, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDDvrgXpSxaraqTj83ingY3xa-AT8ywxV4",
+        authDomain: "carolina-634a1.firebaseapp.com",
+        projectId: "carolina-634a1",
+        storageBucket: "carolina-634a1.firebasestorage.app",
+        messagingSenderId: "80980917854",
+        appId: "1:80980917854:web:15a9f9a238ed2bd7c0becf",
+        measurementId: "G-VDJ7B6SDW4"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.db = db;
+    window.doc = doc;
+    window.setDoc = setDoc;
+    window.updateDoc = updateDoc;
+    window.onSnapshot = onSnapshot;
+    window.serverTimestamp = serverTimestamp;
+    window.deleteField = deleteField;
+
+    console.log("🔥 Juegos conectados a Carolina");
+</script>
+
+<script>
+// ==================== IDENTIDAD (compartida con index.html) ====================
+let miIdentidad = localStorage.getItem("identidadRefugio");
+let miRival = null;
+
+function actualizarChipIdentidad(){
+    miRival = miIdentidad === 'nico' ? 'carito' : 'nico';
+    const chip = document.getElementById('chip-identidad');
+    chip.innerText = miIdentidad === 'carito' ? 'Carito 💖' : 'Nico 💙';
+}
+
+function pedirIdentidadSiHaceFalta(){
+    if (miIdentidad === 'nico' || miIdentidad === 'carito') {
+        actualizarChipIdentidad();
+        iniciarJuegos();
+    } else {
+        document.getElementById('modal-acceso').classList.remove('oculto');
+        setTimeout(() => document.getElementById('input-clave-juegos').focus(), 150);
+    }
+}
+
+function verificarIdentidadJuegos(){
+    const clave = document.getElementById('input-clave-juegos').value.toLowerCase().trim();
+    if (clave === 'nico' || clave === 'carito') {
+        miIdentidad = clave;
+        localStorage.setItem('identidadRefugio', miIdentidad);
+        document.getElementById('modal-acceso').classList.add('oculto');
+        actualizarChipIdentidad();
+        iniciarJuegos();
+    } else {
+        document.getElementById('error-clave-juegos').innerText = 'Llave incorrecta 💔';
+        document.getElementById('input-clave-juegos').value = '';
+    }
+}
+
+function vibrarJ(patron){ if (navigator.vibrate) { try { navigator.vibrate(patron); } catch(e){} } }
+
+// ==================== NAVEGACIÓN ENTRE JUEGOS ====================
+function abrirJuego(juego){
+    vibrarJ(12);
+    document.querySelectorAll('.pantalla-juego').forEach(p => p.classList.remove('activa'));
+    document.getElementById('pantalla-' + juego).classList.add('activa');
+    if (juego === 'ahorcado') iniciarAhorcado();
+    if (juego === 'frutas') iniciarFrutas();
+    if (juego === 'truco') iniciarTruco();
+}
+function cerrarJuego(){
+    vibrarJ(12);
+    detenerListenersActivos();
+    document.querySelectorAll('.pantalla-juego').forEach(p => p.classList.remove('activa'));
+    document.getElementById('pantalla-menu').classList.add('activa');
+}
+function detenerListenersActivos(){
+    if (window._unsubAhorcado) { window._unsubAhorcado(); window._unsubAhorcado = null; }
+    if (window._unsubFrutas) { window._unsubFrutas(); window._unsubFrutas = null; }
+    if (window._unsubTruco) { window._unsubTruco(); window._unsubTruco = null; }
+    if (window._loopFrutas) { cancelAnimationFrame(window._loopFrutas); window._loopFrutas = null; }
+    if (window._timerFrutas) { clearInterval(window._timerFrutas); window._timerFrutas = null; }
+}
+
+function iniciarJuegos(){
+    // Todo listo; los juegos se inician al abrirlos.
+}
+
+// ==================== AHORCADO ====================
+const ABECEDARIO = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
+
+function normalizarLetra(l){
+    return l.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+}
+
+function iniciarAhorcado(){
+    const ref = window.doc(window.db, 'juegos', 'ahorcado');
+    if (window._unsubAhorcado) window._unsubAhorcado();
+    window._unsubAhorcado = window.onSnapshot(ref, (snap) => {
+        renderAhorcado(snap.exists() ? snap.data() : null);
+    }, (err) => {
+        document.getElementById('contenido-ahorcado').innerHTML = `<div class="panel texto-centro texto-tenue">No se pudo conectar. Revisá tu conexión.</div>`;
+    });
+}
+
+function renderAhorcado(estado){
+    const cont = document.getElementById('contenido-ahorcado');
+
+    if (!estado || estado.fase === 'terminado_reiniciar') {
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <p class="texto-tenue">No hay ninguna partida activa. Proponé una palabra para que ${miRival === 'carito' ? 'Carito' : 'Nico'} la adivine.</p>
+                <button class="btn-principal" onclick="mostrarFormularioPalabra()">✍️ Proponer una palabra</button>
+            </div>
+            <div id="form-palabra-ahorcado"></div>
+        `;
+        return;
+    }
+
+    const soyProponente = estado.proponente === miIdentidad;
+    const palabra = estado.palabra || "";
+    const letrasIntentadas = estado.letrasIntentadas || [];
+    const erroresMax = estado.erroresMax || 6;
+    const errores = estado.errores || 0;
+
+    const dibujos = [
+        `\n \n \n \n \n=====`,
+        `  ____\n |\n |\n |\n |\n=====`,
+        `  ____\n |    |\n |\n |\n |\n=====`,
+        `  ____\n |    |\n |    😵\n |\n |\n=====`,
+        `  ____\n |    |\n |    😵\n |    |\n |\n=====`,
+        `  ____\n |    |\n |    😵\n |   /|\n |\n=====`,
+        `  ____\n |    |\n |    😵\n |   /|\\\n |   / \n=====`
+    ];
+
+    const letrasPalabra = palabra.split("").map(normalizarLetra);
+    const todasAdivinadas = letrasPalabra.every(l => l === " " || letrasIntentadas.includes(l));
+
+    let fase = estado.fase;
+    if (fase === 'jugando' && todasAdivinadas) fase = 'ganado';
+    if (fase === 'jugando' && errores >= erroresMax) fase = 'perdido';
+
+    const visual = palabra.split("").map(ch => {
+        if (ch === " ") return "&nbsp;&nbsp;";
+        const norm = normalizarLetra(ch);
+        const mostrar = fase !== 'jugando' || letrasIntentadas.includes(norm);
+        return mostrar ? ch.toUpperCase() : "_";
+    }).join(" ");
+
+    let html = `<div class="panel texto-centro">
+        <div class="texto-tenue" style="margin-bottom:8px;">${soyProponente ? '👀 Vos elegiste la palabra' : '🎯 Te toca adivinar'} ${estado.categoria ? '· Pista: ' + estado.categoria : ''}</div>
+        <pre style="font-family:monospace; font-size:0.85rem; opacity:0.75; margin:4px 0 10px;">${dibujos[Math.min(errores, dibujos.length-1)]}</pre>
+        <div style="font-size:1.6rem; letter-spacing:3px; font-family:monospace; margin-bottom:10px; word-break:break-all;">${visual}</div>
+        <div class="texto-tenue">Errores: ${errores} / ${erroresMax}</div>
+    </div>`;
+
+    if (fase === 'jugando' && !soyProponente) {
+        html += `<div class="panel"><div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;">`;
+        ABECEDARIO.forEach(letra => {
+            const usada = letrasIntentadas.includes(letra);
+            html += `<button class="btn-secundario" style="padding:8px 0; font-size:0.85rem; ${usada ? 'opacity:0.3;' : ''}" ${usada ? 'disabled' : ''} onclick="intentarLetra('${letra}')">${letra}</button>`;
+        });
+        html += `</div></div>`;
+    } else if (fase === 'jugando' && soyProponente) {
+        html += `<div class="panel texto-centro texto-tenue">Esperando que adivine, letra por letra…</div>`;
+    }
+
+    if (fase === 'ganado' || fase === 'perdido') {
+        html += `<div class="panel texto-centro">
+            <div style="font-size:1.3rem; margin-bottom:6px;">${fase === 'ganado' ? '🎉 ¡Adivinada!' : '💀 Se acabaron los intentos'}</div>
+            <div class="texto-tenue" style="margin-bottom:12px;">La palabra era: <b>${palabra.toUpperCase()}</b></div>
+            <button class="btn-principal" onclick="mostrarFormularioPalabra()">🔁 Jugar de nuevo</button>
+        </div>
+        <div id="form-palabra-ahorcado"></div>`;
+    }
+
+    cont.innerHTML = html;
+}
+
+function mostrarFormularioPalabra(){
+    const cont = document.getElementById('form-palabra-ahorcado');
+    if (!cont) return;
+    cont.innerHTML = `
+        <div class="panel">
+            <input type="text" id="input-palabra-secreta" placeholder="Escribí la palabra secreta" autocomplete="off"
+                style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--borde); background:rgba(255,255,255,0.06); color:var(--texto); font-size:1rem; margin-bottom:8px; text-align:center;">
+            <input type="text" id="input-categoria-secreta" placeholder="Pista o categoría (opcional)" autocomplete="off"
+                style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--borde); background:rgba(255,255,255,0.06); color:var(--texto); font-size:0.9rem; margin-bottom:10px; text-align:center;">
+            <button class="btn-principal" onclick="proponerPalabra()">Empezar partida</button>
+        </div>`;
+    setTimeout(() => document.getElementById('input-palabra-secreta').focus(), 100);
+}
+
+async function proponerPalabra(){
+    const palabra = document.getElementById('input-palabra-secreta').value.trim();
+    const categoria = document.getElementById('input-categoria-secreta').value.trim();
+    if (!palabra) return;
+    vibrarJ(12);
+    const ref = window.doc(window.db, 'juegos', 'ahorcado');
+    await window.setDoc(ref, {
+        palabra: palabra,
+        categoria: categoria,
+        proponente: miIdentidad,
+        adivinador: miRival,
+        letrasIntentadas: [],
+        erroresMax: 6,
+        errores: 0,
+        fase: 'jugando',
+        actualizadoEn: window.serverTimestamp()
+    });
+}
+
+async function intentarLetra(letra){
+    const ref = window.doc(window.db, 'juegos', 'ahorcado');
+    // Se relee el estado actual vía el listener; para evitar condiciones de carrera
+    // simples (dos toques rápidos) alcanza con tomar el último snapshot renderizado.
+    const cont = document.getElementById('contenido-ahorcado');
+    if (cont.dataset.bloqueado === '1') return;
+    cont.dataset.bloqueado = '1';
+    try {
+        const snap = await new Promise((resolve) => {
+            const unsub = window.onSnapshot(ref, (s) => { unsub(); resolve(s); });
+        });
+        const estado = snap.data();
+        if (!estado || estado.letrasIntentadas.includes(letra)) return;
+        const nuevasLetras = [...estado.letrasIntentadas, letra];
+        const letrasPalabra = estado.palabra.split("").map(normalizarLetra);
+        const acierto = letrasPalabra.includes(letra);
+        const nuevosErrores = acierto ? estado.errores : estado.errores + 1;
+        vibrarJ(acierto ? 15 : [10,30,10]);
+        await window.updateDoc(ref, { letrasIntentadas: nuevasLetras, errores: nuevosErrores });
+    } finally {
+        cont.dataset.bloqueado = '0';
+    }
+}
+
+// ==================== ATRAPAR FRUTAS ====================
+const DURACION_FRUTAS = 30; // segundos
+const FRUTAS_EMOJI = ['🍎','🍊','🍋','🍇','🍓','🍉','🍑','🍒'];
+
+function iniciarFrutas(){
+    const contInicial = document.getElementById('contenido-frutas');
+    if (contInicial) delete contInicial.dataset.faseFrutas;
+    const ref = window.doc(window.db, 'juegos', 'frutas');
+    if (window._unsubFrutas) window._unsubFrutas();
+    window._unsubFrutas = window.onSnapshot(ref, (snap) => {
+        renderFrutas(snap.exists() ? snap.data() : null);
+    });
+}
+
+let frutasJuego = null; // estado local del canvas (no compartido)
+
+function renderFrutas(estado){
+    const cont = document.getElementById('contenido-frutas');
+
+    if (!estado || estado.fase === 'esperando') {
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <p class="texto-tenue">30 segundos. Gana quien atrape más frutas. ¡A las 3 arrancan los dos!</p>
+                <div class="texto-tenue" style="margin:10px 0;">
+                    ${miIdentidad === 'carito' ? 'Carito' : 'Nico'}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                    ${miRival === 'carito' ? 'Carito' : 'Nico'}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+                </div>
+                <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoFrutas()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🍓'}</button>
+            </div>`;
+        if (listoYo && listoRival) {
+            iniciarPartidaFrutasSiCorresponde(estado);
+        }
+        return;
+    }
+
+    if (estado.fase === 'jugando') {
+        // Este snapshot se dispara también cuando actualizamos NUESTRO propio puntaje;
+        // si el canvas ya está corriendo, sólo actualizamos el marcador del rival
+        // en vez de reconstruir todo el DOM (eso reiniciaría el juego a cada toque).
+        if (cont.dataset.faseFrutas === 'jugando') {
+            const marcadorRival = document.getElementById('marcador-rival-frutas');
+            if (marcadorRival) marcadorRival.innerText = estado.puntajes?.[miRival] || 0;
+            return;
+        }
+        cont.dataset.faseFrutas = 'jugando';
+        cont.innerHTML = `
+            <div class="panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:0.9rem;">
+                    <span>Vos: <b id="marcador-yo-frutas">0</b> 🍓</span>
+                    <span id="cronometro-frutas" style="font-family:monospace; font-size:1.1rem;">${DURACION_FRUTAS}</span>
+                    <span>${miRival === 'carito' ? 'Carito' : 'Nico'}: <b id="marcador-rival-frutas">${estado.puntajes?.[miRival] || 0}</b> 🍓</span>
+                </div>
+                <div style="position:relative; width:100%; aspect-ratio:3/4; max-height:60vh; background:rgba(0,0,0,0.25); border-radius:14px; overflow:hidden; touch-action:none;" id="area-frutas">
+                    <canvas id="canvas-frutas" style="position:absolute; inset:0; width:100%; height:100%;"></canvas>
+                </div>
+                <p class="texto-tenue texto-centro" style="margin-top:8px;">Deslizá el dedo (o el mouse) para mover la canasta 🧺</p>
+            </div>`;
+        arrancarCanvasFrutas(estado);
+        return;
+    }
+    cont.dataset.faseFrutas = estado.fase;
+
+    if (estado.fase === 'terminado') {
+        const miPuntaje = estado.puntajes?.[miIdentidad] || 0;
+        const puntajeRival = estado.puntajes?.[miRival] || 0;
+        let resultado = '🤝 ¡Empate!';
+        if (miPuntaje > puntajeRival) resultado = '🏆 ¡Ganaste vos!';
+        else if (puntajeRival > miPuntaje) resultado = `🏆 Ganó ${miRival === 'carito' ? 'Carito' : 'Nico'}`;
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <div style="font-size:1.3rem; margin-bottom:10px;">${resultado}</div>
+                <div class="texto-tenue" style="margin-bottom:14px;">
+                    Vos: ${miPuntaje} 🍓 &nbsp;·&nbsp; ${miRival === 'carito' ? 'Carito' : 'Nico'}: ${puntajeRival} 🍓
+                </div>
+                <button class="btn-principal" onclick="reiniciarFrutas()">🔁 Jugar de nuevo</button>
+            </div>`;
+    }
+}
+
+async function marcarListoFrutas(){
+    vibrarJ(12);
+    const ref = window.doc(window.db, 'juegos', 'frutas');
+    await window.setDoc(ref, {
+        fase: 'esperando',
+        listos: { [miIdentidad]: true },
+        puntajes: { nico: 0, carito: 0 }
+    }, { merge: true });
+}
+
+let _iniciandoFrutas = false;
+async function iniciarPartidaFrutasSiCorresponde(estado){
+    if (estado.fase !== 'esperando' || _iniciandoFrutas) return;
+    _iniciandoFrutas = true;
+    // Cualquiera de los dos dispositivos puede disparar el inicio; si llegan
+    // ambos casi a la vez no pasa nada grave, sólo se reescribe el mismo estado.
+    const ref = window.doc(window.db, 'juegos', 'frutas');
+    await window.updateDoc(ref, { fase: 'jugando', inicioEn: Date.now() });
+    setTimeout(() => { _iniciandoFrutas = false; }, 2000);
+}
+
+function arrancarCanvasFrutas(estadoInicial){
+    const canvas = document.getElementById('canvas-frutas');
+    if (!canvas || canvas.dataset.iniciado === '1') return;
+    canvas.dataset.iniciado = '1';
+
+    const area = document.getElementById('area-frutas');
+    const ctx = canvas.getContext('2d');
+    function ajustarTamano(){
+        canvas.width = area.clientWidth;
+        canvas.height = area.clientHeight;
+    }
+    ajustarTamano();
+    window.addEventListener('resize', ajustarTamano);
+
+    let canastaX = canvas.width / 2;
+    const canastaAncho = 60, canastaAlto = 34;
+    let frutas = [];
+    let puntaje = 0;
+    let terminando = false;
+
+    function moverCanasta(clientX){
+        const rect = canvas.getBoundingClientRect();
+        canastaX = Math.max(canastaAncho/2, Math.min(canvas.width - canastaAncho/2, clientX - rect.left));
+    }
+    area.addEventListener('touchmove', (e) => { e.preventDefault(); if (e.touches[0]) moverCanasta(e.touches[0].clientX); }, { passive:false });
+    area.addEventListener('mousemove', (e) => moverCanasta(e.clientX));
+
+    function spawnFruta(){
+        frutas.push({
+            x: Math.random() * (canvas.width - 30) + 15,
+            y: -20,
+            vel: 1.6 + Math.random() * 2.2,
+            emoji: FRUTAS_EMOJI[Math.floor(Math.random() * FRUTAS_EMOJI.length)]
+        });
+    }
+    let spawnAcumulado = 0;
+
+    async function actualizarPuntajeRemoto(){
+        const ref = window.doc(window.db, 'juegos', 'frutas');
+        await window.updateDoc(ref, { [`puntajes.${miIdentidad}`]: puntaje }).catch(()=>{});
+    }
+
+    function loop(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        spawnAcumulado++;
+        if (spawnAcumulado > 42) { spawnFruta(); spawnAcumulado = 0; }
+
+        ctx.font = '28px sans-serif';
+        ctx.textAlign = 'center';
+        for (let i = frutas.length - 1; i >= 0; i--) {
+            const f = frutas[i];
+            f.y += f.vel;
+            ctx.fillText(f.emoji, f.x, f.y);
+            const distX = Math.abs(f.x - canastaX);
+            const distY = Math.abs(f.y - (canvas.height - 26));
+            if (distX < canastaAncho/2 && distY < canastaAlto/2 && f.y > 0) {
+                frutas.splice(i,1);
+                puntaje++;
+                const marcador = document.getElementById('marcador-yo-frutas');
+                if (marcador) marcador.innerText = puntaje;
+                actualizarPuntajeRemoto();
+                vibrarJ(10);
+            } else if (f.y > canvas.height + 20) {
+                frutas.splice(i,1);
+            }
+        }
+
+        // Canasta
+        ctx.font = '38px sans-serif';
+        ctx.fillText('🧺', canastaX, canvas.height - 8);
+
+        if (!terminando) window._loopFrutas = requestAnimationFrame(loop);
+    }
+    loop();
+
+    let restante = DURACION_FRUTAS;
+    if (estadoInicial.inicioEn) {
+        const transcurrido = Math.floor((Date.now() - estadoInicial.inicioEn) / 1000);
+        restante = Math.max(0, DURACION_FRUTAS - transcurrido);
+    }
+    const cronoEl = document.getElementById('cronometro-frutas');
+    if (cronoEl) cronoEl.innerText = restante;
+
+    window._timerFrutas = setInterval(async () => {
+        restante--;
+        const el = document.getElementById('cronometro-frutas');
+        if (el) el.innerText = Math.max(0, restante);
+        if (restante <= 0) {
+            clearInterval(window._timerFrutas);
+            terminando = true;
+            if (window._loopFrutas) cancelAnimationFrame(window._loopFrutas);
+            const ref = window.doc(window.db, 'juegos', 'frutas');
+            const dataActual = (await new Promise(res => { const u = window.onSnapshot(ref, s => { u(); res(s.data()); }); }));
+            if (dataActual && dataActual.fase === 'jugando') {
+                await window.updateDoc(ref, { fase: 'terminado' }).catch(()=>{});
+            }
+        }
+    }, 1000);
+}
+
+async function reiniciarFrutas(){
+    vibrarJ(12);
+    const ref = window.doc(window.db, 'juegos', 'frutas');
+    await window.setDoc(ref, { fase: 'esperando', listos: {}, puntajes: { nico:0, carito:0 } });
+    const canvas = document.getElementById('canvas-frutas');
+    if (canvas) canvas.dataset.iniciado = '0';
+}
+
+// ==================== TRUCO ARGENTINO ====================
+function nombreJugador(id){ return id === 'carito' ? 'Carito' : 'Nico'; }
+
+function crearMazoTruco(){
+    const palos = ['espada','basto','oro','copa'];
+    const numeros = [1,2,3,4,5,6,7,10,11,12];
+    let mazo = [];
+    palos.forEach(p => numeros.forEach(n => mazo.push(p + '_' + n)));
+    for (let i = mazo.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [mazo[i], mazo[j]] = [mazo[j], mazo[i]];
+    }
+    return mazo;
+}
+function numDeCarta(id){ return parseInt(id.split('_')[1]); }
+function paloDeCarta(id){ return id.split('_')[0]; }
+function valorTruco(id){
+    const n = numDeCarta(id), p = paloDeCarta(id);
+    if (p === 'espada' && n === 1) return 14;
+    if (p === 'basto' && n === 1) return 13;
+    if (p === 'espada' && n === 7) return 12;
+    if (p === 'oro' && n === 7) return 11;
+    if (n === 3) return 10;
+    if (n === 2) return 9;
+    if ((p === 'copa' || p === 'oro') && n === 1) return 8;
+    if (n === 12) return 7;
+    if (n === 11) return 6;
+    if (n === 10) return 5;
+    if ((p === 'copa' || p === 'basto') && n === 7) return 4;
+    if (n === 6) return 3;
+    if (n === 5) return 2;
+    return 1; // el 4, la más baja
+}
+function valorEnvido(id){ const n = numDeCarta(id); return n <= 7 ? n : 0; }
+function calcularEnvido(cartas){
+    const porPalo = {};
+    cartas.forEach(c => { const p = paloDeCarta(c); (porPalo[p] = porPalo[p] || []).push(c); });
+    let mejor = 0;
+    Object.values(porPalo).forEach(grupo => {
+        if (grupo.length >= 2) {
+            const vals = grupo.map(valorEnvido).sort((a,b) => b-a);
+            mejor = Math.max(mejor, 20 + vals[0] + vals[1]);
+        }
+    });
+    if (mejor === 0) mejor = Math.max(...cartas.map(valorEnvido));
+    return mejor;
+}
+function nombreCartaTruco(id){
+    const n = numDeCarta(id), p = paloDeCarta(id);
+    const nombresNum = {1:'As', 10:'Sota', 11:'Caballo', 12:'Rey'};
+    const nombresPalo = {espada:'Espada 🗡️', basto:'Basto 🌳', oro:'Oro 🪙', copa:'Copa 🏆'};
+    return `${nombresNum[n] || n} de ${nombresPalo[p]}`;
+}
+function nombreCantoTruco(tipo){
+    return {envido:'Envido', envido_envido:'Envido', real_envido:'Real Envido', falta_envido:'Falta Envido',
+            truco:'Truco', retruco:'Retruco', vale_cuatro:'Vale Cuatro'}[tipo] || tipo;
+}
+function pushLog(estado, mensaje){
+    const hist = [...(estado?.historial || []), mensaje];
+    return hist.slice(-6);
+}
+function determinarGanadorManoTruco(gr, mano){
+    const cuenta = {nico:0, carito:0};
+    gr.forEach(g => { if (g === 'nico') cuenta.nico++; else if (g === 'carito') cuenta.carito++; });
+    if (cuenta.nico >= 2) return 'nico';
+    if (cuenta.carito >= 2) return 'carito';
+    if (gr[0] === 'parda' && gr[1] && gr[1] !== 'parda') return gr[1];
+    if (gr[1] === 'parda' && gr[0] && gr[0] !== 'parda') return gr[0];
+    if (gr[0] === 'parda' && gr[1] === 'parda' && gr[2] && gr[2] !== 'parda') return gr[2];
+    if (gr[0] === 'parda' && gr[1] === 'parda' && gr[2] === 'parda') return mano;
+    if (gr[2] === 'parda' && gr[0] && gr[0] !== 'parda' && gr[1] && gr[1] !== 'parda') return gr[0];
+    return null;
+}
+function valorQueridoTruco(nivel){ return {1:2, 2:3, 3:4}[nivel] || 1; }
+function opcionesEnvidoSiguientes(cadena){
+    const planos = cadena.filter(c => c.tipo === 'envido').length;
+    const hayReal = cadena.some(c => c.tipo === 'real_envido');
+    const hayFalta = cadena.some(c => c.tipo === 'falta_envido');
+    let op = [];
+    if (planos < 2 && !hayReal && !hayFalta) op.push('envido');
+    if (!hayReal && !hayFalta) op.push('real_envido');
+    if (!hayFalta) op.push('falta_envido');
+    return op;
+}
+function calcularPuntosEnvidoQuerido(cadena, puntosParaGanar, puntajes){
+    const ultimo = cadena[cadena.length - 1];
+    if (ultimo.tipo === 'falta_envido') {
+        const lider = Math.max(puntajes.nico, puntajes.carito);
+        return Math.max(1, puntosParaGanar - lider);
+    }
+    return cadena.reduce((tot, c) => tot + (c.tipo === 'real_envido' ? 3 : 2), 0);
+}
+
+function refTruco(){ return window.doc(window.db, 'juegos', 'truco'); }
+async function leerTrucoActual(){
+    return await new Promise(res => { const u = window.onSnapshot(refTruco(), s => { u(); res(s.exists() ? s.data() : null); }); });
+}
+
+function iniciarTruco(){
+    if (window._unsubTruco) window._unsubTruco();
+    window._unsubTruco = window.onSnapshot(refTruco(), snap => renderTruco(snap.exists() ? snap.data() : null));
+}
+
+let _iniciandoTruco = false;
+async function iniciarPartidaTrucoSiCorresponde(estado){
+    if (estado.fase !== 'esperando' || _iniciandoTruco) return;
+    _iniciandoTruco = true;
+    const manoElegida = Math.random() < 0.5 ? 'nico' : 'carito';
+    await repartirNuevaManoTruco(estado, manoElegida, { nico:0, carito:0 });
+    setTimeout(() => { _iniciandoTruco = false; }, 2000);
+}
+
+async function repartirNuevaManoTruco(estadoPrevio, manoElegida, puntajesIniciales){
+    const mazo = crearMazoTruco();
+    const cartasNico = mazo.slice(0,3), cartasCarito = mazo.slice(3,6);
+    await window.setDoc(refTruco(), {
+        fase: 'jugando',
+        puntosParaGanar: estadoPrevio.puntosParaGanar || 30,
+        puntajes: puntajesIniciales || estadoPrevio.puntajes || {nico:0, carito:0},
+        mano: manoElegida,
+        cartas: { nico: cartasNico, carito: cartasCarito },
+        cartasJugadas: [],
+        rondaActual: 1,
+        ganadoresRonda: [null,null,null],
+        jugadorEnTurno: manoElegida,
+        cantoPendiente: null,
+        envidoCadena: [],
+        envidoResuelto: false,
+        envidoGanador: null,
+        trucoNivel: 0,
+        trucoQueridoNivel: 0,
+        trucoUltimoCantadoPor: null,
+        historial: pushLog(estadoPrevio, `Nueva mano. Reparte ${nombreJugador(manoElegida)}.`),
+        manoGanadorTexto: null,
+        ganadorPartida: null
+    }, { merge: false });
+}
+
+async function elegirMetaTruco(meta){
+    const estado = await leerTrucoActual();
+    if (estado?.listos?.[miIdentidad]) return;
+    await window.setDoc(refTruco(), { fase:'esperando', puntosParaGanar: meta,
+        listos: estado?.listos || {}, puntajes: estado?.puntajes || {nico:0,carito:0} }, { merge:true });
+}
+async function marcarListoTruco(){
+    vibrarJ(12);
+    const estado = await leerTrucoActual();
+    await window.setDoc(refTruco(), {
+        fase: 'esperando',
+        listos: { ...(estado?.listos||{}), [miIdentidad]: true },
+        puntosParaGanar: estado?.puntosParaGanar || 30,
+        puntajes: estado?.puntajes || {nico:0, carito:0}
+    }, { merge: true });
+}
+
+async function jugarCartaTruco(cartaId){
+    vibrarJ(12);
+    const estado = await leerTrucoActual();
+    if (!estado || estado.fase !== 'jugando' || estado.cantoPendiente || estado.jugadorEnTurno !== miIdentidad) return;
+    const jugadas = estado.cartasJugadas.filter(c => c.jugador === miIdentidad);
+    if (jugadas.some(c => c.carta === cartaId)) return;
+    if (!estado.cartas[miIdentidad].includes(cartaId)) return;
+
+    const nuevasJugadas = [...estado.cartasJugadas, { jugador: miIdentidad, carta: cartaId, ronda: estado.rondaActual }];
+    const jugadasRonda = nuevasJugadas.filter(c => c.ronda === estado.rondaActual);
+    let updates = { cartasJugadas: nuevasJugadas };
+
+    if (estado.rondaActual === 1 && jugadasRonda.length === 2 && !estado.envidoResuelto && estado.envidoCadena.length === 0) {
+        updates.envidoResuelto = true; // se pasó el momento de cantar envido
+    }
+
+    if (jugadasRonda.length < 2) {
+        updates.jugadorEnTurno = miRival;
+        await window.updateDoc(refTruco(), updates);
+        return;
+    }
+
+    const [j1, j2] = jugadasRonda;
+    const v1 = valorTruco(j1.carta), v2 = valorTruco(j2.carta);
+    let ganadorRonda = v1 > v2 ? j1.jugador : (v2 > v1 ? j2.jugador : 'parda');
+    const nuevosGanadores = [...estado.ganadoresRonda];
+    nuevosGanadores[estado.rondaActual - 1] = ganadorRonda;
+    updates.ganadoresRonda = nuevosGanadores;
+
+    const ganadorMano = determinarGanadorManoTruco(nuevosGanadores, estado.mano);
+    if (ganadorMano || estado.rondaActual === 3) {
+        await finalizarManoTruco(estado, updates, ganadorMano || estado.mano);
+    } else {
+        updates.rondaActual = estado.rondaActual + 1;
+        const siguienteLider = ganadorRonda === 'parda' ? estado.mano : ganadorRonda;
+        updates.jugadorEnTurno = siguienteLider;
+        await window.updateDoc(refTruco(), updates);
+    }
+}
+
+async function finalizarManoTruco(estado, updatesParciales, ganadorHand){
+    const puntos = estado.trucoQueridoNivel > 0 ? valorQueridoTruco(estado.trucoQueridoNivel) : 1;
+    const nuevosPuntajes = { ...estado.puntajes };
+    nuevosPuntajes[ganadorHand] = (nuevosPuntajes[ganadorHand] || 0) + puntos;
+    const updates = {
+        ...updatesParciales,
+        puntajes: nuevosPuntajes,
+        historial: pushLog(estado, `${nombreJugador(ganadorHand)} ganó la mano (+${puntos}).`)
+    };
+    if (nuevosPuntajes[ganadorHand] >= estado.puntosParaGanar) {
+        updates.fase = 'terminado';
+        updates.ganadorPartida = ganadorHand;
+    } else {
+        updates.fase = 'mano_terminada';
+        updates.manoGanadorTexto = `${nombreJugador(ganadorHand)} ganó la mano`;
+    }
+    await window.updateDoc(refTruco(), updates);
+}
+
+async function siguienteManoTruco(){
+    const estado = await leerTrucoActual();
+    if (!estado || estado.fase !== 'mano_terminada') return;
+    const siguienteMano = estado.mano === 'nico' ? 'carito' : 'nico';
+    await repartirNuevaManoTruco(estado, siguienteMano, estado.puntajes);
+}
+
+async function cantarEnvido(tipo){
+    vibrarJ(12);
+    const estado = await leerTrucoActual();
+    if (!estado || estado.cantoPendiente || estado.jugadorEnTurno !== miIdentidad) return;
+    if (estado.rondaActual !== 1 || estado.envidoResuelto || estado.trucoNivel > 0) return;
+    if (estado.envidoCadena.length > 0) return;
+    const nuevaCadena = [...estado.envidoCadena, { tipo, de: miIdentidad }];
+    await window.updateDoc(refTruco(), {
+        cantoPendiente: { familia:'envido', tipo, de: miIdentidad },
+        envidoCadena: nuevaCadena,
+        historial: pushLog(estado, `${nombreJugador(miIdentidad)} cantó ${nombreCantoTruco(tipo)}.`)
+    });
+}
+async function escalarEnvido(tipo){
+    vibrarJ(12);
+    const estado = await leerTrucoActual();
+    if (!estado || !estado.cantoPendiente || estado.cantoPendiente.familia !== 'envido' || estado.cantoPendiente.de !== miRival) return;
+    const nuevaCadena = [...estado.envidoCadena, { tipo, de: miIdentidad }];
+    await window.updateDoc(refTruco(), {
+        cantoPendiente: { familia:'envido', tipo, de: miIdentidad },
+        envidoCadena: nuevaCadena,
+        historial: pushLog(estado, `${nombreJugador(miIdentidad)} subió a ${nombreCantoTruco(tipo)}.`)
+    });
+}
+async function cantarTruco(){
+    vibrarJ(12);
+    const estado = await leerTrucoActual();
+    if (!estado || estado.cantoPendiente || estado.jugadorEnTurno !== miIdentidad) return;
+    if (estado.trucoNivel >= 3) return;
+    if (estado.trucoNivel > 0 && estado.trucoUltimoCantadoPor === miIdentidad) return;
+    const siguienteNivel = estado.trucoNivel + 1;
+    const tipos = ['','truco','retruco','vale_cuatro'];
+    await window.updateDoc(refTruco(), {
+        cantoPendiente: { familia:'truco', tipo: tipos[siguienteNivel], de: miIdentidad, nivel: siguienteNivel },
+        historial: pushLog(estado, `${nombreJugador(miIdentidad)} cantó ${nombreCantoTruco(tipos[siguienteNivel])}.`)
+    });
+}
+async function escalarTruco(){
+    vibrarJ(12);
+    const estado = await leerTrucoActual();
+    const canto = estado?.cantoPendiente;
+    if (!canto || canto.familia !== 'truco' || canto.de !== miRival || canto.nivel >= 3) return;
+    const siguienteNivel = canto.nivel + 1;
+    const tipos = ['','truco','retruco','vale_cuatro'];
+    await window.updateDoc(refTruco(), {
+        cantoPendiente: { familia:'truco', tipo: tipos[siguienteNivel], de: miIdentidad, nivel: siguienteNivel },
+        historial: pushLog(estado, `${nombreJugador(miIdentidad)} subió a ${nombreCantoTruco(tipos[siguienteNivel])}.`)
+    });
+}
+
+async function responderQuieroTruco(){
+    vibrarJ(15);
+    const estado = await leerTrucoActual();
+    const canto = estado?.cantoPendiente;
+    if (!canto || canto.de !== miRival) return;
+    let updates = { cantoPendiente: null };
+    if (canto.familia === 'envido') {
+        const vN = calcularEnvido(estado.cartas.nico), vC = calcularEnvido(estado.cartas.carito);
+        let ganador;
+        if (vN === vC) ganador = estado.mano; else ganador = vN > vC ? 'nico' : 'carito';
+        const puntos = calcularPuntosEnvidoQuerido(estado.envidoCadena, estado.puntosParaGanar, estado.puntajes);
+        const nuevosPuntajes = { ...estado.puntajes };
+        nuevosPuntajes[ganador] += puntos;
+        updates.puntajes = nuevosPuntajes;
+        updates.envidoResuelto = true;
+        updates.envidoGanador = ganador;
+        updates.historial = pushLog(estado, `Envido querido: gana ${nombreJugador(ganador)} (+${puntos}). Nico ${vN} · Carito ${vC}.`);
+        if (nuevosPuntajes[ganador] >= estado.puntosParaGanar) { updates.fase = 'terminado'; updates.ganadorPartida = ganador; }
+    } else {
+        updates.trucoNivel = canto.nivel;
+        updates.trucoQueridoNivel = canto.nivel;
+        updates.trucoUltimoCantadoPor = canto.de;
+        updates.historial = pushLog(estado, `${nombreJugador(miIdentidad)} quiso el ${nombreCantoTruco(canto.tipo)}.`);
+    }
+    await window.updateDoc(refTruco(), updates);
+}
+async function responderNoQuieroTruco(){
+    vibrarJ([10,30,10]);
+    const estado = await leerTrucoActual();
+    const canto = estado?.cantoPendiente;
+    if (!canto || canto.de !== miRival) return;
+    let updates = { cantoPendiente: null };
+    if (canto.familia === 'envido') {
+        const puntos = estado.envidoCadena.length;
+        const nuevosPuntajes = { ...estado.puntajes };
+        nuevosPuntajes[canto.de] += puntos;
+        updates.puntajes = nuevosPuntajes;
+        updates.envidoResuelto = true;
+        updates.historial = pushLog(estado, `Envido no querido: +${puntos} para ${nombreJugador(canto.de)}.`);
+        if (nuevosPuntajes[canto.de] >= estado.puntosParaGanar) { updates.fase = 'terminado'; updates.ganadorPartida = canto.de; }
+        await window.updateDoc(refTruco(), updates);
+    } else {
+        const puntos = canto.nivel;
+        const nuevosPuntajes = { ...estado.puntajes };
+        nuevosPuntajes[canto.de] += puntos;
+        updates.puntajes = nuevosPuntajes;
+        updates.historial = pushLog(estado, `${nombreCantoTruco(canto.tipo)} no querido: +${puntos} para ${nombreJugador(canto.de)}.`);
+        if (nuevosPuntajes[canto.de] >= estado.puntosParaGanar) {
+            updates.fase = 'terminado'; updates.ganadorPartida = canto.de;
+        } else {
+            updates.fase = 'mano_terminada';
+            updates.manoGanadorTexto = `${nombreJugador(canto.de)} ganó la mano (no querido)`;
+        }
+        await window.updateDoc(refTruco(), updates);
+    }
+}
+async function irseAlMazoTruco(){
+    vibrarJ([10,30,10]);
+    const estado = await leerTrucoActual();
+    if (!estado || estado.fase !== 'jugando' || estado.cantoPendiente) return;
+    const puntos = estado.trucoQueridoNivel > 0 ? valorQueridoTruco(estado.trucoQueridoNivel) : 1;
+    const nuevosPuntajes = { ...estado.puntajes };
+    nuevosPuntajes[miRival] += puntos;
+    let updates = {
+        puntajes: nuevosPuntajes,
+        historial: pushLog(estado, `${nombreJugador(miIdentidad)} se fue al mazo (+${puntos} para ${nombreJugador(miRival)}).`)
+    };
+    if (nuevosPuntajes[miRival] >= estado.puntosParaGanar) {
+        updates.fase = 'terminado'; updates.ganadorPartida = miRival;
+    } else {
+        updates.fase = 'mano_terminada';
+        updates.manoGanadorTexto = `${nombreJugador(miRival)} ganó la mano (se fue al mazo)`;
+    }
+    await window.updateDoc(refTruco(), updates);
+}
+async function reiniciarTruco(){
+    vibrarJ(12);
+    await window.setDoc(refTruco(), { fase:'esperando', listos:{}, puntajes:{nico:0,carito:0}, puntosParaGanar:30 });
+}
+async function ajustarPuntajeTruco(jugador, delta){
+    const estado = await leerTrucoActual();
+    if (!estado) return;
+    const nuevosPuntajes = { ...estado.puntajes };
+    nuevosPuntajes[jugador] = Math.max(0, (nuevosPuntajes[jugador]||0) + delta);
+    await window.updateDoc(refTruco(), { puntajes: nuevosPuntajes });
+}
+
+function renderTruco(estado){
+    const cont = document.getElementById('contenido-truco');
+
+    if (!estado || estado.fase === 'esperando') {
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
+        const meta = estado?.puntosParaGanar || 30;
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <p class="texto-tenue">Truco de a dos, con envido. Gana quien llegue primero a los tantos.</p>
+                <div class="btn-fila" style="margin:10px 0;">
+                    <button class="btn-secundario" style="${meta===15?'border-color:var(--rosa);':''}" onclick="elegirMetaTruco(15)">A 15</button>
+                    <button class="btn-secundario" style="${meta===30?'border-color:var(--rosa);':''}" onclick="elegirMetaTruco(30)">A 30</button>
+                </div>
+                <div class="texto-tenue" style="margin-bottom:10px;">
+                    ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                    ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+                </div>
+                <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoTruco()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🃏'}</button>
+            </div>`;
+        if (listoYo && listoRival) iniciarPartidaTrucoSiCorresponde(estado);
+        return;
+    }
+
+    if (estado.fase === 'terminado') {
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <div style="font-size:1.3rem; margin-bottom:10px;">🏆 ¡Ganó ${nombreJugador(estado.ganadorPartida)}!</div>
+                <div class="texto-tenue" style="margin-bottom:14px;">Nico ${estado.puntajes.nico} — Carito ${estado.puntajes.carito}</div>
+                <button class="btn-principal" onclick="reiniciarTruco()">🔁 Jugar de nuevo</button>
+            </div>`;
+        return;
+    }
+
+    if (estado.fase === 'mano_terminada') {
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <div style="font-size:1.15rem; margin-bottom:8px;">${estado.manoGanadorTexto}</div>
+                <div class="texto-tenue" style="margin-bottom:14px;">Nico ${estado.puntajes.nico} — Carito ${estado.puntajes.carito} (a ${estado.puntosParaGanar})</div>
+                <button class="btn-principal" onclick="siguienteManoTruco()">Repartir siguiente mano ▶️</button>
+            </div>`;
+        return;
+    }
+
+    // fase 'jugando'
+    const misCartas = estado.cartas[miIdentidad] || [];
+    const misJugadas = estado.cartasJugadas.filter(c => c.jugador === miIdentidad).map(c => c.carta);
+    const misDisponibles = misCartas.filter(c => !misJugadas.includes(c));
+    const canto = estado.cantoPendiente;
+
+    let filaCartasArea = '';
+    for (let r = 1; r <= estado.rondaActual; r++) {
+        const mia = estado.cartasJugadas.find(c => c.jugador === miIdentidad && c.ronda === r);
+        const delRival = estado.cartasJugadas.find(c => c.jugador === miRival && c.ronda === r);
+        filaCartasArea += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; ${r<estado.rondaActual?'opacity:0.55;':''} border-bottom:${r<estado.rondaActual?'1px dashed rgba(255,255,255,0.1)':'none'};">
+            <span style="font-size:0.8rem;">${delRival ? nombreCartaTruco(delRival.carta) : '🂠 —'}</span>
+            <span style="font-size:0.7rem; opacity:0.5;">ronda ${r}</span>
+            <span style="font-size:0.8rem;">${mia ? nombreCartaTruco(mia.carta) : '—'}</span>
+        </div>`;
+    }
+
+    let html = `
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:6px;">
+                <span>Nico: <b>${estado.puntajes.nico}</b></span>
+                <span class="texto-tenue">a ${estado.puntosParaGanar}</span>
+                <span>Carito: <b>${estado.puntajes.carito}</b></span>
+            </div>
+            <div style="text-align:center; font-size:0.72rem; opacity:0.55;">mano: ${nombreJugador(miRival)} arriba · vos abajo</div>
+            <div style="margin-top:8px;">${filaCartasArea}</div>
+        </div>
+    `;
+
+    if (canto && canto.de === miRival) {
+        const opciones = canto.familia === 'envido' ? opcionesEnvidoSiguientes(estado.envidoCadena) : [];
+        html += `<div class="panel texto-centro">
+            <div style="font-size:1.1rem; margin-bottom:10px;">${nombreJugador(miRival)} cantó: <b>${nombreCantoTruco(canto.tipo)}</b></div>
+            <div class="btn-fila" style="margin-bottom:8px;">
+                <button class="btn-principal" onclick="responderQuieroTruco()">Quiero</button>
+                <button class="btn-secundario" onclick="responderNoQuieroTruco()">No quiero</button>
+            </div>`;
+        if (canto.familia === 'envido') {
+            opciones.filter(o => o !== canto.tipo).forEach(op => {
+                html += `<button class="btn-secundario" style="margin-top:6px;" onclick="escalarEnvido('${op}')">${nombreCantoTruco(op)}</button>`;
+            });
+        } else if (canto.nivel < 3) {
+            html += `<button class="btn-secundario" style="margin-top:6px;" onclick="escalarTruco()">${nombreCantoTruco(['','truco','retruco','vale_cuatro'][canto.nivel+1])}</button>`;
+        }
+        html += `</div>`;
+    } else if (canto && canto.de === miIdentidad) {
+        html += `<div class="panel texto-centro texto-tenue">Cantaste ${nombreCantoTruco(canto.tipo)}. Esperando la respuesta de ${nombreJugador(miRival)}…</div>`;
+    } else {
+        const esMiTurno = estado.jugadorEnTurno === miIdentidad;
+        const puedeEnvido = esMiTurno && estado.rondaActual === 1 && !estado.envidoResuelto && estado.trucoNivel === 0 && estado.envidoCadena.length === 0;
+        const puedeTruco = esMiTurno && estado.trucoNivel < 3 && !(estado.trucoNivel > 0 && estado.trucoUltimoCantadoPor === miIdentidad);
+        html += `<div class="panel texto-centro texto-tenue">${esMiTurno ? '🎯 Tu turno' : `Turno de ${nombreJugador(miRival)}…`}</div>`;
+
+        if (esMiTurno) {
+            html += `<div class="panel"><div class="btn-fila" style="flex-wrap:wrap;">`;
+            if (puedeEnvido) {
+                html += `<button class="btn-secundario" onclick="cantarEnvido('envido')">Envido</button>
+                         <button class="btn-secundario" onclick="cantarEnvido('real_envido')">Real Envido</button>
+                         <button class="btn-secundario" onclick="cantarEnvido('falta_envido')">Falta Envido</button>`;
+            }
+            if (puedeTruco) {
+                const nombreSiguiente = nombreCantoTruco(['','truco','retruco','vale_cuatro'][estado.trucoNivel+1]);
+                html += `<button class="btn-secundario" onclick="cantarTruco()">${nombreSiguiente}</button>`;
+            }
+            html += `</div></div>`;
+        }
+
+        html += `<div class="panel">
+            <div class="texto-tenue" style="margin-bottom:8px;">Tu mano:</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">`;
+        misDisponibles.forEach(c => {
+            html += `<button class="btn-secundario" style="flex:1; min-width:100px; ${esMiTurno ? '' : 'opacity:0.5;'}" ${esMiTurno ? '' : 'disabled'} onclick="jugarCartaTruco('${c}')">${nombreCartaTruco(c)}</button>`;
+        });
+        html += `</div></div>`;
+
+        html += `<button class="btn-secundario" onclick="irseAlMazoTruco()">🏳️ Irse al mazo</button>`;
+    }
+
+    if (estado.historial && estado.historial.length) {
+        html += `<div class="panel texto-tenue" style="font-size:0.72rem; line-height:1.6;">${estado.historial.slice(-4).map(h => '• ' + h).join('<br>')}</div>`;
+    }
+
+    html += `<div class="texto-centro" style="margin-top:6px;">
+        <button class="btn-secundario" style="font-size:0.7rem; padding:6px 10px; width:auto;" onclick="document.getElementById('ajuste-puntaje-truco').classList.toggle('oculto')">⚙️ Corregir puntaje</button>
+        <div id="ajuste-puntaje-truco" class="oculto panel" style="margin-top:8px;">
+            <div style="display:flex; justify-content:space-around; font-size:0.8rem;">
+                <span>Nico
+                    <button class="btn-secundario" style="width:auto; padding:2px 8px;" onclick="ajustarPuntajeTruco('nico',-1)">−</button>
+                    <button class="btn-secundario" style="width:auto; padding:2px 8px;" onclick="ajustarPuntajeTruco('nico',1)">+</button>
+                </span>
+                <span>Carito
+                    <button class="btn-secundario" style="width:auto; padding:2px 8px;" onclick="ajustarPuntajeTruco('carito',-1)">−</button>
+                    <button class="btn-secundario" style="width:auto; padding:2px 8px;" onclick="ajustarPuntajeTruco('carito',1)">+</button>
+                </span>
+            </div>
+        </div>
+    </div>`;
+
+    cont.innerHTML = html;
+}
+
+pedirIdentidadSiHaceFalta();
+</script>
+</body>
+</html>

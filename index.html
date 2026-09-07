@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1181,6 +1183,7 @@
         .planeta-reloj { background: radial-gradient(circle at 32% 28%, rgba(255,214,178,0.5), rgba(255,157,133,0.3) 70%); box-shadow: 0 0 16px rgba(255,157,133,0.25); }
         .planeta-ticket { background: radial-gradient(circle at 32% 28%, rgba(245,217,168,0.5), rgba(217,162,115,0.3) 70%); box-shadow: 0 0 16px rgba(240,217,160,0.25); }
         .planeta-sanacion { background: radial-gradient(circle at 32% 28%, rgba(184,232,201,0.5), rgba(148,131,224,0.28) 70%); box-shadow: 0 0 16px rgba(184,232,201,0.25); }
+        .planeta-juegos { background: radial-gradient(circle at 32% 28%, rgba(178,212,255,0.5), rgba(216,196,255,0.3) 70%); box-shadow: 0 0 16px rgba(178,212,255,0.28); }
         /* Widget fijo abajo a la izquierda, en el mismo nivel que el chat (abajo a la derecha) */
         .sorpresa-flotante {
             position: fixed;
@@ -1860,6 +1863,7 @@
             <button class="punto-corazon planeta-reloj" style="left:50%;top:98.3%" onclick="ejecutarOpcionMenu(event, 'reloj')"><span class="planeta-icono">⏰</span><span class="planeta-nombre">Cuenta&nbsp;regresiva</span></button>
             <button class="punto-corazon planeta-ticket" style="left:50%;top:16%" onclick="ejecutarOpcionMenu(event, 'ticket')"><span class="planeta-icono">🎟️</span><span class="planeta-nombre">Ticket&nbsp;Diario</span></button>
             <button class="punto-corazon planeta-sanacion" style="left:1.96%;top:23.42%" onclick="ejecutarOpcionMenu(event, 'sanacion')"><span class="planeta-icono">🌿</span><span class="planeta-nombre">Sanación</span></button>
+            <button class="punto-corazon planeta-juegos" style="left:98.04%;top:23.42%" onclick="irAJuegos(event)"><span class="planeta-icono">🎮</span><span class="planeta-nombre">Juegos</span></button>
         </div>
     </div>
 
@@ -3591,6 +3595,15 @@
         function toggleMenuPrincipal(event) {
             if (event) event.stopPropagation();
             document.getElementById('menu-principal').classList.toggle('abierto');
+        }
+
+        // Los juegos viven en su propia página (juegos.html), fuera de la
+        // constelación del corazón: no pasan por requerirIdentidad/ejecutarAccion
+        // porque juegos.html pide su propia llave de acceso al entrar.
+        function irAJuegos(event) {
+            if (event) event.stopPropagation();
+            vibrar(15);
+            window.location.href = 'juegos.html';
         }
 
         function ejecutarOpcionMenu(event, opcion) {

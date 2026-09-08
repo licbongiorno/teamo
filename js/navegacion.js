@@ -23,6 +23,24 @@ function abrirJuego(juego){
     if (juego === 'batallanaval') iniciarBatallaNaval();
     if (juego === 'espejo') iniciarEspejo();
     if (juego === 'mentiraverdad') iniciarMentiraVerdad();
+
+    // Los juegos de "responder y revelar" comparten un mismo motor
+    // genérico (js/motor-reflexion.js): todos arrancan igual, sólo
+    // cambia su configuración (banco de preguntas y textos).
+    const JUEGOS_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones'];
+    if (JUEGOS_MOTOR_REFLEXION.includes(juego)) iniciarReflexionGenerico(juego);
+
+    if (juego === 'mentegemela') iniciarMenteGemela();
+    if (juego === 'adn') iniciarAdn();
+    if (juego === 'palabraexplosiva') iniciarPalabraExplosiva();
+    if (juego === 'memoria') iniciarMemoria();
+    if (juego === 'adivinaquien') iniciarAdivinaQuien();
+    if (juego === 'tiraafloja') iniciarTiraAfloja();
+    if (juego === 'arbol') iniciarArbol();
+    if (juego === 'refugio') iniciarRefugio();
+    if (juego === 'puntoencuentro') iniciarPuntoEncuentro();
+    if (juego === 'dibujayadivina') iniciarDibujaYAdivina();
+    if (juego === 'cartas') iniciarCartas();
     // Deja constancia en la URL de qué juego está abierto, así un link
     // desde una página de categoría (categorias/*.html) puede llevar
     // directo a un juego con ?juego=id, y el botón "atrás" del navegador
@@ -66,6 +84,31 @@ function detenerListenersActivos(){
     if (window._unsubEspejoLista) { window._unsubEspejoLista(); window._unsubEspejoLista = null; }
     if (window._unsubEspejoActual) { window._unsubEspejoActual(); window._unsubEspejoActual = null; }
     if (window._unsubMentiraVerdad) { window._unsubMentiraVerdad(); window._unsubMentiraVerdad = null; }
+
+    // Listeners del motor de reflexión: usan claves dinámicas por
+    // juego (_unsubReflexionLista_<id> / _unsubReflexionActual_<id>),
+    // así que se barren todos juntos en vez de listarlos uno por uno.
+    Object.keys(window).forEach((k) => {
+        if ((k.startsWith('_unsubReflexionLista_') || k.startsWith('_unsubReflexionActual_')) && typeof window[k] === 'function') {
+            window[k](); window[k] = null;
+        }
+    });
+
+    if (window._unsubMenteGemela) { window._unsubMenteGemela(); window._unsubMenteGemela = null; }
+    if (window._unsubAdn) { window._unsubAdn(); window._unsubAdn = null; }
+    if (window._unsubPalabraExplosiva) { window._unsubPalabraExplosiva(); window._unsubPalabraExplosiva = null; }
+    if (window._unsubMemoria) { window._unsubMemoria(); window._unsubMemoria = null; }
+    if (window._unsubAdivinaQuien) { window._unsubAdivinaQuien(); window._unsubAdivinaQuien = null; }
+    if (window._unsubTiraAfloja) { window._unsubTiraAfloja(); window._unsubTiraAfloja = null; }
+    if (window._intervaloTA) { clearInterval(window._intervaloTA); window._intervaloTA = null; }
+    if (window._timerPE) { clearInterval(window._timerPE); window._timerPE = null; }
+    if (window._unsubArbol) { window._unsubArbol(); window._unsubArbol = null; }
+    if (window._unsubRefugio) { window._unsubRefugio(); window._unsubRefugio = null; }
+    if (window._unsubPuntosRefugio) { window._unsubPuntosRefugio(); window._unsubPuntosRefugio = null; }
+    if (window._unsubPuntosEncuentro) { window._unsubPuntosEncuentro(); window._unsubPuntosEncuentro = null; }
+    if (window._unsubDibujaYAdivina) { window._unsubDibujaYAdivina(); window._unsubDibujaYAdivina = null; }
+    if (window._unsubCartasLista) { window._unsubCartasLista(); window._unsubCartasLista = null; }
+    if (window._unsubCartasActual) { window._unsubCartasActual(); window._unsubCartasActual = null; }
 }
 
 function renderMenuPrincipal(){

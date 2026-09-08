@@ -1,0 +1,66 @@
+/* ============================================================
+   juegos.css — estilos específicos de cada juego (tableros de
+   Damas/Ajedrez, Letras Compartidas, El Jardín). Sólo se necesita
+   en juegos.html, donde vive la pantalla de juego en sí.
+   ============================================================ */
+/* ============ EL JARDÍN COMPARTIDO ============ */
+.escena-jardin{ font-size:4rem; line-height:1.2; margin:6px 0 4px; }
+.medidor-jardin{ margin-bottom:12px; }
+.barra-medidor{ height:10px; border-radius:6px; background:rgba(255,255,255,0.08); overflow:hidden; }
+.relleno-medidor{ height:100%; border-radius:6px; transition:width 0.4s ease; }
+.relleno-agua{ background:linear-gradient(90deg,#6fb8e8,var(--celeste)); }
+.relleno-sol{ background:linear-gradient(90deg,#e8b85e,#ffd97a); }
+.barra-progreso-jardin{ height:10px; border-radius:6px; background:rgba(255,255,255,0.08); overflow:hidden; margin-top:8px; }
+.relleno-progreso-jardin{ height:100%; border-radius:6px; background:linear-gradient(90deg,var(--verde),var(--lila)); transition:width 0.4s ease; }
+.opciones-forma-final{ display:flex; gap:10px; margin-top:10px; }
+.tarjeta-forma-final{ flex:1; background:rgba(255,255,255,0.05); border:1px solid var(--borde); border-radius:14px;
+    padding:14px 8px; text-align:center; cursor:pointer; transition:transform 0.15s ease, background 0.15s ease; }
+.tarjeta-forma-final:active{ transform:scale(0.96); background:rgba(255,255,255,0.1); }
+.historial-kaizen{ font-size:0.74rem; opacity:0.75; line-height:1.7; }
+
+
+/* ============ LETRAS COMPARTIDAS ============ */
+.lista-escrituras{ display:flex; flex-direction:column; gap:10px; }
+.item-escritura{
+    background:var(--panel); border:1px solid var(--borde); border-radius:16px; padding:14px;
+    display:flex; align-items:center; gap:12px; cursor:pointer; text-align:left;
+}
+.item-escritura:active{ transform:scale(0.98); }
+.item-escritura .info-escritura{ flex:1; min-width:0; }
+.item-escritura .titulo-escritura{ font-weight:600; font-size:0.92rem; margin-bottom:2px; }
+.item-escritura .detalle-escritura{ font-size:0.75rem; opacity:0.6; }
+.badge-estado{ font-size:0.68rem; padding:3px 9px; border-radius:10px; white-space:nowrap; }
+.badge-activa{ background:rgba(178,212,255,0.2); color:#a8d8ff; }
+.badge-terminada{ background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.6); }
+.texto-escritura{ display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+.fragmento{ padding:10px 14px; border-radius:14px; line-height:1.5; font-size:0.92rem; white-space:pre-wrap; }
+.fragmento-nico{ background:rgba(178,212,255,0.14); border-left:3px solid #a8d8ff; }
+.fragmento-carito{ background:rgba(255,184,207,0.14); border-left:3px solid #ffb3c6; }
+.fragmento .autor-fragmento{ font-size:0.68rem; opacity:0.6; margin-bottom:4px; display:block; }
+#input-fragmento{
+    width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid var(--borde);
+    border-radius:14px; padding:12px; color:var(--texto); font-family:var(--fuente-texto); font-size:0.92rem;
+    resize:vertical; outline:none; line-height:1.5; margin-bottom:10px;
+}
+
+
+/* ============ TABLEROS (DAMAS Y AJEDREZ) ============ */
+.tablero-juego{
+    display:grid; grid-template-columns:repeat(8,1fr); width:100%; aspect-ratio:1/1;
+    border-radius:12px; overflow:hidden; border:1px solid var(--borde); user-select:none;
+}
+.casilla-tablero{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    font-size:min(6.5vw,28px); cursor:pointer; aspect-ratio:1/1;
+}
+.casilla-clara{ background:rgba(253,246,240,0.10); }
+.casilla-oscura{ background:rgba(15,10,20,0.55); }
+.casilla-seleccionada{ box-shadow:inset 0 0 0 3px var(--rosa); }
+.casilla-destino{ box-shadow:inset 0 0 0 3px var(--celeste); }
+.casilla-destino::after{
+    content:''; position:absolute; width:22%; height:22%; border-radius:50%;
+    background:rgba(168,216,255,0.55);
+}
+.pieza-tablero{ pointer-events:none; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+.info-turno-tablero{ text-align:center; font-size:0.85rem; margin-bottom:10px; }
+.corona-dama{ position:absolute; top:1px; font-size:0.5em; }

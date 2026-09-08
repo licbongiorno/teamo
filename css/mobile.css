@@ -1,0 +1,29 @@
+/* ============================================================
+   mobile.css — ajustes finos para pantallas angostas (<380px,
+   celulares chicos) y para punteros gruesos (dedo). El resto del
+   diseño ya es responsive con clamp()/vw, esto sólo pule los
+   casos límite.
+   ============================================================ */
+@media (max-width: 380px){
+    .contenedor{ padding:14px 12px 90px; }
+    .titulo-app{ font-size:1.7rem; }
+    .grid-categorias{ gap:8px; }
+    .tarjeta-categoria{ padding:12px 6px; }
+    .tarjeta-categoria .icono-categoria{ font-size:1.5rem; }
+    .tarjeta-juego .icono-juego, .tarjeta-juego-cat .icono-juego{ width:42px; font-size:1.8rem; }
+}
+
+/* Punteros gruesos (dedo, no mouse): un poco más de aire vertical
+   entre elementos tocables para bajar el error de puntería. */
+@media (pointer: coarse){
+    .btn-principal, .btn-secundario{ padding-top:13px; padding-bottom:13px; }
+    .casilla-tablero{ min-height:38px; }
+}
+
+/* Landscape en celular: la app está pensada vertical, pero al menos
+   que el contenido no quede gigante y desbordado al girar. */
+@media (max-height: 420px) and (orientation: landscape){
+    .contenedor{ padding-top:10px; padding-bottom:70px; }
+    .titulo-app{ font-size:1.4rem; margin:0; }
+    .subtitulo-app{ margin-bottom:6px; }
+}

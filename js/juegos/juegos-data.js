@@ -25,8 +25,8 @@ window.JUEGOS = [
     { id:'ajedrez',    nombre:'Ajedrez',              icono:'♟️', categoria:'clasicos',    disponible:true,  descripcion:'Partida completa: enroque, al paso, jaque y jaque mate.' },
     { id:'tateti',     nombre:'Ta-Te-Ti Infinito',   icono:'❌', categoria:'clasicos',    disponible:true, descripcion:'Tres en línea, pero cada jugador sólo tiene 3 marcas activas.' },
     { id:'conecta4',   nombre:'Conecta 4',            icono:'🔴', categoria:'clasicos',    disponible:true, descripcion:'El clásico de las fichas que caen, a 4 en línea.' },
-    { id:'escoba',     nombre:'Escoba de 15',        icono:'🧹', categoria:'clasicos',    disponible:false, descripcion:'Cartas españolas: sumá 15 y levantá la mesa.' },
-    { id:'batallanaval', nombre:'Batalla Naval',      icono:'🚢', categoria:'clasicos',    disponible:false, descripcion:'Ubicá tu flota y hundí la del otro por turnos.' },
+    { id:'escoba',     nombre:'Escoba de 15',        icono:'🧹', categoria:'clasicos',    disponible:true, descripcion:'Cartas españolas: sumá 15 y levantá la mesa.' },
+    { id:'batallanaval', nombre:'Batalla Naval',      icono:'🚢', categoria:'clasicos',    disponible:true, descripcion:'Ubicá tu flota y hundí la del otro por turnos.' },
 
     // ---- COMPETENCIA ----
     { id:'frutas',     nombre:'Atrapar Frutas',       icono:'🍓', categoria:'competencia', disponible:true,  descripcion:'30 segundos atrapando frutas. Se compara el mejor puntaje.' },
@@ -43,12 +43,12 @@ window.JUEGOS = [
     { id:'conoceme',   nombre:'¿Cuánto me conocés?',  icono:'🧩', categoria:'conexion',    disponible:false, descripcion:'Elegí qué haría el otro y comparen qué tanto se conocen.' },
     { id:'mentegemela', nombre:'Mente Gemela',        icono:'👯', categoria:'conexion',    disponible:false, descripcion:'5 preguntas de opción múltiple: ¿qué % de coincidencia tienen?' },
     { id:'adn',        nombre:'ADN de la Pareja',      icono:'🧬', categoria:'conexion',    disponible:false, descripcion:'20 preguntas que arman un perfil visual de la relación.' },
-    { id:'mentiraverdad', nombre:'Mentira o Verdad',  icono:'🎭', categoria:'conexion',    disponible:false, descripcion:'Tres afirmaciones, una es mentira. ¿La descubrís?' },
+    { id:'mentiraverdad', nombre:'Mentira o Verdad',  icono:'🎭', categoria:'conexion',    disponible:true, descripcion:'Tres afirmaciones, una es mentira. ¿La descubrís?' },
     { id:'detective',  nombre:'Detective de Nosotros', icono:'🔍', categoria:'conexion',    disponible:false, descripcion:'Pistas sobre momentos que vivieron juntos, a adivinar entre los dos.' },
     { id:'nuncapregunte', nombre:'Lo que nunca te pregunté', icono:'💭', categoria:'conexion', disponible:false, descripcion:'Preguntas inesperadas para conversaciones profundas.' },
 
     // ---- REFLEXIÓN ----
-    { id:'espejo',     nombre:'El Espejo',             icono:'🪞', categoria:'reflexion',   disponible:false, descripcion:'Respondé y predecí qué respondió el otro. Sin diagnósticos, sólo curiosidad.' },
+    { id:'espejo',     nombre:'El Espejo',             icono:'🪞', categoria:'reflexion',   disponible:true, descripcion:'Respondé y predecí qué respondió el otro. Sin diagnósticos, sólo curiosidad.' },
     { id:'dilema',     nombre:'El Dilema Imposible',   icono:'⚖️', categoria:'reflexion',   disponible:false, descripcion:'Dos opciones igual de difíciles. No hay respuesta correcta.' },
     { id:'quehariassi', nombre:'¿Qué harías si...?',  icono:'🤯', categoria:'reflexion',   disponible:false, descripcion:'Situaciones absurdas, románticas y filosóficas para responder.' },
     { id:'futuro',     nombre:'Nuestro Futuro',        icono:'🔮', categoria:'reflexion',   disponible:false, descripcion:'10 rondas imaginando cómo se ven juntos más adelante.' },

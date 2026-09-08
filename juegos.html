@@ -1,27 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0b0a17">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
-<title>Nuestros Juegos 🎮</title>
-<meta name="description" content="Centro de juegos para jugar en simultáneo o por turnos, cada uno desde su dispositivo.">
-<meta http-equiv="Content-Security-Policy" content="
-    default-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com;
-    connect-src 'self' data: blob: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com https://www.gstatic.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    font-src 'self' https://fonts.gstatic.com;
-    img-src 'self' data: https:;
-">
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400;0,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/global.css">
-<link rel="stylesheet" href="css/juegos.css">
-<link rel="stylesheet" href="css/mobile.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b0a17">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
+    <title>Nuestros Juegos 🎮</title>
+    <meta name="description" content="Centro de juegos para jugar en simultáneo o por turnos, cada uno desde su dispositivo.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com; connect-src 'self' data: blob: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400;0,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/juegos.css">
+    <link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
 
@@ -46,10 +39,8 @@
     <div id="pantalla-menu" class="pantalla-juego activa">
         <div class="titulo-app">Nuestros Juegos</div>
         <div class="subtitulo-app">Cada uno desde su dispositivo — algunos al mismo tiempo, otros por turnos, cuando puedan 🎮💕</div>
-
         <div class="separador-seccion">Categorías</div>
         <div class="grid-categorias" id="grid-categorias"></div>
-
         <div class="separador-seccion">Disponibles ahora</div>
         <div class="tarjetas-juegos" id="lista-disponibles"></div>
     </div>
@@ -143,6 +134,61 @@
         </div>
         <div id="contenido-verdadoreto"></div>
     </div>
+
+    <!-- ==================== BATALLA NAVAL (NUEVO) ==================== -->
+    <div id="pantalla-batallanaval" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🚢 Batalla Naval</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-batallanaval"></div>
+    </div>
+
+    <!-- ==================== ESCOBA DE 15 (NUEVO) ==================== -->
+    <div id="pantalla-escoba" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🧹 Escoba de 15</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-escoba"></div>
+    </div>
+
+    <!-- ==================== EL ESPEJO (NUEVO) ==================== -->
+    <div id="pantalla-espejo" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🪞 El Espejo</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-espejo"></div>
+    </div>
+
+    <!-- ==================== MASCOTA / CHOKUREI (NUEVO) ==================== -->
+    <div id="pantalla-mascota" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🐾 Chokurei Virtual</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-mascota"></div>
+    </div>
+
+    <!-- ==================== REFLEJOS (NUEVO) ==================== -->
+    <div id="pantalla-reflejos" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">⚡ Reflejos</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-reflejos"></div>
+    </div>
+
+    <!-- ==================== TA-TE-TI (NUEVO) ==================== -->
+    <div id="pantalla-tateti" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">❌ Ta-Te-Ti ⭕</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-tateti"></div>
+    </div>
+
 </div>
 
 <!-- ==================== CHAT FLOTANTE ==================== -->
@@ -173,14 +219,20 @@
 
 <!-- ==================== LÓGICA DE CADA JUEGO ==================== -->
 <script src="js/juegos/ahorcado.js"></script>
-<script src="js/juegos/frutas.js"></script>
-<script src="js/juegos/truco.js"></script>
-<script src="js/juegos/letras.js"></script>
-<script src="js/juegos/damas.js"></script>
 <script src="js/juegos/ajedrez.js"></script>
-<script src="js/juegos/jardin.js"></script>
+<script src="js/juegos/batallanaval.js"></script>
+<script src="js/juegos/damas.js"></script>
+<script src="js/juegos/escoba.js"></script>
+<script src="js/juegos/espejo.js"></script>
+<script src="js/juegos/frutas.js"></script>
 <script src="js/juegos/indagacion.js"></script>
+<script src="js/juegos/jardin.js"></script>
+<script src="js/juegos/letras.js"></script>
+<script src="js/juegos/mascota.js"></script>
+<script src="js/juegos/reflejos.js"></script>
 <script src="js/juegos/ruleta.js"></script>
+<script src="js/juegos/tateti.js"></script>
+<script src="js/juegos/truco.js"></script>
 <script src="js/juegos/verdadoreto.js"></script>
 
 <!-- ==================== CHAT ==================== -->

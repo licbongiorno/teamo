@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a17">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚡%3C/text%3E%3C/svg%3E">
+<title>Competencia — Nuestros Juegos</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400;0,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/mobile.css">
+</head>
+<body>
+<div class="contenedor">
+    <div class="encabezado">
+        <a href="../juegos.html" class="btn-volver">⬅️ Categorías</a>
+    </div>
+    <div class="titulo-app">⚡ Competencia</div>
+    <div class="subtitulo-app">Uno contra el otro: velocidad, puntería y puntaje.</div>
+    <div class="lista-juegos-categoria" id="lista-juegos-categoria"></div>
+</div>
+
+<script src="../js/juegos-data.js"></script>
+<script>
+    const cont = document.getElementById('lista-juegos-categoria');
+    const juegos = window.obtenerJuegosDeCategoria('competencia');
+    if (!juegos.length) {
+        cont.innerHTML = '<p class="texto-tenue texto-centro">Todavía no hay juegos acá.</p>';
+    } else {
+        cont.innerHTML = juegos.map(j => {
+            if (j.disponible) {
+                return `<a class="tarjeta-juego-cat disponible" href="../juegos.html?juego=${j.id}">
+                    <div class="icono-juego">${j.icono}</div>
+                    <div class="info-juego"><h3>${j.nombre}</h3><p>${j.descripcion}</p></div>
+                    <span class="badge-disponible">Jugar</span>
+                </a>`;
+            }
+            return `<div class="tarjeta-juego-cat proximamente">
+                <div class="icono-juego">${j.icono}</div>
+                <div class="info-juego"><h3>${j.nombre}</h3><p>${j.descripcion}</p></div>
+                <span class="badge-proximamente">Próximamente</span>
+            </div>`;
+        }).join('');
+    }
+</script>
+</body>
+</html>

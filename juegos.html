@@ -135,7 +135,7 @@
         <div id="contenido-verdadoreto"></div>
     </div>
 
-    <!-- ==================== BATALLA NAVAL (NUEVO) ==================== -->
+    <!-- ==================== BATALLA NAVAL ==================== -->
     <div id="pantalla-batallanaval" class="pantalla-juego">
         <div class="fila-superior-juego">
             <span class="titulo-juego">🚢 Batalla Naval</span>
@@ -144,7 +144,7 @@
         <div id="contenido-batallanaval"></div>
     </div>
 
-    <!-- ==================== ESCOBA DE 15 (NUEVO) ==================== -->
+    <!-- ==================== ESCOBA DE 15 ==================== -->
     <div id="pantalla-escoba" class="pantalla-juego">
         <div class="fila-superior-juego">
             <span class="titulo-juego">🧹 Escoba de 15</span>
@@ -153,7 +153,7 @@
         <div id="contenido-escoba"></div>
     </div>
 
-    <!-- ==================== EL ESPEJO (NUEVO) ==================== -->
+    <!-- ==================== EL ESPEJO ==================== -->
     <div id="pantalla-espejo" class="pantalla-juego">
         <div class="fila-superior-juego">
             <span class="titulo-juego">🪞 El Espejo</span>
@@ -162,7 +162,7 @@
         <div id="contenido-espejo"></div>
     </div>
 
-    <!-- ==================== MASCOTA / CHOKUREI (NUEVO) ==================== -->
+    <!-- ==================== MASCOTA / CHOKUREI ==================== -->
     <div id="pantalla-mascota" class="pantalla-juego">
         <div class="fila-superior-juego">
             <span class="titulo-juego">🐾 Chokurei Virtual</span>
@@ -171,7 +171,7 @@
         <div id="contenido-mascota"></div>
     </div>
 
-    <!-- ==================== REFLEJOS (NUEVO) ==================== -->
+    <!-- ==================== REFLEJOS ==================== -->
     <div id="pantalla-reflejos" class="pantalla-juego">
         <div class="fila-superior-juego">
             <span class="titulo-juego">⚡ Reflejos</span>
@@ -180,13 +180,31 @@
         <div id="contenido-reflejos"></div>
     </div>
 
-    <!-- ==================== TA-TE-TI (NUEVO) ==================== -->
+    <!-- ==================== TA-TE-TI ==================== -->
     <div id="pantalla-tateti" class="pantalla-juego">
         <div class="fila-superior-juego">
             <span class="titulo-juego">❌ Ta-Te-Ti ⭕</span>
             <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
         </div>
         <div id="contenido-tateti"></div>
+    </div>
+
+    <!-- ==================== CONECTA 4 (NUEVO) ==================== -->
+    <div id="pantalla-conecta4" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔴 Conecta 4 🟡</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-conecta4"></div>
+    </div>
+
+    <!-- ==================== MENTIRA O VERDAD (NUEVO) ==================== -->
+    <div id="pantalla-mentiraverdad" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🤔 Mentira o Verdad</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-mentiraverdad"></div>
     </div>
 
 </div>
@@ -218,9 +236,11 @@
 <script src="js/navegacion.js"></script>
 
 <!-- ==================== LÓGICA DE CADA JUEGO ==================== -->
+<!-- Todos los 18 juegos listados alfabéticamente -->
 <script src="js/juegos/ahorcado.js"></script>
 <script src="js/juegos/ajedrez.js"></script>
 <script src="js/juegos/batallanaval.js"></script>
+<script src="js/juegos/conecta4.js"></script>
 <script src="js/juegos/damas.js"></script>
 <script src="js/juegos/escoba.js"></script>
 <script src="js/juegos/espejo.js"></script>
@@ -229,6 +249,7 @@
 <script src="js/juegos/jardin.js"></script>
 <script src="js/juegos/letras.js"></script>
 <script src="js/juegos/mascota.js"></script>
+<script src="js/juegos/mentiraverdad.js"></script>
 <script src="js/juegos/reflejos.js"></script>
 <script src="js/juegos/ruleta.js"></script>
 <script src="js/juegos/tateti.js"></script>

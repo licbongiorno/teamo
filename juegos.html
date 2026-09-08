@@ -1,20 +1,27 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0b0a17">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
-    <title>Nuestros Juegos 🎮</title>
-    <meta name="description" content="Centro de juegos para jugar en simultáneo o por turnos, cada uno desde su dispositivo.">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com; connect-src 'self' data: blob: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400;0,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/juegos.css">
-    <link rel="stylesheet" href="css/mobile.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0a17">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
+<title>Nuestros Juegos 🎮</title>
+<meta name="description" content="Centro de juegos para jugar en simultáneo o por turnos, cada uno desde su dispositivo.">
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com;
+    connect-src 'self' data: blob: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com https://www.gstatic.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: https:;
+">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400;0,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/juegos.css">
+<link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
 
@@ -39,8 +46,10 @@
     <div id="pantalla-menu" class="pantalla-juego activa">
         <div class="titulo-app">Nuestros Juegos</div>
         <div class="subtitulo-app">Cada uno desde su dispositivo — algunos al mismo tiempo, otros por turnos, cuando puedan 🎮💕</div>
+
         <div class="separador-seccion">Categorías</div>
         <div class="grid-categorias" id="grid-categorias"></div>
+
         <div class="separador-seccion">Disponibles ahora</div>
         <div class="tarjetas-juegos" id="lista-disponibles"></div>
     </div>
@@ -135,13 +144,40 @@
         <div id="contenido-verdadoreto"></div>
     </div>
 
-    <!-- ==================== BATALLA NAVAL ==================== -->
-    <div id="pantalla-batallanaval" class="pantalla-juego">
+    <!-- ==================== TA-TE-TI INFINITO ==================== -->
+    <div id="pantalla-tateti" class="pantalla-juego">
         <div class="fila-superior-juego">
-            <span class="titulo-juego">🚢 Batalla Naval</span>
+            <span class="titulo-juego">❌ Ta-Te-Ti Infinito</span>
             <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
         </div>
-        <div id="contenido-batallanaval"></div>
+        <div id="contenido-tateti"></div>
+    </div>
+
+    <!-- ==================== CONECTA 4 ==================== -->
+    <div id="pantalla-conecta4" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔴 Conecta 4</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-conecta4"></div>
+    </div>
+
+    <!-- ==================== DUELO DE REFLEJOS ==================== -->
+    <div id="pantalla-reflejos" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">💥 Duelo de Reflejos</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-reflejos"></div>
+    </div>
+
+    <!-- ==================== MASCOTA VIRTUAL ==================== -->
+    <div id="pantalla-mascota" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🐱 Mascota Virtual</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-mascota"></div>
     </div>
 
     <!-- ==================== ESCOBA DE 15 ==================== -->
@@ -153,6 +189,15 @@
         <div id="contenido-escoba"></div>
     </div>
 
+    <!-- ==================== BATALLA NAVAL ==================== -->
+    <div id="pantalla-batallanaval" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🚢 Batalla Naval</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-batallanaval"></div>
+    </div>
+
     <!-- ==================== EL ESPEJO ==================== -->
     <div id="pantalla-espejo" class="pantalla-juego">
         <div class="fila-superior-juego">
@@ -162,51 +207,190 @@
         <div id="contenido-espejo"></div>
     </div>
 
-    <!-- ==================== MASCOTA / CHOKUREI ==================== -->
-    <div id="pantalla-mascota" class="pantalla-juego">
-        <div class="fila-superior-juego">
-            <span class="titulo-juego">🐾 Chokurei Virtual</span>
-            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
-        </div>
-        <div id="contenido-mascota"></div>
-    </div>
-
-    <!-- ==================== REFLEJOS ==================== -->
-    <div id="pantalla-reflejos" class="pantalla-juego">
-        <div class="fila-superior-juego">
-            <span class="titulo-juego">⚡ Reflejos</span>
-            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
-        </div>
-        <div id="contenido-reflejos"></div>
-    </div>
-
-    <!-- ==================== TA-TE-TI ==================== -->
-    <div id="pantalla-tateti" class="pantalla-juego">
-        <div class="fila-superior-juego">
-            <span class="titulo-juego">❌ Ta-Te-Ti ⭕</span>
-            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
-        </div>
-        <div id="contenido-tateti"></div>
-    </div>
-
-    <!-- ==================== CONECTA 4 (NUEVO) ==================== -->
-    <div id="pantalla-conecta4" class="pantalla-juego">
-        <div class="fila-superior-juego">
-            <span class="titulo-juego">🔴 Conecta 4 🟡</span>
-            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
-        </div>
-        <div id="contenido-conecta4"></div>
-    </div>
-
-    <!-- ==================== MENTIRA O VERDAD (NUEVO) ==================== -->
+    <!-- ==================== MENTIRA O VERDAD ==================== -->
     <div id="pantalla-mentiraverdad" class="pantalla-juego">
         <div class="fila-superior-juego">
-            <span class="titulo-juego">🤔 Mentira o Verdad</span>
+            <span class="titulo-juego">🎭 Mentira o Verdad</span>
             <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
         </div>
         <div id="contenido-mentiraverdad"></div>
     </div>
-
+    <!-- ==================== ⚖️ EL DILEMA IMPOSIBLE ==================== -->
+    <div id="pantalla-dilema" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">⚖️ El Dilema Imposible</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-dilema"></div>
+    </div>
+    <!-- ==================== 🤯 ¿QUÉ HARÍAS SI...? ==================== -->
+    <div id="pantalla-quehariassi" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🤯 ¿Qué harías si...?</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-quehariassi"></div>
+    </div>
+    <!-- ==================== 🔮 NUESTRO FUTURO ==================== -->
+    <div id="pantalla-futuro" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔮 Nuestro Futuro</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-futuro"></div>
+    </div>
+    <!-- ==================== ⏳ MÁQUINA DEL TIEMPO ==================== -->
+    <div id="pantalla-maquinatiempo" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">⏳ Máquina del Tiempo</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-maquinatiempo"></div>
+    </div>
+    <!-- ==================== 🌜 ANTES DE DORMIR ==================== -->
+    <div id="pantalla-antesdedormir" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🌜 Antes de Dormir</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-antesdedormir"></div>
+    </div>
+    <!-- ==================== 📸 NUESTRO ÁLBUM INVISIBLE ==================== -->
+    <div id="pantalla-album" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">📸 Nuestro Álbum Invisible</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-album"></div>
+    </div>
+    <!-- ==================== 💭 LO QUE NUNCA TE PREGUNTÉ ==================== -->
+    <div id="pantalla-nuncapregunte" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">💭 Lo que nunca te pregunté</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-nuncapregunte"></div>
+    </div>
+    <!-- ==================== 🧩 ¿CUÁNTO ME CONOCÉS? ==================== -->
+    <div id="pantalla-conoceme" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🧩 ¿Cuánto me conocés?</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-conoceme"></div>
+    </div>
+    <!-- ==================== 🔍 DETECTIVE DE NOSOTROS ==================== -->
+    <div id="pantalla-detective" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔍 Detective de Nosotros</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-detective"></div>
+    </div>
+    <!-- ==================== 🎡 EL DESTINO DECIDE ==================== -->
+    <div id="pantalla-destino" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🎡 El Destino Decide</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-destino"></div>
+    </div>
+    <!-- ==================== 🎯 DUELO DE DECISIONES ==================== -->
+    <div id="pantalla-decisiones" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🎯 Duelo de Decisiones</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-decisiones"></div>
+    </div>
+    <!-- ==================== 👯 MENTE GEMELA ==================== -->
+    <div id="pantalla-mentegemela" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">👯 Mente Gemela</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-mentegemela"></div>
+    </div>
+    <!-- ==================== 🧬 ADN DE LA PAREJA ==================== -->
+    <div id="pantalla-adn" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🧬 ADN de la Pareja</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-adn"></div>
+    </div>
+    <!-- ==================== 💣 PALABRA EXPLOSIVA ==================== -->
+    <div id="pantalla-palabraexplosiva" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">💣 Palabra Explosiva</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-palabraexplosiva"></div>
+    </div>
+    <!-- ==================== 🧠 MEMORIA DE EMOJIS ==================== -->
+    <div id="pantalla-memoria" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🧠 Memoria de Emojis</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-memoria"></div>
+    </div>
+    <!-- ==================== ❓ ADIVINA QUIÉN ==================== -->
+    <div id="pantalla-adivinaquien" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">❓ Adivina Quién</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-adivinaquien"></div>
+    </div>
+    <!-- ==================== ❤️ TIRA Y AFLOJA ==================== -->
+    <div id="pantalla-tiraafloja" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">❤️ Tira y Afloja</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-tiraafloja"></div>
+    </div>
+    <!-- ==================== 🌳 NUESTRO ÁRBOL ==================== -->
+    <div id="pantalla-arbol" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🌳 Nuestro Árbol</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-arbol"></div>
+    </div>
+    <!-- ==================== 🏡 EL REFUGIO ==================== -->
+    <div id="pantalla-refugio" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🏡 El Refugio</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-refugio"></div>
+    </div>
+    <!-- ==================== 📍 PUNTO DE ENCUENTRO ==================== -->
+    <div id="pantalla-puntoencuentro" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">📍 Punto de Encuentro</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-puntoencuentro"></div>
+    </div>
+    <!-- ==================== 🎨 DIBUJA Y ADIVINA ==================== -->
+    <div id="pantalla-dibujayadivina" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🎨 Dibuja y Adivina</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-dibujayadivina"></div>
+    </div>
+    <!-- ==================== 💌 CARTA PARA ABRIR DESPUÉS ==================== -->
+    <div id="pantalla-cartas" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">💌 Carta para Abrir Después</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-cartas"></div>
+    </div>
 </div>
 
 <!-- ==================== CHAT FLOTANTE ==================== -->
@@ -236,25 +420,47 @@
 <script src="js/navegacion.js"></script>
 
 <!-- ==================== LÓGICA DE CADA JUEGO ==================== -->
-<!-- Todos los 18 juegos listados alfabéticamente -->
 <script src="js/juegos/ahorcado.js"></script>
-<script src="js/juegos/ajedrez.js"></script>
-<script src="js/juegos/batallanaval.js"></script>
-<script src="js/juegos/conecta4.js"></script>
-<script src="js/juegos/damas.js"></script>
-<script src="js/juegos/escoba.js"></script>
-<script src="js/juegos/espejo.js"></script>
 <script src="js/juegos/frutas.js"></script>
-<script src="js/juegos/indagacion.js"></script>
-<script src="js/juegos/jardin.js"></script>
-<script src="js/juegos/letras.js"></script>
-<script src="js/juegos/mascota.js"></script>
-<script src="js/juegos/mentiraverdad.js"></script>
-<script src="js/juegos/reflejos.js"></script>
-<script src="js/juegos/ruleta.js"></script>
-<script src="js/juegos/tateti.js"></script>
 <script src="js/juegos/truco.js"></script>
+<script src="js/juegos/letras.js"></script>
+<script src="js/juegos/damas.js"></script>
+<script src="js/juegos/ajedrez.js"></script>
+<script src="js/juegos/jardin.js"></script>
+<script src="js/juegos/indagacion.js"></script>
+<script src="js/juegos/ruleta.js"></script>
 <script src="js/juegos/verdadoreto.js"></script>
+<script src="js/juegos/tateti.js"></script>
+<script src="js/juegos/conecta4.js"></script>
+<script src="js/juegos/reflejos.js"></script>
+<script src="js/juegos/mascota.js"></script>
+<script src="js/juegos/escoba.js"></script>
+<script src="js/juegos/batallanaval.js"></script>
+<script src="js/juegos/espejo.js"></script>
+<script src="js/juegos/mentiraverdad.js"></script>
+<script src="js/motor-reflexion.js"></script>
+<script src="js/juegos/dilema.js"></script>
+<script src="js/juegos/quehariassi.js"></script>
+<script src="js/juegos/futuro.js"></script>
+<script src="js/juegos/maquinatiempo.js"></script>
+<script src="js/juegos/antesdedormir.js"></script>
+<script src="js/juegos/album.js"></script>
+<script src="js/juegos/nuncapregunte.js"></script>
+<script src="js/juegos/conoceme.js"></script>
+<script src="js/juegos/detective.js"></script>
+<script src="js/juegos/destino.js"></script>
+<script src="js/juegos/decisiones.js"></script>
+<script src="js/juegos/mentegemela.js"></script>
+<script src="js/juegos/adn.js"></script>
+<script src="js/juegos/palabraexplosiva.js"></script>
+<script src="js/juegos/memoria.js"></script>
+<script src="js/juegos/adivinaquien.js"></script>
+<script src="js/juegos/tiraafloja.js"></script>
+<script src="js/juegos/arbol.js"></script>
+<script src="js/juegos/refugio.js"></script>
+<script src="js/juegos/puntoencuentro.js"></script>
+<script src="js/juegos/dibujayadivina.js"></script>
+<script src="js/juegos/cartas.js"></script>
 
 <!-- ==================== CHAT ==================== -->
 <script src="js/chat.js"></script>

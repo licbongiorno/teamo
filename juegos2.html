@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0a17">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
+<title>Nuestros Juegos 🎮</title>
+<meta name="description" content="Centro de juegos para jugar en simultáneo o por turnos, cada uno desde su dispositivo.">
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://apis.google.com;
+    connect-src 'self' data: blob: https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com https://www.gstatic.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: https:;
+">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400;0,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/juegos.css">
+<link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+
+<!-- ==================== MODAL DE ACCESO ==================== -->
+<div id="modal-acceso" class="modal-fondo oculto">
+    <div class="modal-caja">
+        <h2>🔒</h2>
+        <p>Escribí tu nombre (nico o carito) para entrar a jugar</p>
+        <input type="text" id="input-clave-juegos" placeholder="nico o carito" autocomplete="off" onkeydown="if(event.key==='Enter') verificarIdentidadJuegos()">
+        <div class="error-clave" id="error-clave-juegos"></div>
+        <button class="btn-principal" onclick="verificarIdentidadJuegos()">Entrar</button>
+    </div>
+</div>
+
+<div class="contenedor">
+    <div class="encabezado">
+        <a href="index.html" class="btn-volver">⬅️ Volver</a>
+        <span class="chip-identidad" id="chip-identidad"></span>
+    </div>
+
+    <!-- ==================== MENÚ PRINCIPAL ==================== -->
+    <div id="pantalla-menu" class="pantalla-juego activa">
+        <div class="titulo-app">Nuestros Juegos</div>
+        <div class="subtitulo-app">Cada uno desde su dispositivo — algunos al mismo tiempo, otros por turnos, cuando puedan 🎮💕</div>
+
+        <div class="separador-seccion">Categorías</div>
+        <div class="grid-categorias" id="grid-categorias"></div>
+
+        <div class="separador-seccion">Disponibles ahora</div>
+        <div class="tarjetas-juegos" id="lista-disponibles"></div>
+    </div>
+
+    <!-- ==================== AHORCADO ==================== -->
+    <div id="pantalla-ahorcado" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔤 Ahorcado</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-ahorcado"></div>
+    </div>
+
+    <!-- ==================== FRUTAS ==================== -->
+    <div id="pantalla-frutas" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🍓 Atrapar Frutas</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-frutas"></div>
+    </div>
+
+    <!-- ==================== TRUCO ==================== -->
+    <div id="pantalla-truco" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🃏 Truco</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-truco"></div>
+    </div>
+
+    <!-- ==================== LETRAS COMPARTIDAS ==================== -->
+    <div id="pantalla-letras" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🪶 Letras Compartidas</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-letras"></div>
+    </div>
+
+    <!-- ==================== DAMAS ==================== -->
+    <div id="pantalla-damas" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">⚫ Damas</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-damas"></div>
+    </div>
+
+    <!-- ==================== AJEDREZ ==================== -->
+    <div id="pantalla-ajedrez" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">♞ Ajedrez</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-ajedrez"></div>
+    </div>
+
+    <!-- ==================== EL JARDÍN COMPARTIDO ==================== -->
+    <div id="pantalla-jardin" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🌱 El Jardín Compartido</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-jardin"></div>
+    </div>
+
+    <!-- ==================== CARTAS DE INDAGACIÓN ==================== -->
+    <div id="pantalla-indagacion" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🌙 Cartas de Indagación</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-indagacion"></div>
+    </div>
+
+    <!-- ==================== RULETA DE CITAS ==================== -->
+    <div id="pantalla-ruleta" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🎡 Ruleta de Citas</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-ruleta"></div>
+    </div>
+
+    <!-- ==================== VERDAD O RETO ==================== -->
+    <div id="pantalla-verdadoreto" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔥 Verdad o Reto</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-verdadoreto"></div>
+    </div>
+</div>
+
+<!-- ==================== CHAT FLOTANTE ==================== -->
+<div id="chat-flotante" class="chat-flotante">
+    <div class="panel-chat" id="panel-chat">
+        <div class="header-chat">
+            <span class="titulo-chat">Nuestro Chat 💬</span>
+            <button class="btn-cerrar-chat" onclick="toggleChat(event)">✕</button>
+        </div>
+        <div class="mensajes-chat" id="mensajes-chat"></div>
+        <div class="input-chat-area">
+            <input type="text" id="input-chat" placeholder="Escribí un mensajito..." autocomplete="off" onkeypress="if(event.key==='Enter') enviarMensajeChat()">
+            <button class="btn-enviar-chat" onclick="enviarMensajeChat()">➤</button>
+        </div>
+    </div>
+    <div class="burbuja-chat" id="burbuja-chat" onclick="toggleChat(event)" title="Abrir chat" role="button" aria-label="Abrir nuestro chat privado">💬</div>
+</div>
+
+<!-- ==================== FIREBASE (módulo, corre una sola vez) ==================== -->
+<script type="module" src="js/firebase.js"></script>
+
+<!-- ==================== MÓDULOS COMPARTIDOS ==================== -->
+<script src="js/usuario.js"></script>
+<script src="js/juegos-data.js"></script>
+<script src="js/puntos.js"></script>
+<script src="js/historial.js"></script>
+<script src="js/navegacion.js"></script>
+
+<!-- ==================== LÓGICA DE CADA JUEGO ==================== -->
+<script src="js/juegos/ahorcado.js"></script>
+<script src="js/juegos/frutas.js"></script>
+<script src="js/juegos/truco.js"></script>
+<script src="js/juegos/letras.js"></script>
+<script src="js/juegos/damas.js"></script>
+<script src="js/juegos/ajedrez.js"></script>
+<script src="js/juegos/jardin.js"></script>
+<script src="js/juegos/indagacion.js"></script>
+<script src="js/juegos/ruleta.js"></script>
+<script src="js/juegos/verdadoreto.js"></script>
+
+<!-- ==================== CHAT ==================== -->
+<script src="js/chat.js"></script>
+
+<script>
+    // firebase.js es un módulo: puede terminar de correr un instante
+    // después de que este script clásico arranca. Si window.db todavía
+    // no está listo, esperamos el evento que firebase.js dispara al
+    // terminar; si ya está listo (caso normal), arrancamos directo.
+    function arrancarJuegos(){ pedirIdentidadSiHaceFalta(); }
+    if (window._firebaseListo) arrancarJuegos();
+    else document.addEventListener('firebase-listo', arrancarJuegos, { once: true });
+</script>
+</body>
+</html>

@@ -294,7 +294,8 @@ function iniciarAhorcado(){
     window._unsubAhorcado = window.onSnapshot(ref, (snap) => {
         renderAhorcado(snap.exists() ? snap.data() : null);
     }, (err) => {
-        document.getElementById('contenido-ahorcado').innerHTML = `<div class="panel texto-centro texto-tenue">No se pudo conectar. Revisá tu conexión.</div>`;
+        console.error('Error de Firestore en ahorcado:', err);
+        document.getElementById('contenido-ahorcado').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}). Si el error dice "permission-denied", hay que sumar la colección "juegos" a las Reglas de Firestore.</div>`;
     });
 }
 
@@ -430,111 +431,77 @@ async function intentarLetra(letra){
 }
 
 // ==================== ATRAPAR FRUTAS ====================
+// Juego ASINCRÓNICO: cada quien juega su ronda de 30s cuando quiera, no hace
+// falta coincidir. Se guarda el MEJOR puntaje de cada uno y se comparan.
 const DURACION_FRUTAS = 30; // segundos
 const FRUTAS_EMOJI = ['🍎','🍊','🍋','🍇','🍓','🍉','🍑','🍒'];
 
+function refFrutas(){ return window.doc(window.db, 'juegos', 'frutas'); }
+
 function iniciarFrutas(){
     const contInicial = document.getElementById('contenido-frutas');
-    if (contInicial) delete contInicial.dataset.faseFrutas;
-    const ref = window.doc(window.db, 'juegos', 'frutas');
+    if (contInicial) delete contInicial.dataset.jugandoLocal;
     if (window._unsubFrutas) window._unsubFrutas();
-    window._unsubFrutas = window.onSnapshot(ref, (snap) => {
+    window._unsubFrutas = window.onSnapshot(refFrutas(), (snap) => {
         renderFrutas(snap.exists() ? snap.data() : null);
+    }, (err) => {
+        console.error('Error de Firestore en frutas:', err);
+        const cont = document.getElementById('contenido-frutas');
+        if (cont && cont.dataset.jugandoLocal !== '1') {
+            cont.innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}). Si el error dice "permission-denied", hay que sumar la colección "juegos" a las Reglas de Firestore.</div>`;
+        }
     });
 }
 
-let frutasJuego = null; // estado local del canvas (no compartido)
-
 function renderFrutas(estado){
     const cont = document.getElementById('contenido-frutas');
+    // Mientras haya una ronda local corriendo, no se reconstruye el DOM
+    // (los snapshots por nuestros propios updateDoc no deben reiniciar el canvas).
+    if (cont.dataset.jugandoLocal === '1') return;
 
-    if (!estado || estado.fase === 'esperando') {
-        const listoYo = estado?.listos?.[miIdentidad];
-        const listoRival = estado?.listos?.[miRival];
-        cont.innerHTML = `
-            <div class="panel texto-centro">
-                <p class="texto-tenue">30 segundos. Gana quien atrape más frutas. ¡A las 3 arrancan los dos!</p>
-                <div class="texto-tenue" style="margin:10px 0;">
-                    ${miIdentidad === 'carito' ? 'Carito' : 'Nico'}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
-                    ${miRival === 'carito' ? 'Carito' : 'Nico'}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
-                </div>
-                <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoFrutas()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🍓'}</button>
-            </div>`;
-        if (listoYo && listoRival) {
-            iniciarPartidaFrutasSiCorresponde(estado);
-        }
-        return;
+    const mejorYo = estado?.mejores?.[miIdentidad] || 0;
+    const mejorRival = estado?.mejores?.[miRival] || 0;
+    let comparacion = 'Todavía nadie jugó una ronda.';
+    if (mejorYo || mejorRival) {
+        if (mejorYo > mejorRival) comparacion = '🏆 Vas ganando vos';
+        else if (mejorRival > mejorYo) comparacion = `🏆 Va ganando ${nombreJugadorFrutas(miRival)}`;
+        else comparacion = '🤝 Están empatados';
     }
 
-    if (estado.fase === 'jugando') {
-        // Este snapshot se dispara también cuando actualizamos NUESTRO propio puntaje;
-        // si el canvas ya está corriendo, sólo actualizamos el marcador del rival
-        // en vez de reconstruir todo el DOM (eso reiniciaría el juego a cada toque).
-        if (cont.dataset.faseFrutas === 'jugando') {
-            const marcadorRival = document.getElementById('marcador-rival-frutas');
-            if (marcadorRival) marcadorRival.innerText = estado.puntajes?.[miRival] || 0;
-            return;
-        }
-        cont.dataset.faseFrutas = 'jugando';
-        cont.innerHTML = `
-            <div class="panel">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:0.9rem;">
-                    <span>Vos: <b id="marcador-yo-frutas">0</b> 🍓</span>
-                    <span id="cronometro-frutas" style="font-family:monospace; font-size:1.1rem;">${DURACION_FRUTAS}</span>
-                    <span>${miRival === 'carito' ? 'Carito' : 'Nico'}: <b id="marcador-rival-frutas">${estado.puntajes?.[miRival] || 0}</b> 🍓</span>
-                </div>
-                <div style="position:relative; width:100%; aspect-ratio:3/4; max-height:60vh; background:rgba(0,0,0,0.25); border-radius:14px; overflow:hidden; touch-action:none;" id="area-frutas">
-                    <canvas id="canvas-frutas" style="position:absolute; inset:0; width:100%; height:100%;"></canvas>
-                </div>
-                <p class="texto-tenue texto-centro" style="margin-top:8px;">Deslizá el dedo (o el mouse) para mover la canasta 🧺</p>
-            </div>`;
-        arrancarCanvasFrutas(estado);
-        return;
-    }
-    cont.dataset.faseFrutas = estado.fase;
-
-    if (estado.fase === 'terminado') {
-        const miPuntaje = estado.puntajes?.[miIdentidad] || 0;
-        const puntajeRival = estado.puntajes?.[miRival] || 0;
-        let resultado = '🤝 ¡Empate!';
-        if (miPuntaje > puntajeRival) resultado = '🏆 ¡Ganaste vos!';
-        else if (puntajeRival > miPuntaje) resultado = `🏆 Ganó ${miRival === 'carito' ? 'Carito' : 'Nico'}`;
-        cont.innerHTML = `
-            <div class="panel texto-centro">
-                <div style="font-size:1.3rem; margin-bottom:10px;">${resultado}</div>
-                <div class="texto-tenue" style="margin-bottom:14px;">
-                    Vos: ${miPuntaje} 🍓 &nbsp;·&nbsp; ${miRival === 'carito' ? 'Carito' : 'Nico'}: ${puntajeRival} 🍓
-                </div>
-                <button class="btn-principal" onclick="reiniciarFrutas()">🔁 Jugar de nuevo</button>
-            </div>`;
-    }
+    cont.innerHTML = `
+        <div class="panel texto-centro">
+            <p class="texto-tenue">30 segundos atrapando frutas. Cada uno juega cuando quiere — se compara el mejor puntaje de cada uno.</p>
+            <div style="display:flex; justify-content:space-around; margin:14px 0;">
+                <div><div class="texto-tenue" style="font-size:0.75rem;">Vos</div><div style="font-size:1.5rem;">${mejorYo} 🍓</div></div>
+                <div><div class="texto-tenue" style="font-size:0.75rem;">${nombreJugadorFrutas(miRival)}</div><div style="font-size:1.5rem;">${mejorRival} 🍓</div></div>
+            </div>
+            <div class="texto-tenue" style="margin-bottom:12px;">${comparacion}</div>
+            <button class="btn-principal" onclick="jugarRondaFrutas()">${mejorYo ? '🔁 Jugar de nuevo' : '¡Jugar! 🍓'}</button>
+        </div>`;
 }
+function nombreJugadorFrutas(id){ return id === 'carito' ? 'Carito' : 'Nico'; }
 
-async function marcarListoFrutas(){
+function jugarRondaFrutas(){
     vibrarJ(12);
-    const ref = window.doc(window.db, 'juegos', 'frutas');
-    await window.setDoc(ref, {
-        fase: 'esperando',
-        listos: { [miIdentidad]: true },
-        puntajes: { nico: 0, carito: 0 }
-    }, { merge: true });
+    const cont = document.getElementById('contenido-frutas');
+    cont.dataset.jugandoLocal = '1';
+    cont.innerHTML = `
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:0.9rem;">
+                <span>Puntaje: <b id="marcador-yo-frutas">0</b> 🍓</span>
+                <span id="cronometro-frutas" style="font-family:monospace; font-size:1.1rem;">${DURACION_FRUTAS}</span>
+            </div>
+            <div style="position:relative; width:100%; aspect-ratio:3/4; max-height:60vh; background:rgba(0,0,0,0.25); border-radius:14px; overflow:hidden; touch-action:none;" id="area-frutas">
+                <canvas id="canvas-frutas" style="position:absolute; inset:0; width:100%; height:100%;"></canvas>
+            </div>
+            <p class="texto-tenue texto-centro" style="margin-top:8px;">Deslizá el dedo (o el mouse) para mover la canasta 🧺</p>
+        </div>`;
+    arrancarCanvasFrutas();
 }
 
-let _iniciandoFrutas = false;
-async function iniciarPartidaFrutasSiCorresponde(estado){
-    if (estado.fase !== 'esperando' || _iniciandoFrutas) return;
-    _iniciandoFrutas = true;
-    // Cualquiera de los dos dispositivos puede disparar el inicio; si llegan
-    // ambos casi a la vez no pasa nada grave, sólo se reescribe el mismo estado.
-    const ref = window.doc(window.db, 'juegos', 'frutas');
-    await window.updateDoc(ref, { fase: 'jugando', inicioEn: Date.now() });
-    setTimeout(() => { _iniciandoFrutas = false; }, 2000);
-}
-
-function arrancarCanvasFrutas(estadoInicial){
+function arrancarCanvasFrutas(){
     const canvas = document.getElementById('canvas-frutas');
-    if (!canvas || canvas.dataset.iniciado === '1') return;
-    canvas.dataset.iniciado = '1';
+    if (!canvas) return;
 
     const area = document.getElementById('area-frutas');
     const ctx = canvas.getContext('2d');
@@ -543,7 +510,8 @@ function arrancarCanvasFrutas(estadoInicial){
         canvas.height = area.clientHeight;
     }
     ajustarTamano();
-    window.addEventListener('resize', ajustarTamano);
+    const onResize = () => ajustarTamano();
+    window.addEventListener('resize', onResize);
 
     let canastaX = canvas.width / 2;
     const canastaAncho = 60, canastaAlto = 34;
@@ -555,8 +523,10 @@ function arrancarCanvasFrutas(estadoInicial){
         const rect = canvas.getBoundingClientRect();
         canastaX = Math.max(canastaAncho/2, Math.min(canvas.width - canastaAncho/2, clientX - rect.left));
     }
-    area.addEventListener('touchmove', (e) => { e.preventDefault(); if (e.touches[0]) moverCanasta(e.touches[0].clientX); }, { passive:false });
-    area.addEventListener('mousemove', (e) => moverCanasta(e.clientX));
+    const onTouchMove = (e) => { e.preventDefault(); if (e.touches[0]) moverCanasta(e.touches[0].clientX); };
+    const onMouseMove = (e) => moverCanasta(e.clientX);
+    area.addEventListener('touchmove', onTouchMove, { passive:false });
+    area.addEventListener('mousemove', onMouseMove);
 
     function spawnFruta(){
         frutas.push({
@@ -567,11 +537,6 @@ function arrancarCanvasFrutas(estadoInicial){
         });
     }
     let spawnAcumulado = 0;
-
-    async function actualizarPuntajeRemoto(){
-        const ref = window.doc(window.db, 'juegos', 'frutas');
-        await window.updateDoc(ref, { [`puntajes.${miIdentidad}`]: puntaje }).catch(()=>{});
-    }
 
     function loop(){
         ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -591,14 +556,12 @@ function arrancarCanvasFrutas(estadoInicial){
                 puntaje++;
                 const marcador = document.getElementById('marcador-yo-frutas');
                 if (marcador) marcador.innerText = puntaje;
-                actualizarPuntajeRemoto();
                 vibrarJ(10);
             } else if (f.y > canvas.height + 20) {
                 frutas.splice(i,1);
             }
         }
 
-        // Canasta
         ctx.font = '38px sans-serif';
         ctx.fillText('🧺', canastaX, canvas.height - 8);
 
@@ -607,10 +570,6 @@ function arrancarCanvasFrutas(estadoInicial){
     loop();
 
     let restante = DURACION_FRUTAS;
-    if (estadoInicial.inicioEn) {
-        const transcurrido = Math.floor((Date.now() - estadoInicial.inicioEn) / 1000);
-        restante = Math.max(0, DURACION_FRUTAS - transcurrido);
-    }
     const cronoEl = document.getElementById('cronometro-frutas');
     if (cronoEl) cronoEl.innerText = restante;
 
@@ -622,21 +581,48 @@ function arrancarCanvasFrutas(estadoInicial){
             clearInterval(window._timerFrutas);
             terminando = true;
             if (window._loopFrutas) cancelAnimationFrame(window._loopFrutas);
-            const ref = window.doc(window.db, 'juegos', 'frutas');
-            const dataActual = (await new Promise(res => { const u = window.onSnapshot(ref, s => { u(); res(s.data()); }); }));
-            if (dataActual && dataActual.fase === 'jugando') {
-                await window.updateDoc(ref, { fase: 'terminado' }).catch(()=>{});
-            }
+            window.removeEventListener('resize', onResize);
+            area.removeEventListener('touchmove', onTouchMove);
+            area.removeEventListener('mousemove', onMouseMove);
+            await finalizarRondaFrutas(puntaje);
         }
     }, 1000);
 }
 
-async function reiniciarFrutas(){
-    vibrarJ(12);
-    const ref = window.doc(window.db, 'juegos', 'frutas');
-    await window.setDoc(ref, { fase: 'esperando', listos: {}, puntajes: { nico:0, carito:0 } });
-    const canvas = document.getElementById('canvas-frutas');
-    if (canvas) canvas.dataset.iniciado = '0';
+async function finalizarRondaFrutas(puntajeObtenido){
+    vibrarJ([15,30,15]);
+    let mejorAnterior = 0;
+    let esNuevoMejor = false;
+    try {
+        const snap = await new Promise((resolve, reject) => {
+            const u = window.onSnapshot(refFrutas(), s => { u(); resolve(s); }, e => { u(); reject(e); });
+        });
+        mejorAnterior = snap.exists() ? (snap.data().mejores?.[miIdentidad] || 0) : 0;
+        if (puntajeObtenido > mejorAnterior) {
+            esNuevoMejor = true;
+            await window.setDoc(refFrutas(), { mejores: { [miIdentidad]: puntajeObtenido } }, { merge: true });
+        }
+    } catch (e) {
+        console.error('No se pudo guardar el puntaje de frutas:', e);
+    }
+
+    const cont = document.getElementById('contenido-frutas');
+    cont.innerHTML = `
+        <div class="panel texto-centro">
+            <div style="font-size:1.3rem; margin-bottom:8px;">${esNuevoMejor ? '🎉 ¡Nuevo mejor puntaje!' : 'Ronda terminada'}</div>
+            <div style="font-size:1.8rem; margin-bottom:6px;">${puntajeObtenido} 🍓</div>
+            <div class="texto-tenue" style="margin-bottom:14px;">${esNuevoMejor ? '' : `Tu mejor puntaje sigue siendo ${Math.max(mejorAnterior, puntajeObtenido)}.`}</div>
+            <button class="btn-principal" onclick="volverAMenuFrutas()">Volver</button>
+        </div>`;
+    // Ya no estamos en una ronda local: el próximo snapshot puede reconstruir el DOM normalmente.
+    delete cont.dataset.jugandoLocal;
+}
+
+function volverAMenuFrutas(){
+    vibrarJ(10);
+    const cont = document.getElementById('contenido-frutas');
+    delete cont.dataset.jugandoLocal;
+    iniciarFrutas();
 }
 
 // ==================== TRUCO ARGENTINO ====================
@@ -739,7 +725,11 @@ async function leerTrucoActual(){
 
 function iniciarTruco(){
     if (window._unsubTruco) window._unsubTruco();
-    window._unsubTruco = window.onSnapshot(refTruco(), snap => renderTruco(snap.exists() ? snap.data() : null));
+    window._unsubTruco = window.onSnapshot(refTruco(), snap => renderTruco(snap.exists() ? snap.data() : null), (err) => {
+        console.error('Error de Firestore en truco:', err);
+        const cont = document.getElementById('contenido-truco');
+        if (cont) cont.innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}). Si el error dice "permission-denied", hay que sumar la colección "juegos" a las Reglas de Firestore.</div>`;
+    });
 }
 
 let _iniciandoTruco = false;

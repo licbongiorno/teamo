@@ -198,6 +198,27 @@ input, textarea { -webkit-user-select:text; user-select:text; }
     border-radius:14px; padding:12px; color:var(--texto); font-family:var(--fuente-texto); font-size:0.92rem;
     resize:vertical; outline:none; line-height:1.5; margin-bottom:10px;
 }
+
+/* ============ TABLEROS (DAMAS Y AJEDREZ) ============ */
+.tablero-juego{
+    display:grid; grid-template-columns:repeat(8,1fr); width:100%; aspect-ratio:1/1;
+    border-radius:12px; overflow:hidden; border:1px solid var(--borde); user-select:none;
+}
+.casilla-tablero{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    font-size:min(6.5vw,28px); cursor:pointer; aspect-ratio:1/1;
+}
+.casilla-clara{ background:rgba(253,246,240,0.10); }
+.casilla-oscura{ background:rgba(15,10,20,0.55); }
+.casilla-seleccionada{ box-shadow:inset 0 0 0 3px var(--rosa); }
+.casilla-destino{ box-shadow:inset 0 0 0 3px var(--celeste); }
+.casilla-destino::after{
+    content:''; position:absolute; width:22%; height:22%; border-radius:50%;
+    background:rgba(168,216,255,0.55);
+}
+.pieza-tablero{ pointer-events:none; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+.info-turno-tablero{ text-align:center; font-size:0.85rem; margin-bottom:10px; }
+.corona-dama{ position:absolute; top:1px; font-size:0.5em; }
 </style>
 </head>
 <body>
@@ -253,6 +274,20 @@ input, textarea { -webkit-user-select:text; user-select:text; }
                     <p>Cadáver exquisito: uno escribe un poco, después el otro sigue, cada uno con su color. Se guarda y se puede releer.</p>
                 </div>
             </div>
+            <div class="tarjeta-juego" onclick="abrirJuego('damas')">
+                <div class="icono-juego">⚫</div>
+                <div class="info-juego">
+                    <h3>Damas</h3>
+                    <p>El clásico tablero de damas, en vivo entre los dos. Movés tus fichas y las del otro se actualizan al instante.</p>
+                </div>
+            </div>
+            <div class="tarjeta-juego" onclick="abrirJuego('ajedrez')">
+                <div class="icono-juego">♞</div>
+                <div class="info-juego">
+                    <h3>Ajedrez</h3>
+                    <p>Una partida de ajedrez compartida, cada uno mueve sus piezas desde su pantalla.</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -290,6 +325,24 @@ input, textarea { -webkit-user-select:text; user-select:text; }
             <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
         </div>
         <div id="contenido-letras"></div>
+    </div>
+
+    <!-- ==================== DAMAS ==================== -->
+    <div id="pantalla-damas" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">⚫ Damas</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-damas"></div>
+    </div>
+
+    <!-- ==================== AJEDREZ ==================== -->
+    <div id="pantalla-ajedrez" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">♞ Ajedrez</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-ajedrez"></div>
     </div>
 </div>
 
@@ -388,6 +441,8 @@ function abrirJuego(juego){
     if (juego === 'frutas') iniciarFrutas();
     if (juego === 'truco') iniciarTruco();
     if (juego === 'letras') iniciarLetras();
+    if (juego === 'damas') iniciarDamas();
+    if (juego === 'ajedrez') iniciarAjedrez();
 }
 function cerrarJuego(){
     vibrarJ(12);
@@ -403,6 +458,8 @@ function detenerListenersActivos(){
     if (window._unsubEscrituraActual) { window._unsubEscrituraActual(); window._unsubEscrituraActual = null; }
     if (window._loopFrutas) { cancelAnimationFrame(window._loopFrutas); window._loopFrutas = null; }
     if (window._timerFrutas) { clearInterval(window._timerFrutas); window._timerFrutas = null; }
+    if (window._unsubDamas) { window._unsubDamas(); window._unsubDamas = null; }
+    if (window._unsubAjedrez) { window._unsubAjedrez(); window._unsubAjedrez = null; }
 }
 
 function iniciarJuegos(){
@@ -559,10 +616,12 @@ async function intentarLetra(letra){
 }
 
 // ==================== ATRAPAR FRUTAS ====================
-// Juego ASINCRÓNICO: cada quien juega su ronda de 30s cuando quiera, no hace
-// falta coincidir. Se guarda el MEJOR puntaje de cada uno y se comparan.
-const DURACION_FRUTAS = 30; // segundos
+// Juego ASINCRÓNICO de SUPERVIVENCIA: cada quien juega su ronda cuando quiera,
+// sin límite de tiempo, con 3 vidas. Se guarda el MEJOR puntaje de cada uno y se comparan.
+const VIDAS_INICIALES_FRUTAS = 3;
 const FRUTAS_EMOJI = ['🍎','🍊','🍋','🍇','🍓','🍉','🍑','🍒'];
+const PROB_CORAZON_FRUTAS = 0.10;   // probabilidad de que caiga un corazón en vez de fruta
+const PROB_CHOCOLATE_FRUTAS = 0.07; // probabilidad de que caiga un chocolate en vez de fruta
 
 function refFrutas(){ return window.doc(window.db, 'juegos', 'frutas'); }
 
@@ -598,7 +657,7 @@ function renderFrutas(estado){
 
     cont.innerHTML = `
         <div class="panel texto-centro">
-            <p class="texto-tenue">30 segundos atrapando frutas. Cada uno juega cuando quiere — se compara el mejor puntaje de cada uno.</p>
+            <p class="texto-tenue">Modo supervivencia: empezás con 3 vidas ❤️. Si se te cae una fruta, perdés una vida. Atrapá corazones para sumar vidas y evitá los chocolates 🍫, ¡te dejan sin ninguna! Cada uno juega cuando quiere — se compara el mejor puntaje de cada uno.</p>
             <div style="display:flex; justify-content:space-around; margin:14px 0;">
                 <div><div class="texto-tenue" style="font-size:0.75rem;">Vos</div><div style="font-size:1.5rem;">${mejorYo} 🍓</div></div>
                 <div><div class="texto-tenue" style="font-size:0.75rem;">${nombreJugadorFrutas(miRival)}</div><div style="font-size:1.5rem;">${mejorRival} 🍓</div></div>
@@ -617,12 +676,12 @@ function jugarRondaFrutas(){
         <div class="panel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:0.9rem;">
                 <span>Puntaje: <b id="marcador-yo-frutas">0</b> 🍓</span>
-                <span id="cronometro-frutas" style="font-family:monospace; font-size:1.1rem;">${DURACION_FRUTAS}</span>
+                <span id="vidas-frutas" style="font-size:1rem;">${'❤️'.repeat(VIDAS_INICIALES_FRUTAS)}</span>
             </div>
             <div style="position:relative; width:100%; aspect-ratio:3/4; max-height:60vh; background:rgba(0,0,0,0.25); border-radius:14px; overflow:hidden; touch-action:none;" id="area-frutas">
                 <canvas id="canvas-frutas" style="position:absolute; inset:0; width:100%; height:100%;"></canvas>
             </div>
-            <p class="texto-tenue texto-centro" style="margin-top:8px;">Deslizá el dedo (o el mouse) para mover la canasta 🧺</p>
+            <p class="texto-tenue texto-centro" style="margin-top:8px;">Deslizá el dedo (o el mouse) para mover la canasta 🧺 — ¡sobrevive lo más que puedas!</p>
         </div>`;
     arrancarCanvasFrutas();
 }
@@ -643,8 +702,9 @@ function arrancarCanvasFrutas(){
 
     let canastaX = canvas.width / 2;
     const canastaAncho = 60, canastaAlto = 34;
-    let frutas = [];
+    let objetos = [];
     let puntaje = 0;
+    let vidas = VIDAS_INICIALES_FRUTAS;
     let terminando = false;
 
     function moverCanasta(clientX){
@@ -656,37 +716,76 @@ function arrancarCanvasFrutas(){
     area.addEventListener('touchmove', onTouchMove, { passive:false });
     area.addEventListener('mousemove', onMouseMove);
 
-    function spawnFruta(){
-        frutas.push({
+    function actualizarVidasUI(){
+        const el = document.getElementById('vidas-frutas');
+        if (el) el.innerText = vidas > 0 ? '❤️'.repeat(vidas) : '💔';
+    }
+
+    function spawnObjeto(){
+        const azar = Math.random();
+        let tipo = 'fruta';
+        if (azar < PROB_CHOCOLATE_FRUTAS) tipo = 'chocolate';
+        else if (azar < PROB_CHOCOLATE_FRUTAS + PROB_CORAZON_FRUTAS) tipo = 'corazon';
+        const emoji = tipo === 'chocolate' ? '🍫' : tipo === 'corazon' ? '❤️' : FRUTAS_EMOJI[Math.floor(Math.random() * FRUTAS_EMOJI.length)];
+        objetos.push({
             x: Math.random() * (canvas.width - 30) + 15,
             y: -20,
             vel: 1.6 + Math.random() * 2.2,
-            emoji: FRUTAS_EMOJI[Math.floor(Math.random() * FRUTAS_EMOJI.length)]
+            emoji, tipo
         });
     }
     let spawnAcumulado = 0;
 
+    async function terminarPartida(){
+        if (terminando) return;
+        terminando = true;
+        clearInterval(window._timerFrutas);
+        if (window._loopFrutas) cancelAnimationFrame(window._loopFrutas);
+        window.removeEventListener('resize', onResize);
+        area.removeEventListener('touchmove', onTouchMove);
+        area.removeEventListener('mousemove', onMouseMove);
+        await finalizarRondaFrutas(puntaje);
+    }
+
     function loop(){
         ctx.clearRect(0,0,canvas.width,canvas.height);
         spawnAcumulado++;
-        if (spawnAcumulado > 42) { spawnFruta(); spawnAcumulado = 0; }
+        if (spawnAcumulado > 42) { spawnObjeto(); spawnAcumulado = 0; }
 
         ctx.font = '28px sans-serif';
         ctx.textAlign = 'center';
-        for (let i = frutas.length - 1; i >= 0; i--) {
-            const f = frutas[i];
+        for (let i = objetos.length - 1; i >= 0; i--) {
+            const f = objetos[i];
             f.y += f.vel;
             ctx.fillText(f.emoji, f.x, f.y);
             const distX = Math.abs(f.x - canastaX);
             const distY = Math.abs(f.y - (canvas.height - 26));
             if (distX < canastaAncho/2 && distY < canastaAlto/2 && f.y > 0) {
-                frutas.splice(i,1);
-                puntaje++;
-                const marcador = document.getElementById('marcador-yo-frutas');
-                if (marcador) marcador.innerText = puntaje;
-                vibrarJ(10);
+                objetos.splice(i,1);
+                if (f.tipo === 'chocolate') {
+                    vidas = 0;
+                    actualizarVidasUI();
+                    vibrarJ([20,40,20,40,20]);
+                    terminarPartida();
+                    break;
+                } else if (f.tipo === 'corazon') {
+                    vidas++;
+                    actualizarVidasUI();
+                    vibrarJ(15);
+                } else {
+                    puntaje++;
+                    const marcador = document.getElementById('marcador-yo-frutas');
+                    if (marcador) marcador.innerText = puntaje;
+                    vibrarJ(10);
+                }
             } else if (f.y > canvas.height + 20) {
-                frutas.splice(i,1);
+                objetos.splice(i,1);
+                if (f.tipo === 'fruta') {
+                    vidas--;
+                    actualizarVidasUI();
+                    vibrarJ([10,30,10]);
+                    if (vidas <= 0) { terminarPartida(); break; }
+                }
             }
         }
 
@@ -696,25 +795,6 @@ function arrancarCanvasFrutas(){
         if (!terminando) window._loopFrutas = requestAnimationFrame(loop);
     }
     loop();
-
-    let restante = DURACION_FRUTAS;
-    const cronoEl = document.getElementById('cronometro-frutas');
-    if (cronoEl) cronoEl.innerText = restante;
-
-    window._timerFrutas = setInterval(async () => {
-        restante--;
-        const el = document.getElementById('cronometro-frutas');
-        if (el) el.innerText = Math.max(0, restante);
-        if (restante <= 0) {
-            clearInterval(window._timerFrutas);
-            terminando = true;
-            if (window._loopFrutas) cancelAnimationFrame(window._loopFrutas);
-            window.removeEventListener('resize', onResize);
-            area.removeEventListener('touchmove', onTouchMove);
-            area.removeEventListener('mousemove', onMouseMove);
-            await finalizarRondaFrutas(puntaje);
-        }
-    }, 1000);
 }
 
 async function finalizarRondaFrutas(puntajeObtenido){
@@ -737,7 +817,7 @@ async function finalizarRondaFrutas(puntajeObtenido){
     const cont = document.getElementById('contenido-frutas');
     cont.innerHTML = `
         <div class="panel texto-centro">
-            <div style="font-size:1.3rem; margin-bottom:8px;">${esNuevoMejor ? '🎉 ¡Nuevo mejor puntaje!' : 'Ronda terminada'}</div>
+            <div style="font-size:1.3rem; margin-bottom:8px;">${esNuevoMejor ? '🎉 ¡Nuevo mejor puntaje!' : '💔 Te quedaste sin vidas'}</div>
             <div style="font-size:1.8rem; margin-bottom:6px;">${puntajeObtenido} 🍓</div>
             <div class="texto-tenue" style="margin-bottom:14px;">${esNuevoMejor ? '' : `Tu mejor puntaje sigue siendo ${Math.max(mejorAnterior, puntajeObtenido)}.`}</div>
             <button class="btn-principal" onclick="volverAMenuFrutas()">Volver</button>
@@ -1044,7 +1124,10 @@ async function responderQuieroTruco(){
         updates.puntajes = nuevosPuntajes;
         updates.envidoResuelto = true;
         updates.envidoGanador = ganador;
-        updates.historial = pushLog(estado, `Envido querido: gana ${nombreJugador(ganador)} (+${puntos}). Nico ${vN} · Carito ${vC}.`);
+        const perdedorEnvido = ganador === 'nico' ? 'carito' : 'nico';
+        const puntosGanador = ganador === 'nico' ? vN : vC;
+        const puntosPerdedor = ganador === 'nico' ? vC : vN;
+        updates.historial = pushLog(estado, `Envido querido: gana ${nombreJugador(ganador)} con ${puntosGanador} (+${puntos}). ${nombreJugador(perdedorEnvido)} tenía ${puntosPerdedor}.`);
         if (nuevosPuntajes[ganador] >= estado.puntosParaGanar) { updates.fase = 'terminado'; updates.ganadorPartida = ganador; }
     } else {
         updates.trucoNivel = canto.nivel;
@@ -1418,6 +1501,451 @@ async function finalizarEscritura(){
     if (!window._escrituraActualId) return;
     vibrarJ([10,30,10]);
     await window.updateDoc(refEscritura(window._escrituraActualId), { estado: 'terminada' });
+}
+
+// ==================== DAMAS ====================
+function refDamas(){ return window.doc(window.db, 'juegos', 'damas'); }
+
+function crearTableroInicialDamas(){
+    const t = new Array(64).fill(null);
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            if ((row + col) % 2 === 1) {
+                if (row <= 2) t[row*8+col] = 'n';
+                else if (row >= 5) t[row*8+col] = 'c';
+            }
+        }
+    }
+    return t;
+}
+
+let _damasSeleccion = null;
+let _damasDestinos = [];
+let _damasCapturasActuales = [];
+
+function iniciarDamas(){
+    _damasSeleccion = null; _damasDestinos = []; _damasCapturasActuales = [];
+    if (window._unsubDamas) window._unsubDamas();
+    window._unsubDamas = window.onSnapshot(refDamas(), (snap) => {
+        renderDamas(snap.exists() ? snap.data() : null);
+    }, (err) => {
+        console.error('Error de Firestore en damas:', err);
+        const cont = document.getElementById('contenido-damas');
+        if (cont) cont.innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}). Si el error dice "permission-denied", hay que sumar la colección "juegos" a las Reglas de Firestore.</div>`;
+    });
+}
+
+async function leerDamasActual(){
+    return await new Promise(res => { const u = window.onSnapshot(refDamas(), s => { u(); res(s.exists() ? s.data() : null); }); });
+}
+
+async function marcarListoDamas(){
+    vibrarJ(12);
+    const estado = await leerDamasActual();
+    if (estado?.listos?.[miIdentidad]) return;
+    const listos = { ...(estado?.listos||{}), [miIdentidad]: true };
+    if (listos.nico && listos.carito) {
+        const manoElegida = Math.random() < 0.5 ? 'nico' : 'carito';
+        await window.setDoc(refDamas(), {
+            fase:'jugando', tablero: crearTableroInicialDamas(), turno: manoElegida,
+            listos, historial: [`Arranca la partida. Empieza ${nombreJugador(manoElegida)}.`], ganador: null
+        });
+    } else {
+        await window.setDoc(refDamas(), { fase:'esperando', listos }, { merge:true });
+    }
+}
+
+async function reiniciarDamas(){
+    vibrarJ(12);
+    await window.setDoc(refDamas(), { fase:'esperando', listos:{} });
+}
+
+function esPropiaFichaDamas(pieza, jugador){
+    return !!pieza && pieza[0] === (jugador === 'nico' ? 'n' : 'c');
+}
+function esRivalFichaDamas(pieza, jugador){
+    return !!pieza && pieza[0] !== (jugador === 'nico' ? 'n' : 'c');
+}
+function esDamaCoronada(pieza){ return !!pieza && pieza.length > 1; }
+
+function movimientosPosiblesDamas(tablero, idx, jugador){
+    const fila = Math.floor(idx/8), col = idx%8;
+    const pieza = tablero[idx];
+    if (!esPropiaFichaDamas(pieza, jugador)) return { simples:[], capturas:[] };
+    const esDama = esDamaCoronada(pieza);
+    const direcciones = esDama ? [[-1,-1],[-1,1],[1,-1],[1,1]]
+        : (jugador === 'nico' ? [[1,-1],[1,1]] : [[-1,-1],[-1,1]]);
+    const simples = [], capturas = [];
+    direcciones.forEach(([dr,dc]) => {
+        const f1 = fila+dr, c1 = col+dc;
+        if (f1<0||f1>7||c1<0||c1>7) return;
+        const idx1 = f1*8+c1;
+        if (!tablero[idx1]) { simples.push(idx1); return; }
+        if (esRivalFichaDamas(tablero[idx1], jugador)) {
+            const f2 = fila+dr*2, c2 = col+dc*2;
+            if (f2<0||f2>7||c2<0||c2>7) return;
+            const idx2 = f2*8+c2;
+            if (!tablero[idx2]) capturas.push({ destino: idx2, capturada: idx1 });
+        }
+    });
+    return { simples, capturas };
+}
+
+function hayCapturasDisponiblesDamas(tablero, jugador){
+    for (let i=0;i<64;i++){
+        if (esPropiaFichaDamas(tablero[i], jugador)) {
+            const { capturas } = movimientosPosiblesDamas(tablero, i, jugador);
+            if (capturas.length) return true;
+        }
+    }
+    return false;
+}
+
+async function seleccionarCasillaDamas(idx){
+    const estado = await leerDamasActual();
+    if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad) return;
+    const tablero = estado.tablero;
+
+    if (_damasSeleccion === null) {
+        if (esPropiaFichaDamas(tablero[idx], miIdentidad)) {
+            vibrarJ(8);
+            _damasSeleccion = idx;
+            const { simples, capturas } = movimientosPosiblesDamas(tablero, idx, miIdentidad);
+            const hayCapturaGlobal = hayCapturasDisponiblesDamas(tablero, miIdentidad);
+            _damasDestinos = hayCapturaGlobal ? capturas.map(c=>c.destino) : [...simples, ...capturas.map(c=>c.destino)];
+            _damasCapturasActuales = capturas;
+            renderDamas(estado);
+        }
+        return;
+    }
+    if (idx === _damasSeleccion) { _damasSeleccion = null; _damasDestinos = []; renderDamas(estado); return; }
+    if (esPropiaFichaDamas(tablero[idx], miIdentidad)) {
+        _damasSeleccion = idx;
+        const { simples, capturas } = movimientosPosiblesDamas(tablero, idx, miIdentidad);
+        const hayCapturaGlobal = hayCapturasDisponiblesDamas(tablero, miIdentidad);
+        _damasDestinos = hayCapturaGlobal ? capturas.map(c=>c.destino) : [...simples, ...capturas.map(c=>c.destino)];
+        _damasCapturasActuales = capturas;
+        renderDamas(estado);
+        return;
+    }
+    if (!_damasDestinos.includes(idx)) return;
+
+    const nuevoTablero = [...tablero];
+    const pieza = nuevoTablero[_damasSeleccion];
+    nuevoTablero[_damasSeleccion] = null;
+    const captura = _damasCapturasActuales.find(c => c.destino === idx);
+    let mensaje = captura ? `${nombreJugador(miIdentidad)} comió una ficha.` : `${nombreJugador(miIdentidad)} movió una ficha.`;
+    if (captura) nuevoTablero[captura.capturada] = null;
+
+    const filaDestino = Math.floor(idx/8);
+    let piezaFinal = pieza;
+    if (!esDamaCoronada(pieza) && ((miIdentidad==='nico' && filaDestino===7) || (miIdentidad==='carito' && filaDestino===0))) {
+        piezaFinal = pieza + 'D';
+        mensaje += ' ¡Corona dama! 👑';
+    }
+    nuevoTablero[idx] = piezaFinal;
+
+    vibrarJ(captura ? [10,20,10] : 10);
+    _damasSeleccion = null; _damasDestinos = []; _damasCapturasActuales = [];
+
+    const quedanRival = nuevoTablero.some(p => esRivalFichaDamas(p, miIdentidad));
+    const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(estado, mensaje) };
+    if (!quedanRival) {
+        updates.fase = 'terminado';
+        updates.ganador = miIdentidad;
+        updates.historial = pushLog(estado, `${mensaje} 🏆 ¡${nombreJugador(miIdentidad)} ganó la partida!`);
+    }
+    await window.updateDoc(refDamas(), updates);
+}
+
+function renderDamas(estado){
+    const cont = document.getElementById('contenido-damas');
+    if (!cont) return;
+
+    if (!estado || estado.fase === 'esperando') {
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <p class="texto-tenue">Tablero de damas clásico, sin captura obligatoria. Vos jugás con las fichas ${miIdentidad==='nico'?'blancas ⚪ (arriba)':'negras ⚫ (abajo)'}.</p>
+                <div class="texto-tenue" style="margin-bottom:10px;">
+                    ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                    ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+                </div>
+                <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoDamas()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! ⚫'}</button>
+            </div>`;
+        return;
+    }
+
+    if (estado.fase === 'terminado') {
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <div style="font-size:1.3rem; margin-bottom:10px;">🏆 ¡Ganó ${nombreJugador(estado.ganador)}!</div>
+                <button class="btn-principal" onclick="reiniciarDamas()">🔁 Jugar de nuevo</button>
+            </div>`;
+        return;
+    }
+
+    const esMiTurno = estado.turno === miIdentidad;
+    let html = `<div class="info-turno-tablero">${esMiTurno ? '🎯 Tu turno' : `Turno de ${nombreJugador(miRival)}…`}</div>`;
+    html += `<div class="tablero-juego">`;
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const idx = row*8+col;
+            const oscura = (row+col)%2===1;
+            const pieza = estado.tablero[idx];
+            let clases = 'casilla-tablero ' + (oscura ? 'casilla-oscura' : 'casilla-clara');
+            if (_damasSeleccion === idx) clases += ' casilla-seleccionada';
+            if (_damasDestinos.includes(idx)) clases += ' casilla-destino';
+            let contenidoPieza = '';
+            if (pieza) {
+                const color = pieza[0] === 'n' ? '⚪' : '⚫';
+                contenidoPieza = `<span class="pieza-tablero">${color}${esDamaCoronada(pieza) ? '<span class="corona-dama">👑</span>' : ''}</span>`;
+            }
+            html += `<div class="${clases}" onclick="${(oscura && esMiTurno) ? `seleccionarCasillaDamas(${idx})` : ''}">${contenidoPieza}</div>`;
+        }
+    }
+    html += `</div>`;
+    if (estado.historial && estado.historial.length) {
+        html += `<div class="panel texto-tenue" style="font-size:0.72rem; line-height:1.6; margin-top:12px;">${estado.historial.slice(-4).map(h => '• ' + h).join('<br>')}</div>`;
+    }
+    html += `<button class="btn-secundario" style="margin-top:10px;" onclick="reiniciarDamas()">🔁 Reiniciar partida</button>`;
+    cont.innerHTML = html;
+}
+
+// ==================== AJEDREZ ====================
+function refAjedrez(){ return window.doc(window.db, 'juegos', 'ajedrez'); }
+
+function crearTableroInicialAjedrez(){
+    const t = new Array(64).fill(null);
+    const filaAtras = ['R','N','B','Q','K','B','N','R'];
+    for (let col=0; col<8; col++){
+        t[0*8+col] = 'c'+filaAtras[col];
+        t[1*8+col] = 'cP';
+        t[6*8+col] = 'nP';
+        t[7*8+col] = 'n'+filaAtras[col];
+    }
+    return t;
+}
+
+let _ajedrezSeleccion = null;
+let _ajedrezDestinos = [];
+
+function iniciarAjedrez(){
+    _ajedrezSeleccion = null; _ajedrezDestinos = [];
+    if (window._unsubAjedrez) window._unsubAjedrez();
+    window._unsubAjedrez = window.onSnapshot(refAjedrez(), (snap) => {
+        renderAjedrez(snap.exists() ? snap.data() : null);
+    }, (err) => {
+        console.error('Error de Firestore en ajedrez:', err);
+        const cont = document.getElementById('contenido-ajedrez');
+        if (cont) cont.innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}). Si el error dice "permission-denied", hay que sumar la colección "juegos" a las Reglas de Firestore.</div>`;
+    });
+}
+
+async function leerAjedrezActual(){
+    return await new Promise(res => { const u = window.onSnapshot(refAjedrez(), s => { u(); res(s.exists() ? s.data() : null); }); });
+}
+
+async function marcarListoAjedrez(){
+    vibrarJ(12);
+    const estado = await leerAjedrezActual();
+    if (estado?.listos?.[miIdentidad]) return;
+    const listos = { ...(estado?.listos||{}), [miIdentidad]: true };
+    if (listos.nico && listos.carito) {
+        await window.setDoc(refAjedrez(), {
+            fase:'jugando', tablero: crearTableroInicialAjedrez(), turno: 'nico',
+            listos, historial: ['Arranca la partida. Empiezan las blancas (Nico).'], ganador: null
+        });
+    } else {
+        await window.setDoc(refAjedrez(), { fase:'esperando', listos }, { merge:true });
+    }
+}
+
+async function reiniciarAjedrez(){
+    vibrarJ(12);
+    await window.setDoc(refAjedrez(), { fase:'esperando', listos:{} });
+}
+
+function colorPiezaAjedrez(pieza){ return pieza ? pieza[0] : null; }
+function tipoPiezaAjedrez(pieza){ return pieza ? pieza[1] : null; }
+function colorDeJugadorAjedrez(jugador){ return jugador === 'nico' ? 'n' : 'c'; }
+
+function destinosDeslizantesAjedrez(tablero, fila, col, direcciones, colorPropio){
+    const destinos = [];
+    direcciones.forEach(([dr,dc]) => {
+        let f = fila+dr, c = col+dc;
+        while (f>=0 && f<8 && c>=0 && c<8) {
+            const idx = f*8+c;
+            if (!tablero[idx]) { destinos.push(idx); }
+            else { if (colorPiezaAjedrez(tablero[idx]) !== colorPropio) destinos.push(idx); break; }
+            f += dr; c += dc;
+        }
+    });
+    return destinos;
+}
+
+function movimientosPosiblesAjedrez(tablero, idx, jugador){
+    const pieza = tablero[idx];
+    const colorPropio = colorDeJugadorAjedrez(jugador);
+    if (!pieza || colorPiezaAjedrez(pieza) !== colorPropio) return [];
+    const tipo = tipoPiezaAjedrez(pieza);
+    const fila = Math.floor(idx/8), col = idx%8;
+    let destinos = [];
+
+    if (tipo === 'P') {
+        const dir = colorPropio === 'n' ? -1 : 1;
+        const filaInicial = colorPropio === 'n' ? 6 : 1;
+        const f1 = fila+dir;
+        if (f1>=0 && f1<8 && !tablero[f1*8+col]) {
+            destinos.push(f1*8+col);
+            const f2 = fila+dir*2;
+            if (fila === filaInicial && !tablero[f2*8+col]) destinos.push(f2*8+col);
+        }
+        [[dir,-1],[dir,1]].forEach(([dr,dc]) => {
+            const f = fila+dr, c = col+dc;
+            if (f>=0 && f<8 && c>=0 && c<8) {
+                const objetivo = tablero[f*8+c];
+                if (objetivo && colorPiezaAjedrez(objetivo) !== colorPropio) destinos.push(f*8+c);
+            }
+        });
+    } else if (tipo === 'N') {
+        [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc]) => {
+            const f = fila+dr, c = col+dc;
+            if (f>=0 && f<8 && c>=0 && c<8) {
+                const objetivo = tablero[f*8+c];
+                if (!objetivo || colorPiezaAjedrez(objetivo) !== colorPropio) destinos.push(f*8+c);
+            }
+        });
+    } else if (tipo === 'B') {
+        destinos = destinosDeslizantesAjedrez(tablero, fila, col, [[-1,-1],[-1,1],[1,-1],[1,1]], colorPropio);
+    } else if (tipo === 'R') {
+        destinos = destinosDeslizantesAjedrez(tablero, fila, col, [[-1,0],[1,0],[0,-1],[0,1]], colorPropio);
+    } else if (tipo === 'Q') {
+        destinos = destinosDeslizantesAjedrez(tablero, fila, col, [[-1,-1],[-1,1],[1,-1],[1,1],[-1,0],[1,0],[0,-1],[0,1]], colorPropio);
+    } else if (tipo === 'K') {
+        [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc]) => {
+            const f = fila+dr, c = col+dc;
+            if (f>=0 && f<8 && c>=0 && c<8) {
+                const objetivo = tablero[f*8+c];
+                if (!objetivo || colorPiezaAjedrez(objetivo) !== colorPropio) destinos.push(f*8+c);
+            }
+        });
+    }
+    return destinos;
+}
+
+const NOMBRES_PIEZAS_AJEDREZ = { P:'peón', N:'caballo', B:'alfil', R:'torre', Q:'reina', K:'rey' };
+const EMOJI_PIEZAS_AJEDREZ = {
+    nP:'♙', nN:'♘', nB:'♗', nR:'♖', nQ:'♕', nK:'♔',
+    cP:'♟', cN:'♞', cB:'♝', cR:'♜', cQ:'♛', cK:'♚'
+};
+
+async function seleccionarCasillaAjedrez(idx){
+    const estado = await leerAjedrezActual();
+    if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad) return;
+    const tablero = estado.tablero;
+    const colorPropio = colorDeJugadorAjedrez(miIdentidad);
+
+    if (_ajedrezSeleccion === null) {
+        if (tablero[idx] && colorPiezaAjedrez(tablero[idx]) === colorPropio) {
+            vibrarJ(8);
+            _ajedrezSeleccion = idx;
+            _ajedrezDestinos = movimientosPosiblesAjedrez(tablero, idx, miIdentidad);
+            renderAjedrez(estado);
+        }
+        return;
+    }
+    if (idx === _ajedrezSeleccion) { _ajedrezSeleccion = null; _ajedrezDestinos = []; renderAjedrez(estado); return; }
+    if (tablero[idx] && colorPiezaAjedrez(tablero[idx]) === colorPropio) {
+        _ajedrezSeleccion = idx;
+        _ajedrezDestinos = movimientosPosiblesAjedrez(tablero, idx, miIdentidad);
+        renderAjedrez(estado);
+        return;
+    }
+    if (!_ajedrezDestinos.includes(idx)) return;
+
+    const nuevoTablero = [...tablero];
+    const pieza = nuevoTablero[_ajedrezSeleccion];
+    const objetivo = nuevoTablero[idx];
+    nuevoTablero[_ajedrezSeleccion] = null;
+
+    let mensaje = `${nombreJugador(miIdentidad)} movió ${NOMBRES_PIEZAS_AJEDREZ[tipoPiezaAjedrez(pieza)]}.`;
+    let terminoPartida = false;
+    if (objetivo) {
+        mensaje = `${nombreJugador(miIdentidad)} capturó ${NOMBRES_PIEZAS_AJEDREZ[tipoPiezaAjedrez(objetivo)]} con su ${NOMBRES_PIEZAS_AJEDREZ[tipoPiezaAjedrez(pieza)]}.`;
+        if (tipoPiezaAjedrez(objetivo) === 'K') terminoPartida = true;
+    }
+
+    let piezaFinal = pieza;
+    const filaDestino = Math.floor(idx/8);
+    if (tipoPiezaAjedrez(pieza) === 'P' && (filaDestino === 0 || filaDestino === 7)) {
+        piezaFinal = colorPropio + 'Q';
+        mensaje += ' ¡Corona reina! 👑';
+    }
+    nuevoTablero[idx] = piezaFinal;
+
+    vibrarJ(objetivo ? [10,20,10] : 10);
+    _ajedrezSeleccion = null; _ajedrezDestinos = [];
+
+    const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(estado, mensaje) };
+    if (terminoPartida) {
+        updates.fase = 'terminado';
+        updates.ganador = miIdentidad;
+        updates.historial = pushLog(estado, `${mensaje} 🏆 ¡${nombreJugador(miIdentidad)} ganó la partida!`);
+    }
+    await window.updateDoc(refAjedrez(), updates);
+}
+
+function renderAjedrez(estado){
+    const cont = document.getElementById('contenido-ajedrez');
+    if (!cont) return;
+
+    if (!estado || estado.fase === 'esperando') {
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <p class="texto-tenue">Ajedrez clásico simplificado (sin enroque, sin captura al paso; el rey no tiene detección de jaque — la partida termina al capturarlo). Vos jugás con las piezas ${miIdentidad==='nico'?'blancas (abajo)':'negras (arriba)'}.</p>
+                <div class="texto-tenue" style="margin-bottom:10px;">
+                    ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                    ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+                </div>
+                <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoAjedrez()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! ♞'}</button>
+            </div>`;
+        return;
+    }
+
+    if (estado.fase === 'terminado') {
+        cont.innerHTML = `
+            <div class="panel texto-centro">
+                <div style="font-size:1.3rem; margin-bottom:10px;">🏆 ¡Ganó ${nombreJugador(estado.ganador)}!</div>
+                <button class="btn-principal" onclick="reiniciarAjedrez()">🔁 Jugar de nuevo</button>
+            </div>`;
+        return;
+    }
+
+    const esMiTurno = estado.turno === miIdentidad;
+    let html = `<div class="info-turno-tablero">${esMiTurno ? '🎯 Tu turno' : `Turno de ${nombreJugador(miRival)}…`}</div>`;
+    html += `<div class="tablero-juego">`;
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            const idx = row*8+col;
+            const oscura = (row+col)%2===1;
+            const pieza = estado.tablero[idx];
+            let clases = 'casilla-tablero ' + (oscura ? 'casilla-oscura' : 'casilla-clara');
+            if (_ajedrezSeleccion === idx) clases += ' casilla-seleccionada';
+            if (_ajedrezDestinos.includes(idx)) clases += ' casilla-destino';
+            const contenidoPieza = pieza ? `<span class="pieza-tablero">${EMOJI_PIEZAS_AJEDREZ[pieza]}</span>` : '';
+            html += `<div class="${clases}" onclick="${esMiTurno ? `seleccionarCasillaAjedrez(${idx})` : ''}">${contenidoPieza}</div>`;
+        }
+    }
+    html += `</div>`;
+    if (estado.historial && estado.historial.length) {
+        html += `<div class="panel texto-tenue" style="font-size:0.72rem; line-height:1.6; margin-top:12px;">${estado.historial.slice(-4).map(h => '• ' + h).join('<br>')}</div>`;
+    }
+    html += `<button class="btn-secundario" style="margin-top:10px;" onclick="reiniciarAjedrez()">🔁 Reiniciar partida</button>`;
+    cont.innerHTML = html;
 }
 
 // ==================== CHAT FLOTANTE ====================

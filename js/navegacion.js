@@ -15,6 +15,14 @@ function abrirJuego(juego){
     if (juego === 'indagacion') iniciarIndagacion();
     if (juego === 'ruleta') iniciarRuleta();
     if (juego === 'verdadoreto') iniciarVerdadOReto();
+    if (juego === 'tateti') iniciarTateti();
+    if (juego === 'conecta4') iniciarConecta4();
+    if (juego === 'reflejos') iniciarReflejos();
+    if (juego === 'mascota') iniciarMascota();
+    if (juego === 'escoba') iniciarEscoba();
+    if (juego === 'batallanaval') iniciarBatallaNaval();
+    if (juego === 'espejo') iniciarEspejo();
+    if (juego === 'mentiraverdad') iniciarMentiraVerdad();
     // Deja constancia en la URL de qué juego está abierto, así un link
     // desde una página de categoría (categorias/*.html) puede llevar
     // directo a un juego con ?juego=id, y el botón "atrás" del navegador
@@ -49,6 +57,15 @@ function detenerListenersActivos(){
     if (window._unsubIndagacionActual) { window._unsubIndagacionActual(); window._unsubIndagacionActual = null; }
     if (window._unsubRuleta) { window._unsubRuleta(); window._unsubRuleta = null; }
     if (window._unsubVerdadOReto) { window._unsubVerdadOReto(); window._unsubVerdadOReto = null; }
+    if (window._unsubTateti) { window._unsubTateti(); window._unsubTateti = null; }
+    if (window._unsubConecta4) { window._unsubConecta4(); window._unsubConecta4 = null; }
+    if (window._unsubReflejos) { window._unsubReflejos(); window._unsubReflejos = null; }
+    if (window._unsubMascota) { window._unsubMascota(); window._unsubMascota = null; }
+    if (window._unsubEscoba) { window._unsubEscoba(); window._unsubEscoba = null; }
+    if (window._unsubBatallaNaval) { window._unsubBatallaNaval(); window._unsubBatallaNaval = null; }
+    if (window._unsubEspejoLista) { window._unsubEspejoLista(); window._unsubEspejoLista = null; }
+    if (window._unsubEspejoActual) { window._unsubEspejoActual(); window._unsubEspejoActual = null; }
+    if (window._unsubMentiraVerdad) { window._unsubMentiraVerdad(); window._unsubMentiraVerdad = null; }
 }
 
 function renderMenuPrincipal(){

@@ -9,10 +9,16 @@
 // Esta lista tiene que coincidir con JUEGOS_MOTOR_REFLEXION de navegacion.js.
 const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones'];
 
+// Estos 9 juegos son "en vivo, los dos a la vez" y comparten la
+// bureaucracia de js/arcade-comun.js (esperar a que ambos estén
+// listos, arrancar sincronizados, etc). Esta lista tiene que
+// coincidir con la de navegacion.js.
+const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carreraglobos', 'ritmo', 'bloques', 'cocodrilos', 'pesca', 'ladrillos'];
+
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 3;
+const VERSION_CACHE = 5;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)
@@ -22,6 +28,9 @@ function scriptsNecesariosPara(juegoId) {
     const propio = `js/juegos/${juegoId}.js?v=${VERSION_CACHE}`;
     if (JUEGOS_QUE_USAN_MOTOR_REFLEXION.includes(juegoId)) {
         return [`js/motor-reflexion.js?v=${VERSION_CACHE}`, propio];
+    }
+    if (JUEGOS_QUE_USAN_ARCADE_COMUN.includes(juegoId)) {
+        return [`js/arcade-comun.js?v=${VERSION_CACHE}`, propio];
     }
     return [propio];
 }

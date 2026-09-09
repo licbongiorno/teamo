@@ -65,6 +65,18 @@ async function abrirJuego(juego){
     if (juego === 'termometro') iniciarTermometro();
     if (juego === 'veinte') iniciarVeinte();
     if (juego === 'estadisticas') iniciarEstadisticas();
+    if (juego === 'sudoku') iniciarSudoku();
+    if (juego === 'uno') iniciarUno();
+    if (juego === 'chinchon') iniciarChinchon();
+    if (juego === 'burbujas') iniciarBurbujas();
+    if (juego === 'bombas') iniciarBombas();
+    if (juego === 'pinatas') iniciarPinatas();
+    if (juego === 'carreraglobos') iniciarCarreraGlobos();
+    if (juego === 'ritmo') iniciarRitmo();
+    if (juego === 'bloques') iniciarBloques();
+    if (juego === 'cocodrilos') iniciarCocodrilos();
+    if (juego === 'pesca') iniciarPesca();
+    if (juego === 'ladrillos') iniciarLadrillos();
 
     // Presencia: mientras estamos en un juego (no en el menú), avisamos
     // cada tanto que estamos acá, para que el otro vea "está jugando
@@ -146,6 +158,25 @@ function detenerListenersActivos(){
     if (window._unsubRuedaPremios) { window._unsubRuedaPremios(); window._unsubRuedaPremios = null; }
     if (window._unsubTermometro) { window._unsubTermometro(); window._unsubTermometro = null; }
     if (window._unsubVeinte) { window._unsubVeinte(); window._unsubVeinte = null; }
+    if (window._unsubSudoku) { window._unsubSudoku(); window._unsubSudoku = null; }
+    if (window._unsubUno) { window._unsubUno(); window._unsubUno = null; }
+    if (window._unsubChinchon) { window._unsubChinchon(); window._unsubChinchon = null; }
+    if (window._unsubBurbujas) { window._unsubBurbujas(); window._unsubBurbujas = null; }
+    if (window._unsubBombas) { window._unsubBombas(); window._unsubBombas = null; }
+    if (window._unsubPinatas) { window._unsubPinatas(); window._unsubPinatas = null; }
+    if (window._unsubCarreraGlobos) { window._unsubCarreraGlobos(); window._unsubCarreraGlobos = null; }
+    if (window._unsubRitmo) { window._unsubRitmo(); window._unsubRitmo = null; }
+    if (window._unsubBloques) { window._unsubBloques(); window._unsubBloques = null; }
+    if (window._unsubCocodrilos) { window._unsubCocodrilos(); window._unsubCocodrilos = null; }
+    if (window._unsubPesca) { window._unsubPesca(); window._unsubPesca = null; }
+    if (window._unsubLadrillos) { window._unsubLadrillos(); window._unsubLadrillos = null; }
+    if (window._loopBurbujas) { cancelAnimationFrame(window._loopBurbujas); window._loopBurbujas = null; }
+    if (window._loopPesca) { cancelAnimationFrame(window._loopPesca); window._loopPesca = null; }
+    if (window._loopGlobos) { clearInterval(window._loopGlobos); window._loopGlobos = null; }
+    if (window._timerPinatas) { clearTimeout(window._timerPinatas); window._timerPinatas = null; }
+    if (window._timerCocodrilos) { clearTimeout(window._timerCocodrilos); window._timerCocodrilos = null; }
+    if (window._spawnLoopCocodrilos) { clearTimeout(window._spawnLoopCocodrilos); window._spawnLoopCocodrilos = null; }
+    if (window._timerCaidaBloques) { clearInterval(window._timerCaidaBloques); window._timerCaidaBloques = null; }
 }
 
 function jugarAlAzar(){

@@ -75,6 +75,18 @@ window.JUEGOS = [
     { id:'veinte',     nombre:'20 Preguntas',          icono:'❔', categoria:'clasicos',    disponible:true, descripcion:'Uno piensa algo, el otro pregunta sí/no hasta adivinar.' },
     { id:'trivianosotros', nombre:'Trivia de Nosotros', icono:'🧠', categoria:'conexion',   disponible:true, descripcion:'Preguntas sobre gustos y costumbres de cada uno.' },
     { id:'batallacanciones', nombre:'Batalla de Canciones', icono:'🎵', categoria:'competencia', disponible:true, descripcion:'Sale un tema, cada uno propone una canción que le calce.' },
+    { id:'sudoku',     nombre:'Sudoku de a Dos',       icono:'🧩', categoria:'cooperativos', disponible:true, descripcion:'Sudoku colaborativo: los dos completan celdas a la vez, sin esperar turnos.' },
+    { id:'uno',        nombre:'UNO',                   icono:'🎴', categoria:'clasicos',    disponible:true, descripcion:'El clásico juego de cartas, de a dos.' },
+    { id:'chinchon',   nombre:'Chinchón',               icono:'🃑', categoria:'clasicos',    disponible:true, descripcion:'El clásico juego de cartas español: armá grupos y escaleras para cerrar la mano.' },
+    { id:'burbujas',   nombre:'Rompe Burbujas',        icono:'🫧', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: tocá las burbujas, evitá los pinches. Gana quien tenga más puntos en 30 segundos.' },
+    { id:'bombas',     nombre:'Esquivá las Bombas',    icono:'💣', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: atrapá corazones, evitá las bombas.' },
+    { id:'pinatas',    nombre:'Derribá Piñatas',       icono:'🎯', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: tocá las piñatas antes de que se vayan. Los combos multiplican los puntos.' },
+    { id:'carreraglobos', nombre:'Carrera de Globos',  icono:'🎈', categoria:'competencia', disponible:true, descripcion:'Tocá lo más rápido posible para inflar tu globo. El primero en llegar a la meta gana.' },
+    { id:'ritmo',      nombre:'Ritmo a Dúo',           icono:'🥁', categoria:'competencia', disponible:true, descripcion:'Tocá al compás de un pulso que se repite. Gana quien tenga mejor puntería.' },
+    { id:'bloques',    nombre:'Batalla de Bloques',    icono:'🧱', categoria:'competencia', disponible:true, descripcion:'Tipo Tetris de a dos: cada uno en su propia grilla, mandándose líneas de basura entre sí.' },
+    { id:'cocodrilos', nombre:'Martillo de Cocodrilos', icono:'🐊', categoria:'cooperativos', disponible:true, descripcion:'Cooperativo en vivo: los dos martillan el mismo tablero. ¿Llegan a la meta juntos?' },
+    { id:'pesca',      nombre:'Pesca Cooperativa',     icono:'🎣', categoria:'cooperativos', disponible:true, descripcion:'Cooperativo en vivo: entre los dos, pesquen los peces que cruzan la pantalla.' },
+    { id:'ladrillos',  nombre:'Rompe Ladrillos a Dúo', icono:'🧱', categoria:'cooperativos', disponible:true, descripcion:'Cooperativo: una pared compartida, ¿cuánto tardan los dos en dejarla limpia?' },
 ];
 
 window.obtenerJuegosDeCategoria = function(categoriaId){

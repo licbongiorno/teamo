@@ -105,9 +105,11 @@ async function seleccionarCasillaDamas(idx){
         if (esPropiaFichaDamas(tablero[idx], miIdentidad)) {
             vibrarJ(8);
             _damasSeleccion = idx;
+            // Sin captura obligatoria: cada ficha se mueve con sus propios
+            // movimientos posibles (simples o de captura), sin importar si
+            // otra ficha del tablero también podría comer.
             const { simples, capturas } = movimientosPosiblesDamas(tablero, idx, miIdentidad);
-            const hayCapturaGlobal = hayCapturasDisponiblesDamas(tablero, miIdentidad);
-            _damasDestinos = hayCapturaGlobal ? capturas.map(c=>c.destino) : [...simples, ...capturas.map(c=>c.destino)];
+            _damasDestinos = [...simples, ...capturas.map(c=>c.destino)];
             _damasCapturasActuales = capturas;
             renderDamas(estado);
         }
@@ -117,8 +119,7 @@ async function seleccionarCasillaDamas(idx){
     if (esPropiaFichaDamas(tablero[idx], miIdentidad)) {
         _damasSeleccion = idx;
         const { simples, capturas } = movimientosPosiblesDamas(tablero, idx, miIdentidad);
-        const hayCapturaGlobal = hayCapturasDisponiblesDamas(tablero, miIdentidad);
-        _damasDestinos = hayCapturaGlobal ? capturas.map(c=>c.destino) : [...simples, ...capturas.map(c=>c.destino)];
+        _damasDestinos = [...simples, ...capturas.map(c=>c.destino)];
         _damasCapturasActuales = capturas;
         renderDamas(estado);
         return;

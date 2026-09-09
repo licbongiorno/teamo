@@ -44,7 +44,7 @@ async function abrirJuego(juego){
     // Los juegos de "responder y revelar" comparten un mismo motor
     // genérico (js/motor-reflexion.js): todos arrancan igual, sólo
     // cambia su configuración (banco de preguntas y textos).
-    const JUEGOS_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones'];
+    const JUEGOS_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones'];
     if (JUEGOS_MOTOR_REFLEXION.includes(juego)) iniciarReflexionGenerico(juego);
 
     if (juego === 'mentegemela') iniciarMenteGemela();
@@ -58,6 +58,18 @@ async function abrirJuego(juego){
     if (juego === 'puntoencuentro') iniciarPuntoEncuentro();
     if (juego === 'dibujayadivina') iniciarDibujaYAdivina();
     if (juego === 'cartas') iniciarCartas();
+    if (juego === 'capsula') iniciarCapsula();
+    if (juego === 'mapa') iniciarMapa();
+    if (juego === 'escaperoom') iniciarEscapeRoom();
+    if (juego === 'ruedapremios') iniciarRuedaPremios();
+    if (juego === 'termometro') iniciarTermometro();
+    if (juego === 'veinte') iniciarVeinte();
+    if (juego === 'estadisticas') iniciarEstadisticas();
+
+    // Presencia: mientras estamos en un juego (no en el menú), avisamos
+    // cada tanto que estamos acá, para que el otro vea "está jugando
+    // ahora" si entra en simultáneo.
+    if (typeof iniciarLatidoPresencia === 'function' && juego !== 'menu') iniciarLatidoPresencia(juego);
     // Deja constancia en la URL de qué juego está abierto, así un link
     // desde una página de categoría (categorias/*.html) puede llevar
     // directo a un juego con ?juego=id, y el botón "atrás" del navegador
@@ -69,6 +81,8 @@ async function abrirJuego(juego){
 function cerrarJuego(){
     vibrarJ(12);
     detenerListenersActivos();
+    if (typeof detenerLatidoPresencia === 'function') detenerLatidoPresencia();
+    if (typeof detenerCronometroTurno === 'function') detenerCronometroTurno();
     document.querySelectorAll('.pantalla-juego').forEach(p => p.classList.remove('activa'));
     document.getElementById('pantalla-menu').classList.add('activa');
     const params = new URLSearchParams(window.location.search);
@@ -126,6 +140,12 @@ function detenerListenersActivos(){
     if (window._unsubDibujaYAdivina) { window._unsubDibujaYAdivina(); window._unsubDibujaYAdivina = null; }
     if (window._unsubCartasLista) { window._unsubCartasLista(); window._unsubCartasLista = null; }
     if (window._unsubCartasActual) { window._unsubCartasActual(); window._unsubCartasActual = null; }
+    if (window._unsubCapsula) { window._unsubCapsula(); window._unsubCapsula = null; }
+    if (window._unsubMapa) { window._unsubMapa(); window._unsubMapa = null; }
+    if (window._unsubEscapeRoom) { window._unsubEscapeRoom(); window._unsubEscapeRoom = null; }
+    if (window._unsubRuedaPremios) { window._unsubRuedaPremios(); window._unsubRuedaPremios = null; }
+    if (window._unsubTermometro) { window._unsubTermometro(); window._unsubTermometro = null; }
+    if (window._unsubVeinte) { window._unsubVeinte(); window._unsubVeinte = null; }
 }
 
 function jugarAlAzar(){
@@ -170,6 +190,9 @@ function renderMenuPrincipal(){
 
 function iniciarJuegos(){
     renderMenuPrincipal();
+    if (typeof aplicarTemaGuardado === 'function') aplicarTemaGuardado();
+    if (typeof registrarActividadRacha === 'function') registrarActividadRacha();
+    if (typeof iniciarEscuchaPresencia === 'function') iniciarEscuchaPresencia();
     // El indicador de "mensaje nuevo" en la burbuja de chat empieza a
     // escuchar apenas sabemos quiénes somos, no recién cuando se abre
     // el chat (así detecta mensajes que llegaron mientras no mirábamos).

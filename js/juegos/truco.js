@@ -14,6 +14,11 @@ function crearMazoTruco(){
 }
 function numDeCarta(id){ return parseInt(id.split('_')[1]); }
 function paloDeCarta(id){ return id.split('_')[0]; }
+function tieneFlorTruco(cartas){
+    if (!cartas || cartas.length < 3) return false;
+    const palos = cartas.map(paloDeCarta);
+    return palos[0] === palos[1] && palos[1] === palos[2];
+}
 function valorTruco(id){
     const n = numDeCarta(id), p = paloDeCarta(id);
     if (p === 'espada' && n === 1) return 14;
@@ -134,6 +139,7 @@ async function repartirNuevaManoTruco(estadoPrevio, manoElegida, puntajesInicial
         trucoNivel: 0,
         trucoQueridoNivel: 0,
         trucoUltimoCantadoPor: null,
+        florCantada: {},
         historial: pushLog(estadoPrevio, `Nueva mano. Reparte ${nombreJugador(manoElegida)}.`),
         manoGanadorTexto: null,
         ganadorPartida: null
@@ -144,6 +150,12 @@ async function elegirMetaTruco(meta){
     const estado = await leerTrucoActual();
     if (estado?.listos?.[miIdentidad]) return;
     await window.setDoc(refTruco(), { fase:'esperando', puntosParaGanar: meta,
+        listos: estado?.listos || {}, puntajes: estado?.puntajes || {nico:0,carito:0} }, { merge:true });
+}
+async function elegirConFlorTruco(valor){
+    const estado = await leerTrucoActual();
+    if (estado?.listos?.[miIdentidad]) return;
+    await window.setDoc(refTruco(), { fase:'esperando', conFlor: valor,
         listos: estado?.listos || {}, puntajes: estado?.puntajes || {nico:0,carito:0} }, { merge:true });
 }
 async function marcarListoTruco(){
@@ -176,6 +188,9 @@ async function jugarCartaTruco(cartaId){
     if (jugadasRonda.length < 2) {
         updates.jugadorEnTurno = miRival;
         await window.updateDoc(refTruco(), updates);
+        if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        }
         return;
     }
 
@@ -194,6 +209,9 @@ async function jugarCartaTruco(cartaId){
         const siguienteLider = ganadorRonda === 'parda' ? estado.mano : ganadorRonda;
         updates.jugadorEnTurno = siguienteLider;
         await window.updateDoc(refTruco(), updates);
+        if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        }
     }
 }
 
@@ -214,6 +232,9 @@ async function finalizarManoTruco(estado, updatesParciales, ganadorHand){
         updates.manoGanadorTexto = `${nombreJugador(ganadorHand)} ganó la mano`;
     }
     await window.updateDoc(refTruco(), updates);
+    if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+    }
 }
 
 async function siguienteManoTruco(){
@@ -221,6 +242,35 @@ async function siguienteManoTruco(){
     if (!estado || estado.fase !== 'mano_terminada') return;
     const siguienteMano = estado.mano === 'nico' ? 'carito' : 'nico';
     await repartirNuevaManoTruco(estado, siguienteMano, estado.puntajes);
+}
+
+// Version simplificada de la flor: cantarla suma 3 puntos directo
+// (sin resolver "querida"/"no querida" ni contraflor, para no meter
+// toda la complejidad de las reglas reales en un motor que ya
+// funciona bien). Sólo se puede cantar una vez por mano, por jugador.
+async function cantarFlorTruco(){
+    vibrarJ([15, 30, 15]);
+    const estado = await leerTrucoActual();
+    if (!estado || estado.fase !== 'jugando' || !estado.conFlor) return;
+    const misCartas = estado.cartas[miIdentidad] || [];
+    if (!tieneFlorTruco(misCartas)) return;
+    const florCantada = { ...(estado.florCantada || {}) };
+    if (florCantada[miIdentidad]) return;
+    florCantada[miIdentidad] = true;
+    const nuevosPuntajes = { ...estado.puntajes };
+    nuevosPuntajes[miIdentidad] = (nuevosPuntajes[miIdentidad] || 0) + 3;
+    const updates = {
+        florCantada, puntajes: nuevosPuntajes,
+        historial: pushLog(estado, `🌺 ${nombreJugador(miIdentidad)} cantó flor (+3).`)
+    };
+    if (nuevosPuntajes[miIdentidad] >= estado.puntosParaGanar) {
+        updates.fase = 'terminado';
+        updates.ganadorPartida = miIdentidad;
+    }
+    await window.updateDoc(refTruco(), updates);
+    if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+    }
 }
 
 async function cantarEnvido(tipo){
@@ -301,6 +351,9 @@ async function responderQuieroTruco(){
         updates.historial = pushLog(estado, `${nombreJugador(miIdentidad)} quiso el ${nombreCantoTruco(canto.tipo)}.`);
     }
     await window.updateDoc(refTruco(), updates);
+    if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+    }
 }
 async function responderNoQuieroTruco(){
     vibrarJ([10,30,10]);
@@ -317,6 +370,9 @@ async function responderNoQuieroTruco(){
         updates.historial = pushLog(estado, `Envido no querido: +${puntos} para ${nombreJugador(canto.de)}.`);
         if (nuevosPuntajes[canto.de] >= estado.puntosParaGanar) { updates.fase = 'terminado'; updates.ganadorPartida = canto.de; }
         await window.updateDoc(refTruco(), updates);
+        if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        }
     } else {
         const puntos = canto.nivel;
         const nuevosPuntajes = { ...estado.puntajes };
@@ -330,6 +386,9 @@ async function responderNoQuieroTruco(){
             updates.manoGanadorTexto = `${nombreJugador(canto.de)} ganó la mano (no querido)`;
         }
         await window.updateDoc(refTruco(), updates);
+        if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        }
     }
 }
 async function irseAlMazoTruco(){
@@ -350,6 +409,9 @@ async function irseAlMazoTruco(){
         updates.manoGanadorTexto = `${nombreJugador(miRival)} ganó la mano (se fue al mazo)`;
     }
     await window.updateDoc(refTruco(), updates);
+    if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+    }
 }
 async function reiniciarTruco(){
     vibrarJ(12);
@@ -370,12 +432,18 @@ function renderTruco(estado){
         const listoYo = estado?.listos?.[miIdentidad];
         const listoRival = estado?.listos?.[miRival];
         const meta = estado?.puntosParaGanar || 30;
+        const conFlor = estado?.conFlor || false;
         cont.innerHTML = `
             <div class="panel texto-centro">
                 <p class="texto-tenue">Truco de a dos, con envido. Gana quien llegue primero a los tantos.</p>
                 <div class="btn-fila" style="margin:10px 0;">
                     <button class="btn-secundario" style="${meta===15?'border-color:var(--rosa);':''}" onclick="elegirMetaTruco(15)">A 15</button>
                     <button class="btn-secundario" style="${meta===30?'border-color:var(--rosa);':''}" onclick="elegirMetaTruco(30)">A 30</button>
+                </div>
+                <div class="texto-tenue" style="margin-bottom:6px;">¿Juegan con flor?</div>
+                <div class="btn-fila" style="margin-bottom:10px;">
+                    <button class="btn-secundario" style="${conFlor?'border-color:var(--rosa);':''}" onclick="elegirConFlorTruco(true)">🌺 Con flor</button>
+                    <button class="btn-secundario" style="${!conFlor?'border-color:var(--rosa);':''}" onclick="elegirConFlorTruco(false)">Sin flor</button>
                 </div>
                 <div class="texto-tenue" style="margin-bottom:10px;">
                     ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
@@ -472,6 +540,9 @@ function renderTruco(estado){
                 html += `<button class="btn-secundario" onclick="cantarTruco()">${nombreSiguiente}</button>`;
             }
             html += `</div></div>`;
+        }
+        if (estado.conFlor && !(estado.florCantada || {})[miIdentidad] && tieneFlorTruco(misCartas)) {
+            html += `<div class="panel texto-centro"><button class="btn-secundario" onclick="cantarFlorTruco()">🌺 ¡Tengo flor! Cantarla (+3)</button></div>`;
         }
 
         html += `<div class="panel">

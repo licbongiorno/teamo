@@ -140,6 +140,10 @@ async function responderReflexion(juegoId, valor){
     const respuestas = { ...data.respuestas, [miIdentidad]: valor };
     const ambos = respuestas.nico && respuestas.carito;
     await window.updateDoc(ref, { respuestas, ...(ambos ? { fase: 'revelado' } : {}) });
+    if (ambos && typeof registrarEvento === 'function') {
+        const cfg = window.CONFIG_REFLEXION[juegoId];
+        registrarEvento('reflexion_completada', `Revelaron una ronda de ${cfg.nombreJuego || juegoId}`);
+    }
 }
 
 async function sortearReflexion(juegoId){

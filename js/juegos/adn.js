@@ -1768,8 +1768,10 @@ function renderAdn(estado){
                 <div class="barra-medidor"><div class="relleno-medidor barra-crecer" style="width:${pct}%; background:linear-gradient(90deg,var(--rosa),var(--lila));"></div></div>
             </div>`;
         });
-        html += `</div><button class="btn-principal" onclick="nuevaRondaAdn()">🔁 Otra ronda</button>`;
+        html += `</div><button class="btn-principal" onclick="nuevaRondaAdn()">🔁 Otra ronda</button>
+        <button class="btn-secundario" style="margin-top:8px;" onclick="compartirResultadoAdn()">📸 Descargar como imagen</button>`;
         cont.innerHTML = html;
+        window._ultimoResultadoAdn = { conteos, total };
         return;
     }
 
@@ -1818,4 +1820,22 @@ async function enviarAdn(){
     const data = snap.data();
     const otro = miIdentidad === 'nico' ? data.respuestasCarito : data.respuestasNico;
     await window.updateDoc(refAdn(), { [campo]: dimensiones, ...(otro ? { fase: 'revelado' } : {}) });
+}
+
+function compartirResultadoAdn(){
+    vibrarJ(12);
+    if (typeof generarTarjetaImagen !== 'function' || !window._ultimoResultadoAdn) return;
+    const { conteos, total } = window._ultimoResultadoAdn;
+    let top = null, topPct = -1;
+    Object.entries(DIMENSIONES_ADN).forEach(([k, d]) => {
+        const pct = total ? Math.round((conteos[k] / total) * 100) : 0;
+        if (pct > topPct) { topPct = pct; top = d; }
+    });
+    generarTarjetaImagen({
+        titulo: 'Nuestro ADN de Pareja',
+        numeroGrande: top ? top.icono : '🧬',
+        subtitulo: top ? `${top.nombre}: ${topPct}%` : '',
+        pie: 'Nico & Carito · Nuestros Juegos',
+        nombreArchivo: 'adn-de-la-pareja'
+    });
 }

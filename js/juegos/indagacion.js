@@ -239,4 +239,7 @@ async function adivinarIndagacion(){
     await window.updateDoc(refCartaIndagacion(window._cartaIndagacionActualId), {
         adivinanza: texto, fase: 'revelado'
     });
+    if (typeof registrarEvento === 'function') {
+        registrarEvento('carta_indagacion', `Completaron una carta de indagación`);
+    }
 }

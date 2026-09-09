@@ -98,4 +98,7 @@ async function jugarTateti(idx){
         updates.turno = miIdentidad === 'nico' ? 'carito' : 'nico';
     }
     await window.updateDoc(refTateti(), updates);
+    if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+        registrarEvento('gano_partida', `${nombreJugador(updates.ganador)} ganó al Ta-Te-Ti Infinito`);
+    }
 }

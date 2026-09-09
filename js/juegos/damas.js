@@ -152,6 +152,9 @@ async function seleccionarCasillaDamas(idx){
         updates.historial = pushLog(estado, `${mensaje} 🏆 ¡${nombreJugador(miIdentidad)} ganó la partida!`);
     }
     await window.updateDoc(refDamas(), updates);
+    if (!quedanRival && typeof registrarEvento === 'function') {
+        registrarEvento('gano_damas', `${nombreJugador(miIdentidad)} le ganó a ${nombreJugador(miRival)} en Damas`);
+    }
 }
 
 function renderDamas(estado){
@@ -183,7 +186,7 @@ function renderDamas(estado){
     }
 
     const esMiTurno = estado.turno === miIdentidad;
-    let html = `<div class="info-turno-tablero">${esMiTurno ? '🎯 Tu turno' : `Turno de ${nombreJugador(miRival)}…`}</div>`;
+    let html = `<div class="info-turno-tablero">${esMiTurno ? '🎯 Tu turno' : `Turno de ${nombreJugador(miRival)}…`} <span id="crono-damas" class="texto-tenue" style="font-size:0.75rem;"></span></div>`;
     html += `<div class="tablero-juego">`;
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
@@ -207,4 +210,5 @@ function renderDamas(estado){
     }
     html += `<button class="btn-secundario" style="margin-top:10px;" onclick="reiniciarDamas()">🔁 Reiniciar partida</button>`;
     cont.innerHTML = html;
+    if (typeof actualizarCronometroTurno === 'function') actualizarCronometroTurno('crono-damas', estado.turno);
 }

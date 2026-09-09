@@ -134,6 +134,7 @@ function renderDibujaYAdivina(estado){
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Uno dibuja con el dedo, el otro adivina. Al acertar, se cambian los roles.</p>
             <button class="btn-principal" onclick="nuevaPartidaDibujaYAdivina()">Empezar</button>
+            <button class="btn-secundario" style="margin-top:8px;" onclick="mostrarGaleriaDibujos()">🖼️ Ver galería</button>
         </div>`;
         return;
     }
@@ -144,6 +145,7 @@ function renderDibujaYAdivina(estado){
     let html = `<div class="panel texto-centro">
         <div style="display:flex; justify-content:space-between; font-size:0.85rem;"><span>Nico ${p.nico || 0}</span><span>Carito ${p.carito || 0}</span></div>
         <div class="texto-tenue" style="margin-top:6px;">${soyDibujante ? `Tu palabra: ${estado.palabra}` : `${nombreJugador(estado.dibujante)} está dibujando…`}</div>
+        <button class="btn-secundario" style="margin-top:8px;" onclick="mostrarGaleriaDibujos()">🖼️ Ver galería</button>
     </div>`;
 
     html += `<div style="position:relative; width:100%; max-width:340px; aspect-ratio:1; margin:0 auto 12px; background:rgba(255,255,255,0.04); border:1px solid var(--borde); border-radius:16px; touch-action:none; overflow:hidden;">
@@ -281,8 +283,72 @@ async function adivinarDibujo(){
     puntajes.nico = (puntajes.nico || 0) + 1;
     puntajes.carito = (puntajes.carito || 0) + 1;
     _canvasListo = false;
+    // Guardamos el dibujo adivinado en la galería antes de limpiar el lienzo.
+    if (data.trazos && data.trazos.length) {
+        try {
+            await window.addDoc(window.collection(window.db, 'juegos'), {
+                tipo: 'dibujo-galeria', palabra: data.palabra, trazos: data.trazos,
+                dibujante: data.dibujante, creadoEn: Date.now()
+            });
+        } catch (e) { console.warn('No se pudo guardar el dibujo en la galería:', e); }
+    }
     await window.setDoc(refDibujaYAdivina(), {
         fase: 'jugando', dibujante: miIdentidad, palabra: elegirPalabraNueva(data.palabra),
         trazos: [], puntajes
+    });
+    if (typeof registrarEvento === 'function') {
+        registrarEvento('dibujo_completado', `Adivinaron "${data.palabra}" en Dibuja y Adivina`);
+    }
+}
+
+// ==================== GALERIA DE DIBUJOS ====================
+async function mostrarGaleriaDibujos(){
+    if (window._unsubDibujaYAdivina) { window._unsubDibujaYAdivina(); window._unsubDibujaYAdivina = null; }
+    const cont = document.getElementById('contenido-dibujayadivina');
+    cont.innerHTML = `<div class="panel texto-centro texto-tenue">Cargando galería…</div>`;
+    try {
+        const q = window.query(window.collection(window.db, 'juegos'), window.where('tipo', '==', 'dibujo-galeria'));
+        const snap = await new Promise((res) => { const u = window.onSnapshot(q, s => { u(); res(s); }); });
+        const dibujos = [];
+        snap.forEach(d => dibujos.push({ id: d.id, ...d.data() }));
+        dibujos.sort((a, b) => (b.creadoEn || 0) - (a.creadoEn || 0));
+        renderGaleriaDibujos(dibujos);
+    } catch (e) {
+        cont.innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo cargar la galería.</div>`;
+    }
+}
+
+function renderGaleriaDibujos(dibujos){
+    const cont = document.getElementById('contenido-dibujayadivina');
+    let html = `<button class="btn-secundario" style="margin-bottom:12px;" onclick="iniciarDibujaYAdivina()">⬅️ Volver al juego</button>`;
+    if (!dibujos.length) {
+        html += `<div class="panel texto-centro texto-tenue">Todavía no hay dibujos guardados. Van a ir apareciendo cada vez que adivinen uno.</div>`;
+        cont.innerHTML = html;
+        return;
+    }
+    html += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">`;
+    dibujos.forEach((d, i) => {
+        html += `<div class="panel texto-centro" style="padding:8px;">
+            <canvas id="canvas-galeria-${i}" style="width:100%; aspect-ratio:1; border-radius:10px; background:rgba(255,255,255,0.04);"></canvas>
+            <div class="texto-tenue" style="margin-top:6px; font-size:0.8rem;">${escaparHtml(d.palabra || '')}</div>
+        </div>`;
+    });
+    html += `</div>`;
+    cont.innerHTML = html;
+
+    dibujos.forEach((d, i) => {
+        const canvas = document.getElementById(`canvas-galeria-${i}`);
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width; canvas.height = rect.height;
+        const ctx = canvas.getContext('2d');
+        (d.trazos || []).forEach(t => {
+            if (!t.puntos || t.puntos.length < 2) return;
+            ctx.beginPath();
+            ctx.strokeStyle = t.color; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.moveTo(t.puntos[0].x * canvas.width, t.puntos[0].y * canvas.height);
+            t.puntos.slice(1).forEach(p => ctx.lineTo(p.x * canvas.width, p.y * canvas.height));
+            ctx.stroke();
+        });
     });
 }

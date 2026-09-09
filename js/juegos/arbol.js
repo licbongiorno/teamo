@@ -56,6 +56,9 @@ async function agregarPuntosArbol(cantidad, mensaje){
     const data = snap.exists() ? snap.data() : { puntos: 0, historial: [] };
     const historial = [...(data.historial || []), { texto: mensaje, autor: miIdentidad, ts: Date.now() }].slice(-12);
     await window.setDoc(refArbol(), { puntos: (data.puntos || 0) + cantidad, historial }, { merge: true });
+    if (typeof registrarEvento === 'function') {
+        registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} cuidó Nuestro Árbol: ${mensaje}`);
+    }
 }
 
 async function regarConLindoArbol(){

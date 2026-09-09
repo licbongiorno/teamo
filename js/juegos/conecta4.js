@@ -106,4 +106,7 @@ async function jugarConecta4(col){
         updates.turno = miIdentidad === 'nico' ? 'carito' : 'nico';
     }
     await window.updateDoc(refConecta4(), updates);
+    if (updates.fase === 'terminado' && updates.ganador !== 'empate' && typeof registrarEvento === 'function') {
+        registrarEvento('gano_partida', `${nombreJugador(updates.ganador)} ganó al Conecta 4`);
+    }
 }

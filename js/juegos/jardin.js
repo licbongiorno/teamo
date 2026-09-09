@@ -144,6 +144,9 @@ async function regarJardin(){
             ultimoRiego: window.serverTimestamp(),
             progreso: nuevoProgreso
         });
+        if (typeof registrarEvento === 'function') {
+            registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} regó El Jardín Compartido`);
+        }
     } catch (e) { console.error('Error regando el jardín:', e); }
 }
 

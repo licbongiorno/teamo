@@ -756,7 +756,8 @@ function renderMenteGemela(estado){
                 <div class="texto-tenue" style="font-size:0.78rem;">Nico: ${p.opciones[rNico[i]]} · Carito: ${p.opciones[rCarito[i]]}</div>
             </div>`;
         });
-        html += `</div><button class="btn-principal" onclick="nuevaRondaMenteGemela()">🔁 Otro set de preguntas</button>`;
+        html += `</div><button class="btn-principal" onclick="nuevaRondaMenteGemela()">🔁 Otro set de preguntas</button>
+        <button class="btn-secundario" style="margin-top:8px;" onclick="compartirResultadoMenteGemela(${pct})">📸 Descargar como imagen</button>`;
         cont.innerHTML = html;
         return;
     }
@@ -812,5 +813,26 @@ async function enviarMenteGemela(){
     await window.updateDoc(refMenteGemela(), {
         [campo]: [..._respuestasLocalesMG],
         ...(otroLisos ? { fase: 'revelado' } : {})
+    });
+    if (otroLisos && typeof registrarEvento === 'function') {
+        const propias = [..._respuestasLocalesMG];
+        const rivales = miIdentidad === 'nico' ? data.respuestasCarito : data.respuestasNico;
+        const coincidencias = propias.filter((r, i) => r === rivales[i]).length;
+        await registrarEvento('reflexion_completada', `Completaron una ronda de Mente Gemela`);
+        for (let i = 0; i < coincidencias; i++) {
+            await registrarEvento('mentegemela_coincidencia', `Coincidieron en Mente Gemela`);
+        }
+    }
+}
+
+function compartirResultadoMenteGemela(pct){
+    vibrarJ(12);
+    if (typeof generarTarjetaImagen !== 'function') return;
+    generarTarjetaImagen({
+        titulo: 'Mente Gemela',
+        numeroGrande: pct + '%',
+        subtitulo: pct >= 80 ? 'Prácticamente la misma persona 👯' : pct >= 50 ? 'Se conocen bastante bien' : 'Todavía hay sorpresas por descubrir',
+        pie: 'Nico & Carito · Nuestros Juegos',
+        nombreArchivo: 'mente-gemela'
     });
 }

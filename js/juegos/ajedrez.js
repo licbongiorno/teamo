@@ -180,6 +180,9 @@ async function seleccionarCasillaAjedrez(idx){
         updates.historial = pushLog(estado, `${mensaje} 🏆 ¡${nombreJugador(miIdentidad)} ganó la partida!`);
     }
     await window.updateDoc(refAjedrez(), updates);
+    if (terminoPartida && typeof registrarEvento === 'function') {
+        registrarEvento('gano_ajedrez', `${nombreJugador(miIdentidad)} le ganó a ${nombreJugador(miRival)} en Ajedrez`);
+    }
 }
 
 function renderAjedrez(estado){
@@ -211,7 +214,7 @@ function renderAjedrez(estado){
     }
 
     const esMiTurno = estado.turno === miIdentidad;
-    let html = `<div class="info-turno-tablero">${esMiTurno ? '🎯 Tu turno' : `Turno de ${nombreJugador(miRival)}…`}</div>`;
+    let html = `<div class="info-turno-tablero">${esMiTurno ? '🎯 Tu turno' : `Turno de ${nombreJugador(miRival)}…`} <span id="crono-ajedrez" class="texto-tenue" style="font-size:0.75rem;"></span></div>`;
     html += `<div class="tablero-juego">`;
     for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
@@ -231,4 +234,5 @@ function renderAjedrez(estado){
     }
     html += `<button class="btn-secundario" style="margin-top:10px;" onclick="reiniciarAjedrez()">🔁 Reiniciar partida</button>`;
     cont.innerHTML = html;
+    if (typeof actualizarCronometroTurno === 'function') actualizarCronometroTurno('crono-ajedrez', estado.turno);
 }

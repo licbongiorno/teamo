@@ -97,7 +97,7 @@ function renderAhorcado(estado){
         html += `<div class="panel texto-centro">
             <div style="font-size:1.3rem; margin-bottom:6px;">${fase === 'ganado' ? '🎉 ¡Adivinada!' : '💀 Se acabaron los intentos'}</div>
             <div class="texto-tenue" style="margin-bottom:12px;">La palabra era: <b>${palabra.toUpperCase()}</b></div>
-            <button class="btn-principal" onclick="reiniciarAhorcado()">🧹 Limpiar y jugar otra</button>
+            <button class="btn-principal" onclick="mostrarFormularioPalabra()">🔁 Jugar de nuevo</button>
         </div>
         <div id="form-palabra-ahorcado"></div>`;
     }
@@ -126,7 +126,7 @@ async function proponerPalabra(){
     const palabra = inputPalabra.value.trim();
     const categoria = document.getElementById('input-categoria-secreta').value.trim();
     if (!palabra) return;
-    if (typeof vibrarJ === 'function') vibrarJ(12); // Validación por si no existe la función
+    vibrarJ(12);
     const boton = document.getElementById('btn-empezar-partida-ahorcado');
     const errorDiv = document.getElementById('error-palabra-ahorcado');
     if (boton) { boton.disabled = true; boton.innerText = 'Guardando…'; }
@@ -168,10 +168,7 @@ async function intentarLetra(letra){
         const letrasPalabra = estado.palabra.split("").map(normalizarLetra);
         const acierto = letrasPalabra.includes(letra);
         const nuevosErrores = acierto ? estado.errores : estado.errores + 1;
-        
-        if (typeof vibrarJ === 'function') {
-            vibrarJ(acierto ? 15 : [10,30,10]);
-        }
+        vibrarJ(acierto ? 15 : [10,30,10]);
 
         // Decidimos acá mismo, en la misma escritura, si esta letra termina
         // la partida (ganada o perdida) — así los dos lados quedan con
@@ -184,23 +181,10 @@ async function intentarLetra(letra){
         else if (nuevosErrores >= erroresMax) nuevaFase = 'perdido';
 
         await window.updateDoc(ref, { letrasIntentadas: nuevasLetras, errores: nuevosErrores, fase: nuevaFase });
+        if (nuevaFase === 'ganado' && typeof registrarEvento === 'function') {
+            registrarEvento('gano_partida', `Adivinaron la palabra en el Ahorcado`);
+        }
     } finally {
         cont.dataset.bloqueado = '0';
-    }
-}
-
-async function reiniciarAhorcado() {
-    const ref = window.doc(window.db, 'juegos', 'ahorcado');
-    const cont = document.getElementById('contenido-ahorcado');
-    
-    // Bloqueo simple para evitar múltiples toques
-    if (cont) cont.style.pointerEvents = 'none';
-    
-    try {
-        await window.updateDoc(ref, { fase: 'terminado_reiniciar' });
-    } catch (e) {
-        console.error('Error al reiniciar el ahorcado:', e);
-    } finally {
-        if (cont) cont.style.pointerEvents = 'auto';
     }
 }

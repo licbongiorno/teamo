@@ -107,7 +107,7 @@ function renderEscritura(e){
     if (fragmentos.length) {
         fragmentos.forEach(f => {
             html += `<div class="fragmento fragmento-${f.autor}">
-                <span class="autor-fragmento">${nombreJugadorFrutas(f.autor)}</span>${escaparHtml(f.texto)}
+                <span class="autor-fragmento">${nombreJugador(f.autor)}</span>${escaparHtml(f.texto)}
             </div>`;
         });
     } else {
@@ -124,7 +124,7 @@ function renderEscritura(e){
         </div>
         <button class="btn-secundario" onclick="finalizarEscritura()">🏁 Dar por terminada esta escritura</button>`;
     } else {
-        html += `<div class="panel texto-centro texto-tenue">Le toca escribir a ${nombreJugadorFrutas(e.turno)}…</div>
+        html += `<div class="panel texto-centro texto-tenue">Le toca escribir a ${nombreJugador(e.turno)}…</div>
         <button class="btn-secundario" onclick="finalizarEscritura()">🏁 Dar por terminada esta escritura</button>`;
     }
 
@@ -150,6 +150,9 @@ async function agregarFragmento(){
     const nuevosFragmentos = [...(e.fragmentos || []), { autor: miIdentidad, texto, ts: Date.now() }];
     const siguienteTurno = miIdentidad === 'nico' ? 'carito' : 'nico';
     await window.updateDoc(refEscritura(id), { fragmentos: nuevosFragmentos, turno: siguienteTurno });
+    if (typeof registrarEvento === 'function') {
+        registrarEvento('letra_agregada', `${nombreJugador(miIdentidad)} escribió un fragmento nuevo`);
+    }
 }
 
 async function finalizarEscritura(){

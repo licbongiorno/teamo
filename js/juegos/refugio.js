@@ -78,5 +78,8 @@ async function colocarEnRefugio(celda){
     const nuevosElementos = [...(estado.elementos || []), { tipo: item.id, celda }];
     await window.setDoc(refRefugio(), { elementos: nuevosElementos }, { merge: true });
     await window.sumarPuntos(miIdentidad, -item.costo);
+    if (typeof registrarEvento === 'function') {
+        registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} agregó ${item.nombre || 'algo'} a El Refugio`);
+    }
     _elementoSeleccionadoRefugio = null;
 }

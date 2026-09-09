@@ -12,6 +12,15 @@ function iniciarMemoria(){
         console.error('Error de Firestore en memoria:', err);
         document.getElementById('contenido-memoria').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
     });
+    if (typeof leerRecord === 'function') {
+        leerRecord('memoria').then(r => { _recordMemoria = r; actualizarChipRecordMemoria(); });
+    }
+}
+
+let _recordMemoria = 0;
+function actualizarChipRecordMemoria(){
+    const chip = document.getElementById('chip-record-memoria');
+    if (chip && _recordMemoria > 0) chip.innerText = `🏆 Récord: nivel ${_recordMemoria}`;
 }
 
 let _intentoLocalMemoria = [];
@@ -22,8 +31,10 @@ function renderMemoria(estado){
     if (!estado || estado.fase === 'sin_ronda') {
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Memoricen la secuencia y reconstrúyanla. La dificultad sube de a poco: 5 → 6 → 7 → 8 → 10.</p>
+            <div class="texto-tenue" id="chip-record-memoria" style="margin-bottom:8px;"></div>
             <button class="btn-principal" onclick="nuevaRondaMemoria()">Empezar</button>
         </div>`;
+        actualizarChipRecordMemoria();
         return;
     }
 
@@ -123,6 +134,9 @@ async function siguienteRondaMemoria(dificultadActual){
         fase: 'jugando', dificultad: siguiente, secuencia: generarSecuenciaMemoria(siguiente),
         vistaNico: false, vistaCarito: false, intentoNico: null, intentoCarito: null
     });
+    if (typeof actualizarRecordSiSupera === 'function') {
+        actualizarRecordSiSupera('memoria', dificultadActual);
+    }
 }
 
 async function enviarIntentoMemoria(){

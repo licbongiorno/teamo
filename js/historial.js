@@ -23,6 +23,11 @@ async function registrarEvento(tipo, detalle){
     } catch (e) {
         console.warn('No se pudo registrar el evento en el historial:', e);
     }
+    // Ademas de guardar el momento en la linea de tiempo, sumamos al
+    // contador de logros (si el modulo esta cargado).
+    if (typeof window.sumarContadorYVerificarLogros === 'function') {
+        window.sumarContadorYVerificarLogros(tipo);
+    }
 }
 
 // Trae los ultimos 'limite' eventos (una sola vez, no en vivo, para

@@ -239,4 +239,7 @@ async function predecirEspejo(){
     const predicciones = { ...data.predicciones, [miIdentidad]: texto };
     const ambosPredijeron = predicciones.nico && predicciones.carito;
     await window.updateDoc(ref, { predicciones, ...(ambosPredijeron ? { fase: 'revelado' } : {}) });
+    if (ambosPredijeron && typeof registrarEvento === 'function') {
+        registrarEvento('espejo_respondido', `Revelaron una ronda de El Espejo`);
+    }
 }

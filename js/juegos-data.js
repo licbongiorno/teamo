@@ -67,6 +67,14 @@ window.JUEGOS = [
     { id:'puntoencuentro', nombre:'Punto de Encuentro', icono:'📍', categoria:'cooperativos', disponible:true, descripcion:'La línea de tiempo viva de todo lo que construyeron acá.' },
     { id:'dibujayadivina', nombre:'Dibuja y Adivina',  icono:'🎨', categoria:'cooperativos', disponible:true, descripcion:'Uno dibuja con el dedo, el otro adivina la palabra.' },
     { id:'cartas',     nombre:'Carta para abrir después', icono:'💌', categoria:'cooperativos', disponible:true, descripcion:'Escribí una carta que se abre recién en la fecha que elijas.' },
+    { id:'capsula',    nombre:'Cápsula del Tiempo',    icono:'📦', categoria:'cooperativos', disponible:true, descripcion:'Vayan agregando notas y predicciones a una cápsula que se abre sola en la fecha que elijan.' },
+    { id:'mapa',       nombre:'Mapa de Nuestros Lugares', icono:'🗺️', categoria:'cooperativos', disponible:true, descripcion:'Guarden lugares importantes: recuerdos, lugares para visitar y sitios clave.' },
+    { id:'escaperoom', nombre:'Escape Room Virtual',   icono:'🔓', categoria:'cooperativos', disponible:true, descripcion:'3 etapas de acertijos para resolver juntos y "escapar".' },
+    { id:'ruedapremios', nombre:'Rueda de Premios',    icono:'🎡', categoria:'conexion',    disponible:true, descripcion:'Giren la rueda: mitad premios tiernos, mitad picantes.' },
+    { id:'termometro', nombre:'Termómetro del Día',    icono:'🌡️', categoria:'conexion',    disponible:true, descripcion:'Marquen del 1 al 10 cómo están hoy. Queda un historial de los últimos días.' },
+    { id:'veinte',     nombre:'20 Preguntas',          icono:'❔', categoria:'clasicos',    disponible:true, descripcion:'Uno piensa algo, el otro pregunta sí/no hasta adivinar.' },
+    { id:'trivianosotros', nombre:'Trivia de Nosotros', icono:'🧠', categoria:'conexion',   disponible:true, descripcion:'Preguntas sobre gustos y costumbres de cada uno.' },
+    { id:'batallacanciones', nombre:'Batalla de Canciones', icono:'🎵', categoria:'competencia', disponible:true, descripcion:'Sale un tema, cada uno propone una canción que le calce.' },
 ];
 
 window.obtenerJuegosDeCategoria = function(categoriaId){

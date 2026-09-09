@@ -111,6 +111,9 @@ async function enviarCartaTiempo(){
         tipo: 'carta-tiempo', autor: miIdentidad, destinatario: miRival, texto,
         creadaEn: Date.now(), fechaApertura, abierta: false, fechaAbierta: null
     });
+    if (typeof registrarEvento === 'function') {
+        registrarEvento('carta_tiempo_enviada', `${nombreJugador(miIdentidad)} mandó una carta para abrir después`);
+    }
     _plazoSeleccionadoCarta = null;
     mostrarListaCartas('enviadas');
 }

@@ -7,14 +7,18 @@
 // Estos 11 juegos comparten el motor genérico de "responder y revelar"
 // (js/motor-reflexion.js), así que necesitan ese archivo además del suyo.
 // Esta lista tiene que coincidir con JUEGOS_MOTOR_REFLEXION de navegacion.js.
-const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones'];
+const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones'];
 
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 2;
+const VERSION_CACHE = 3;
 
 function scriptsNecesariosPara(juegoId) {
+    // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)
+    // ya se carga siempre de entrada, junto con el resto de la infraestructura
+    // compartida — no hay nada más que bajar bajo demanda para esta pantalla.
+    if (juegoId === 'estadisticas') return [];
     const propio = `js/juegos/${juegoId}.js?v=${VERSION_CACHE}`;
     if (JUEGOS_QUE_USAN_MOTOR_REFLEXION.includes(juegoId)) {
         return [`js/motor-reflexion.js?v=${VERSION_CACHE}`, propio];

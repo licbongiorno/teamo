@@ -152,4 +152,7 @@ async function atacarBN(i){
     }
     // si tocó, sigue jugando (turno extra por acierto)
     await window.updateDoc(refBatallaNaval(), updates);
+    if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
+        registrarEvento('gano_partida', `${nombreJugador(updates.ganador)} ganó a Batalla Naval`);
+    }
 }

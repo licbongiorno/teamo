@@ -206,6 +206,9 @@ async function levantarEscoba(){
         historial: pushLogEscoba(data, mensaje),
         ...(fin.terminado ? { fase: 'terminado', puntajes: fin.puntajes } : {})
     });
+    if (fin.terminado && typeof registrarEvento === 'function') {
+        registrarEvento('gano_partida', `Terminaron una partida de Escoba de 15`);
+    }
 }
 
 async function tirarEscoba(){
@@ -236,4 +239,7 @@ async function tirarEscoba(){
         historial: pushLogEscoba(data, `${nombreJugador(miIdentidad)} tiró ${nombreCartaEscoba(cartaTirada)}.`),
         ...(fin.terminado ? { fase: 'terminado', puntajes: fin.puntajes } : {})
     });
+    if (fin.terminado && typeof registrarEvento === 'function') {
+        registrarEvento('gano_partida', `Terminaron una partida de Escoba de 15`);
+    }
 }

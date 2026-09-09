@@ -217,3 +217,63 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 .badge-disponible, .badge-proximamente{ font-size:0.65rem; padding:3px 9px; border-radius:10px; white-space:nowrap; flex-shrink:0; }
 .badge-disponible{ background:rgba(184,232,201,0.2); color:#b8e8c9; }
 .badge-proximamente{ background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5); }
+
+/* ==================== TEMA CLARO ==================== */
+html[data-tema="claro"]{
+    --bg-oscuro:#fdf3ea; --panel:rgba(60,40,30,0.045); --borde:rgba(60,40,30,0.14); --texto:#2b2230;
+}
+html[data-tema="claro"], html[data-tema="claro"] body{
+    background: radial-gradient(ellipse 140% 90% at 50% 0%, #fffaf4 0%, var(--bg-oscuro) 55%, #f3e2d3 100%);
+}
+html[data-tema="claro"] .texto-tenue{ opacity:0.62; }
+html[data-tema="claro"] .panel, html[data-tema="claro"] .tarjeta-categoria,
+html[data-tema="claro"] .tarjeta-juego, html[data-tema="claro"] .tarjeta-juego-cat{
+    background: rgba(60,40,30,0.05); border-color: rgba(60,40,30,0.13);
+}
+
+.btn-icono-header{
+    background:transparent; border:1px solid var(--borde); border-radius:50%;
+    width:34px; height:34px; font-size:1rem; cursor:pointer; color:var(--texto);
+    display:flex; align-items:center; justify-content:center; touch-action:manipulation;
+}
+.btn-icono-header:active{ transform:scale(0.9); }
+
+/* ==================== RACHA ==================== */
+.chip-racha-activa{
+    font-size:0.75rem; padding:4px 10px; border-radius:12px;
+    background:rgba(245,217,160,0.18); border:1px solid rgba(245,217,160,0.4); white-space:nowrap;
+}
+
+/* ==================== PRESENCIA ==================== */
+.aviso-presencia-activo{
+    background:linear-gradient(90deg, rgba(255,179,198,0.18), rgba(168,216,255,0.18));
+    border:1px solid rgba(255,179,198,0.4); border-radius:16px; padding:12px 16px;
+    font-size:0.85rem; margin-bottom:14px; cursor:pointer; text-align:center;
+    animation:aparecerSuave 0.4s ease;
+}
+.aviso-presencia-activo:active{ transform:scale(0.98); }
+
+/* ==================== LOGROS ==================== */
+.grilla-logros{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+.tarjeta-logro{
+    border-radius:14px; padding:12px 6px; text-align:center; border:1px solid var(--borde);
+}
+.tarjeta-logro-desbloqueada{ background:rgba(245,217,160,0.12); border-color:rgba(245,217,160,0.4); }
+.tarjeta-logro-bloqueada{ background:rgba(255,255,255,0.03); opacity:0.55; }
+.tarjeta-logro-icono{ font-size:1.6rem; margin-bottom:4px; }
+.tarjeta-logro-nombre{ font-size:0.65rem; line-height:1.25; }
+
+.toast-logro{
+    position:fixed; top:calc(16px + env(safe-area-inset-top,0px)); left:50%; transform:translateX(-50%);
+    z-index:10100; display:flex; align-items:center; gap:10px;
+    background:linear-gradient(135deg, rgba(36,26,51,0.95), rgba(11,8,18,0.95));
+    border:1px solid rgba(245,217,160,0.5); border-radius:16px; padding:12px 18px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.4); animation:aparecerLogroToast 0.4s ease;
+    max-width:90vw;
+}
+.toast-logro-icono{ font-size:1.8rem; }
+.toast-logro-titulo{ font-size:0.68rem; opacity:0.7; text-transform:uppercase; letter-spacing:0.05em; }
+.toast-logro-nombre{ font-size:0.95rem; font-weight:600; }
+.toast-logro-salir{ animation:desaparecerLogroToast 0.5s ease forwards; }
+@keyframes aparecerLogroToast{ from{ opacity:0; transform:translateX(-50%) translateY(-20px); } to{ opacity:1; transform:translateX(-50%) translateY(0); } }
+@keyframes desaparecerLogroToast{ from{ opacity:1; } to{ opacity:0; transform:translateX(-50%) translateY(-20px); } }

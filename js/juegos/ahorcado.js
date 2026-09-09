@@ -5,7 +5,14 @@ function normalizarLetra(l){
     return l.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
 }
 
+// Si tenemos el formulario de "proponer palabra" abierto, no lo pisamos
+// con cada snapshot que llega de Firestore (antes: si te llegaba una
+// actualización mientras tipeabas tu palabra nueva, el formulario se
+// borraba solo y tenías que volver a intentarlo, sin ningún aviso).
+let _formularioAhorcadoAbierto = false;
+
 function iniciarAhorcado(){
+    _formularioAhorcadoAbierto = false;
     const ref = window.doc(window.db, 'juegos', 'ahorcado');
     if (window._unsubAhorcado) window._unsubAhorcado();
     window._unsubAhorcado = window.onSnapshot(ref, (snap) => {
@@ -18,6 +25,16 @@ function iniciarAhorcado(){
 
 function renderAhorcado(estado){
     const cont = document.getElementById('contenido-ahorcado');
+
+    // Mientras el formulario de "proponer palabra" está abierto, sólo lo
+    // pisamos si de verdad arrancó una partida nueva (fase 'jugando') o si
+    // no hay ninguna partida — cualquier otro snapshot de por medio (por
+    // ejemplo, ecos del propio guardado) no debe borrar lo que se está tipeando.
+    if (_formularioAhorcadoAbierto && estado && estado.fase === 'jugando') {
+        _formularioAhorcadoAbierto = false;
+    } else if (_formularioAhorcadoAbierto && estado) {
+        return;
+    }
 
     if (!estado || estado.fase === 'terminado_reiniciar') {
         cont.innerHTML = `
@@ -46,12 +63,10 @@ function renderAhorcado(estado){
         `  ____\n |    |\n |    😵\n |   /|\\\n |   / \n=====`
     ];
 
-    const letrasPalabra = palabra.split("").map(normalizarLetra);
-    const todasAdivinadas = letrasPalabra.every(l => l === " " || letrasIntentadas.includes(l));
-
-    let fase = estado.fase;
-    if (fase === 'jugando' && todasAdivinadas) fase = 'ganado';
-    if (fase === 'jugando' && errores >= erroresMax) fase = 'perdido';
+    // La fase ya viene decidida por quien adivinó la última letra (ver
+    // intentarLetra), así los dos lados ven exactamente el mismo resultado
+    // sin depender de que cada pantalla la recalcule por su cuenta.
+    const fase = estado.fase;
 
     const visual = palabra.split("").map(ch => {
         if (ch === " ") return "&nbsp;&nbsp;";
@@ -91,6 +106,7 @@ function renderAhorcado(estado){
 }
 
 function mostrarFormularioPalabra(){
+    _formularioAhorcadoAbierto = true;
     const cont = document.getElementById('form-palabra-ahorcado');
     if (!cont) return;
     cont.innerHTML = `
@@ -99,34 +115,46 @@ function mostrarFormularioPalabra(){
                 style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--borde); background:rgba(255,255,255,0.06); color:var(--texto); font-size:1rem; margin-bottom:8px; text-align:center;">
             <input type="text" id="input-categoria-secreta" placeholder="Pista o categoría (opcional)" autocomplete="off"
                 style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--borde); background:rgba(255,255,255,0.06); color:var(--texto); font-size:0.9rem; margin-bottom:10px; text-align:center;">
-            <button class="btn-principal" onclick="proponerPalabra()">Empezar partida</button>
+            <button class="btn-principal" id="btn-empezar-partida-ahorcado" onclick="proponerPalabra()">Empezar partida</button>
+            <div class="texto-tenue" id="error-palabra-ahorcado" style="margin-top:8px;"></div>
         </div>`;
     setTimeout(() => document.getElementById('input-palabra-secreta').focus(), 100);
 }
 
 async function proponerPalabra(){
-    const palabra = document.getElementById('input-palabra-secreta').value.trim();
+    const inputPalabra = document.getElementById('input-palabra-secreta');
+    const palabra = inputPalabra.value.trim();
     const categoria = document.getElementById('input-categoria-secreta').value.trim();
     if (!palabra) return;
     vibrarJ(12);
+    const boton = document.getElementById('btn-empezar-partida-ahorcado');
+    const errorDiv = document.getElementById('error-palabra-ahorcado');
+    if (boton) { boton.disabled = true; boton.innerText = 'Guardando…'; }
     const ref = window.doc(window.db, 'juegos', 'ahorcado');
-    await window.setDoc(ref, {
-        palabra: palabra,
-        categoria: categoria,
-        proponente: miIdentidad,
-        adivinador: miRival,
-        letrasIntentadas: [],
-        erroresMax: 6,
-        errores: 0,
-        fase: 'jugando',
-        actualizadoEn: window.serverTimestamp()
-    });
+    try {
+        await window.setDoc(ref, {
+            palabra: palabra,
+            categoria: categoria,
+            proponente: miIdentidad,
+            adivinador: miRival,
+            letrasIntentadas: [],
+            erroresMax: 6,
+            errores: 0,
+            fase: 'jugando',
+            actualizadoEn: window.serverTimestamp()
+        });
+        _formularioAhorcadoAbierto = false;
+        // El propio onSnapshot va a redibujar la pantalla con la partida
+        // ya arrancada apenas confirme la escritura.
+    } catch (e) {
+        console.error('Error al proponer palabra:', e);
+        if (boton) { boton.disabled = false; boton.innerText = 'Empezar partida'; }
+        if (errorDiv) errorDiv.innerText = `⚠️ No se pudo guardar (${e.code || 'error'}). Probá de nuevo.`;
+    }
 }
 
 async function intentarLetra(letra){
     const ref = window.doc(window.db, 'juegos', 'ahorcado');
-    // Se relee el estado actual vía el listener; para evitar condiciones de carrera
-    // simples (dos toques rápidos) alcanza con tomar el último snapshot renderizado.
     const cont = document.getElementById('contenido-ahorcado');
     if (cont.dataset.bloqueado === '1') return;
     cont.dataset.bloqueado = '1';
@@ -135,13 +163,24 @@ async function intentarLetra(letra){
             const unsub = window.onSnapshot(ref, (s) => { unsub(); resolve(s); });
         });
         const estado = snap.data();
-        if (!estado || estado.letrasIntentadas.includes(letra)) return;
+        if (!estado || estado.fase !== 'jugando' || estado.letrasIntentadas.includes(letra)) return;
         const nuevasLetras = [...estado.letrasIntentadas, letra];
         const letrasPalabra = estado.palabra.split("").map(normalizarLetra);
         const acierto = letrasPalabra.includes(letra);
         const nuevosErrores = acierto ? estado.errores : estado.errores + 1;
         vibrarJ(acierto ? 15 : [10,30,10]);
-        await window.updateDoc(ref, { letrasIntentadas: nuevasLetras, errores: nuevosErrores });
+
+        // Decidimos acá mismo, en la misma escritura, si esta letra termina
+        // la partida (ganada o perdida) — así los dos lados quedan con
+        // exactamente el mismo resultado guardado, sin que cada pantalla
+        // tenga que recalcularlo por su cuenta.
+        const erroresMax = estado.erroresMax || 6;
+        const todasAdivinadas = letrasPalabra.every(l => l === ' ' || nuevasLetras.includes(l));
+        let nuevaFase = 'jugando';
+        if (todasAdivinadas) nuevaFase = 'ganado';
+        else if (nuevosErrores >= erroresMax) nuevaFase = 'perdido';
+
+        await window.updateDoc(ref, { letrasIntentadas: nuevasLetras, errores: nuevosErrores, fase: nuevaFase });
     } finally {
         cont.dataset.bloqueado = '0';
     }

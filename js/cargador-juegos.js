@@ -9,10 +9,15 @@
 // Esta lista tiene que coincidir con JUEGOS_MOTOR_REFLEXION de navegacion.js.
 const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones'];
 
+// Versión de caché: sumale 1 cada vez que se actualicen archivos de
+// juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
+// en caché. Cambiar este número fuerza a descargar la versión nueva.
+const VERSION_CACHE = 2;
+
 function scriptsNecesariosPara(juegoId) {
-    const propio = `js/juegos/${juegoId}.js`;
+    const propio = `js/juegos/${juegoId}.js?v=${VERSION_CACHE}`;
     if (JUEGOS_QUE_USAN_MOTOR_REFLEXION.includes(juegoId)) {
-        return ['js/motor-reflexion.js', propio];
+        return [`js/motor-reflexion.js?v=${VERSION_CACHE}`, propio];
     }
     return [propio];
 }

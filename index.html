@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -615,15 +614,28 @@
         .chat-flotante.mostrar { display: flex; }
         .chat-flotante.abierto { z-index: 10050; }
         .burbuja-chat {
+            position: relative;
             width: 58px; height: 58px; border-radius: 50%;
             background: radial-gradient(circle at 32% 28%, rgba(184,232,201,0.5), rgba(178,212,255,0.32) 70%);
             border: 1px solid rgba(184,232,201,0.5); box-shadow: 0 6px 24px rgba(178,212,255,0.4);
             display: flex; align-items: center; justify-content: center; font-size: 1.55rem; cursor: pointer;
             animation: aparecerSuave 0.8s forwards, latidoBurbuja 3s infinite;
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); touch-action: manipulation;
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
         .burbuja-chat:active { transform: scale(0.9); }
+        /* Mensaje nuevo sin leer: la burbuja cambia de color y late más
+           rápido, más un punto rojo arriba a la derecha, hasta que se abre el chat. */
+        .burbuja-chat.no-leido {
+            background: radial-gradient(circle at 32% 28%, rgba(255,138,164,0.65), rgba(255,90,130,0.45) 70%);
+            border-color: rgba(255,138,164,0.75); box-shadow: 0 6px 26px rgba(255,90,130,0.55);
+            animation: aparecerSuave 0.8s forwards, latidoBurbuja 1.1s infinite;
+        }
+        .burbuja-chat.no-leido::after {
+            content: ''; position: absolute; top: 1px; right: 1px; width: 15px; height: 15px;
+            border-radius: 50%; background: #ff4d6d; border: 2px solid rgba(15,10,20,0.9);
+            animation: aparecerSuave 0.3s forwards;
+        }
         .panel-chat {
             position: absolute; bottom: calc(100% + 15px); right: 0;
             background: rgba(15, 10, 20, 0.9); border: 1px solid rgba(255,194,217,0.2);
@@ -1183,7 +1195,6 @@
         .planeta-reloj { background: radial-gradient(circle at 32% 28%, rgba(255,214,178,0.5), rgba(255,157,133,0.3) 70%); box-shadow: 0 0 16px rgba(255,157,133,0.25); }
         .planeta-ticket { background: radial-gradient(circle at 32% 28%, rgba(245,217,168,0.5), rgba(217,162,115,0.3) 70%); box-shadow: 0 0 16px rgba(240,217,160,0.25); }
         .planeta-sanacion { background: radial-gradient(circle at 32% 28%, rgba(184,232,201,0.5), rgba(148,131,224,0.28) 70%); box-shadow: 0 0 16px rgba(184,232,201,0.25); }
-        .planeta-juegos { background: radial-gradient(circle at 32% 28%, rgba(178,212,255,0.5), rgba(216,196,255,0.3) 70%); box-shadow: 0 0 16px rgba(178,212,255,0.28); }
         /* Widget fijo abajo a la izquierda, en el mismo nivel que el chat (abajo a la derecha) */
         .sorpresa-flotante {
             position: fixed;
@@ -1863,7 +1874,6 @@
             <button class="punto-corazon planeta-reloj" style="left:50%;top:98.3%" onclick="ejecutarOpcionMenu(event, 'reloj')"><span class="planeta-icono">⏰</span><span class="planeta-nombre">Cuenta&nbsp;regresiva</span></button>
             <button class="punto-corazon planeta-ticket" style="left:50%;top:16%" onclick="ejecutarOpcionMenu(event, 'ticket')"><span class="planeta-icono">🎟️</span><span class="planeta-nombre">Ticket&nbsp;Diario</span></button>
             <button class="punto-corazon planeta-sanacion" style="left:1.96%;top:23.42%" onclick="ejecutarOpcionMenu(event, 'sanacion')"><span class="planeta-icono">🌿</span><span class="planeta-nombre">Sanación</span></button>
-            <button class="punto-corazon planeta-juegos" style="left:98.04%;top:23.42%" onclick="irAJuegos(event)"><span class="planeta-icono">🎮</span><span class="planeta-nombre">Juegos</span></button>
         </div>
     </div>
 
@@ -2157,7 +2167,7 @@
     <!-- FIREBASE (Proyecto Carolina) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, limit, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDDvrgXpSxaraqTj83ingY3xa-AT8ywxV4",
@@ -2184,6 +2194,7 @@
         window.onSnapshot = onSnapshot;
         window.query = query;
         window.orderBy = orderBy;
+        window.limit = limit;
         window.serverTimestamp = serverTimestamp;
         window.doc = doc;
         window.updateDoc = updateDoc;
@@ -3568,6 +3579,7 @@
                 vibrar(15);
                 miIdentidad = clave;
                 localStorage.setItem("identidadRefugio", miIdentidad);
+                iniciarEscuchaChatNoLeidos();
                 document.getElementById('modal-acceso').classList.add('oculto');
                 document.getElementById('input-clave').value = '';
                 document.getElementById('error-clave').innerText = "";
@@ -3597,15 +3609,6 @@
             document.getElementById('menu-principal').classList.toggle('abierto');
         }
 
-        // Los juegos viven en su propia página (juegos.html), fuera de la
-        // constelación del corazón: no pasan por requerirIdentidad/ejecutarAccion
-        // porque juegos.html pide su propia llave de acceso al entrar.
-        function irAJuegos(event) {
-            if (event) event.stopPropagation();
-            vibrar(15);
-            window.location.href = 'juegos.html';
-        }
-
         function ejecutarOpcionMenu(event, opcion) {
             if (event) event.stopPropagation();
             document.getElementById('menu-principal').classList.remove('abierto');
@@ -3628,12 +3631,14 @@
             if (chatFlotante.classList.contains('abierto')) {
                 chatFlotante.classList.remove('abierto');
             } else {
+                marcarChatComoVisto();
                 requerirIdentidad('chat');
             }
         }
 
         function abrirChatInterno() {
             document.getElementById('chat-flotante').classList.add('abierto');
+            marcarChatComoVisto();
             setTimeout(() => document.getElementById('input-chat').focus(), 300);
 
             if (!chatIniciado) {
@@ -3698,6 +3703,49 @@
         }
 
         function verificarEnterChat(e) { if (e.key === "Enter") enviarMensajeChat(); }
+
+        // ==================== INDICADOR DE MENSAJE NUEVO ====================
+        // A diferencia del listener de arriba (que sólo arranca la primera vez
+        // que se ABRE el panel), este escucha el último mensaje todo el tiempo,
+        // desde que sabemos quiénes somos — así detecta mensajes nuevos del
+        // otro aunque nunca hayamos abierto el chat en esta sesión.
+        let _escuchaNoLeidosIniciada = false;
+
+        function iniciarEscuchaChatNoLeidos() {
+            if (_escuchaNoLeidosIniciada || !miIdentidad) return;
+            _escuchaNoLeidosIniciada = true;
+            const q = window.query(
+                window.collection(window.db, "chat"),
+                window.orderBy("timestamp", "desc"),
+                window.limit(1)
+            );
+            window.onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) return;
+                const msg = snapshot.docs[0].data();
+                if (msg.autor === miIdentidad) return; // mensaje propio, no cuenta como no leído
+                const fecha = msg.timestamp && msg.timestamp.toMillis ? msg.timestamp.toMillis() : Date.now();
+                const visto = Number(localStorage.getItem("chatVistoHasta_" + miIdentidad) || 0);
+                const chatFlotante = document.getElementById("chat-flotante");
+                const abierto = chatFlotante && chatFlotante.classList.contains("abierto");
+                if (fecha > visto && !abierto) marcarChatComoNoLeido(true);
+            }, (err) => console.error("Error escuchando no leídos del chat:", err));
+        }
+
+        function marcarChatComoNoLeido(hayNoLeido) {
+            const burbuja = document.getElementById("burbuja-chat");
+            if (burbuja) burbuja.classList.toggle("no-leido", hayNoLeido);
+        }
+
+        function marcarChatComoVisto() {
+            if (!miIdentidad) return;
+            localStorage.setItem("chatVistoHasta_" + miIdentidad, String(Date.now()));
+            marcarChatComoNoLeido(false);
+        }
+
+        // Si ya sabíamos quiénes somos de una visita anterior (miIdentidad
+        // viene de localStorage), arrancamos la escucha ya mismo, sin
+        // esperar a que se abra el chat ni se pida la llave de nuevo.
+        if (miIdentidad) iniciarEscuchaChatNoLeidos();
 
         // Devuelve "Hoy", "Ayer" o la fecha en formato "12 de agosto" (con año si no es el actual),
         // igual que los separadores de fecha de WhatsApp.

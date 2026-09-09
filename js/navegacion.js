@@ -170,6 +170,10 @@ function renderMenuPrincipal(){
 
 function iniciarJuegos(){
     renderMenuPrincipal();
+    // El indicador de "mensaje nuevo" en la burbuja de chat empieza a
+    // escuchar apenas sabemos quiénes somos, no recién cuando se abre
+    // el chat (así detecta mensajes que llegaron mientras no mirábamos).
+    if (typeof iniciarEscuchaChatNoLeidos === 'function') iniciarEscuchaChatNoLeidos();
     // Si venimos de una página de categoría con ?juego=id, entramos
     // directo a ese juego en vez de mostrar el menú principal.
     const params = new URLSearchParams(window.location.search);

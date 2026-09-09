@@ -128,6 +128,20 @@ function detenerListenersActivos(){
     if (window._unsubCartasActual) { window._unsubCartasActual(); window._unsubCartasActual = null; }
 }
 
+function jugarAlAzar(){
+    vibrarJ(15);
+    if (!window.JUEGOS) return;
+    const disponibles = window.JUEGOS.filter(j => j.disponible);
+    if (!disponibles.length) return;
+    // Si ya hay un juego abierto, lo excluye para no repetir el mismo.
+    const params = new URLSearchParams(window.location.search);
+    const actual = params.get('juego');
+    const candidatos = disponibles.filter(j => j.id !== actual);
+    const lista = candidatos.length ? candidatos : disponibles;
+    const elegido = lista[Math.floor(Math.random() * lista.length)];
+    abrirJuego(elegido.id);
+}
+
 function renderMenuPrincipal(){
     const gridCat = document.getElementById('grid-categorias');
     if (gridCat && window.CATEGORIAS) {

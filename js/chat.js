@@ -6,6 +6,7 @@ function toggleChat(event){
     const chatFlotante = document.getElementById('chat-flotante');
     const abierto = chatFlotante.classList.toggle('abierto');
     if (abierto) {
+        marcarChatComoVisto();
         setTimeout(() => document.getElementById('input-chat').focus(), 300);
         if (!chatIniciadoJuegos) {
             chatIniciadoJuegos = true;
@@ -69,4 +70,42 @@ async function enviarMensajeChat(){
         console.error('Error chat:', e);
         input.value = texto;
     }
+}
+
+// ==================== INDICADOR DE MENSAJE NUEVO ====================
+// A diferencia del listener de arriba (que sólo arranca la primera vez
+// que se ABRE el panel), este escucha el último mensaje todo el tiempo,
+// desde que sabemos quiénes somos — así detecta mensajes nuevos del
+// otro aunque nunca hayamos abierto el chat en esta sesión.
+let _escuchaNoLeidosIniciada = false;
+
+function iniciarEscuchaChatNoLeidos(){
+    if (_escuchaNoLeidosIniciada || !miIdentidad) return;
+    _escuchaNoLeidosIniciada = true;
+    const q = window.query(
+        window.collection(window.db, 'chat'),
+        window.orderBy('timestamp', 'desc'),
+        window.limit(1)
+    );
+    window.onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) return;
+        const msg = snapshot.docs[0].data();
+        if (msg.autor === miIdentidad) return; // mensaje propio, no cuenta como no leído
+        const fecha = msg.timestamp && msg.timestamp.toMillis ? msg.timestamp.toMillis() : Date.now();
+        const visto = Number(localStorage.getItem('chatVistoHasta_' + miIdentidad) || 0);
+        const chatFlotante = document.getElementById('chat-flotante');
+        const abierto = chatFlotante && chatFlotante.classList.contains('abierto');
+        if (fecha > visto && !abierto) marcarChatComoNoLeido(true);
+    }, (err) => console.error('Error escuchando no leídos del chat:', err));
+}
+
+function marcarChatComoNoLeido(hayNoLeido){
+    const burbuja = document.getElementById('burbuja-chat');
+    if (burbuja) burbuja.classList.toggle('no-leido', hayNoLeido);
+}
+
+function marcarChatComoVisto(){
+    if (!miIdentidad) return;
+    localStorage.setItem('chatVistoHasta_' + miIdentidad, String(Date.now()));
+    marcarChatComoNoLeido(false);
 }

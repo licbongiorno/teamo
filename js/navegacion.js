@@ -1,10 +1,27 @@
 // ==================== NAVEGACIÓN ENTRE JUEGOS ====================
-function abrirJuego(juego){
+async function abrirJuego(juego){
     vibrarJ(12);
     const pantalla = document.getElementById('pantalla-' + juego);
     if (!pantalla) return; // juego todavía no disponible
     document.querySelectorAll('.pantalla-juego').forEach(p => p.classList.remove('activa'));
     pantalla.classList.add('activa');
+
+    // El código de cada juego se descarga recién ahora, la primera vez
+    // que se abre (ver js/cargador-juegos.js). Si ya se abrió antes en
+    // esta sesión, esto resuelve al toque y no se nota.
+    const contenido = document.getElementById('contenido-' + juego);
+    const yaTieneContenido = contenido && contenido.innerHTML.trim().length > 0;
+    if (contenido && !yaTieneContenido) {
+        contenido.innerHTML = '<div class="panel texto-centro texto-tenue">Cargando…</div>';
+    }
+    try {
+        await window.asegurarJuegoCargado(juego);
+    } catch (err) {
+        console.error('Error cargando el juego', juego, err);
+        if (contenido) contenido.innerHTML = '<div class="panel texto-centro texto-tenue">⚠️ No se pudo cargar este juego. Revisá tu conexión e intentá de nuevo.</div>';
+        return;
+    }
+
     if (juego === 'ahorcado') iniciarAhorcado();
     if (juego === 'frutas') iniciarFrutas();
     if (juego === 'truco') iniciarTruco();

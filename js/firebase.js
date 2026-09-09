@@ -9,7 +9,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {
     getFirestore, doc, setDoc, updateDoc, onSnapshot, serverTimestamp,
-    deleteField, collection, addDoc, query, where, orderBy
+    deleteField, collection, addDoc, query, where, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -36,6 +36,7 @@ window.addDoc = addDoc;
 window.query = query;
 window.where = where;
 window.orderBy = orderBy;
+window.limit = limit;
 
 // Todos los juegos y utilidades comparten la MISMA colección 'juegos'
 // (cada documento se distingue por su id o por un campo 'tipo'), así

@@ -119,8 +119,34 @@ function renderCartaReflexion(juegoId, c){
         } else if (cfg.mensajePostRevelado) {
             html += `<div class="panel texto-centro texto-tenue">${cfg.mensajePostRevelado}</div>`;
         }
+        if (cfg.compartirWhatsApp && cfg.numerosWhatsApp) {
+            html += `<div class="panel texto-centro">
+                <div class="texto-tenue" style="margin-bottom:8px;">Mandar esta pregunta y respuestas por WhatsApp:</div>
+                <div class="btn-fila">
+                    <button class="btn-secundario" onclick="compartirReflexionWhatsApp('${juegoId}', 'nico')">A Nico 💙</button>
+                    <button class="btn-secundario" onclick="compartirReflexionWhatsApp('${juegoId}', 'carito')">A Carito 💖</button>
+                </div>
+            </div>`;
+        }
     }
     cont.innerHTML = html;
+}
+
+function compartirReflexionWhatsApp(juegoId, destinatario){
+    vibrarJ(10);
+    const cfg = window.CONFIG_REFLEXION[juegoId];
+    const numero = cfg.numerosWhatsApp && cfg.numerosWhatsApp[destinatario];
+    if (!numero) return;
+    const contNodo = document.getElementById('contenido-' + juegoId);
+    if (!contNodo) return;
+    const preguntaEl = contNodo.querySelector('.flip-carta p');
+    const parrafos = contNodo.querySelectorAll('.reflexion-reveal p');
+    const pregunta = preguntaEl ? preguntaEl.innerText : '';
+    const respNico = parrafos[0] ? parrafos[0].innerText : '';
+    const respCarito = parrafos[1] ? parrafos[1].innerText : '';
+    const texto = `${pregunta}\n\nNico: ${respNico}\nCarito: ${respCarito}`;
+    const url = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
 }
 
 async function responderReflexionTexto(juegoId){

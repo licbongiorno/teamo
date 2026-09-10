@@ -11,6 +11,7 @@ import {
     getFirestore, doc, setDoc, updateDoc, onSnapshot, serverTimestamp,
     deleteField, collection, addDoc, query, where, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDDvrgXpSxaraqTj83ingY3xa-AT8ywxV4",
@@ -23,8 +24,10 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 window.db = db;
+window.auth = auth;
 window.doc = doc;
 window.setDoc = setDoc;
 window.updateDoc = updateDoc;
@@ -44,9 +47,24 @@ window.limit = limit;
 // Firestore cada vez que agregamos un juego.
 window._refJuegos = (idODoc) => doc(db, 'juegos', idODoc);
 
-// Avisa al resto de los scripts (usuario.js espera esto) que Firebase
-// ya está listo, por si algo necesita esperar explícitamente.
-window._firebaseListo = true;
-document.dispatchEvent(new Event('firebase-listo'));
+// Paso 1 de seguridad: login anónimo automático. Por ahora las Reglas
+// de Firestore siguen abiertas (if true), así que esto todavía no
+// bloquea a nadie — es la base para, en un paso siguiente, exigir
+// "request.auth != null" en las Reglas y cerrar la puerta a cualquiera
+// que sólo tenga la URL.
+//
+// Ojo con el orden: 'firebase-listo' recién se dispara DESPUÉS de que
+// el login anónimo confirma (onAuthStateChanged), no apenas arranca el
+// módulo — así ningún juego intenta leer/escribir antes de estar
+// autenticado.
+onAuthStateChanged(auth, (user) => {
+    if (!user) return; // todavía no logueó; el siguiente evento sí va a traer el user
+    window._miUid = user.uid;
+    window._firebaseListo = true;
+    document.dispatchEvent(new Event('firebase-listo'));
+    console.log("🔥 Juegos conectados a Carolina (sesión anónima " + user.uid.slice(0, 6) + "…)");
+});
 
-console.log("🔥 Juegos conectados a Carolina");
+signInAnonymously(auth).catch((err) => {
+    console.error('No se pudo iniciar la sesión anónima:', err);
+});

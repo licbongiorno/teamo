@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -2214,6 +2216,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDDvrgXpSxaraqTj83ingY3xa-AT8ywxV4",
@@ -2227,6 +2230,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         // Persistencia offline: si la señal en la clínica es débil o nula, la app sigue
         // mostrando la última fecha/mensaje que se sincronizó, sin pantalla en blanco.
@@ -2235,6 +2239,7 @@
         });
 
         window.db = db;
+        window.auth = auth;
         window.collection = collection;
         window.addDoc = addDoc;
         window.onSnapshot = onSnapshot;
@@ -2248,7 +2253,22 @@
         window.deleteDoc = deleteDoc;
         window.setDoc = setDoc;
 
-        console.log("🔥 Conectado con éxito a Carolina");
+        // Paso 1 de seguridad: login anónimo automático (ver misma explicación
+        // en js/firebase.js, el que usa juegos.html). Acá el script clásico de
+        // abajo no tenía ningún "esperá a que esté listo" — lo agregamos ahora
+        // para que nada intente usar window.db antes de estar autenticado.
+        window._firebaseListoIndex = false;
+        onAuthStateChanged(auth, (user) => {
+            if (!user) return;
+            window._miUid = user.uid;
+            window._firebaseListoIndex = true;
+            document.dispatchEvent(new Event('firebase-listo-index'));
+            console.log("🔥 Conectado con éxito a Carolina (sesión anónima " + user.uid.slice(0, 6) + "…)");
+        });
+
+        signInAnonymously(auth).catch((err) => {
+            console.error('No se pudo iniciar la sesión anónima:', err);
+        });
     </script>
 
     <!-- Cargador liviano para las secciones que ya se migraron al patrón
@@ -3550,8 +3570,14 @@
 
         // Si ya sabíamos quiénes somos de una visita anterior (miIdentidad
         // viene de localStorage), arrancamos la escucha ya mismo, sin
-        // esperar a que se abra el chat ni se pida la llave de nuevo.
-        if (miIdentidad) iniciarEscuchaChatNoLeidos();
+        // esperar a que se abra el chat ni se pida la llave de nuevo —
+        // pero primero hay que esperar a que termine el login anónimo
+        // (ver el módulo de Firebase más arriba), si es que no terminó ya.
+        function _arrancarEscuchaChatSiCorresponde() {
+            if (miIdentidad) iniciarEscuchaChatNoLeidos();
+        }
+        if (window._firebaseListoIndex) _arrancarEscuchaChatSiCorresponde();
+        else document.addEventListener('firebase-listo-index', _arrancarEscuchaChatSiCorresponde, { once: true });
 
         // Devuelve "Hoy", "Ayer" o la fecha en formato "12 de agosto" (con año si no es el actual),
         // igual que los separadores de fecha de WhatsApp.

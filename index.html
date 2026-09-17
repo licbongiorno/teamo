@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://s.ytimg.com">
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="dns-prefetch" href="https://www.youtube.com">
-    <link rel="stylesheet" href="css/refugio.css?v=2">
+    <link rel="stylesheet" href="css/refugio.css?v=3">
     <link rel="stylesheet" href="css/auth-gate.css">
 </head>
 
@@ -54,6 +54,7 @@
     </div>
     <script src="js/auth-gate.js"></script>
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});</script>
+    <script src="js/icon-sprite.js?v=1"></script>
 
     <div id="vineta-calida"></div>
     <canvas id="canvas-particulas"></canvas>
@@ -136,7 +137,7 @@
                 <span>🔊</span>
             </div>
         </div>
-        <div class="burbuja-reproductor" id="burbuja-reproductor" onclick="toggleReproductor(event)" title="Nuestra música" role="button" aria-label="Abrir reproductor de música">🎵</div>
+        <div class="burbuja-reproductor" id="burbuja-reproductor" onclick="toggleReproductor(event)" title="Nuestra música" role="button" aria-label="Abrir reproductor de música"><svg class="icono-svg"><use href="#icono-nota-musical"></use></svg></div>
     </div>
     <!-- Player de YouTube embebido: queda oculto visualmente pero vive en la misma página,
          no abre la app ni una pestaña nueva. Reproduce nuestra playlist de YouTube Music. -->
@@ -144,7 +145,7 @@
 
     <!-- Botón para volver a la constelación desde el libro o cualquier panel -->
     <div id="menu-principal" class="menu-principal">
-        <div class="burbuja-menu" id="burbuja-menu" onclick="volverAlUniverso(event)" title="Volver al universo" role="button" aria-label="Volver a nuestro universo">🌌</div>
+        <div class="burbuja-menu" id="burbuja-menu" onclick="volverAlUniverso(event)" title="Volver al universo" role="button" aria-label="Volver a nuestro universo"><svg class="icono-svg"><use href="#icono-galaxia"></use></svg></div>
     </div>
 
     <!-- UNIVERSO-CORAZÓN: aparece al abrir la puerta. Cada punto es una elección;
@@ -166,22 +167,22 @@
                 <!-- Brillo viajero: recorre la línea del corazón como una constelación que se enciende de a ratos -->
                 <path class="trazo-corazon-brillo" pathLength="100" d="M 50.0,25.0 L 50.02,24.58 L 50.19,23.35 L 50.62,21.41 L 51.43,18.89 L 52.72,15.97 L 54.54,12.87 L 56.92,9.8 L 59.85,7.0 L 63.28,4.67 L 67.14,2.98 L 71.32,2.06 L 75.67,2.01 L 80.05,2.85 L 84.3,4.58 L 88.23,7.14 L 91.71,10.43 L 94.58,14.33 L 96.72,18.71 L 98.04,23.42 L 98.48,28.33 L 98.04,33.33 L 96.72,38.32 L 94.58,43.22 L 91.71,48.0 L 88.23,52.62 L 84.3,57.1 L 80.05,61.43 L 75.67,65.63 L 71.32,69.72 L 67.14,73.69 L 63.28,77.54 L 59.85,81.24 L 56.92,84.74 L 54.54,88.0 L 52.72,90.94 L 51.43,93.47 L 50.62,95.54 L 50.19,97.07 L 50.02,98.02 L 50.0,98.33 L 49.98,98.02 L 49.81,97.07 L 49.38,95.54 L 48.57,93.47 L 47.28,90.94 L 45.46,88.0 L 43.08,84.74 L 40.15,81.24 L 36.72,77.54 L 32.86,73.69 L 28.68,69.72 L 24.33,65.63 L 19.95,61.43 L 15.7,57.1 L 11.77,52.62 L 8.29,48.0 L 5.42,43.22 L 3.28,38.32 L 1.96,33.33 L 1.52,28.33 L 1.96,23.42 L 3.28,18.71 L 5.42,14.33 L 8.29,10.43 L 11.77,7.14 L 15.7,4.58 L 19.95,2.85 L 24.33,2.01 L 28.68,2.06 L 32.86,2.98 L 36.72,4.67 L 40.15,7.0 L 43.08,9.8 L 45.46,12.87 L 47.28,15.97 L 48.57,18.89 L 49.38,21.41 L 49.81,23.35 L 49.98,24.58 L 50.0,25.0 Z" />
             </svg>
-            <button class="punto-corazon planeta-carta" style="left:84.3%;top:4.6%" onclick="entrarALaCarta(event)"><span class="planeta-icono">📘</span><span class="planeta-nombre">El Libro</span></button>
-            <button class="punto-corazon planeta-gratitud" style="left:15.7%;top:4.6%" onclick="ejecutarOpcionMenu(event, 'gratitud')"><span class="planeta-icono">💛</span><span class="planeta-nombre">Gratitud</span></button>
-            <button class="punto-corazon planeta-musica" style="left:91.7%;top:48.0%" onclick="ejecutarOpcionMenu(event, 'musica')"><span class="planeta-icono">🎵</span><span class="planeta-nombre">Música</span></button>
-            <button class="punto-corazon planeta-preguntas" style="left:8.3%;top:48.0%" onclick="ejecutarOpcionMenu(event, 'preguntas')"><span class="planeta-icono">❓</span><span class="planeta-nombre">Preguntas</span></button>
-            <button class="punto-corazon planeta-muro" style="left:67.1%;top:73.7%" onclick="ejecutarOpcionMenu(event, 'muro')"><span class="planeta-icono">📜</span><span class="planeta-nombre">Muro</span></button>
-            <button class="punto-corazon planeta-deseos" style="left:32.9%;top:73.7%" onclick="ejecutarOpcionMenu(event, 'deseos')"><span class="planeta-icono">🌠</span><span class="planeta-nombre">Deseos</span></button>
-            <button class="punto-corazon planeta-reloj" style="left:50%;top:98.3%" onclick="ejecutarOpcionMenu(event, 'reloj')"><span class="planeta-icono">⏰</span><span class="planeta-nombre">Cuenta&nbsp;regresiva</span></button>
-            <button class="punto-corazon planeta-ticket" style="left:50%;top:16%" onclick="ejecutarOpcionMenu(event, 'ticket')"><span class="planeta-icono">🎟️</span><span class="planeta-nombre">Ticket&nbsp;Diario</span></button>
-            <button class="punto-corazon planeta-sanacion" style="left:1.96%;top:23.42%" onclick="ejecutarOpcionMenu(event, 'sanacion')"><span class="planeta-icono">🌿</span><span class="planeta-nombre">Sanación</span></button>
-            <button class="punto-corazon planeta-juegos" style="left:98.04%;top:23.42%" onclick="location.href='juegos.html'"><span class="planeta-icono">🎮</span><span class="planeta-nombre">Juegos</span></button>
+            <button class="punto-corazon planeta-carta" style="left:84.3%;top:4.6%" onclick="entrarALaCarta(event)"><svg class="icono-svg planeta-icono"><use href="#icono-libro"></use></svg><span class="planeta-nombre">El Libro</span></button>
+            <button class="punto-corazon planeta-gratitud" style="left:15.7%;top:4.6%" onclick="ejecutarOpcionMenu(event, 'gratitud')"><svg class="icono-svg planeta-icono"><use href="#icono-corazon-chispa"></use></svg><span class="planeta-nombre">Gratitud</span></button>
+            <button class="punto-corazon planeta-musica" style="left:91.7%;top:48.0%" onclick="ejecutarOpcionMenu(event, 'musica')"><svg class="icono-svg planeta-icono"><use href="#icono-nota-musical"></use></svg><span class="planeta-nombre">Música</span></button>
+            <button class="punto-corazon planeta-preguntas" style="left:8.3%;top:48.0%" onclick="ejecutarOpcionMenu(event, 'preguntas')"><svg class="icono-svg planeta-icono"><use href="#icono-pregunta"></use></svg><span class="planeta-nombre">Preguntas</span></button>
+            <button class="punto-corazon planeta-muro" style="left:67.1%;top:73.7%" onclick="ejecutarOpcionMenu(event, 'muro')"><svg class="icono-svg planeta-icono"><use href="#icono-documento"></use></svg><span class="planeta-nombre">Muro</span></button>
+            <button class="punto-corazon planeta-deseos" style="left:32.9%;top:73.7%" onclick="ejecutarOpcionMenu(event, 'deseos')"><svg class="icono-svg planeta-icono"><use href="#icono-estrella-fugaz"></use></svg><span class="planeta-nombre">Deseos</span></button>
+            <button class="punto-corazon planeta-reloj" style="left:50%;top:98.3%" onclick="ejecutarOpcionMenu(event, 'reloj')"><svg class="icono-svg planeta-icono"><use href="#icono-reloj"></use></svg><span class="planeta-nombre">Cuenta&nbsp;regresiva</span></button>
+            <button class="punto-corazon planeta-ticket" style="left:50%;top:16%" onclick="ejecutarOpcionMenu(event, 'ticket')"><svg class="icono-svg planeta-icono"><use href="#icono-ticket"></use></svg><span class="planeta-nombre">Ticket&nbsp;Diario</span></button>
+            <button class="punto-corazon planeta-sanacion" style="left:1.96%;top:23.42%" onclick="ejecutarOpcionMenu(event, 'sanacion')"><svg class="icono-svg planeta-icono"><use href="#icono-hoja"></use></svg><span class="planeta-nombre">Sanación</span></button>
+            <button class="punto-corazon planeta-juegos" style="left:98.04%;top:23.42%" onclick="location.href='juegos.html'"><svg class="icono-svg planeta-icono"><use href="#icono-gamepad"></use></svg><span class="planeta-nombre">Juegos</span></button>
         </div>
     </div>
 
     <!-- Botón "Sorpresa" como widget fijo, abajo a la izquierda, en paralelo al chat (abajo a la derecha) -->
     <div id="sorpresa-flotante" class="sorpresa-flotante">
-        <button class="nucleo-corazon" onclick="lanzarSorpresaAleatoria(event)" title="Sorpresa" aria-label="Mandar una sorpresa al azar">🎁</button>
+        <button class="nucleo-corazon" onclick="lanzarSorpresaAleatoria(event)" title="Sorpresa" aria-label="Mandar una sorpresa al azar"><svg class="icono-svg"><use href="#icono-regalo"></use></svg></button>
     </div>
 
     <button id="btn-azar" class="btn-azar" onclick="viajarAlAzar()">
@@ -202,7 +203,7 @@
 
     <!-- Burbuja flotante para entrar al Muro desde cualquier pantalla -->
     <div id="muro-flotante" class="muro-flotante">
-        <div class="burbuja-muro" onclick="abrirMuro(event)" title="Nuestro Muro en el Tiempo" role="button" aria-label="Abrir el Muro">📜</div>
+        <div class="burbuja-muro" onclick="abrirMuro(event)" title="Nuestro Muro en el Tiempo" role="button" aria-label="Abrir el Muro"><svg class="icono-svg"><use href="#icono-documento"></use></svg></div>
     </div>
 
 
@@ -219,7 +220,7 @@
                 <button class="btn-enviar-gratitud" onclick="guardarGratitud()">➤</button>
             </div>
         </div>
-        <div class="burbuja-gratitud" id="burbuja-gratitud" onclick="toggleGratitud(event)" title="Rincón de la gratitud" role="button" aria-label="Abrir el rincón de la gratitud">💛</div>
+        <div class="burbuja-gratitud" id="burbuja-gratitud" onclick="toggleGratitud(event)" title="Rincón de la gratitud" role="button" aria-label="Abrir el rincón de la gratitud"><svg class="icono-svg"><use href="#icono-corazon-chispa"></use></svg></div>
     </div>
 
     <!-- ====== LISTA DE DESEOS JUNTOS (Bucket List) ====== -->
@@ -239,7 +240,7 @@
                 <button class="btn-enviar-deseo" onclick="agregarDeseo()">➤</button>
             </div>
         </div>
-        <div class="burbuja-deseos" id="burbuja-deseos" onclick="toggleDeseos(event)" title="Lista de deseos juntos" role="button" aria-label="Abrir la lista de deseos juntos">🌠</div>
+        <div class="burbuja-deseos" id="burbuja-deseos" onclick="toggleDeseos(event)" title="Lista de deseos juntos" role="button" aria-label="Abrir la lista de deseos juntos"><svg class="icono-svg"><use href="#icono-estrella-fugaz"></use></svg></div>
     </div>
 
     <!-- ====== PREGUNTAS PARA NOSOTROS (Ping Pong) ====== -->
@@ -273,7 +274,7 @@
             <div class="fr-fecha" id="fr-fecha">25 de agosto de 2026, 12 hs</div>
             <a class="btn-ver-boleto" href="https://drive.google.com/uc?export=download&id=1cq1pwYt6iyr96WBC2oJldx05mWZojnXR" target="_blank" rel="noopener" style="text-decoration: none; display: inline-block;">🎫 Ver mi boleto real</a>
         </div>
-        <div class="burbuja-reloj" id="burbuja-reloj" onclick="toggleReloj(event)" title="Cuenta regresiva" role="button" aria-label="Ver cuenta regresiva">⏰</div>
+        <div class="burbuja-reloj" id="burbuja-reloj" onclick="toggleReloj(event)" title="Cuenta regresiva" role="button" aria-label="Ver cuenta regresiva"><svg class="icono-svg"><use href="#icono-reloj"></use></svg></div>
     </div>
 
     <!-- ====== MODAL: BOLETO DE AVIÓN DORADO ====== -->
@@ -440,7 +441,7 @@
                 <button class="btn-enviar-chat" onclick="enviarMensajeChat()">➤</button>
             </div>
         </div>
-        <div class="burbuja-chat" id="burbuja-chat" onclick="toggleChat(event)" title="Abrir chat" role="button" aria-label="Abrir nuestro chat privado">💬</div>
+        <div class="burbuja-chat" id="burbuja-chat" onclick="toggleChat(event)" title="Abrir chat" role="button" aria-label="Abrir nuestro chat privado"><svg class="icono-svg"><use href="#icono-chat"></use></svg></div>
     </div>
 
     <!-- ====== MURO EN EL TIEMPO (pantalla completa) ====== -->

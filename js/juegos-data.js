@@ -9,13 +9,15 @@
 // pantalla+lógica en juegos.html/js/juegos/<id>.js, y 2) poner
 // disponible:true acá. Las páginas de categoría se actualizan solas.
 // ============================================================
+// iconoSvg: id de <symbol> en js/icon-sprite.js (ver renderMenuPrincipal
+// en navegacion.js y categorias/*.html, que arman el <svg><use> con esto).
 window.CATEGORIAS = [
-    { id: 'clasicos',     nombre: 'Clásicos',     icono: '🃏', color: '#a8d8ff' },
-    { id: 'competencia',  nombre: 'Competencia',  icono: '⚡', color: '#ffb3c6' },
-    { id: 'conexion',     nombre: 'Conexión',     icono: '💬', color: '#c9b6ff' },
-    { id: 'reflexion',    nombre: 'Reflexión',    icono: '🌙', color: '#a8edea' },
-    { id: 'cuidado',          nombre: 'Cuidado Compartido', icono: '🌱', color: '#b8e8c9' },
-    { id: 'cooperativosvivo', nombre: 'Cooperativos en Vivo', icono: '🤝', color: '#f5d9a0' },
+    { id: 'clasicos',     nombre: 'Clásicos',     icono: '🃏', iconoSvg: 'icono-cartas',    color: '#a8d8ff' },
+    { id: 'competencia',  nombre: 'Competencia',  icono: '⚡', iconoSvg: 'icono-rayo',      color: '#ffb3c6' },
+    { id: 'conexion',     nombre: 'Conexión',     icono: '💬', iconoSvg: 'icono-chat',      color: '#c9b6ff' },
+    { id: 'reflexion',    nombre: 'Reflexión',    icono: '🌙', iconoSvg: 'icono-luna',      color: '#a8edea' },
+    { id: 'cuidado',          nombre: 'Cuidado Compartido', icono: '🌱', iconoSvg: 'icono-brote',    color: '#b8e8c9' },
+    { id: 'cooperativosvivo', nombre: 'Cooperativos en Vivo', icono: '🤝', iconoSvg: 'icono-personas', color: '#f5d9a0' },
 ];
 
 window.JUEGOS = [

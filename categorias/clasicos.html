@@ -32,12 +32,13 @@
 </div>
 <script src="../js/auth-gate.js"></script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function(){});</script>
+<script src="../js/icon-sprite.js?v=1"></script>
 
 <div class="contenedor">
     <div class="encabezado">
-        <a href="../juegos.html" class="btn-volver">⬅️ Categorías</a>
+        <a href="../juegos.html" class="btn-volver"><svg class="icono-svg"><use href="#icono-flecha-izq"></use></svg> Categorías</a>
     </div>
-    <div class="titulo-app">🃏 Clásicos</div>
+    <div class="titulo-app"><svg class="icono-svg"><use href="#icono-cartas"></use></svg> Clásicos</div>
     <div class="subtitulo-app">Los juegos de mesa de toda la vida, para jugar en vivo entre los dos.</div>
     <div class="lista-juegos-categoria" id="lista-juegos-categoria"></div>
 </div>

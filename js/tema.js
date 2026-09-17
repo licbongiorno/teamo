@@ -26,7 +26,8 @@ function actualizarBotonTema(){
     const btn = document.getElementById('btn-tema');
     if (!btn) return;
     const esClaro = document.documentElement.getAttribute('data-tema') === 'claro';
-    btn.innerText = esClaro ? '🌙' : '☀️';
+    const icono = esClaro ? 'icono-luna' : 'icono-sol';
+    btn.innerHTML = `<svg class="icono-svg"><use href="#${icono}"></use></svg>`;
     btn.title = esClaro ? 'Pasar a tema oscuro' : 'Pasar a tema claro';
 }
 

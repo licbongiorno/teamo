@@ -45,6 +45,7 @@
 </div>
 <script src="js/auth-gate.js"></script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});</script>
+<script src="js/icon-sprite.js?v=1"></script>
 
 <!-- ==================== MODAL DE ACCESO ==================== -->
 <div id="modal-acceso" class="modal-fondo oculto">
@@ -59,10 +60,10 @@
 
 <div class="contenedor">
     <div class="encabezado">
-        <a href="index.html" class="btn-volver">⬅️ Volver</a>
+        <a href="index.html" class="btn-volver"><svg class="icono-svg"><use href="#icono-flecha-izq"></use></svg> Volver</a>
         <div style="display:flex; align-items:center; gap:8px;">
             <span id="chip-racha"></span>
-            <button class="btn-icono-header" id="btn-tema" onclick="alternarTema()" title="Cambiar tema">🌙</button>
+            <button class="btn-icono-header" id="btn-tema" onclick="alternarTema()" title="Cambiar tema"><svg class="icono-svg"><use href="#icono-luna"></use></svg></button>
             <span class="chip-identidad" id="chip-identidad"></span>
         </div>
     </div>
@@ -74,7 +75,7 @@
 
         <div id="aviso-presencia"></div>
 
-        <button class="btn-secundario" style="width:100%; margin-bottom:14px;" onclick="abrirJuego('estadisticas')">📊 Nuestra Historia</button>
+        <button class="btn-secundario" style="width:100%; margin-bottom:14px;" onclick="abrirJuego('estadisticas')"><svg class="icono-svg"><use href="#icono-grafico"></use></svg> Nuestra Historia</button>
 
         <div class="separador-seccion">Categorías</div>
         <div class="grid-categorias" id="grid-categorias"></div>
@@ -592,7 +593,7 @@
 
 <!-- ==================== CHAT FLOTANTE ==================== -->
 <div class="azar-flotante">
-    <button class="burbuja-azar" onclick="jugarAlAzar()" title="Jugar algo al azar" aria-label="Abrir un juego al azar">🎲</button>
+    <button class="burbuja-azar" onclick="jugarAlAzar()" title="Jugar algo al azar" aria-label="Abrir un juego al azar"><svg class="icono-svg"><use href="#icono-dado"></use></svg></button>
 </div>
 
 <div id="chat-flotante" class="chat-flotante">
@@ -615,12 +616,12 @@
 
 <!-- ==================== MÓDULOS COMPARTIDOS ==================== -->
 <script src="js/usuario.js?v=6"></script>
-<script src="js/juegos-data.js?v=5"></script>
+<script src="js/juegos-data.js?v=6"></script>
 <script src="js/puntos.js?v=6"></script>
 <script src="js/historial.js?v=5"></script>
 <script src="js/racha.js?v=5"></script>
 <script src="js/presencia.js?v=5"></script>
-<script src="js/tema.js?v=5"></script>
+<script src="js/tema.js?v=6"></script>
 <script src="js/logros.js?v=5"></script>
 <script src="js/estadisticas.js?v=5"></script>
 <script src="js/records.js?v=5"></script>

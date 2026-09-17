@@ -204,7 +204,7 @@ function renderMenuPrincipal(){
         gridCat.innerHTML = window.CATEGORIAS.map(c => {
             const cantidad = window.obtenerJuegosDeCategoria(c.id).filter(j => j.disponible).length;
             return `<a class="tarjeta-categoria" href="categorias/${c.id}.html">
-                <span class="icono-categoria">${c.icono}</span>
+                <svg class="icono-svg icono-categoria"><use href="#${c.iconoSvg}"></use></svg>
                 <span class="nombre-categoria">${c.nombre}</span>
                 <span class="cantidad-categoria">${cantidad} disponible${cantidad === 1 ? '' : 's'}</span>
             </a>`;

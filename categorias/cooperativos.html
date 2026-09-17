@@ -9,8 +9,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400;0,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../css/global.css">
 <link rel="stylesheet" href="../css/mobile.css">
+<link rel="stylesheet" href="../css/auth-gate.css">
 </head>
 <body>
+
+<!-- ====== PORTÓN DE ACCESO (usuario + contraseña) ====== -->
+<div id="gate-acceso" class="gate-acceso">
+    <form class="gate-tarjeta" onsubmit="return false;">
+        <div class="gate-candado">🔒</div>
+        <h2>Nuestros Juegos</h2>
+        <p>Elegí quién sos e ingresá la contraseña</p>
+        <div class="gate-usuarios">
+            <button type="button" class="gate-btn-usuario" data-usuario="carito" onclick="gateElegirUsuario(this)">Carito 💖</button>
+            <button type="button" class="gate-btn-usuario" data-usuario="nico" onclick="gateElegirUsuario(this)">Nico 💙</button>
+        </div>
+        <input type="password" id="gate-clave" class="gate-input" placeholder="Contraseña" autocomplete="off" inputmode="numeric" onkeydown="gateEntrarConEnter(event)">
+        <button type="button" class="gate-btn-entrar" onclick="gateEntrar()">Entrar</button>
+        <div id="gate-error" class="gate-error"></div>
+    </form>
+</div>
+<script src="../js/auth-gate.js"></script>
+
 <div class="contenedor">
     <div class="encabezado">
         <a href="../juegos.html" class="btn-volver">⬅️ Categorías</a>

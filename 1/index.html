@@ -1736,9 +1736,27 @@
         }
 
     </style>
+    <link rel="stylesheet" href="../css/auth-gate.css">
 </head>
 
 <body>
+
+    <!-- ====== PORTÓN DE ACCESO (usuario + contraseña) ====== -->
+    <div id="gate-acceso" class="gate-acceso">
+        <form class="gate-tarjeta" onsubmit="return false;">
+            <div class="gate-candado">🔒</div>
+            <h2>Nuestro Refugio</h2>
+            <p>Elegí quién sos e ingresá la contraseña</p>
+            <div class="gate-usuarios">
+                <button type="button" class="gate-btn-usuario" data-usuario="carito" onclick="gateElegirUsuario(this)">Carito 💖</button>
+                <button type="button" class="gate-btn-usuario" data-usuario="nico" onclick="gateElegirUsuario(this)">Nico 💙</button>
+            </div>
+            <input type="password" id="gate-clave" class="gate-input" placeholder="Contraseña" autocomplete="off" inputmode="numeric" onkeydown="gateEntrarConEnter(event)">
+            <button type="button" class="gate-btn-entrar" onclick="gateEntrar()">Entrar</button>
+            <div id="gate-error" class="gate-error"></div>
+        </form>
+    </div>
+    <script src="../js/auth-gate.js"></script>
 
     <div id="vineta-calida"></div>
     <canvas id="canvas-particulas"></canvas>

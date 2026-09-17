@@ -1,0 +1,47 @@
+/* ============================================================
+   auth-gate.css — portón de acceso (usuario + contraseña) compartido
+   por todas las páginas del sitio. Estilos autocontenidos (no dependen
+   de las variables --fuente-* / --rosa de cada página) para que se vean
+   igual en index.html, 1/index.html, juegos.html y categorias/*.html.
+   ============================================================ */
+.gate-acceso {
+    position: fixed; inset: 0; z-index: 999999;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; box-sizing: border-box;
+    background: radial-gradient(ellipse 140% 90% at 50% 0%, #241a33 0%, #180f1e 55%, #0b0812 100%);
+}
+.gate-acceso.gate-oculto { display: none; }
+.gate-tarjeta {
+    width: min(90vw, 360px); box-sizing: border-box; text-align: center; color: #fdf6f0;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,179,198,0.3);
+    border-radius: 22px; padding: clamp(26px, 7vw, 36px) clamp(22px, 6vw, 30px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    font-family: 'Montserrat', sans-serif;
+    animation: gate-aparecer 0.5s ease forwards;
+}
+@keyframes gate-aparecer { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.gate-candado { font-size: 2.2rem; margin-bottom: 6px; }
+.gate-tarjeta h2 {
+    font-family: 'Dancing Script', cursive; font-size: clamp(1.8rem, 7vw, 2.3rem);
+    color: #ffc2d9; margin: 0 0 6px;
+}
+.gate-tarjeta p { font-size: 0.88rem; color: rgba(255,255,255,0.7); margin: 0 0 18px; }
+.gate-usuarios { display: flex; gap: 10px; margin-bottom: 14px; }
+.gate-btn-usuario {
+    flex: 1; padding: 12px 8px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.25); color: #fdf6f0; font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer; touch-action: manipulation;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.gate-btn-usuario.gate-seleccionado { background: rgba(255,194,217,0.25); border-color: #ffc2d9; transform: scale(1.03); }
+.gate-input {
+    width: 100%; box-sizing: border-box; padding: 13px; border-radius: 12px; margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fdf6f0;
+    text-align: center; font-size: 1.1rem; font-family: 'Montserrat', sans-serif; letter-spacing: 3px;
+}
+.gate-btn-entrar {
+    width: 100%; padding: 12px; border-radius: 20px; border: none; background: #ffc2d9; color: #1a1015;
+    font-weight: bold; font-size: 1rem; cursor: pointer; touch-action: manipulation; font-family: 'Montserrat', sans-serif;
+}
+.gate-btn-entrar:active { transform: scale(0.98); }
+.gate-error { color: #ff9d85; font-size: 0.82rem; margin-top: 12px; min-height: 1.1em; }

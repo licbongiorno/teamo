@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://s.ytimg.com">
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="dns-prefetch" href="https://www.youtube.com">
-    <link rel="stylesheet" href="css/refugio.css?v=1">
+    <link rel="stylesheet" href="css/refugio.css?v=2">
     <link rel="stylesheet" href="css/auth-gate.css">
 </head>
 
@@ -126,7 +126,7 @@
             <div class="controles-audio">
                 <button id="btn-random" class="btn-toggle" onclick="toggleRandom()" title="Aleatorio" aria-label="Reproducción aleatoria">🔀</button>
                 <button onclick="cambiarCancion(-1)" title="Anterior" aria-label="Canción anterior">⏮</button>
-                <button id="btn-play-pause" onclick="togglePlayPause()" title="Pausar/Reproducir" aria-label="Pausar o reproducir">⏸</button>
+                <button id="btn-play-pause" onclick="togglePlayPause()" title="Pausar/Reproducir" aria-label="Pausar o reproducir">▶</button>
                 <button onclick="cambiarCancion(1)" title="Siguiente" aria-label="Canción siguiente">⏭</button>
                 <button id="btn-repeat" class="btn-toggle" onclick="toggleRepeat()" title="Repetir" aria-label="Repetir canción">🔁</button>
             </div>
@@ -150,10 +150,10 @@
     <!-- UNIVERSO-CORAZÓN: aparece al abrir la puerta. Cada punto es una elección;
          nada se reproduce ni se abre solo, incluyendo el libro. -->
     <div id="universo-corazon" class="universo-corazon">
-        <div class="estrellas-titilantes" aria-hidden="true"></div>
+        <canvas id="universo-canvas-estrellas" class="universo-canvas-estrellas" aria-hidden="true"></canvas>
         <div class="universo-titulo-principal">Nuestro universo</div>
         <div class="universo-subtitulo-principal">Cada estrella es un pedacito nuestro. Elegí cuál explorar 💫</div>
-        <div class="lienzo-corazon">
+        <div class="lienzo-corazon" id="lienzo-corazon-3d">
             <svg viewBox="0 0 100 100" preserveAspectRatio="none">
                 <defs>
                     <linearGradient id="gradienteCorazon" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -465,6 +465,11 @@
          de "carga bajo demanda" (por ahora sólo Preguntas). -->
     <script src="js/inicio-cargador.js?v=1"></script>
 
-    <script src="js/index-refugio.js?v=1"></script>
+    <!-- Cielo con profundidad (parallax), fugaces e inclinación 3D del
+         corazón para la pantalla "Nuestro universo" — se activa/apaga
+         desde mostrarUniversoCorazon()/entrarALaCarta() en index-refugio.js. -->
+    <script src="js/inicio/universo-3d.js?v=1"></script>
+
+    <script src="js/index-refugio.js?v=2"></script>
 </body>
 </html>

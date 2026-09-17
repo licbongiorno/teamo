@@ -1087,6 +1087,7 @@
             universo.style.display = 'flex';
             document.getElementById('scroll-aviso').style.display = 'none';
             setTimeout(() => universo.classList.add('activo'), 50);
+            if (typeof window.iniciarUniversoEstrellas === 'function') window.iniciarUniversoEstrellas();
         }
 
         // Entrar al libro es una elección: se toca "La Carta" en el corazón,
@@ -1097,6 +1098,7 @@
             const universo = document.getElementById('universo-corazon');
             universo.classList.remove('activo');
             setTimeout(() => { universo.style.display = 'none'; }, 500);
+            if (typeof window.detenerUniversoEstrellas === 'function') window.detenerUniversoEstrellas();
 
             document.getElementById('contenedor').classList.add('activo');
             document.getElementById('scroll-aviso').style.display = 'block';
@@ -1153,6 +1155,18 @@
         let miIdentidad = localStorage.getItem("identidadRefugio");
         let miRival = miIdentidad === 'nico' ? 'carito' : (miIdentidad === 'carito' ? 'nico' : null);
         function nombreJugador(id) { return id === 'carito' ? 'Carito' : 'Nico'; }
+        // Este archivo se ejecuta al cargar la página, antes de que el
+        // portón de acceso (js/auth-gate.js) confirme quién es — así que
+        // en el momento en que se lee arriba, identidadRefugio todavía
+        // puede no existir en localStorage aunque el usuario recién haya
+        // entrado. auth-gate.js dispara este evento apenas confirma, así
+        // que lo escuchamos para no quedarnos con miIdentidad/miRival en
+        // null para el resto de la sesión (rompía chat, gratitud, muro, etc.)
+        document.addEventListener('acceso-concedido', (e) => {
+            miIdentidad = e.detail.usuario;
+            miRival = miIdentidad === 'nico' ? 'carito' : 'nico';
+            iniciarEscuchaChatNoLeidos(); // ya tiene su propio guard, no se duplica si ya había arrancado
+        });
         // chatIniciado, muroIniciado, gratitudIniciado y deseosIniciado
         // ahora viven en sus propios módulos (js/inicio/*.js).
         let accionPendiente = null; // 'chat', 'muro', 'gratitud' o 'deseos'

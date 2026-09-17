@@ -1027,18 +1027,15 @@
             display: none; flex-direction: column; align-items: center; justify-content: flex-start;
             padding: calc(30px + env(safe-area-inset-top, 0px)) 18px calc(120px + env(safe-area-inset-bottom, 0px));
             overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; touch-action: pan-y; box-sizing: border-box;
+            /* El cielo estrellado real (con profundidad y fugaces) lo pinta
+               <canvas id="universo-canvas-estrellas"> — ver js/inicio/universo-3d.js.
+               Acá sólo queda el fondo de nebulosa detrás de todo eso. */
             background:
-                radial-gradient(1.5px 1.5px at 10% 15%, rgba(255,255,255,0.7) 1px, transparent 0),
-                radial-gradient(1px 1px at 85% 8%, rgba(255,255,255,0.5) 1px, transparent 0),
-                radial-gradient(1.5px 1.5px at 92% 35%, rgba(255,255,255,0.6) 1px, transparent 0),
-                radial-gradient(1px 1px at 6% 55%, rgba(255,255,255,0.45) 1px, transparent 0),
-                radial-gradient(1.5px 1.5px at 22% 92%, rgba(255,255,255,0.5) 1px, transparent 0),
-                radial-gradient(1px 1px at 78% 88%, rgba(255,255,255,0.4) 1px, transparent 0),
-                radial-gradient(1.5px 1.5px at 55% 45%, rgba(255,255,255,0.35) 1px, transparent 0),
                 radial-gradient(ellipse 90% 55% at 50% 0%, rgba(148,131,224,0.16), transparent 62%),
                 radial-gradient(ellipse 90% 55% at 50% 100%, rgba(255,184,207,0.12), transparent 62%),
                 var(--color-bg-oscuro);
             opacity: 0; transition: opacity 0.7s ease;
+            perspective: 1200px; /* contexto 3D para que .lienzo-corazon pueda inclinarse de verdad */
         }
         .universo-corazon::before {
             content: '';
@@ -1048,38 +1045,9 @@
         }
         @keyframes respirarUniverso { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
         @media (prefers-reduced-motion: reduce) { .universo-corazon::before { animation: none; } }
-        .estrellas-titilantes { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-        .estrellas-titilantes::before, .estrellas-titilantes::after {
-            content: ''; position: absolute; inset: 0;
-            background-image:
-                radial-gradient(1.4px 1.4px at 8% 22%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1px 1px at 18% 68%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1.4px 1.4px at 27% 40%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1px 1px at 38% 80%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1.4px 1.4px at 47% 12%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1px 1px at 58% 55%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1.4px 1.4px at 66% 30%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1px 1px at 74% 75%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1.4px 1.4px at 84% 18%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1px 1px at 92% 62%, #fdf6f0 1px, transparent 0);
-            animation: titilarEstrellas 3.6s ease-in-out infinite;
-        }
-        .estrellas-titilantes::after {
-            background-image:
-                radial-gradient(1px 1px at 14% 48%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1.4px 1.4px at 23% 85%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1px 1px at 33% 15%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1.4px 1.4px at 44% 60%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1px 1px at 54% 30%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1.4px 1.4px at 63% 78%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1px 1px at 71% 10%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1.4px 1.4px at 80% 50%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1px 1px at 88% 88%, #fdf6f0 1px, transparent 0),
-                radial-gradient(1.4px 1.4px at 96% 35%, #fdf6f0 1px, transparent 0);
-            animation-delay: 1.8s;
-        }
-        @keyframes titilarEstrellas { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-        @media (prefers-reduced-motion: reduce) { .estrellas-titilantes::before, .estrellas-titilantes::after { animation: none; opacity: 0.6; } }
+        /* Cielo real con profundidad (3 capas en parallax) y estrellas
+           fugaces, dibujado en <canvas> por js/inicio/universo-3d.js. */
+        .universo-canvas-estrellas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; display: block; }
         .universo-corazon.mostrar { display: flex; }
         .universo-corazon.activo { opacity: 1; }
         .universo-titulo-principal {
@@ -1102,6 +1070,13 @@
         .lienzo-corazon {
             position: relative; width: min(84vw, 380px); aspect-ratio: 11 / 10;
             flex-shrink: 0; margin: 0 auto;
+            /* Inclinación 3D real: js/inicio/universo-3d.js mueve estas dos
+               variables (con el dedo/mouse, o solas si nadie lo toca) y acá
+               se convierten en una rotación de verdad, no un truco visual.
+               El suavizado ya lo hace el JS cuadro a cuadro, así que no hace
+               falta (ni conviene) una transition de CSS acá encima. */
+            transform-style: preserve-3d;
+            transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
         }
         .lienzo-corazon::before {
             content: '';
@@ -1117,7 +1092,7 @@
             50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); }
         }
         @media (prefers-reduced-motion: reduce) { .lienzo-corazon::before { animation: none; opacity: 0.7; } }
-        .lienzo-corazon svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        .lienzo-corazon svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; transform: translateZ(-18px); }
         .trazo-corazon {
             fill: none; stroke: url(#gradienteCorazon); stroke-width: 0.55; opacity: 0.5;
             filter: drop-shadow(0 0 5px rgba(255,184,207,0.55));
@@ -1147,33 +1122,51 @@
             .trazo-corazon-brillo { display: none; }
         }
         .punto-corazon {
-            position: absolute; transform: translate(-50%, -50%);
+            position: absolute;
+            /* translate/scale como propiedades independientes de transform:
+               así el latido y el "apretar" (:active) no pisan la posición
+               (translate) ni la profundidad 3D (transform: translateZ) —
+               las tres conviven sin competir por la misma propiedad. */
+            translate: -50% -50%;
+            transform: translateZ(var(--pz, 0px));
             width: clamp(44px, 14.5vw, 62px); height: clamp(44px, 14.5vw, 62px); border-radius: 50%; color: #fdf6f0;
             display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
             font-family: var(--fuente-texto); text-align: center; cursor: pointer; touch-action: manipulation;
             border: 1px solid rgba(255,255,255,0.18); box-sizing: border-box; padding: 0 3px;
-            animation: latidoBurbuja 3.6s infinite;
-            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+            animation: latidoPuntoCorazon 3.6s infinite;
+            transition: scale 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
         }
-        .punto-corazon:active { transform: translate(-50%, -50%) scale(0.88); box-shadow: 0 0 24px rgba(255,194,217,0.65); }
+        @keyframes latidoPuntoCorazon {
+            0%, 100% { scale: 1; }
+            14% { scale: 1.09; }
+            28% { scale: 1; }
+            42% { scale: 1.05; }
+            70% { scale: 1; }
+        }
+        .punto-corazon:active { scale: 0.88; box-shadow: 0 0 24px rgba(255,194,217,0.65); }
         .punto-corazon .planeta-icono { font-size: clamp(0.95rem, 3.8vw, 1.35rem); }
         .punto-corazon .planeta-nombre { font-size: clamp(0.4rem, 1.7vw, 0.54rem); font-weight: 600; line-height: 1.1; letter-spacing: 0.01em; }
         .planeta-carta {
+            --pz: 34px;
             width: clamp(54px, 18.5vw, 80px); height: clamp(54px, 18.5vw, 80px);
             background: radial-gradient(circle at 32% 28%, rgba(255,230,190,0.6), rgba(255,184,207,0.32) 70%);
             box-shadow: 0 0 24px rgba(255,205,150,0.4); border-color: rgba(255,227,194,0.55);
         }
         .planeta-carta .planeta-icono { font-size: clamp(1.25rem, 4.8vw, 1.7rem); }
         .planeta-carta .planeta-nombre { font-size: clamp(0.46rem, 1.9vw, 0.6rem); }
-        .planeta-musica { background: radial-gradient(circle at 32% 28%, rgba(255,214,168,0.5), rgba(255,138,158,0.28) 70%); box-shadow: 0 0 16px rgba(255,184,207,0.25); }
-        .planeta-muro { background: radial-gradient(circle at 32% 28%, rgba(255,227,194,0.48), rgba(180,120,60,0.3) 70%); box-shadow: 0 0 16px rgba(212,163,115,0.25); }
-        .planeta-gratitud { background: radial-gradient(circle at 32% 28%, rgba(255,226,159,0.5), rgba(255,169,159,0.28) 70%); box-shadow: 0 0 16px rgba(245,217,168,0.25); }
-        .planeta-deseos { background: radial-gradient(circle at 32% 28%, rgba(184,232,201,0.48), rgba(168,237,234,0.28) 70%); box-shadow: 0 0 16px rgba(184,232,201,0.25); }
-        .planeta-preguntas { background: radial-gradient(circle at 32% 28%, rgba(216,196,255,0.5), rgba(148,131,224,0.3) 70%); box-shadow: 0 0 16px rgba(148,131,224,0.25); }
-        .planeta-reloj { background: radial-gradient(circle at 32% 28%, rgba(255,214,178,0.5), rgba(255,157,133,0.3) 70%); box-shadow: 0 0 16px rgba(255,157,133,0.25); }
-        .planeta-ticket { background: radial-gradient(circle at 32% 28%, rgba(245,217,168,0.5), rgba(217,162,115,0.3) 70%); box-shadow: 0 0 16px rgba(240,217,160,0.25); }
-        .planeta-sanacion { background: radial-gradient(circle at 32% 28%, rgba(184,232,201,0.5), rgba(148,131,224,0.28) 70%); box-shadow: 0 0 16px rgba(184,232,201,0.25); }
-        .planeta-juegos { background: radial-gradient(circle at 32% 28%, rgba(178,212,255,0.5), rgba(255,179,198,0.28) 70%); box-shadow: 0 0 16px rgba(178,212,255,0.25); }
+        /* --pz: profundidad de cada planeta dentro del corazón 3D — con
+           valores distintos, al inclinar el corazón cada uno se mueve un
+           poco distinto según qué tan "cerca" está, que es justamente lo
+           que hace que algo se sienta en 3D de verdad y no sólo inclinado. */
+        .planeta-musica { --pz: 26px; background: radial-gradient(circle at 32% 28%, rgba(255,214,168,0.5), rgba(255,138,158,0.28) 70%); box-shadow: 0 0 16px rgba(255,184,207,0.25); }
+        .planeta-muro { --pz: 8px; background: radial-gradient(circle at 32% 28%, rgba(255,227,194,0.48), rgba(180,120,60,0.3) 70%); box-shadow: 0 0 16px rgba(212,163,115,0.25); }
+        .planeta-gratitud { --pz: 10px; background: radial-gradient(circle at 32% 28%, rgba(255,226,159,0.5), rgba(255,169,159,0.28) 70%); box-shadow: 0 0 16px rgba(245,217,168,0.25); }
+        .planeta-deseos { --pz: 30px; background: radial-gradient(circle at 32% 28%, rgba(184,232,201,0.48), rgba(168,237,234,0.28) 70%); box-shadow: 0 0 16px rgba(184,232,201,0.25); }
+        .planeta-preguntas { --pz: 14px; background: radial-gradient(circle at 32% 28%, rgba(216,196,255,0.5), rgba(148,131,224,0.3) 70%); box-shadow: 0 0 16px rgba(148,131,224,0.25); }
+        .planeta-reloj { --pz: 4px; background: radial-gradient(circle at 32% 28%, rgba(255,214,178,0.5), rgba(255,157,133,0.3) 70%); box-shadow: 0 0 16px rgba(255,157,133,0.25); }
+        .planeta-ticket { --pz: 22px; background: radial-gradient(circle at 32% 28%, rgba(245,217,168,0.5), rgba(217,162,115,0.3) 70%); box-shadow: 0 0 16px rgba(240,217,160,0.25); }
+        .planeta-sanacion { --pz: 12px; background: radial-gradient(circle at 32% 28%, rgba(184,232,201,0.5), rgba(148,131,224,0.28) 70%); box-shadow: 0 0 16px rgba(184,232,201,0.25); }
+        .planeta-juegos { --pz: 28px; background: radial-gradient(circle at 32% 28%, rgba(178,212,255,0.5), rgba(255,179,198,0.28) 70%); box-shadow: 0 0 16px rgba(178,212,255,0.25); }
         /* Widget fijo abajo a la izquierda, en el mismo nivel que el chat (abajo a la derecha) */
         .sorpresa-flotante {
             position: fixed;

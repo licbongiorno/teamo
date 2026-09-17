@@ -222,11 +222,17 @@ async function responderEspejo(){
     if (!texto || !window._cartaEspejoActualId) return;
     vibrarJ(12);
     const ref = refEspejo(window._cartaEspejoActualId);
-    const snap = await new Promise(res => { const u = window.onSnapshot(ref, s => { u(); res(s); }); });
-    const data = snap.data();
-    const respuestas = { ...data.respuestas, [miIdentidad]: texto };
-    const ambosRespondieron = respuestas.nico && respuestas.carito;
-    await window.updateDoc(ref, { respuestas, ...(ambosRespondieron ? { fase: 'prediciendo' } : {}) });
+    // Transacción: mergear a mano en JS y despues updateDoc reemplaza el
+    // campo "respuestas" entero — si los dos respondían casi a la vez, el
+    // segundo podía escribir sobre una copia que todavía no incluía la
+    // respuesta recién guardada del primero, borrándola.
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.data();
+        const respuestas = { ...data.respuestas, [miIdentidad]: texto };
+        const ambosRespondieron = respuestas.nico && respuestas.carito;
+        tx.update(ref, { respuestas, ...(ambosRespondieron ? { fase: 'prediciendo' } : {}) });
+    });
 }
 
 async function predecirEspejo(){
@@ -234,11 +240,14 @@ async function predecirEspejo(){
     if (!texto || !window._cartaEspejoActualId) return;
     vibrarJ([15, 30, 15]);
     const ref = refEspejo(window._cartaEspejoActualId);
-    const snap = await new Promise(res => { const u = window.onSnapshot(ref, s => { u(); res(s); }); });
-    const data = snap.data();
-    const predicciones = { ...data.predicciones, [miIdentidad]: texto };
-    const ambosPredijeron = predicciones.nico && predicciones.carito;
-    await window.updateDoc(ref, { predicciones, ...(ambosPredijeron ? { fase: 'revelado' } : {}) });
+    const ambosPredijeron = await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.data();
+        const predicciones = { ...data.predicciones, [miIdentidad]: texto };
+        const listo = predicciones.nico && predicciones.carito;
+        tx.update(ref, { predicciones, ...(listo ? { fase: 'revelado' } : {}) });
+        return listo;
+    });
     if (ambosPredijeron && typeof registrarEvento === 'function') {
         registrarEvento('espejo_respondido', `Revelaron una ronda de El Espejo`);
     }

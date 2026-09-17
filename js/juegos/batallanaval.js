@@ -117,14 +117,23 @@ async function confirmarFlotaBN(){
     if (_seleccionFlotaBN.length !== CELDAS_FLOTA_BN) return;
     vibrarJ(12);
     const campoBarcos = miIdentidad === 'nico' ? 'barcosNico' : 'barcosCarito';
-    const snap = await new Promise(res => { const u = window.onSnapshot(refBatallaNaval(), s => { u(); res(s); }); });
-    const data = snap.data();
-    const listos = { ...(data.listos || {}), [miIdentidad]: true };
-    const ambosListos = listos.nico && listos.carito;
-    await window.updateDoc(refBatallaNaval(), {
-        [campoBarcos]: [..._seleccionFlotaBN],
-        listos,
-        ...(ambosListos ? { fase: 'atacando' } : {})
+    // Transacción: updateDoc reemplaza el campo "listos" entero (no lo
+    // mergea), así que si los dos confirman su flota casi a la vez, el
+    // que escribe último borraba el "listo" del otro y la partida podía
+    // quedar trabada en 'colocando'. La transacción relee el estado más
+    // reciente en cada reintento, así el segundo en confirmar siempre ve
+    // la marca del primero.
+    const ref = refBatallaNaval();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.data();
+        const listos = { ...(data.listos || {}), [miIdentidad]: true };
+        const ambosListos = listos.nico && listos.carito;
+        tx.update(ref, {
+            [campoBarcos]: [..._seleccionFlotaBN],
+            listos,
+            ...(ambosListos ? { fase: 'atacando' } : {})
+        });
     });
 }
 

@@ -89,11 +89,19 @@ async function agregarItemCapsula(){
     const texto = input.value.trim();
     if (!texto) return;
     vibrarJ(12);
-    const snap = await new Promise(res => { const u = window.onSnapshot(refCapsula(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (!data || Date.now() >= data.fechaApertura) return;
-    const items = [...(data.items || []), { autor: miIdentidad, texto, ts: Date.now() }];
-    await window.updateDoc(refCapsula(), { items });
+    // Transacción: leer y escribir por separado podía hacer que, si los
+    // dos agregaban una nota casi al mismo tiempo, uno pisara el array
+    // completo del otro y esa nota desapareciera sin aviso.
+    const ref = refCapsula();
+    const agregado = await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : null;
+        if (!data || Date.now() >= data.fechaApertura) return false;
+        const items = [...(data.items || []), { autor: miIdentidad, texto, ts: Date.now() }];
+        tx.update(ref, { items });
+        return true;
+    });
+    if (!agregado) return;
     input.value = '';
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} agregó algo a la Cápsula del Tiempo`);

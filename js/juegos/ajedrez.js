@@ -34,17 +34,27 @@ async function leerAjedrezActual(){
 
 async function marcarListoAjedrez(){
     vibrarJ(12);
-    const estado = await leerAjedrezActual();
-    if (estado?.listos?.[miIdentidad]) return;
-    const listos = { ...(estado?.listos||{}), [miIdentidad]: true };
-    if (listos.nico && listos.carito) {
-        await window.setDoc(refAjedrez(), {
-            fase:'jugando', tablero: crearTableroInicialAjedrez(), turno: 'nico',
-            listos, historial: ['Arranca la partida. Empiezan las blancas (Nico).'], ganador: null
-        });
-    } else {
-        await window.setDoc(refAjedrez(), { fase:'esperando', listos }, { merge:true });
-    }
+    // Transacción: si los dos tocan "listo" casi al mismo tiempo, cada
+    // lectura suelta (leerAjedrezActual) puede no ver todavía la marca
+    // del otro, y entonces ninguno de los dos dispara el arranque de la
+    // partida. Con una transacción, Firestore reintenta automáticamente
+    // si detecta que el documento cambió mientras se decidía, así que
+    // el segundo en confirmar siempre ve la marca del primero.
+    const ref = refAjedrez();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.listos?.[miIdentidad]) return;
+        const listos = { ...(estado?.listos||{}), [miIdentidad]: true };
+        if (listos.nico && listos.carito) {
+            tx.set(ref, {
+                fase:'jugando', tablero: crearTableroInicialAjedrez(), turno: 'nico',
+                listos, historial: ['Arranca la partida. Empiezan las blancas (Nico).'], ganador: null
+            });
+        } else {
+            tx.set(ref, { fase:'esperando', listos }, { merge:true });
+        }
+    });
 }
 
 async function reiniciarAjedrez(){

@@ -1,5 +1,5 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, enableIndexedDbPersistence, runTransaction, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -36,6 +36,10 @@
         window.updateDoc = updateDoc;
         window.deleteDoc = deleteDoc;
         window.setDoc = setDoc;
+        window.runTransaction = runTransaction;
+        window.increment = increment;
+        window.arrayUnion = arrayUnion;
+        window.arrayRemove = arrayRemove;
 
         // Paso 1 de seguridad: login anónimo automático (ver misma explicación
         // en js/firebase.js, el que usa juegos.html). Acá el script clásico de

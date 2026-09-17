@@ -197,6 +197,12 @@ async function enviarGarbageBloques(cantidad){
 
 function aplicarGarbageLocalBloques(cantidad){
     for (let i = 0; i < cantidad; i++) {
+        // Si la fila de arriba ya tiene algo (bloques propios o basura
+        // previa), no hay lugar para meter otra fila de basura: eso es
+        // un desborde del tablero y tendría que terminar la partida, en
+        // vez de descartar silenciosamente esos bloques como pasaba antes.
+        const filaSuperior = _gridBloques.slice(0, COLUMNAS_BLOQUES);
+        if (filaSuperior.some(celda => celda)) { gameOverBloques(); return; }
         _gridBloques.splice(0, COLUMNAS_BLOQUES);
         const filaGarbage = new Array(COLUMNAS_BLOQUES).fill('garbage');
         filaGarbage[Math.floor(Math.random() * COLUMNAS_BLOQUES)] = null;

@@ -9,7 +9,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {
     getFirestore, doc, setDoc, updateDoc, onSnapshot, serverTimestamp,
-    deleteField, collection, addDoc, query, where, orderBy, limit
+    deleteField, collection, addDoc, query, where, orderBy, limit,
+    runTransaction, increment, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
@@ -40,6 +41,10 @@ window.query = query;
 window.where = where;
 window.orderBy = orderBy;
 window.limit = limit;
+window.runTransaction = runTransaction;
+window.increment = increment;
+window.arrayUnion = arrayUnion;
+window.arrayRemove = arrayRemove;
 
 // Todos los juegos y utilidades comparten la MISMA colección 'juegos'
 // (cada documento se distingue por su id o por un campo 'tipo'), así

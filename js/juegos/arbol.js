@@ -52,10 +52,16 @@ function renderArbol(estado){
 
 async function agregarPuntosArbol(cantidad, mensaje){
     vibrarJ([12, 20, 12]);
-    const snap = await new Promise(res => { const u = window.onSnapshot(refArbol(), s => { u(); res(s); }); });
-    const data = snap.exists() ? snap.data() : { puntos: 0, historial: [] };
-    const historial = [...(data.historial || []), { texto: mensaje, autor: miIdentidad, ts: Date.now() }].slice(-12);
-    await window.setDoc(refArbol(), { puntos: (data.puntos || 0) + cantidad, historial }, { merge: true });
+    // Transacción: leer y despues escribir por separado hacía que, si
+    // Nico y Carito sumaban puntos casi al mismo tiempo, el que escribe
+    // último pisara la suma del otro (uno de los dos aportes se perdía).
+    const ref = refArbol();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : { puntos: 0, historial: [] };
+        const historial = [...(data.historial || []), { texto: mensaje, autor: miIdentidad, ts: Date.now() }].slice(-12);
+        tx.set(ref, { puntos: (data.puntos || 0) + cantidad, historial }, { merge: true });
+    });
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} cuidó Nuestro Árbol: ${mensaje}`);
     }

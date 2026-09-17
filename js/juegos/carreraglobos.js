@@ -146,24 +146,34 @@ async function terminarCarreraGlobos(ganadorForzado){
     if (window._loopGlobos) clearInterval(window._loopGlobos);
     if (_unsubRivalGlobos) { _unsubRivalGlobos(); _unsubRivalGlobos = null; }
     try {
-        const snap = await new Promise(res => { const u = window.onSnapshot(refCarreraGlobos(), s => { u(); res(s); }); });
-        const data = snap.data();
-        if (data.fase === 'terminado') { renderCarreraGlobos(data); return; }
-        let ganador = ganadorForzado;
-        if (!ganador) {
-            const pNico = data.progresoNico || 0, pCarito = data.progresoCarito || 0;
-            if (pNico > pCarito) ganador = 'nico';
-            else if (pCarito > pNico) ganador = 'carito';
-        }
-        const victorias = { ...(data.victorias || { nico: 0, carito: 0 }) };
-        if (ganador) victorias[ganador] = (victorias[ganador] || 0) + 1;
-        await window.updateDoc(refCarreraGlobos(), {
-            fase: 'terminado', ganador,
-            [miIdentidad === 'nico' ? 'progresoNico' : 'progresoCarito']: _toquesLocalesGlobos,
-            victorias
+        // Transacción: si los dos llegan a la meta casi juntos, sin esto
+        // cada uno lee el documento antes de que el otro confirme su
+        // victoria y el que escribe último pisa el resultado del primero
+        // (ganador equivocado, o el punto de "victorias" del otro se
+        // pierde). La transacción hace que "¿ya terminó?" + "escribir el
+        // resultado" pasen como una sola operación atómica.
+        const ref = refCarreraGlobos();
+        const escribiYo = await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(ref);
+            const data = snap.data();
+            if (data.fase === 'terminado') return { escribio: false, data };
+            const campoProgresoPropio = miIdentidad === 'nico' ? 'progresoNico' : 'progresoCarito';
+            const progresoNico = miIdentidad === 'nico' ? _toquesLocalesGlobos : (data.progresoNico || 0);
+            const progresoCarito = miIdentidad === 'carito' ? _toquesLocalesGlobos : (data.progresoCarito || 0);
+            let ganador = ganadorForzado;
+            if (!ganador) {
+                if (progresoNico > progresoCarito) ganador = 'nico';
+                else if (progresoCarito > progresoNico) ganador = 'carito';
+            }
+            const victorias = { ...(data.victorias || { nico: 0, carito: 0 }) };
+            if (ganador) victorias[ganador] = (victorias[ganador] || 0) + 1;
+            tx.update(ref, { fase: 'terminado', ganador, progresoNico, progresoCarito, victorias, [campoProgresoPropio]: _toquesLocalesGlobos });
+            return { escribio: true, ganador };
         });
-        if (ganador && typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `${nombreJugador(ganador)} ganó la Carrera de Globos`);
+        if (!escribiYo.escribio) {
+            renderCarreraGlobos(escribiYo.data);
+        } else if (escribiYo.ganador && typeof registrarEvento === 'function') {
+            registrarEvento('gano_partida', `${nombreJugador(escribiYo.ganador)} ganó la Carrera de Globos`);
         }
     } catch (e) {
         console.error('No se pudo terminar la carrera de globos:', e);

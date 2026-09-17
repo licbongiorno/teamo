@@ -125,12 +125,10 @@ function iniciarDibujaYAdivina(){
 let _colorActualDibujo = COLORES_DIBUJAR[0];
 let _dibujando = false;
 let _trazoActual = null;
-let _canvasListo = false;
 
 function renderDibujaYAdivina(estado){
     const cont = document.getElementById('contenido-dibujayadivina');
     if (!estado || estado.fase === 'sin_partida') {
-        _canvasListo = false;
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Uno dibuja con el dedo, el otro adivina. Al acertar, se cambian los roles.</p>
             <button class="btn-principal" onclick="nuevaPartidaDibujaYAdivina()">Empezar</button>
@@ -192,8 +190,12 @@ function configurarCanvasDibujo(estado, soyDibujante){
     }
     redibujarTodo();
 
-    if (!soyDibujante || _canvasListo) return;
-    _canvasListo = true;
+    if (!soyDibujante) return;
+    // Cada render reemplaza el <canvas> por uno nuevo (renderDibujaYAdivina
+    // hace cont.innerHTML), así que hay que enganchar los listeners de
+    // nuevo en cada llamada — antes había un guard de "sólo la primera
+    // vez" que dejaba el canvas sin listeners (y al dibujante sin poder
+    // seguir dibujando) apenas terminaba su primer trazo.
 
     function posRelativa(e){
         const r = canvas.getBoundingClientRect();
@@ -244,12 +246,11 @@ function configurarCanvasDibujo(estado, soyDibujante){
 function elegirColorDibujo(c){ _colorActualDibujo = c; vibrarJ(8); document.querySelectorAll('#contenido-dibujayadivina .btn-fila button').forEach(b => {}); refrescarVistaDibujo(); }
 async function refrescarVistaDibujo(){
     const snap = await new Promise(res => { const u = window.onSnapshot(refDibujaYAdivina(), s => { u(); res(s); }); });
-    if (snap.exists()) { _canvasListo = false; renderDibujaYAdivina(snap.data()); }
+    if (snap.exists()) renderDibujaYAdivina(snap.data());
 }
 
 async function limpiarLienzoDibujo(){
     vibrarJ(12);
-    _canvasListo = false;
     await window.updateDoc(refDibujaYAdivina(), { trazos: [] });
 }
 
@@ -261,7 +262,6 @@ function elegirPalabraNueva(excluir){
 
 async function nuevaPartidaDibujaYAdivina(){
     vibrarJ(12);
-    _canvasListo = false;
     await window.setDoc(refDibujaYAdivina(), {
         fase: 'jugando', dibujante: 'nico', palabra: elegirPalabraNueva(null),
         trazos: [], puntajes: { nico: 0, carito: 0 }
@@ -279,10 +279,12 @@ async function adivinarDibujo(){
     if (intento !== data.palabra.toLowerCase()) { vibrarJ([10, 30, 10]); return; }
 
     vibrarJ([15, 30, 15]);
+    // Sólo suma punto a quien adivinó (miIdentidad, ya que arriba se
+    // descartó el caso de que el dibujante intente "adivinar" su propia
+    // palabra) — antes se sumaba a los dos siempre, así que el marcador
+    // nunca reflejaba quién acertó más.
     const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
-    puntajes.nico = (puntajes.nico || 0) + 1;
-    puntajes.carito = (puntajes.carito || 0) + 1;
-    _canvasListo = false;
+    puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
     // Guardamos el dibujo adivinado en la galería antes de limpiar el lienzo.
     if (data.trazos && data.trazos.length) {
         try {

@@ -36,18 +36,25 @@ async function leerDamasActual(){
 
 async function marcarListoDamas(){
     vibrarJ(12);
-    const estado = await leerDamasActual();
-    if (estado?.listos?.[miIdentidad]) return;
-    const listos = { ...(estado?.listos||{}), [miIdentidad]: true };
-    if (listos.nico && listos.carito) {
-        const manoElegida = Math.random() < 0.5 ? 'nico' : 'carito';
-        await window.setDoc(refDamas(), {
-            fase:'jugando', tablero: crearTableroInicialDamas(), turno: manoElegida,
-            listos, historial: [`Arranca la partida. Empieza ${nombreJugador(manoElegida)}.`], ganador: null
-        });
-    } else {
-        await window.setDoc(refDamas(), { fase:'esperando', listos }, { merge:true });
-    }
+    // Transacción por el mismo motivo que en ajedrez.js: si los dos
+    // tocan "listo" casi al mismo tiempo, una lectura suelta puede no
+    // ver todavía la marca del otro y la partida nunca arranca.
+    const ref = refDamas();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.listos?.[miIdentidad]) return;
+        const listos = { ...(estado?.listos||{}), [miIdentidad]: true };
+        if (listos.nico && listos.carito) {
+            const manoElegida = Math.random() < 0.5 ? 'nico' : 'carito';
+            tx.set(ref, {
+                fase:'jugando', tablero: crearTableroInicialDamas(), turno: manoElegida,
+                listos, historial: [`Arranca la partida. Empieza ${nombreJugador(manoElegida)}.`], ganador: null
+            });
+        } else {
+            tx.set(ref, { fase:'esperando', listos }, { merge:true });
+        }
+    });
 }
 
 async function reiniciarDamas(){
@@ -71,16 +78,40 @@ function movimientosPosiblesDamas(tablero, idx, jugador){
     const direcciones = esDama ? [[-1,-1],[-1,1],[1,-1],[1,1]]
         : (jugador === 'nico' ? [[1,-1],[1,1]] : [[-1,-1],[-1,1]]);
     const simples = [], capturas = [];
+
+    if (!esDama) {
+        direcciones.forEach(([dr,dc]) => {
+            const f1 = fila+dr, c1 = col+dc;
+            if (f1<0||f1>7||c1<0||c1>7) return;
+            const idx1 = f1*8+c1;
+            if (!tablero[idx1]) { simples.push(idx1); return; }
+            if (esRivalFichaDamas(tablero[idx1], jugador)) {
+                const f2 = fila+dr*2, c2 = col+dc*2;
+                if (f2<0||f2>7||c2<0||c2>7) return;
+                const idx2 = f2*8+c2;
+                if (!tablero[idx2]) capturas.push({ destino: idx2, capturada: idx1 });
+            }
+        });
+        return { simples, capturas };
+    }
+
+    // Dama coronada: "vuela" — se mueve o come a cualquier distancia en
+    // línea recta diagonal (como el alfil del ajedrez), tal como
+    // promete la descripción del juego en el catálogo. Antes se movía
+    // igual que una ficha simple, un solo paso, y nunca llegaba a volar.
     direcciones.forEach(([dr,dc]) => {
-        const f1 = fila+dr, c1 = col+dc;
-        if (f1<0||f1>7||c1<0||c1>7) return;
-        const idx1 = f1*8+c1;
-        if (!tablero[idx1]) { simples.push(idx1); return; }
-        if (esRivalFichaDamas(tablero[idx1], jugador)) {
-            const f2 = fila+dr*2, c2 = col+dc*2;
-            if (f2<0||f2>7||c2<0||c2>7) return;
-            const idx2 = f2*8+c2;
-            if (!tablero[idx2]) capturas.push({ destino: idx2, capturada: idx1 });
+        let f = fila+dr, c = col+dc;
+        while (f>=0 && f<8 && c>=0 && c<8) {
+            const i = f*8+c;
+            if (!tablero[i]) { simples.push(i); f += dr; c += dc; continue; }
+            if (esRivalFichaDamas(tablero[i], jugador)) {
+                let f2 = f+dr, c2 = c+dc;
+                while (f2>=0 && f2<8 && c2>=0 && c2<8 && !tablero[f2*8+c2]) {
+                    capturas.push({ destino: f2*8+c2, capturada: i });
+                    f2 += dr; c2 += dc;
+                }
+            }
+            break; // topó con una ficha (propia o la rival recién evaluada): no sigue de largo
         }
     });
     return { simples, capturas };

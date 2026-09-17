@@ -108,13 +108,21 @@ function renderTableroCocodrilos(estado){
 }
 
 async function martillarCocodrilo(indice){
-    const snap = await new Promise(res => { const u = window.onSnapshot(refCocodrilos(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (!data || data.fase !== 'jugando' || !data.pozos[indice]) return;
-    vibrarJ(15);
-    const pozos = [...data.pozos];
-    pozos[indice] = false;
-    await window.updateDoc(refCocodrilos(), { pozos, contador: (data.contador || 0) + 1 });
+    const ref = refCocodrilos();
+    // Transacción: leer y escribir por separado podía "revivir" un
+    // cocodrilo que el otro jugador ya había golpeado (el segundo en
+    // escribir pisaba el array completo con datos viejos) y descontar
+    // mal el conteo compartido.
+    const golpeado = await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.data();
+        if (!data || data.fase !== 'jugando' || !data.pozos[indice]) return false;
+        const pozos = [...data.pozos];
+        pozos[indice] = false;
+        tx.update(ref, { pozos, contador: (data.contador || 0) + 1 });
+        return true;
+    });
+    if (golpeado) vibrarJ(15);
 }
 
 let _spawnCocodrilosActivo = false;

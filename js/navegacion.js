@@ -210,17 +210,29 @@ function renderMenuPrincipal(){
             </a>`;
         }).join('');
     }
-    const listaDisp = document.getElementById('lista-disponibles');
-    if (listaDisp && window.JUEGOS) {
+    // Antes acá abajo se listaban TODOS los juegos disponibles (~58),
+    // duplicando uno por uno lo que ya se puede recorrer por categoría
+    // apenas un tap más abajo. En vez de esa lista larga y genérica,
+    // se destaca uno solo por día — la misma sugerencia para los dos,
+    // pensada como punto de partida ("¿a qué jugamos hoy?") y no como
+    // otro catálogo repetido.
+    const destacadoEl = document.getElementById('destacado-hoy');
+    if (destacadoEl && window.JUEGOS) {
         const disponibles = window.JUEGOS.filter(j => j.disponible);
-        listaDisp.innerHTML = disponibles.map(j => `
-            <div class="tarjeta-juego" onclick="abrirJuego('${j.id}')">
-                <div class="icono-juego">${j.icono}</div>
-                <div class="info-juego">
-                    <h3>${j.nombre}</h3>
-                    <p>${j.descripcion}</p>
-                </div>
-            </div>`).join('');
+        if (disponibles.length) {
+            const hoy = new Date();
+            const semilla = hoy.getFullYear() * 372 + (hoy.getMonth() + 1) * 31 + hoy.getDate();
+            const elegido = disponibles[semilla % disponibles.length];
+            destacadoEl.innerHTML = `
+                <div class="tarjeta-juego-cat disponible destacado" onclick="abrirJuego('${elegido.id}')">
+                    <div class="icono-juego">${elegido.icono}</div>
+                    <div class="info-juego">
+                        <h3>${elegido.nombre}</h3>
+                        <p>${elegido.descripcion}</p>
+                    </div>
+                    <span class="badge-disponible">Jugar</span>
+                </div>`;
+        }
     }
 }
 

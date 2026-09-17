@@ -10,7 +10,7 @@
     .grid-categorias{ gap:8px; }
     .tarjeta-categoria{ padding:12px 6px; }
     .tarjeta-categoria .icono-categoria{ font-size:1.5rem; }
-    .tarjeta-juego .icono-juego, .tarjeta-juego-cat .icono-juego{ width:42px; font-size:1.8rem; }
+    .tarjeta-juego-cat .icono-juego{ width:42px; font-size:1.8rem; }
 }
 
 /* Punteros gruesos (dedo, no mouse): un poco más de aire vertical

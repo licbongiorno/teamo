@@ -45,18 +45,6 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 .subtitulo-app{ text-align:center; font-size:0.82rem; opacity:0.72; margin-bottom:10px; }
 .chip-identidad{ font-size:0.72rem; opacity:0.8; text-align:center; margin-bottom:14px; }
 
-.tarjetas-juegos{ display:flex; flex-direction:column; gap:14px; }
-.tarjeta-juego{
-    background:var(--panel); border:1px solid var(--borde); border-radius:20px; padding:18px;
-    display:flex; align-items:center; gap:14px; cursor:pointer;
-    transition:transform 0.2s ease, background 0.2s ease;
-}
-.tarjeta-juego:active{ transform:scale(0.97); background:rgba(255,255,255,0.1); }
-.tarjeta-juego .icono-juego{ font-size:2.2rem; flex-shrink:0; width:54px; text-align:center; }
-.tarjeta-juego .info-juego{ flex:1; }
-.tarjeta-juego h3{ margin:0 0 3px; font-size:1.05rem; }
-.tarjeta-juego p{ margin:0; font-size:0.78rem; opacity:0.7; line-height:1.35; }
-
 .pantalla-juego{ display:none; }
 .pantalla-juego.activa{ display:block; animation:aparecer 0.3s ease; }
 @keyframes aparecer{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
@@ -226,6 +214,16 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 .badge-disponible{ background:rgba(184,232,201,0.2); color:#b8e8c9; }
 .badge-proximamente{ background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5); }
 
+/* Sugerencia del día (juegos.html): misma tarjeta que .tarjeta-juego-cat,
+   con un resalte cálido para que se note que es una elegida, no una más
+   de la lista. */
+.tarjeta-juego-cat.destacado{
+    background:linear-gradient(135deg, rgba(255,179,198,0.16), rgba(201,182,255,0.12));
+    border-color:rgba(255,179,198,0.4);
+    box-shadow:0 10px 26px rgba(255,179,198,0.18);
+    margin-bottom:22px;
+}
+
 /* ==================== TEMA CLARO ==================== */
 html[data-tema="claro"]{
     --bg-oscuro:#fdf3ea; --panel:rgba(60,40,30,0.045); --borde:rgba(60,40,30,0.14); --texto:#2b2230;
@@ -235,7 +233,7 @@ html[data-tema="claro"], html[data-tema="claro"] body{
 }
 html[data-tema="claro"] .texto-tenue{ opacity:0.62; }
 html[data-tema="claro"] .panel, html[data-tema="claro"] .tarjeta-categoria,
-html[data-tema="claro"] .tarjeta-juego, html[data-tema="claro"] .tarjeta-juego-cat{
+html[data-tema="claro"] .tarjeta-juego-cat{
     background: rgba(60,40,30,0.05); border-color: rgba(60,40,30,0.13);
 }
 

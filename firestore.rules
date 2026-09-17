@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// ============================================================
+// Reglas de Firestore para el proyecto "Carolina" (Nuestro Refugio /
+// Nuestros Juegos). Solo las dos personas que abren la web pueden
+// leer y escribir, y solo después de que Firebase ya las autenticó
+// (login anónimo automático, ver js/firebase.js). Antes de esto las
+// reglas estaban en "if true": cualquiera con la URL del proyecto de
+// Firebase (no la web, el proyecto) podía leer o escribir cualquier
+// dato sin pasar por la contraseña de la web.
+//
+// Esto NO reemplaza al portón de usuario/contraseña de la web — lo
+// complementa. El portón protege la interfaz; esto protege los datos
+// aunque alguien se salte la interfaz y le hable directo a la API de
+// Firestore.
+//
+// Cómo aplicar estas reglas (no se pueden desplegar desde acá porque
+// hace falta acceso a la consola/proyecto real de Firebase):
+//   1. Entrar a https://console.firebase.google.com
+//   2. Elegir el proyecto "carolina-634a1"
+//   3. Firestore Database → pestaña "Reglas"
+//   4. Pegar el contenido de este archivo completo y publicar
+// (o, si tienen Firebase CLI instalado: `firebase deploy --only firestore:rules`)
+// ============================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Todas las colecciones que usa la web (chat, muro, deseos,
+    // gratitud, sanacion, ticketsDiarios, juegos) comparten la misma
+    // regla: solo lectura/escritura para quien ya inició sesión
+    // (aunque sea sesión anónima) contra este proyecto de Firebase.
+    match /{collection}/{docId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

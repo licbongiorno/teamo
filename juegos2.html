@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0a17">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <title>Nuestros Juegos 🎮</title>
 <meta name="description" content="Centro de juegos para jugar en simultáneo o por turnos, cada uno desde su dispositivo.">
 <meta http-equiv="Content-Security-Policy" content="
@@ -42,6 +44,7 @@
     </form>
 </div>
 <script src="js/auth-gate.js"></script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});</script>
 
 <!-- ==================== MODAL DE ACCESO ==================== -->
 <div id="modal-acceso" class="modal-fondo oculto">

@@ -34,6 +34,20 @@
         document.body.style.overflow = '';
     }
 
+    function mostrarChipSesion(usuario) {
+        var chip = document.getElementById('gate-chip-sesion');
+        if (!chip) {
+            chip = document.createElement('button');
+            chip.id = 'gate-chip-sesion';
+            chip.className = 'gate-chip-sesion';
+            chip.type = 'button';
+            chip.title = 'Tocá para cerrar sesión';
+            chip.onclick = window.gateCerrarSesion;
+            document.body.appendChild(chip);
+        }
+        chip.textContent = (usuario === 'carito' ? 'Carito 💖' : 'Nico 💙') + ' · salir';
+    }
+
     function concederAcceso(usuario) {
         localStorage.setItem(LLAVE_SESION, JSON.stringify({ usuario: usuario, ts: Date.now() }));
         // Compat: el resto del sitio (chat, juegos, muro, etc.) ya lee
@@ -41,8 +55,16 @@
         // alcanza para que no vuelvan a pedir identidad por separado.
         localStorage.setItem('identidadRefugio', usuario);
         ocultarPorton();
+        mostrarChipSesion(usuario);
         document.dispatchEvent(new CustomEvent('acceso-concedido', { detail: { usuario: usuario } }));
     }
+
+    window.gateCerrarSesion = function () {
+        if (!window.confirm('¿Cerrar sesión y volver a pedir usuario y contraseña en este dispositivo?')) return;
+        localStorage.removeItem(LLAVE_SESION);
+        localStorage.removeItem('identidadRefugio');
+        location.reload();
+    };
 
     window.gateElegirUsuario = function (boton) {
         usuarioElegido = boton.getAttribute('data-usuario');
@@ -80,10 +102,22 @@
         }
     };
 
+    function usuarioDeSesion() {
+        try {
+            var datos = JSON.parse(localStorage.getItem(LLAVE_SESION) || 'null');
+            return datos ? datos.usuario : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     // El <div id="gate-acceso"> ya está en el DOM en este punto porque
     // este script se incluye inmediatamente después en el HTML.
     if (sesionActiva()) {
         ocultarPorton();
+        document.addEventListener('DOMContentLoaded', function () {
+            mostrarChipSesion(usuarioDeSesion());
+        });
     } else {
         document.body.style.overflow = 'hidden';
     }

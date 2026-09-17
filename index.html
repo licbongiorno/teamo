@@ -10,6 +10,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0b0a17">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9D%A4%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <title>Para Carito, el amor de mi vida</title>
     <meta name="description" content="Una cartita interactiva para Carito, el amor de mi vida.">
     <meta property="og:title" content="Para Carito, el amor de mi vida">
@@ -1826,6 +1828,7 @@
         </form>
     </div>
     <script src="js/auth-gate.js"></script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});</script>
 
     <div id="vineta-calida"></div>
     <canvas id="canvas-particulas"></canvas>

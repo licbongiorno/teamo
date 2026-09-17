@@ -807,16 +807,22 @@ async function nuevaRondaMenteGemela(){
 async function enviarMenteGemela(){
     vibrarJ([15, 30, 15]);
     const campo = miIdentidad === 'nico' ? 'respuestasNico' : 'respuestasCarito';
-    const snap = await new Promise(res => { const u = window.onSnapshot(refMenteGemela(), s => { u(); res(s); }); });
-    const data = snap.data();
-    const otroLisos = miIdentidad === 'nico' ? data.respuestasCarito : data.respuestasNico;
-    await window.updateDoc(refMenteGemela(), {
-        [campo]: [..._respuestasLocalesMG],
-        ...(otroLisos ? { fase: 'revelado' } : {})
+    const ref = refMenteGemela();
+    // Transacción: si los dos envían casi al mismo tiempo, una lectura
+    // suelta puede no ver todavía las respuestas del otro y ninguno de
+    // los dos dispara "revelado" — la ronda queda trabada esperando.
+    const rivales = await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.data();
+        const otroListo = miIdentidad === 'nico' ? data.respuestasCarito : data.respuestasNico;
+        tx.update(ref, {
+            [campo]: [..._respuestasLocalesMG],
+            ...(otroListo ? { fase: 'revelado' } : {})
+        });
+        return otroListo || null;
     });
-    if (otroLisos && typeof registrarEvento === 'function') {
+    if (rivales && typeof registrarEvento === 'function') {
         const propias = [..._respuestasLocalesMG];
-        const rivales = miIdentidad === 'nico' ? data.respuestasCarito : data.respuestasNico;
         const coincidencias = propias.filter((r, i) => r === rivales[i]).length;
         await registrarEvento('reflexion_completada', `Completaron una ronda de Mente Gemela`);
         for (let i = 0; i < coincidencias; i++) {

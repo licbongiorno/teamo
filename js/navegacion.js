@@ -169,7 +169,10 @@ function detenerListenersActivos(){
     if (window._unsubBloques) { window._unsubBloques(); window._unsubBloques = null; }
     if (window._unsubCocodrilos) { window._unsubCocodrilos(); window._unsubCocodrilos = null; }
     if (window._unsubPesca) { window._unsubPesca(); window._unsubPesca = null; }
+    if (window._unsubContadorPesca) { window._unsubContadorPesca(); window._unsubContadorPesca = null; }
+    if (window._resizeHandlerPesca) { window.removeEventListener('resize', window._resizeHandlerPesca); window._resizeHandlerPesca = null; }
     if (window._unsubLadrillos) { window._unsubLadrillos(); window._unsubLadrillos = null; }
+    if (window._tickLadrillos) { clearInterval(window._tickLadrillos); window._tickLadrillos = null; }
     if (window._loopBurbujas) { cancelAnimationFrame(window._loopBurbujas); window._loopBurbujas = null; }
     if (window._loopPesca) { cancelAnimationFrame(window._loopPesca); window._loopPesca = null; }
     if (window._loopGlobos) { clearInterval(window._loopGlobos); window._loopGlobos = null; }

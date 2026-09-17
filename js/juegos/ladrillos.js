@@ -26,14 +26,13 @@ function nuevaParedLadrillos(){
 }
 
 let _ladrillosMostrados = false;
-let _tickLadrillos = null;
 
 function renderLadrillos(estado){
     const cont = document.getElementById('contenido-ladrillos');
 
     if (!estado || estado.fase === 'sin_partida') {
         _ladrillosMostrados = false;
-        if (_tickLadrillos) { clearInterval(_tickLadrillos); _tickLadrillos = null; }
+        if (window._tickLadrillos) { clearInterval(window._tickLadrillos); window._tickLadrillos = null; }
         const mejor = estado?.mejorTiempoMs;
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Pared compartida de ${TOTAL_LADRILLOS} ladrillos. Entre los dos, a la vez, rompanla lo más rápido posible.</p>
@@ -45,7 +44,7 @@ function renderLadrillos(estado){
 
     if (estado.fase === 'terminado') {
         _ladrillosMostrados = false;
-        if (_tickLadrillos) { clearInterval(_tickLadrillos); _tickLadrillos = null; }
+        if (window._tickLadrillos) { clearInterval(window._tickLadrillos); window._tickLadrillos = null; }
         const tiempo = ((estado.horaFinReal || Date.now()) - estado.horaInicio) / 1000;
         cont.innerHTML = `<div class="panel texto-centro logro-animado">
             <div style="font-size:1.3rem; margin-bottom:6px;">🎉 ¡Pared limpia!</div>
@@ -69,7 +68,11 @@ function renderLadrillos(estado){
         }
         html += `</div></div>`;
         cont.innerHTML = html;
-        _tickLadrillos = setInterval(() => {
+        // Por las dudas quedara uno corriendo de antes (salir del juego a
+        // mitad de partida y volver a entrar), lo apagamos antes de armar
+        // uno nuevo para no duplicar el cronómetro.
+        if (window._tickLadrillos) clearInterval(window._tickLadrillos);
+        window._tickLadrillos = setInterval(() => {
             const el = document.getElementById('tiempo-ladrillos');
             if (el) el.innerText = ((Date.now() - estado.horaInicio) / 1000).toFixed(1) + 's';
         }, 100);
@@ -94,24 +97,33 @@ async function empezarLadrillos(){
 }
 
 async function romperLadrillo(indice){
-    const snap = await new Promise(res => { const u = window.onSnapshot(refLadrillos(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (!data || data.fase !== 'jugando' || !data.ladrillos[indice]) return;
+    const ref = refLadrillos();
+    // Transacción: leer el array completo y escribirlo de nuevo sin
+    // transacción hacía que, si los dos rompían ladrillos distintos casi
+    // a la vez, la segunda escritura pisara el array entero con datos
+    // viejos y "revivía" el ladrillo que ya había roto el otro.
+    const resultado = await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.data();
+        if (!data || data.fase !== 'jugando' || !data.ladrillos[indice]) return null;
+        const ladrillos = [...data.ladrillos];
+        ladrillos[indice] = false;
+        const quedan = ladrillos.some(Boolean);
+        const updates = { ladrillos };
+        if (!quedan) {
+            const horaFinReal = Date.now();
+            const tiempoMs = horaFinReal - data.horaInicio;
+            const mejorTiempoMs = data.mejorTiempoMs && data.mejorTiempoMs < tiempoMs ? data.mejorTiempoMs : tiempoMs;
+            updates.fase = 'terminado';
+            updates.horaFinReal = horaFinReal;
+            updates.mejorTiempoMs = mejorTiempoMs;
+        }
+        tx.update(ref, updates);
+        return { quedan };
+    });
+    if (!resultado) return;
     vibrarJ(8);
-    const ladrillos = [...data.ladrillos];
-    ladrillos[indice] = false;
-    const quedan = ladrillos.some(Boolean);
-    const updates = { ladrillos };
-    if (!quedan) {
-        const horaFinReal = Date.now();
-        const tiempoMs = horaFinReal - data.horaInicio;
-        const mejorTiempoMs = data.mejorTiempoMs && data.mejorTiempoMs < tiempoMs ? data.mejorTiempoMs : tiempoMs;
-        updates.fase = 'terminado';
-        updates.horaFinReal = horaFinReal;
-        updates.mejorTiempoMs = mejorTiempoMs;
-    }
-    await window.updateDoc(refLadrillos(), updates);
-    if (!quedan && typeof registrarEvento === 'function') {
+    if (!resultado.quedan && typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `Limpiaron la pared en Rompe Ladrillos a Dúo`);
     }
 }

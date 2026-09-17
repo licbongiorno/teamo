@@ -142,8 +142,15 @@ async function siguienteRondaMemoria(dificultadActual){
 async function enviarIntentoMemoria(){
     vibrarJ([15, 30, 15]);
     const campo = miIdentidad === 'nico' ? 'intentoNico' : 'intentoCarito';
-    const snap = await new Promise(res => { const u = window.onSnapshot(refMemoria(), s => { u(); res(s); }); });
-    const data = snap.data();
-    const otro = miIdentidad === 'nico' ? data.intentoCarito : data.intentoNico;
-    await window.updateDoc(refMemoria(), { [campo]: [..._intentoLocalMemoria], ...(otro ? { fase: 'revelado' } : {}) });
+    const ref = refMemoria();
+    // Transacción: si los dos envían casi al mismo tiempo, una lectura
+    // suelta puede no ver todavía el intento del otro y ninguno de los
+    // dos dispara "revelado" — la ronda queda trabada en "Esperando…"
+    // para siempre, sin ningún timeout que la rescate.
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.data();
+        const otro = miIdentidad === 'nico' ? data.intentoCarito : data.intentoNico;
+        tx.update(ref, { [campo]: [..._intentoLocalMemoria], ...(otro ? { fase: 'revelado' } : {}) });
+    });
 }

@@ -103,6 +103,11 @@ function arrancarCanvasPesca(horaFin){
     function ajustar(){ canvas.width = area.clientWidth; canvas.height = area.clientHeight; }
     ajustar();
     window.addEventListener('resize', ajustar);
+    // Guardados en window para que detenerListenersActivos() (navegacion.js)
+    // los pueda apagar si el jugador sale de esta pantalla a mitad de
+    // ronda — si no, el listener de resize y el onSnapshot de acá abajo
+    // quedaban corriendo para siempre en segundo plano.
+    window._resizeHandlerPesca = ajustar;
 
     let objetos = [], terminando = false, spawnAcumulado = 0;
     let unsubContador = window.onSnapshot(refPesca(), (snap) => {
@@ -110,6 +115,7 @@ function arrancarCanvasPesca(horaFin){
         const el = document.getElementById('contador-pesca');
         if (el && data) el.innerText = `${data.contador || 0} / ${META_PESCA}`;
     });
+    window._unsubContadorPesca = unsubContador;
 
     function spawnPez(){
         const deIzqADer = Math.random() < 0.5;
@@ -123,13 +129,14 @@ function arrancarCanvasPesca(horaFin){
     }
 
     async function atrapar(o){
+        if (terminando) return;
         vibrarJ(12);
         try {
-            const snap = await new Promise(res => { const u = window.onSnapshot(refPesca(), s => { u(); res(s); }); });
-            const data = snap.data();
-            if (data && data.fase === 'jugando') {
-                await window.updateDoc(refPesca(), { contador: (data.contador || 0) + 1 });
-            }
+            // increment() es un field transform atómico de Firestore: a
+            // diferencia de leer el contador y escribir "leído + 1" por
+            // separado, nunca pierde una captura aunque los dos toquen
+            // peces casi al mismo tiempo.
+            await window.updateDoc(refPesca(), { contador: window.increment(1) });
         } catch (e) { /* silencioso */ }
     }
 
@@ -154,9 +161,11 @@ function arrancarCanvasPesca(horaFin){
         if (terminando) return;
         terminando = true;
         window.removeEventListener('resize', ajustar);
+        window._resizeHandlerPesca = null;
         canvas.removeEventListener('click', onClick);
         canvas.removeEventListener('touchstart', onTouch);
         if (unsubContador) unsubContador();
+        window._unsubContadorPesca = null;
         await finalizarRondaPesca();
     }
 

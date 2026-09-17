@@ -133,8 +133,10 @@ function renderPalabraExplosiva(estado){
     const yaEnvie = !!estado[`palabras${miIdentidad === 'nico' ? 'Nico' : 'Carito'}`];
 
     if (estado.fase === 'revelado') {
-        const pNico = (estado.palabrasNico || []).map(p => p.toLowerCase().trim()).filter(Boolean);
-        const pCarito = (estado.palabrasCarito || []).map(p => p.toLowerCase().trim()).filter(Boolean);
+        // Set para que repetir la misma palabra varias veces no infle el
+        // puntaje (antes cada repetición sumaba de nuevo).
+        const pNico = [...new Set((estado.palabrasNico || []).map(p => p.toLowerCase().trim()).filter(Boolean))];
+        const pCarito = [...new Set((estado.palabrasCarito || []).map(p => p.toLowerCase().trim()).filter(Boolean))];
         let puntosNico = 0, puntosCarito = 0;
         const compartidas = pNico.filter(p => pCarito.includes(p));
         pNico.forEach(p => { puntosNico += pCarito.includes(p) ? 1 : 2; });
@@ -217,9 +219,16 @@ async function enviarPalabraExplosiva(){
     if (window._timerPE) { clearInterval(window._timerPE); window._timerPE = null; }
     vibrarJ([15, 30, 15]);
     const campo = miIdentidad === 'nico' ? 'palabrasNico' : 'palabrasCarito';
-    const snap = await new Promise(res => { const u = window.onSnapshot(refPalabraExplosiva(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (data[campo]) return; // ya se había enviado (por el timeout, por ejemplo)
-    const otro = miIdentidad === 'nico' ? data.palabrasCarito : data.palabrasNico;
-    await window.updateDoc(refPalabraExplosiva(), { [campo]: [..._palabrasLocalesPE], ...(otro ? { fase: 'revelado' } : {}) });
+    const ref = refPalabraExplosiva();
+    // Transacción: el auto-envío por el cronómetro compartido hace que
+    // los dos disparen esto casi en el mismo instante cuando se acaba
+    // el tiempo — con una lectura suelta, ninguno veía todavía las
+    // palabras del otro y la ronda quedaba trabada sin revelarse.
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.data();
+        if (data[campo]) return; // ya se había enviado (por el timeout, por ejemplo)
+        const otro = miIdentidad === 'nico' ? data.palabrasCarito : data.palabrasNico;
+        tx.update(ref, { [campo]: [..._palabrasLocalesPE], ...(otro ? { fase: 'revelado' } : {}) });
+    });
 }

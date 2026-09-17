@@ -137,12 +137,16 @@ function renderJardin(estado){
 
 async function regarJardin(){
     vibrarJ(12);
-    const estado = window._estadoJardinActual || {};
-    const nuevoProgreso = estado.formaElegida ? (estado.progreso || 0) : Math.min(100, (estado.progreso || 0) + CRECIMIENTO_POR_CUIDADO_JARDIN);
+    // Transacción: usar la caché local (window._estadoJardinActual) para
+    // calcular el nuevo progreso en vez de leerlo fresco podía perder un
+    // incremento si Nico y Carito regaban/daban sol casi al mismo tiempo.
+    const ref = refJardin();
     try {
-        await window.updateDoc(refJardin(), {
-            ultimoRiego: window.serverTimestamp(),
-            progreso: nuevoProgreso
+        await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(ref);
+            const estado = snap.exists() ? snap.data() : {};
+            const nuevoProgreso = estado.formaElegida ? (estado.progreso || 0) : Math.min(100, (estado.progreso || 0) + CRECIMIENTO_POR_CUIDADO_JARDIN);
+            tx.update(ref, { ultimoRiego: window.serverTimestamp(), progreso: nuevoProgreso });
         });
         if (typeof registrarEvento === 'function') {
             registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} regó El Jardín Compartido`);
@@ -152,12 +156,13 @@ async function regarJardin(){
 
 async function darSolJardin(){
     vibrarJ(12);
-    const estado = window._estadoJardinActual || {};
-    const nuevoProgreso = estado.formaElegida ? (estado.progreso || 0) : Math.min(100, (estado.progreso || 0) + CRECIMIENTO_POR_CUIDADO_JARDIN);
+    const ref = refJardin();
     try {
-        await window.updateDoc(refJardin(), {
-            ultimoSol: window.serverTimestamp(),
-            progreso: nuevoProgreso
+        await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(ref);
+            const estado = snap.exists() ? snap.data() : {};
+            const nuevoProgreso = estado.formaElegida ? (estado.progreso || 0) : Math.min(100, (estado.progreso || 0) + CRECIMIENTO_POR_CUIDADO_JARDIN);
+            tx.update(ref, { ultimoSol: window.serverTimestamp(), progreso: nuevoProgreso });
         });
     } catch (e) { console.error('Error dando sol al jardín:', e); }
 }
@@ -192,13 +197,14 @@ async function registrarKaizenJardin(){
     const objetivo = input ? input.value.trim() : '';
     if (!objetivo) return;
     vibrarJ([10,20,10]);
-    const estado = window._estadoJardinActual || {};
-    const nuevoProgreso = Math.min(100, (estado.progreso || 0) + FERTILIZANTE_POR_KAIZEN);
     const mensaje = `${nombreJugador(miIdentidad)} completó un objetivo ("${objetivo}") y aportó fertilizante 🧪`;
+    const ref = refJardin();
     try {
-        await window.updateDoc(refJardin(), {
-            progreso: nuevoProgreso,
-            historial: pushLog(estado, mensaje)
+        await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(ref);
+            const estado = snap.exists() ? snap.data() : {};
+            const nuevoProgreso = Math.min(100, (estado.progreso || 0) + FERTILIZANTE_POR_KAIZEN);
+            tx.update(ref, { progreso: nuevoProgreso, historial: pushLog(estado, mensaje) });
         });
         const cont = document.getElementById('form-kaizen-jardin');
         if (cont) cont.innerHTML = '';

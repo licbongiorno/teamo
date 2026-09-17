@@ -85,15 +85,20 @@ function actualizarRuedaPremios(estado){
 
 async function girarRuedaPremios(){
     vibrarJ(12);
-    const estado = await new Promise((res) => {
-        const u = window.onSnapshot(refRuedaPremios(), s => { u(); res(s.exists() ? s.data() : { rotacion: 0, historial: [] }); });
-    });
     const idx = Math.floor(Math.random() * OPCIONES_RUEDAPREMIOS.length);
-    const anguloObjetivo = (360 - (idx * 45 + 22.5) + 360) % 360;
-    const rotActual = estado.rotacion || 0;
-    const nuevaRot = rotActual + 1440 + ((anguloObjetivo - (rotActual % 360) + 360) % 360);
-    const hist = [...(estado.historial || []), { opcion: OPCIONES_RUEDAPREMIOS[idx].texto }].slice(-8);
-    await window.setDoc(refRuedaPremios(), { rotacion: nuevaRot, ganadorIndice: idx, historial: hist }, { merge: true });
+    const ref = refRuedaPremios();
+    // Transacción: mismo motivo que en ruleta.js — leer y escribir por
+    // separado podía perder una entrada del historial o desincronizar
+    // el ganadorIndice si los dos giraban casi juntos.
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : { rotacion: 0, historial: [] };
+        const anguloObjetivo = (360 - (idx * 45 + 22.5) + 360) % 360;
+        const rotActual = estado.rotacion || 0;
+        const nuevaRot = rotActual + 1440 + ((anguloObjetivo - (rotActual % 360) + 360) % 360);
+        const hist = [...(estado.historial || []), { opcion: OPCIONES_RUEDAPREMIOS[idx].texto }].slice(-8);
+        tx.set(ref, { rotacion: nuevaRot, ganadorIndice: idx, historial: hist }, { merge: true });
+    });
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `Giraron la Rueda de Premios: ${OPCIONES_RUEDAPREMIOS[idx].texto}`);
     }

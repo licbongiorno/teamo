@@ -67,17 +67,29 @@ function seleccionarItemRefugio(id){
 async function colocarEnRefugio(celda){
     if (!_elementoSeleccionadoRefugio) return;
     const item = CATALOGO_REFUGIO.find(it => it.id === _elementoSeleccionadoRefugio);
-    const puntos = window._refugioPuntos || { nico: 0, carito: 0 };
-    const total = (puntos.nico || 0) + (puntos.carito || 0);
-    if (total < item.costo) { vibrarJ([10, 30, 10]); return; }
-
-    const estado = window._refugioEstado || { elementos: [] };
-    if ((estado.elementos || []).some(e => e.celda === celda)) return; // celda ocupada
-
+    const refugioRef = refRefugio();
+    const puntosRef = window.doc(window.db, 'juegos', 'puntos-globales');
+    // Transacción sobre los dos documentos (refugio + pozo de puntos):
+    // antes se chequeaba el saldo y si la celda estaba libre contra
+    // copias en caché, y después se escribía cada cosa por separado. Si
+    // los dos compraban casi al mismo tiempo, el pozo se podía gastar
+    // dos veces, o el ítem de uno desaparecía porque la segunda
+    // escritura pisaba el array de "elementos" entero.
+    const resultado = await window.runTransaction(window.db, async (tx) => {
+        const snapRefugio = await tx.get(refugioRef);
+        const snapPuntos = await tx.get(puntosRef);
+        const estado = snapRefugio.exists() ? snapRefugio.data() : { elementos: [] };
+        const puntos = snapPuntos.exists() ? snapPuntos.data() : { nico: 0, carito: 0 };
+        const total = (puntos.nico || 0) + (puntos.carito || 0);
+        if (total < item.costo) return { ok: false };
+        if ((estado.elementos || []).some(e => e.celda === celda)) return { ok: false };
+        const nuevosElementos = [...(estado.elementos || []), { tipo: item.id, celda }];
+        tx.set(refugioRef, { elementos: nuevosElementos }, { merge: true });
+        tx.set(puntosRef, { [miIdentidad]: (puntos[miIdentidad] || 0) - item.costo }, { merge: true });
+        return { ok: true };
+    });
+    if (!resultado.ok) { vibrarJ([10, 30, 10]); return; }
     vibrarJ([15, 30, 15]);
-    const nuevosElementos = [...(estado.elementos || []), { tipo: item.id, celda }];
-    await window.setDoc(refRefugio(), { elementos: nuevosElementos }, { merge: true });
-    await window.sumarPuntos(miIdentidad, -item.costo);
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} agregó ${item.nombre || 'algo'} a El Refugio`);
     }

@@ -70,20 +70,22 @@ function renderTermometro(registros){
 async function marcarTermometro(valor){
     vibrarJ(10);
     const hoy = _hoyTermometro();
+    // ID fijo por día+autor en vez de buscar con una query y decidir si
+    // hace falta addDoc o updateDoc: ese "buscar y después crear" podía
+    // crear dos documentos para el mismo día si se tocaba dos veces
+    // rápido (la segunda búsqueda todavía no veía el addDoc de la
+    // primera). Con un ID determinístico, setDoc con merge es siempre
+    // la misma operación, así se llame una vez o diez.
+    const idDeHoy = `termometro-${hoy}-${miIdentidad}`;
     try {
-        const q = window.query(window.collection(window.db, 'juegos'), window.where('tipo', '==', 'termometro-dia'));
-        const snap = await new Promise((res) => { const u = window.onSnapshot(q, s => { u(); res(s); }); });
-        let idExistente = null;
-        snap.forEach(d => { const data = d.data(); if (data.fecha === hoy && data.autor === miIdentidad) idExistente = d.id; });
-        if (idExistente) {
-            await window.updateDoc(refTermometro(idExistente), { valor });
-        } else {
-            await window.addDoc(window.collection(window.db, 'juegos'), {
-                tipo: 'termometro-dia', fecha: hoy, autor: miIdentidad, valor, creadoEn: Date.now()
-            });
-            if (typeof registrarEvento === 'function') {
-                registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} marcó cómo está hoy`);
-            }
+        const snapExistente = await new Promise((res) => { const u = window.onSnapshot(refTermometro(idDeHoy), s => { u(); res(s); }); });
+        const yaExistia = snapExistente.exists();
+        await window.setDoc(refTermometro(idDeHoy), {
+            tipo: 'termometro-dia', fecha: hoy, autor: miIdentidad, valor,
+            creadoEn: yaExistia ? snapExistente.data().creadoEn : Date.now()
+        }, { merge: true });
+        if (!yaExistia && typeof registrarEvento === 'function') {
+            registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} marcó cómo está hoy`);
         }
     } catch (e) {
         console.error('No se pudo guardar el termómetro:', e);

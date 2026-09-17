@@ -166,6 +166,7 @@ function detenerListenersActivos(){
     if (window._unsubPinatas) { window._unsubPinatas(); window._unsubPinatas = null; }
     if (window._unsubCarreraGlobos) { window._unsubCarreraGlobos(); window._unsubCarreraGlobos = null; }
     if (window._unsubRitmo) { window._unsubRitmo(); window._unsubRitmo = null; }
+    if (window._tickRitmoTimeout) { clearTimeout(window._tickRitmoTimeout); window._tickRitmoTimeout = null; }
     if (window._unsubBloques) { window._unsubBloques(); window._unsubBloques = null; }
     if (window._unsubCocodrilos) { window._unsubCocodrilos(); window._unsubCocodrilos = null; }
     if (window._unsubPesca) { window._unsubPesca(); window._unsubPesca = null; }
@@ -177,6 +178,7 @@ function detenerListenersActivos(){
     if (window._loopPesca) { cancelAnimationFrame(window._loopPesca); window._loopPesca = null; }
     if (window._loopGlobos) { clearInterval(window._loopGlobos); window._loopGlobos = null; }
     if (window._timerPinatas) { clearTimeout(window._timerPinatas); window._timerPinatas = null; }
+    if (window._detenerRondaPinatas) { window._detenerRondaPinatas(); window._detenerRondaPinatas = null; }
     if (window._timerCocodrilos) { clearTimeout(window._timerCocodrilos); window._timerCocodrilos = null; }
     if (window._spawnLoopCocodrilos) { clearTimeout(window._spawnLoopCocodrilos); window._spawnLoopCocodrilos = null; }
     if (window._timerCaidaBloques) { clearInterval(window._timerCaidaBloques); window._timerCaidaBloques = null; }

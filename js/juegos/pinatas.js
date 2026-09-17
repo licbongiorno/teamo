@@ -8,6 +8,12 @@ const TIEMPO_VIDA_PINATA = 1200;
 function refPinatas(){ return window.doc(window.db, 'juegos', 'pinatas'); }
 
 function iniciarPinatas(){
+    // Por si quedó una ronda anterior corriendo en segundo plano (se
+    // salió de esta pantalla a mitad de partida y se volvió a entrar
+    // antes de que esa ronda abandonada terminara sola): la paramos
+    // antes de que renderPinatas pueda arrancar una nueva en paralelo,
+    // que si no terminaban compitiendo por escribir el resultado.
+    if (window._detenerRondaPinatas) { window._detenerRondaPinatas(); window._detenerRondaPinatas = null; }
     const cont = document.getElementById('contenido-pinatas');
     if (cont) delete cont.dataset.jugandoLocal;
     if (window._unsubPinatas) window._unsubPinatas();
@@ -148,12 +154,23 @@ function arrancarPinatas(horaFin){
     }
     tick();
 
-    async function terminar(){
-        if (terminando) return;
+    // Handle expuesto para que iniciarPinatas() (o detenerListenersActivos
+    // en navegacion.js) pueda apagar esta ronda desde afuera si el
+    // jugador sale de la pantalla antes de que termine sola — si no,
+    // spawnTimeout y unsubRival (son variables locales de este closure,
+    // no llegan a window) quedaban corriendo para siempre en segundo
+    // plano, y volver a entrar armaba un segundo loop en paralelo.
+    window._detenerRondaPinatas = function pararTimersPinatas(){
         terminando = true;
         if (spawnTimeout) clearTimeout(spawnTimeout);
-        if (window._timerPinatas) clearTimeout(window._timerPinatas);
+        if (window._timerPinatas) { clearTimeout(window._timerPinatas); window._timerPinatas = null; }
         if (unsubRival) unsubRival();
+    };
+
+    async function terminar(){
+        if (terminando) return;
+        window._detenerRondaPinatas();
+        window._detenerRondaPinatas = null;
         area.innerHTML = '';
         await finalizarRondaPinatas(puntaje);
     }

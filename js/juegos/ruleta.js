@@ -83,13 +83,18 @@ function actualizarRuleta(estado){
 
 async function girarRuleta(){
     vibrarJ(12);
-    const estado = await new Promise((res) => {
-        const u = window.onSnapshot(refRuleta(), s => { u(); res(s.exists() ? s.data() : { rotacion: 0, historial: [] }); });
-    });
     const idx = Math.floor(Math.random() * OPCIONES_RULETA.length);
-    const anguloObjetivo = (360 - (idx * 60 + 30) + 360) % 360;
-    const rotActual = estado.rotacion || 0;
-    const nuevaRot = rotActual + 1440 + ((anguloObjetivo - (rotActual % 360) + 360) % 360);
-    const hist = [...(estado.historial || []), { opcion: OPCIONES_RULETA[idx].texto }].slice(-8);
-    await window.setDoc(refRuleta(), { rotacion: nuevaRot, ganadorIndice: idx, historial: hist }, { merge: true });
+    const ref = refRuleta();
+    // Transacción: dos giros casi simultáneos podían perder una entrada
+    // del historial o dejar ganadorIndice desincronizado de la rotación
+    // que terminaba viendo el otro (leer y escribir por separado).
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : { rotacion: 0, historial: [] };
+        const anguloObjetivo = (360 - (idx * 60 + 30) + 360) % 360;
+        const rotActual = estado.rotacion || 0;
+        const nuevaRot = rotActual + 1440 + ((anguloObjetivo - (rotActual % 360) + 360) % 360);
+        const hist = [...(estado.historial || []), { opcion: OPCIONES_RULETA[idx].texto }].slice(-8);
+        tx.set(ref, { rotacion: nuevaRot, ganadorIndice: idx, historial: hist }, { merge: true });
+    });
 }

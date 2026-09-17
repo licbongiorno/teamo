@@ -1,5 +1,7 @@
 // ==================== TRUCO ARGENTINO ====================
-function nombreJugador(id){ return id === 'carito' ? 'Carito' : 'Nico'; }
+// nombreJugador(id) ya está definida en js/usuario.js — no hace falta
+// redeclararla acá (antes se pisaba silenciosamente el helper
+// compartido para cualquier juego que cargara después de este).
 
 function crearMazoTruco(){
     const palos = ['espada','basto','oro','copa'];

@@ -3,6 +3,7 @@
 function refTiraAfloja(){ return window.doc(window.db, 'juegos', 'tiraafloja'); }
 
 function iniciarTiraAfloja(){
+    _taRondaMontada = false;
     if (window._unsubTiraAfloja) window._unsubTiraAfloja();
     window._unsubTiraAfloja = window.onSnapshot(refTiraAfloja(), (snap) => {
         renderTiraAfloja(snap.exists() ? snap.data() : null);
@@ -13,12 +14,14 @@ function iniciarTiraAfloja(){
 }
 
 let _toquesLocalesTA = 0;
+let _taRondaMontada = false;
 
 function renderTiraAfloja(estado){
     const cont = document.getElementById('contenido-tiraafloja');
     if (window._intervaloTA) { clearInterval(window._intervaloTA); window._intervaloTA = null; }
 
     if (!estado || estado.fase === 'sin_partida') {
+        _taRondaMontada = false;
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Toques rápidos para llevar el corazón a tu lado. Nico empuja hacia arriba, Carito hacia abajo.</p>
             <button class="btn-principal" onclick="nuevaPartidaTiraAfloja()">Empezar</button>
@@ -27,6 +30,7 @@ function renderTiraAfloja(estado){
     }
 
     if (estado.fase === 'terminado') {
+        _taRondaMontada = false;
         const p = estado.puntajes || { nico: 0, carito: 0 };
         cont.innerHTML = `<div class="panel texto-centro logro-animado">
             <div style="font-size:1.2rem; margin-bottom:8px;">🏆 ¡Ganó ${nombreJugador(estado.ganador)}!</div>
@@ -37,6 +41,22 @@ function renderTiraAfloja(estado){
     }
 
     const pos = estado.posicion ?? 50;
+
+    // Este render se dispara con CADA actualización de posición, incluidas
+    // las que llegan por los toques del rival (comparten el mismo
+    // documento). Antes esto reconstruía toda la pantalla y ponía
+    // _toquesLocalesTA en 0 en cada una de esas actualizaciones — como acá
+    // se juega tocando en tiempo real, eso borraba toques propios recién
+    // hechos que todavía no se habían sincronizado (cada 300ms). Ahora la
+    // pantalla se arma una sola vez por ronda y las actualizaciones
+    // siguientes sólo mueven la barra.
+    if (_taRondaMontada) {
+        const barra = document.getElementById('barra-ta');
+        if (barra) barra.style.top = pos + '%';
+        window._intervaloTA = setInterval(() => sincronizarTiraAfloja(), 300);
+        return;
+    }
+    _taRondaMontada = true;
     _toquesLocalesTA = 0;
     let html = `<div class="panel texto-centro">
         <div class="texto-tenue" style="margin-bottom:10px;">Nico ⬆️ — tocá lo más rápido que puedas — ⬇️ Carito</div>

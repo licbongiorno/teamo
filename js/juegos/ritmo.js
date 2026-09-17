@@ -9,6 +9,12 @@ const PULSOS_RITMO = 16;
 function refRitmo(){ return window.doc(window.db, 'juegos', 'ritmo'); }
 
 function iniciarRitmo(){
+    // Por si quedó el loop de una ronda anterior corriendo (se salió de
+    // esta pantalla a mitad de partida y se volvió a entrar antes de
+    // que terminara sola): lo apagamos antes de que se pueda arrancar
+    // uno nuevo en paralelo, que si no terminaban compitiendo por
+    // escribir el resultado con datos de pulsos mezclados.
+    if (window._tickRitmoTimeout) { clearTimeout(window._tickRitmoTimeout); window._tickRitmoTimeout = null; }
     const cont = document.getElementById('contenido-ritmo');
     if (cont) delete cont.dataset.jugandoLocal;
     if (window._unsubRitmo) window._unsubRitmo();
@@ -98,7 +104,6 @@ function jugarRondaRitmo(horaInicio){
 let _erroresRitmo = [];
 let _pulsoActualRitmo = 0;
 let _yaTocoEstePulsoRitmo = false;
-let _tickRitmoTimeout = null;
 let _horaUltimoPulsoRitmo = 0;
 
 function arrancarLoopRitmo(horaInicio){
@@ -117,13 +122,13 @@ function arrancarLoopRitmo(horaInicio){
         if (c) c.innerText = `Pulso ${_pulsoActualRitmo} / ${PULSOS_RITMO}`;
 
         if (_pulsoActualRitmo >= PULSOS_RITMO) {
-            _tickRitmoTimeout = setTimeout(() => terminarRitmo(), INTERVALO_RITMO_MS / 2);
+            window._tickRitmoTimeout = setTimeout(() => terminarRitmo(), INTERVALO_RITMO_MS / 2);
             return;
         }
-        _tickRitmoTimeout = setTimeout(marcarPulso, INTERVALO_RITMO_MS);
+        window._tickRitmoTimeout = setTimeout(marcarPulso, INTERVALO_RITMO_MS);
     }
     const esperar = Math.max(0, horaInicio - Date.now());
-    _tickRitmoTimeout = setTimeout(marcarPulso, esperar);
+    window._tickRitmoTimeout = setTimeout(marcarPulso, esperar);
 }
 
 function tocarRitmo(){
@@ -138,7 +143,7 @@ function tocarRitmo(){
 }
 
 async function terminarRitmo(){
-    if (_tickRitmoTimeout) clearTimeout(_tickRitmoTimeout);
+    if (window._tickRitmoTimeout) { clearTimeout(window._tickRitmoTimeout); window._tickRitmoTimeout = null; }
     vibrarJ([15, 30, 15]);
     const promedio = _erroresRitmo.length ? _erroresRitmo.reduce((a, b) => a + b, 0) / _erroresRitmo.length : 9999;
     try {

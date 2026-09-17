@@ -14,11 +14,12 @@ function refPuntos(){ return window.doc(window.db, 'juegos', 'puntos-globales');
 async function sumarPuntos(jugador, cantidad){
     if (!jugador || !cantidad) return;
     try {
-        const snap = await new Promise((res, rej) => {
-            const u = window.onSnapshot(refPuntos(), s => { u(); res(s); }, e => { u(); rej(e); });
-        });
-        const actual = snap.exists() ? (snap.data()[jugador] || 0) : 0;
-        await window.setDoc(refPuntos(), { [jugador]: actual + cantidad }, { merge: true });
+        // increment() es un field transform atómico de Firestore: suma
+        // "cantidad" del lado del servidor, así que nunca se pierde un
+        // aporte aunque varios juegos sumen puntos casi al mismo tiempo
+        // (antes se leía el valor y se escribía "leído + cantidad" por
+        // separado, sin ninguna garantía de que no cambiara entre medio).
+        await window.setDoc(refPuntos(), { [jugador]: window.increment(cantidad) }, { merge: true });
     } catch (e) {
         console.warn('No se pudo sumar puntos:', e);
     }

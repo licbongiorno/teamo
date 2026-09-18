@@ -84,6 +84,7 @@ function renderStroop(estado){
 
     const restante = (estado.horaInicio || Date.now()) - Date.now();
     if (restante > -500) {
+        if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refStroop(), 'stroop');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
         _cuentaRegresivaStroop = setTimeout(() => renderStroop(estado), restante > 0 ? Math.min(restante, 200) : 150);
         return;

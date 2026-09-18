@@ -89,6 +89,7 @@ function renderLadrillos(estado){
     // fase === 'jugando'
     const restante = (estado.horaInicio || Date.now()) - Date.now();
     if (restante > -500) {
+        if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refLadrillos(), 'ladrillos');
         _ladrillosMostrados = false;
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
         _cuentaRegresivaLadrillos = setTimeout(() => renderLadrillos(estado), restante > 0 ? Math.min(restante, 200) : 150);

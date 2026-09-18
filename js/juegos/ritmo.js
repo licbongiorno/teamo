@@ -64,6 +64,7 @@ function renderRitmo(estado){
     if (estado.fase === 'jugando') {
         const restante = (estado.horaInicio || Date.now()) - Date.now();
         if (restante > -500) {
+            if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refRitmo(), 'ritmo');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
             _cuentaRegresivaRitmo = setTimeout(() => renderRitmo(estado), restante > 0 ? Math.min(restante, 200) : 150);
             return;

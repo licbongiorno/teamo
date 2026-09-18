@@ -61,6 +61,7 @@ function renderTopo(estado){
     if (estado.fase === 'jugando') {
         const restante = (estado.horaInicio || Date.now()) - Date.now();
         if (restante > -500) {
+            if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refTopo(), 'topo');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
             _cuentaRegresivaTopo = setTimeout(() => renderTopo(estado), restante > 0 ? Math.min(restante, 200) : 150);
             return;

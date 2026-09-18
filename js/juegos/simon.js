@@ -94,6 +94,7 @@ function renderSimon(estado){
     // Cuenta regresiva inicial (una sola vez, antes del nivel 1).
     const restanteInicio = (estado.horaInicio || Date.now()) - Date.now();
     if (restanteInicio > -500) {
+        if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refSimon(), 'simon');
         cont.innerHTML = htmlCuentaRegresivaArcade(restanteInicio);
         _cuentaRegresivaSimon = setTimeout(() => renderSimon(estado), restanteInicio > 0 ? Math.min(restanteInicio, 200) : 150);
         return;

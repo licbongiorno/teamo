@@ -74,6 +74,7 @@ function renderPPT(estado){
 
     const restante = (estado.horaInicio || Date.now()) - Date.now();
     if (restante > -500) {
+        if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refPPT(), 'ppt');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
         _cuentaRegresivaPPT = setTimeout(() => renderPPT(estado), restante > 0 ? Math.min(restante, 200) : 150);
         return;

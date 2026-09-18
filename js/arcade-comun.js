@@ -71,6 +71,34 @@ function htmlCuentaRegresivaArcade(restanteMs){
 }
 window.htmlCuentaRegresivaArcade = htmlCuentaRegresivaArcade;
 
+// Autoreparación: si un documento quedó en un estado roto — fase que
+// no es 'sin_partida'/'esperando'/'terminado' pero sin un horaInicio
+// válido — antes eso dejaba a los dos jugadores mirando "¡YA!" para
+// siempre (con la vieja condición de carrera no transaccional, un
+// documento podía quedar así de antes de este arreglo, y el código
+// nuevo nunca lo iba a curar solo porque nunca vuelve a escribir
+// fase:'jugando' sin horaInicio). Ahora, apenas cualquiera de los dos
+// dispositivos detecta esta combinación imposible, reinicia la
+// partida solo (vuelve a 'sin_partida') para que puedan arrancar de
+// nuevo en vez de quedar trabados.
+const _reparandoRondaArcade = {};
+async function repararRondaArcadeSiCorresponde(refDoc, juegoId){
+    if (_reparandoRondaArcade[juegoId]) return;
+    _reparandoRondaArcade[juegoId] = true;
+    try {
+        await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(refDoc);
+            const estado = snap.exists() ? snap.data() : null;
+            if (!estado || typeof estado.horaInicio === 'number') return; // ya no hace falta (se reparó solo, o alguien ganó la carrera)
+            if (estado.fase === 'sin_partida' || estado.fase === 'esperando' || estado.fase === 'terminado') return; // no es el caso roto
+            tx.set(refDoc, { fase: 'sin_partida', listos: {} }, { merge: true });
+        });
+    } finally {
+        setTimeout(() => { _reparandoRondaArcade[juegoId] = false; }, 1000);
+    }
+}
+window.repararRondaArcadeSiCorresponde = repararRondaArcadeSiCorresponde;
+
 // Escribe el puntaje propio "en vivo" sin saturar Firestore: como
 // mucho una escritura cada `intervaloMs`.
 const _ultimaEscrituraVivo = {};

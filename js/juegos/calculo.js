@@ -82,6 +82,7 @@ function renderCalculo(estado){
 
     const restante = (estado.horaInicio || Date.now()) - Date.now();
     if (restante > -500) {
+        if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refCalculo(), 'calculo');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
         _cuentaRegresivaCalculo = setTimeout(() => renderCalculo(estado), restante > 0 ? Math.min(restante, 200) : 150);
         return;

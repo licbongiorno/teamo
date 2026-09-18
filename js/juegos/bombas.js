@@ -58,6 +58,7 @@ function renderBombas(estado){
     if (estado.fase === 'jugando') {
         const restante = (estado.horaInicio || Date.now()) - Date.now();
         if (restante > -500) {
+            if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBombas(), 'bombas');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
             _cuentaRegresivaBombas = setTimeout(() => renderBombas(estado), restante > 0 ? Math.min(restante, 200) : 150);
             return;

@@ -58,6 +58,7 @@ function renderPesca(estado){
     if (estado.fase === 'jugando') {
         const restante = (estado.horaInicio || Date.now()) - Date.now();
         if (restante > -500) {
+            if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refPesca(), 'pesca');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
             _cuentaRegresivaPesca = setTimeout(() => renderPesca(estado), restante > 0 ? Math.min(restante, 200) : 150);
             return;

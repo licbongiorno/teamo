@@ -250,6 +250,42 @@ function renderMenuPrincipal(){
     }
 }
 
+// Buscador del menú principal: con más de 70 juegos en el catálogo,
+// encontrar uno puntual por categoría se hace lento. Filtra por
+// nombre (sin importar mayúsculas/acentos) y, mientras hay texto
+// escrito, tapa el resto del menú (desafío, sugerencia, categorías)
+// para no duplicar la pantalla.
+function _normalizarBusquedaJuegos(t){
+    return (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+function buscarJuegos(){
+    const input = document.getElementById('buscador-juegos');
+    const resultados = document.getElementById('resultados-busqueda-juegos');
+    const seccionesNormales = document.getElementById('secciones-normales-menu');
+    if (!input || !resultados) return;
+    const q = _normalizarBusquedaJuegos(input.value);
+    if (!q) {
+        resultados.style.display = 'none';
+        resultados.innerHTML = '';
+        if (seccionesNormales) seccionesNormales.style.display = '';
+        return;
+    }
+    if (seccionesNormales) seccionesNormales.style.display = 'none';
+    resultados.style.display = '';
+    const encontrados = (window.JUEGOS || []).filter(j => j.disponible && _normalizarBusquedaJuegos(j.nombre).includes(q));
+    if (!encontrados.length) {
+        resultados.innerHTML = '<p class="texto-tenue texto-centro">No encontramos ningún juego con ese nombre.</p>';
+        return;
+    }
+    resultados.innerHTML = encontrados.map(j => `
+        <div class="tarjeta-juego-cat disponible" onclick="abrirJuego('${j.id}')" style="cursor:pointer;">
+            <div class="icono-juego">${j.iconoSvg ? `<svg class="icono-svg"><use href="#${j.iconoSvg}"></use></svg>` : j.icono}</div>
+            <div class="info-juego"><h3>${j.nombre}</h3><p>${j.descripcion}</p></div>
+            <span class="badge-disponible">Jugar</span>
+        </div>`).join('');
+}
+window.buscarJuegos = buscarJuegos;
+
 function iniciarJuegos(){
     renderMenuPrincipal();
     if (typeof aplicarTemaGuardado === 'function') aplicarTemaGuardado();

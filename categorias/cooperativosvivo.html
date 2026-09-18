@@ -40,10 +40,12 @@
     </div>
     <div class="titulo-app"><svg class="icono-svg"><use href="#icono-personas"></use></svg> Cooperativos en Vivo</div>
     <div class="subtitulo-app">Cooperan en el momento: se entienden mejor si los dos están conectados a la vez.</div>
+    <input type="text" id="buscador-categoria" class="input-buscador" placeholder="🔍 Filtrar por nombre..." autocomplete="off" oninput="filtrarCategoria()">
     <div class="lista-juegos-categoria" id="lista-juegos-categoria"></div>
 </div>
 
 <script src="../js/juegos-data.js"></script>
+<script src="../js/filtro-categoria.js"></script>
 <script>
     const cont = document.getElementById('lista-juegos-categoria');
     const juegos = window.obtenerJuegosDeCategoria('cooperativosvivo');

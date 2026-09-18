@@ -42,6 +42,11 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 .titulo-app{ font-family:var(--fuente-titulo); font-size:2rem; text-align:center; margin:4px 0 2px;
     background:linear-gradient(90deg,var(--rosa),var(--lila),var(--celeste));
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+/* En las páginas de categoría (categorias/*.html), el ícono del título
+   trae su propio color pastel puesto inline (--color-cat), así la
+   cabecera se siente parte de la misma categoría que el mosaico de
+   colores del menú, en vez de un ícono blanco genérico. */
+.titulo-app .icono-svg{ color:var(--color-cat, var(--texto)); }
 .subtitulo-app{ text-align:center; font-size:0.82rem; opacity:0.72; margin-bottom:10px; }
 .chip-identidad{ font-size:0.72rem; opacity:0.8; text-align:center; margin-bottom:14px; }
 
@@ -184,14 +189,22 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 
 /* ============ SELECTOR DE CATEGORÍAS (juegos.html) Y LISTADOS (categorias/*.html) ============ */
 .grid-categorias{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:22px; }
+/* Cada categoría trae su propio color pastel (juegos-data.js) en la
+   variable --color-cat, puesta inline por navegacion.js. Antes esa
+   info existía pero nunca se usaba y las 6 tarjetas se veían todas
+   igual de grises — ahora cada una se tiñe con el suyo, así el menú
+   se lee de un vistazo como un mosaico de colores en vez de una
+   lista monocroma. */
 .tarjeta-categoria{
-    background:var(--panel); border:1px solid var(--borde); border-radius:18px; padding:16px 10px;
+    background:linear-gradient(160deg, color-mix(in srgb, var(--color-cat, var(--rosa)) 16%, var(--panel)), var(--panel) 70%);
+    border:1px solid color-mix(in srgb, var(--color-cat, var(--rosa)) 38%, var(--borde));
+    border-radius:18px; padding:16px 10px;
     text-align:center; cursor:pointer; text-decoration:none; color:var(--texto);
     display:flex; flex-direction:column; align-items:center; gap:6px;
-    transition:transform 0.2s ease, background 0.2s ease;
+    transition:transform 0.2s cubic-bezier(0.34,1.56,0.64,1), background 0.2s ease, box-shadow 0.2s ease;
 }
-.tarjeta-categoria:active{ transform:scale(0.96); background:rgba(255,255,255,0.1); }
-.tarjeta-categoria .icono-categoria{ font-size:1.8rem; }
+.tarjeta-categoria:active{ transform:scale(0.96); box-shadow:0 4px 18px color-mix(in srgb, var(--color-cat, var(--rosa)) 35%, transparent); }
+.tarjeta-categoria .icono-categoria{ font-size:1.8rem; color:var(--color-cat, var(--texto)); }
 .tarjeta-categoria .nombre-categoria{ font-size:0.85rem; font-weight:600; }
 .tarjeta-categoria .cantidad-categoria{ font-size:0.68rem; opacity:0.6; }
 
@@ -233,17 +246,24 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 }
 
 /* ==================== TEMA CLARO ==================== */
+/* Antes era un beige/crema bastante monocromo. Ahora es un lavado
+   pastel de verdad — rosa muy suave arriba, lila apenas insinuado
+   abajo — para que el tema claro se sienta pastel en toda la
+   pantalla y no sólo en los acentos de color. */
 html[data-tema="claro"]{
-    --bg-oscuro:#fdf3ea; --panel:rgba(60,40,30,0.045); --borde:rgba(60,40,30,0.14); --texto:#2b2230;
+    --bg-oscuro:#fbeef0; --panel:rgba(70,45,60,0.045); --borde:rgba(70,45,60,0.13); --texto:#2b2230;
 }
 html[data-tema="claro"], html[data-tema="claro"] body{
-    background: radial-gradient(ellipse 140% 90% at 50% 0%, #fffaf4 0%, var(--bg-oscuro) 55%, #f3e2d3 100%);
+    background: radial-gradient(ellipse 140% 90% at 50% 0%, #fffaf9 0%, var(--bg-oscuro) 55%, #efe3fa 100%);
 }
 html[data-tema="claro"] .texto-tenue{ opacity:0.62; }
-html[data-tema="claro"] .panel, html[data-tema="claro"] .tarjeta-categoria,
+html[data-tema="claro"] .panel,
 html[data-tema="claro"] .tarjeta-juego-cat{
     background: rgba(60,40,30,0.05); border-color: rgba(60,40,30,0.13);
 }
+/* .tarjeta-categoria queda afuera de la regla de arriba a propósito:
+   así conserva su tinte pastel por categoría (--color-cat) también en
+   tema claro, en vez de volver todo al mismo beige plano. */
 
 .btn-icono-header{
     background:transparent; border:1px solid var(--borde); border-radius:50%;

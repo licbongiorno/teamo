@@ -5,18 +5,18 @@
 // Firebase y siempre tiene que pedirse en vivo, sea o no la
 // primera visita.
 //
-// Estrategia:
-//  - "app shell" (páginas y estilos base): se precachean en la
-//    instalación para que el sitio abra sin conexión.
-//  - resto de archivos propios del sitio (los ~58 juegos, imágenes,
-//    etc.): "stale-while-revalidate" — se sirven del caché al toque
-//    si ya se visitaron, y de fondo se actualiza el caché para la
-//    próxima vez, sin tener que listar acá cada archivo nuevo.
-//  - todo lo que no sea del mismo origen (Firebase, YouTube, fonts de
-//    Google) se ignora: pasa directo a la red, tal como si no hubiera
-//    service worker.
-// ============================================================
-const VERSION = 'refugio-v1';
+// Estrategia: "red primero, caché como respaldo" para todo lo propio
+// del sitio. Antes esto era "stale-while-revalidate" (servía lo
+// cacheado al toque y actualizaba el caché recién para la PRÓXIMA
+// visita) — con eso, quien tenía la app instalada podía quedarse
+// viendo una versión vieja del sitio indefinidamente (faltaban
+// funciones nuevas, o quedaban bugs ya arreglados) porque cada visita
+// mostraba lo que se había guardado la visita ANTERIOR, nunca lo más
+// nuevo. Ahora se pide la red primero siempre que haya conexión, y
+// sólo se usa lo cacheado si falla (sin conexión). Esto sacrifica algo
+// de velocidad/ahorro de datos a cambio de que las actualizaciones
+// lleguen siempre, que para una app de dos personas pesa mucho más.
+const VERSION = 'refugio-v2';
 const CACHE_SHELL = VERSION + '-shell';
 const CACHE_RUNTIME = VERSION + '-runtime';
 
@@ -61,16 +61,12 @@ self.addEventListener('fetch', (event) => {
     if (url.origin !== self.location.origin) return; // Firebase, YouTube, fonts, etc. van directo a la red
 
     event.respondWith(
-        caches.match(request).then((cacheado) => {
-            const enRed = fetch(request).then((respuesta) => {
-                if (respuesta && respuesta.ok) {
-                    const copia = respuesta.clone();
-                    caches.open(CACHE_RUNTIME).then((cache) => cache.put(request, copia));
-                }
-                return respuesta;
-            }).catch(() => cacheado); // sin conexión: lo que haya en caché
-
-            return cacheado || enRed;
-        })
+        fetch(request).then((respuesta) => {
+            if (respuesta && respuesta.ok) {
+                const copia = respuesta.clone();
+                caches.open(CACHE_RUNTIME).then((cache) => cache.put(request, copia));
+            }
+            return respuesta;
+        }).catch(() => caches.match(request)) // sin conexión: lo último que se haya guardado
     );
 });

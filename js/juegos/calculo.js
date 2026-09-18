@@ -100,12 +100,21 @@ function renderCalculo(estado){
 
 async function marcarListoCalculo(){
     vibrarJ(12);
-    const estado = await new Promise(res => { const u = window.onSnapshot(refCalculo(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refCalculo(), {
-        fase: 'esperando',
-        listos: { ...(estado?.listos || {}), [miIdentidad]: true },
-        victorias: estado?.victorias || { nico: 0, carito: 0 }
-    }, { merge: true });
+    // Transacción (en vez de leer con onSnapshot y despues escribir
+    // con merge suelto): si los dos tocan "listo" casi al mismo
+    // tiempo, una lectura suelta puede no ver todavía la marca del
+    // otro y la escritura de uno pisa la del otro, dejando la
+    // partida esperando para siempre.
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(refCalculo());
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.fase === 'esperando' && estado?.listos?.[miIdentidad]) return;
+        tx.set(refCalculo(), {
+            fase: 'esperando',
+            listos: { ...(estado?.listos || {}), [miIdentidad]: true },
+            victorias: estado?.victorias || { nico: 0, carito: 0 }
+        }, { merge: true });
+    });
 }
 
 async function responderCalculo(rondaEsperada, valor){

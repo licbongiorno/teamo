@@ -86,20 +86,32 @@ function renderReflejos(estado){
 
 async function marcarListoReflejos(){
     vibrarJ(12);
-    const estado = await new Promise(res => { const u = window.onSnapshot(refReflejos(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refReflejos(), {
-        fase: 'esperando',
-        listos: { ...(estado?.listos || {}), [miIdentidad]: true },
-        puntajes: estado?.puntajes || { nico: 0, carito: 0 }
-    }, { merge: true });
+    // Transacción (en vez de leer con onSnapshot y despues escribir
+    // con merge suelto): si los dos tocan "listo" casi al mismo
+    // tiempo, una lectura suelta puede no ver todavía la marca del
+    // otro y la escritura de uno pisa la del otro, dejando la
+    // partida esperando para siempre.
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(refReflejos());
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.fase === 'esperando' && estado?.listos?.[miIdentidad]) return;
+        tx.set(refReflejos(), {
+            fase: 'esperando',
+            listos: { ...(estado?.listos || {}), [miIdentidad]: true },
+            puntajes: estado?.puntajes || { nico: 0, carito: 0 }
+        }, { merge: true });
+    });
 }
 
 async function iniciarRondaReflejosSiCorresponde(estado){
     if (estado.fase !== 'esperando' || _iniciandoReflejos) return;
     _iniciandoReflejos = true;
-    const horaFuego = Date.now() + 2000 + Math.random() * 5000;
-    await window.updateDoc(refReflejos(), { fase: 'preparados', horaFuego, tocoNico: null, tocoCarito: null });
-    setTimeout(() => { _iniciandoReflejos = false; }, 1000);
+    try {
+        const horaFuego = Date.now() + 2000 + Math.random() * 5000;
+        await window.updateDoc(refReflejos(), { fase: 'preparados', horaFuego, tocoNico: null, tocoCarito: null });
+    } finally {
+        setTimeout(() => { _iniciandoReflejos = false; }, 1000);
+    }
 }
 
 let _fuegoDisparado = false;

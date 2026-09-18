@@ -5,25 +5,54 @@
 // evita repetir 9 veces el mismo "esperar a que ambos estén listos
 // y arrancar sincronizados".
 // ============================================================
+// Antes esto era un "leer con onSnapshot y después escribir con merge"
+// suelto: si los dos jugadores tocaban "listo" casi al mismo tiempo,
+// cada lectura podía no ver todavía la marca del otro, y la escritura
+// de uno pisaba (borraba) la del otro — la partida se quedaba
+// esperando para siempre. Con una transacción, Firestore reintenta
+// solo si detecta que el documento cambió mientras se decidía, así
+// que el segundo en confirmar siempre ve la marca del primero (mismo
+// patrón ya usado en ajedrez.js/damas.js/chinchon.js/uno.js).
 async function marcarListoArcade(refDoc, extra){
-    const estado = await new Promise(res => { const u = window.onSnapshot(refDoc, s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refDoc, {
-        fase: 'esperando',
-        listos: { ...(estado?.listos || {}), [miIdentidad]: true },
-        ...(extra || {})
-    }, { merge: true });
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(refDoc);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.fase === 'esperando' && estado?.listos?.[miIdentidad]) return;
+        tx.set(refDoc, {
+            fase: 'esperando',
+            listos: { ...(estado?.listos || {}), [miIdentidad]: true },
+            ...(extra || {})
+        }, { merge: true });
+    });
 }
 
+// _iniciandoRondaArcade evita que el mismo dispositivo dispare dos
+// transacciones redundantes casi seguidas (por ejemplo si el
+// onSnapshot local vuelve a disparar antes de que la primera
+// transacción termine). Va dentro de un try/finally: antes, si
+// updateDoc/la transacción fallaba (red, permisos), la bandera se
+// quedaba en `true` para siempre y ese dispositivo nunca más podía
+// arrancar una ronda de ese juego. La transacción en sí (chequeando
+// fase==='esperando' adentro) es lo que evita que arranque dos veces
+// aunque los dos dispositivos entren a la vez.
 const _iniciandoRondaArcade = {};
 async function iniciarRondaArcadeSiCorresponde(refDoc, juegoId, duracionMs, extraInicial){
     if (_iniciandoRondaArcade[juegoId]) return;
     _iniciandoRondaArcade[juegoId] = true;
-    const horaInicio = Date.now() + 3000;
-    await window.updateDoc(refDoc, {
-        fase: 'jugando', horaInicio, horaFin: horaInicio + duracionMs,
-        ...(extraInicial || {})
-    });
-    setTimeout(() => { _iniciandoRondaArcade[juegoId] = false; }, 1000);
+    try {
+        await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(refDoc);
+            const estado = snap.exists() ? snap.data() : null;
+            if (!estado || estado.fase !== 'esperando') return; // ya arrancó (el otro dispositivo ganó la carrera) o cambió mientras tanto
+            const horaInicio = Date.now() + 3000;
+            tx.set(refDoc, {
+                fase: 'jugando', horaInicio, horaFin: horaInicio + duracionMs,
+                ...(extraInicial || {})
+            }, { merge: true });
+        });
+    } finally {
+        _iniciandoRondaArcade[juegoId] = false;
+    }
 }
 
 // HTML compartido para el "3, 2, 1, ¡Ya!" que se ve mientras

@@ -60,25 +60,56 @@ function iniciarEscoba(){
 let _seleccionMesaEscoba = [];
 let _cartaManoEscoba = null;
 
-async function nuevaPartidaEscoba(){
+// Antes esto arrancaba una partida apenas UNO tocaba "Empezar", sin
+// esperar al otro — igual que le pasaba a Tira y Afloja al principio
+// de la sesión: alguien podía terminar jugando solo, o pisarle la
+// partida en curso al otro con un "Empezar" sin querer. Ahora sigue
+// el mismo patrón "los dos listos" que ya usan Ajedrez/Damas/Chinchón/
+// UNO/Truco: una transacción marca la bandera propia, y recién reparte
+// cuando ve las DOS marcas adentro de esa misma transacción (así nunca
+// hay una ventana donde "los dos están listos" pero todavía no se
+// repartió).
+async function marcarListoEscoba(){
     vibrarJ(12);
-    const mazo = crearMazoEscoba();
-    const mesa = mazo.splice(0, 4);
-    const manoNico = mazo.splice(0, 3);
-    const manoCarito = mazo.splice(0, 3);
-    await window.setDoc(refEscoba(), {
-        fase: 'jugando', mazo, mesa, manoNico, manoCarito,
-        bazasNico: [], bazasCarito: [], escobasNico: 0, escobasCarito: 0,
-        turno: 'nico', ultimoQueLevanto: null, puntajes: null, historial: []
+    const ref = refEscoba();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.listos?.[miIdentidad]) return;
+        const listos = { ...(estado?.listos || {}), [miIdentidad]: true };
+        if (listos.nico && listos.carito) {
+            const mazo = crearMazoEscoba();
+            const mesa = mazo.splice(0, 4);
+            const manoNico = mazo.splice(0, 3);
+            const manoCarito = mazo.splice(0, 3);
+            tx.set(ref, {
+                fase: 'jugando', mazo, mesa, manoNico, manoCarito, listos,
+                bazasNico: [], bazasCarito: [], escobasNico: 0, escobasCarito: 0,
+                turno: 'nico', ultimoQueLevanto: null, puntajes: null, historial: []
+            });
+        } else {
+            tx.set(ref, { fase: 'esperando', listos }, { merge: true });
+        }
     });
+}
+
+async function reiniciarEscoba(){
+    vibrarJ(12);
+    await window.setDoc(refEscoba(), { fase: 'esperando', listos: {} });
 }
 
 function renderEscoba(estado){
     const cont = document.getElementById('contenido-escoba');
-    if (!estado || estado.fase === 'sin_partida') {
+    if (!estado || estado.fase === 'sin_partida' || estado.fase === 'esperando') {
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Mazo español. Sumá 15 combinando una carta de tu mano con las de la mesa.</p>
-            <button class="btn-principal" onclick="nuevaPartidaEscoba()">Empezar partida</button>
+            <div class="texto-tenue" style="margin-bottom:10px;">
+                ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+            </div>
+            <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoEscoba()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🃏'}</button>
         </div>`;
         return;
     }
@@ -89,7 +120,7 @@ function renderEscoba(estado){
             <div style="font-size:1.2rem; margin-bottom:8px;">${p.nico === p.carito ? '🤝 ¡Empate!' : `🏆 ¡Ganó ${nombreJugador(p.nico > p.carito ? 'nico' : 'carito')}!`}</div>
             <div class="texto-tenue">Nico ${p.nico} — Carito ${p.carito}</div>
             <div class="texto-tenue" style="margin:8px 0 14px;">Escobas: Nico ${estado.escobasNico || 0} · Carito ${estado.escobasCarito || 0}</div>
-            <button class="btn-principal" onclick="nuevaPartidaEscoba()">🔁 Jugar de nuevo</button>
+            <button class="btn-principal" onclick="reiniciarEscoba()">🔁 Jugar de nuevo</button>
         </div>`;
         return;
     }

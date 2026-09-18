@@ -103,9 +103,22 @@ async function leerTrucoActual(){
     return await new Promise(res => { const u = window.onSnapshot(refTruco(), s => { u(); res(s.exists() ? s.data() : null); }); });
 }
 
+let _trucoFaseAnterior = null;
 function iniciarTruco(){
+    _trucoFaseAnterior = null;
     if (window._unsubTruco) window._unsubTruco();
-    window._unsubTruco = window.onSnapshot(refTruco(), snap => renderTruco(snap.exists() ? snap.data() : null), (err) => {
+    window._unsubTruco = window.onSnapshot(refTruco(), snap => {
+        // Hay varios lugares donde una mano puede terminar la partida
+        // (truco, envido, flor, irse al mazo...); en vez de agregar el
+        // sonido en cada uno, se detecta acá la transición a 'terminado',
+        // una sola vez, para cualquier camino.
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _trucoFaseAnterior && _trucoFaseAnterior !== 'terminado' && window.sfx) {
+            window.sfx[datos.ganadorPartida === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _trucoFaseAnterior = datos ? datos.fase : null;
+        renderTruco(datos);
+    }, (err) => {
         console.error('Error de Firestore en truco:', err);
         const cont = document.getElementById('contenido-truco');
         if (cont) cont.innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}). Si el error dice "permission-denied", hay que sumar la colección "juegos" a las Reglas de Firestore.</div>`;
@@ -173,6 +186,7 @@ async function marcarListoTruco(){
 
 async function jugarCartaTruco(cartaId){
     vibrarJ(12);
+    if (window.sfx) window.sfx.cartaFlip();
     const estado = await leerTrucoActual();
     if (!estado || estado.fase !== 'jugando' || estado.cantoPendiente || estado.jugadorEnTurno !== miIdentidad) return;
     const jugadas = estado.cartasJugadas.filter(c => c.jugador === miIdentidad);
@@ -252,6 +266,7 @@ async function siguienteManoTruco(){
 // funciona bien). Sólo se puede cantar una vez por mano, por jugador.
 async function cantarFlorTruco(){
     vibrarJ([15, 30, 15]);
+    if (window.sfx) window.sfx.click();
     const estado = await leerTrucoActual();
     if (!estado || estado.fase !== 'jugando' || !estado.conFlor) return;
     const misCartas = estado.cartas[miIdentidad] || [];
@@ -277,6 +292,7 @@ async function cantarFlorTruco(){
 
 async function cantarEnvido(tipo){
     vibrarJ(12);
+    if (window.sfx) window.sfx.click();
     const estado = await leerTrucoActual();
     if (!estado || estado.cantoPendiente || estado.jugadorEnTurno !== miIdentidad) return;
     if (estado.rondaActual !== 1 || estado.envidoResuelto || estado.trucoNivel > 0) return;
@@ -301,6 +317,7 @@ async function escalarEnvido(tipo){
 }
 async function cantarTruco(){
     vibrarJ(12);
+    if (window.sfx) window.sfx.click();
     const estado = await leerTrucoActual();
     if (!estado || estado.cantoPendiente || estado.jugadorEnTurno !== miIdentidad) return;
     if (estado.trucoNivel >= 3) return;

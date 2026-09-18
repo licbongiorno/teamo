@@ -5,10 +5,18 @@ const FILAS_C4 = 6, COLS_C4 = 7;
 
 function refConecta4(){ return window.doc(window.db, 'juegos', 'conecta4'); }
 
+let _conecta4FaseAnterior = null;
 function iniciarConecta4(){
     if (window._unsubConecta4) window._unsubConecta4();
+    _conecta4FaseAnterior = null;
     window._unsubConecta4 = window.onSnapshot(refConecta4(), (snap) => {
-        renderConecta4(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _conecta4FaseAnterior === 'jugando' && window.sfx) {
+            if (datos.ganador === 'empate') window.sfx.empate();
+            else window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _conecta4FaseAnterior = datos ? datos.fase : null;
+        renderConecta4(datos);
     }, (err) => {
         console.error('Error de Firestore en conecta4:', err);
         document.getElementById('contenido-conecta4').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -94,6 +102,7 @@ async function jugarConecta4(col){
     if (fila === -1) return; // columna llena
 
     tablero[fila * COLS_C4 + col] = miIdentidad;
+    if (window.sfx) window.sfx.rebote();
     let updates = { tablero };
     if (hayGanadorC4(tablero, fila, col, miIdentidad)) {
         updates.fase = 'terminado';

@@ -5,10 +5,21 @@ const COMBOS_TATETI = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[
 
 function refTateti(){ return window.doc(window.db, 'juegos', 'tateti'); }
 
+let _tatetiFaseAnterior = null;
 function iniciarTateti(){
     if (window._unsubTateti) window._unsubTateti();
+    _tatetiFaseAnterior = null;
     window._unsubTateti = window.onSnapshot(refTateti(), (snap) => {
-        renderTateti(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        // El sonido de cierre va acá (no en jugarTateti) para que suene
+        // igual en las dos pantallas, sea quien sea quien hizo la jugada
+        // ganadora — cada uno con su propio veredicto (ganó/perdió).
+        if (datos && datos.fase === 'terminado' && _tatetiFaseAnterior === 'jugando' && window.sfx) {
+            if (datos.ganador === 'empate') window.sfx.empate();
+            else window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _tatetiFaseAnterior = datos ? datos.fase : null;
+        renderTateti(datos);
     }, (err) => {
         console.error('Error de Firestore en tateti:', err);
         document.getElementById('contenido-tateti').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -75,6 +86,7 @@ function ganadorTateti(tablero, jugador){
 
 async function jugarTateti(idx){
     vibrarJ(12);
+    if (window.sfx) window.sfx.toque();
     const snap = await new Promise(res => { const u = window.onSnapshot(refTateti(), s => { u(); res(s); }); });
     if (!snap.exists()) return;
     const estado = snap.data();

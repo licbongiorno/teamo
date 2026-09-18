@@ -4,10 +4,17 @@ const CELDAS_FLOTA_BN = 7; // 1 barco de 3 + 2 barcos de 2 = 7 celdas (simplific
 
 function refBatallaNaval(){ return window.doc(window.db, 'juegos', 'batallanaval'); }
 
+let _batallaNavalFaseAnterior = null;
 function iniciarBatallaNaval(){
+    _batallaNavalFaseAnterior = null;
     if (window._unsubBatallaNaval) window._unsubBatallaNaval();
     window._unsubBatallaNaval = window.onSnapshot(refBatallaNaval(), (snap) => {
-        renderBatallaNaval(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _batallaNavalFaseAnterior === 'atacando' && window.sfx) {
+            window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _batallaNavalFaseAnterior = datos ? datos.fase : null;
+        renderBatallaNaval(datos);
     }, (err) => {
         console.error('Error de Firestore en batallanaval:', err);
         document.getElementById('contenido-batallanaval').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -150,6 +157,7 @@ async function atacarBN(i){
     const barcosRival = data[campoBarcosRival] || [];
     const tocado = barcosRival.includes(i);
     vibrarJ(tocado ? [20, 40, 20] : 10);
+    if (window.sfx) window.sfx[tocado ? 'golpe' : 'swoosh']();
 
     const hundioTodo = tocado && barcosRival.every(idx => disparos.includes(idx));
     let updates = { [campoDisparos]: disparos };

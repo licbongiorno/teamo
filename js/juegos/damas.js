@@ -18,11 +18,18 @@ let _damasSeleccion = null;
 let _damasDestinos = [];
 let _damasCapturasActuales = [];
 
+let _damasFaseAnterior = null;
 function iniciarDamas(){
     _damasSeleccion = null; _damasDestinos = []; _damasCapturasActuales = [];
+    _damasFaseAnterior = null;
     if (window._unsubDamas) window._unsubDamas();
     window._unsubDamas = window.onSnapshot(refDamas(), (snap) => {
-        renderDamas(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _damasFaseAnterior === 'jugando' && window.sfx) {
+            window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _damasFaseAnterior = datos ? datos.fase : null;
+        renderDamas(datos);
     }, (err) => {
         console.error('Error de Firestore en damas:', err);
         const cont = document.getElementById('contenido-damas');
@@ -135,6 +142,7 @@ async function seleccionarCasillaDamas(idx){
     if (_damasSeleccion === null) {
         if (esPropiaFichaDamas(tablero[idx], miIdentidad)) {
             vibrarJ(8);
+            if (window.sfx) window.sfx.seleccionar();
             _damasSeleccion = idx;
             // Sin captura obligatoria: cada ficha se mueve con sus propios
             // movimientos posibles (simples o de captura), sin importar si
@@ -173,6 +181,7 @@ async function seleccionarCasillaDamas(idx){
     nuevoTablero[idx] = piezaFinal;
 
     vibrarJ(captura ? [10,20,10] : 10);
+    if (window.sfx) window.sfx[captura ? 'golpe' : 'rebote']();
     _damasSeleccion = null; _damasDestinos = []; _damasCapturasActuales = [];
 
     const quedanRival = nuevoTablero.some(p => esRivalFichaDamas(p, miIdentidad));

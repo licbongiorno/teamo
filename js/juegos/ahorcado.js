@@ -11,12 +11,31 @@ function normalizarLetra(l){
 // borraba solo y tenías que volver a intentarlo, sin ningún aviso).
 let _formularioAhorcadoAbierto = false;
 
+let _ahorcadoFaseAnterior = null;
+let _ahorcadoLetrasAnteriores = 0;
 function iniciarAhorcado(){
     _formularioAhorcadoAbierto = false;
+    _ahorcadoFaseAnterior = null;
+    _ahorcadoLetrasAnteriores = 0;
     const ref = window.doc(window.db, 'juegos', 'ahorcado');
     if (window._unsubAhorcado) window._unsubAhorcado();
     window._unsubAhorcado = window.onSnapshot(ref, (snap) => {
-        renderAhorcado(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'jugando' && window.sfx) {
+            const letras = datos.letrasIntentadas || [];
+            if (letras.length > _ahorcadoLetrasAnteriores) {
+                const letrasPalabra = (datos.palabra || '').split('').map(normalizarLetra);
+                const ultima = letras[letras.length - 1];
+                window.sfx[letrasPalabra.includes(ultima) ? 'acierto' : 'error']();
+            }
+            _ahorcadoLetrasAnteriores = letras.length;
+        }
+        if (datos && (datos.fase === 'ganado' || datos.fase === 'perdido') &&
+            _ahorcadoFaseAnterior === 'jugando' && window.sfx) {
+            window.sfx[datos.fase === 'ganado' ? 'victoria' : 'derrota']();
+        }
+        _ahorcadoFaseAnterior = datos ? datos.fase : null;
+        renderAhorcado(datos);
     }, (err) => {
         console.error('Error de Firestore en ahorcado:', err);
         document.getElementById('contenido-ahorcado').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}). Si el error dice "permission-denied", hay que sumar la colección "juegos" a las Reglas de Firestore.</div>`;

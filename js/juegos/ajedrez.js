@@ -16,11 +16,18 @@ function crearTableroInicialAjedrez(){
 let _ajedrezSeleccion = null;
 let _ajedrezDestinos = [];
 
+let _ajedrezFaseAnterior = null;
 function iniciarAjedrez(){
     _ajedrezSeleccion = null; _ajedrezDestinos = [];
+    _ajedrezFaseAnterior = null;
     if (window._unsubAjedrez) window._unsubAjedrez();
     window._unsubAjedrez = window.onSnapshot(refAjedrez(), (snap) => {
-        renderAjedrez(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _ajedrezFaseAnterior === 'jugando' && window.sfx) {
+            window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _ajedrezFaseAnterior = datos ? datos.fase : null;
+        renderAjedrez(datos);
     }, (err) => {
         console.error('Error de Firestore en ajedrez:', err);
         const cont = document.getElementById('contenido-ajedrez');
@@ -145,6 +152,7 @@ async function seleccionarCasillaAjedrez(idx){
     if (_ajedrezSeleccion === null) {
         if (tablero[idx] && colorPiezaAjedrez(tablero[idx]) === colorPropio) {
             vibrarJ(8);
+            if (window.sfx) window.sfx.seleccionar();
             _ajedrezSeleccion = idx;
             _ajedrezDestinos = movimientosPosiblesAjedrez(tablero, idx, miIdentidad);
             renderAjedrez(estado);
@@ -181,6 +189,7 @@ async function seleccionarCasillaAjedrez(idx){
     nuevoTablero[idx] = piezaFinal;
 
     vibrarJ(objetivo ? [10,20,10] : 10);
+    if (window.sfx) window.sfx[objetivo ? 'golpe' : 'rebote']();
     _ajedrezSeleccion = null; _ajedrezDestinos = [];
 
     const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(estado, mensaje) };

@@ -28,10 +28,19 @@ function nombreCartaEscoba(c){
 
 function refEscoba(){ return window.doc(window.db, 'juegos', 'escoba'); }
 
+let _escobaFaseAnterior = null;
 function iniciarEscoba(){
+    _escobaFaseAnterior = null;
     if (window._unsubEscoba) window._unsubEscoba();
     window._unsubEscoba = window.onSnapshot(refEscoba(), (snap) => {
-        renderEscoba(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _escobaFaseAnterior === 'jugando' && window.sfx) {
+            const p = datos.puntajes || { nico: 0, carito: 0 };
+            if (p.nico === p.carito) window.sfx.empate();
+            else window.sfx[(p.nico > p.carito ? 'nico' : 'carito') === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _escobaFaseAnterior = datos ? datos.fase : null;
+        renderEscoba(datos);
     }, (err) => {
         console.error('Error de Firestore en escoba:', err);
         document.getElementById('contenido-escoba').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -168,6 +177,7 @@ async function finalizarSiCorrespondeEscoba(estado, manoNico, manoCarito, mazo, 
 async function levantarEscoba(){
     if (!_cartaManoEscoba || !_seleccionMesaEscoba.length) return;
     vibrarJ([15, 30, 15]);
+    if (window.sfx) window.sfx.acierto();
     const snap = await new Promise(res => { const u = window.onSnapshot(refEscoba(), s => { u(); res(s); }); });
     const data = snap.data();
     if (data.fase !== 'jugando' || data.turno !== miIdentidad) return;
@@ -214,6 +224,7 @@ async function levantarEscoba(){
 async function tirarEscoba(){
     if (!_cartaManoEscoba) return;
     vibrarJ(12);
+    if (window.sfx) window.sfx.cartaFlip();
     const snap = await new Promise(res => { const u = window.onSnapshot(refEscoba(), s => { u(); res(s); }); });
     const data = snap.data();
     if (data.fase !== 'jugando' || data.turno !== miIdentidad) return;

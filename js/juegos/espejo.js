@@ -167,9 +167,13 @@ function abrirCartaEspejo(id){
     if (window._unsubEspejoLista) { window._unsubEspejoLista(); window._unsubEspejoLista = null; }
     if (window._unsubEspejoActual) window._unsubEspejoActual();
     window._cartaEspejoActualId = id;
+    let _faseAnteriorEspejo = null;
     window._unsubEspejoActual = window.onSnapshot(refEspejo(id), (snap) => {
         if (!snap.exists()) { mostrarListaEspejo(); return; }
-        renderCartaEspejo({ id: snap.id, ...snap.data() });
+        const datos = snap.data();
+        if (datos.fase === 'revelado' && _faseAnteriorEspejo === 'prediciendo' && window.sfx) window.sfx.revelar();
+        _faseAnteriorEspejo = datos.fase;
+        renderCartaEspejo({ id: snap.id, ...datos });
     }, (err) => console.error('Error de Firestore en carta espejo:', err));
 }
 
@@ -221,6 +225,7 @@ async function responderEspejo(){
     const texto = document.getElementById('input-respuesta-espejo').value.trim();
     if (!texto || !window._cartaEspejoActualId) return;
     vibrarJ(12);
+    if (window.sfx) window.sfx.click();
     const ref = refEspejo(window._cartaEspejoActualId);
     // Transacción: mergear a mano en JS y despues updateDoc reemplaza el
     // campo "respuestas" entero — si los dos respondían casi a la vez, el

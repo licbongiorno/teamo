@@ -3,10 +3,19 @@
 // sí/no hasta adivinar (o hasta gastar las 20 preguntas).
 function refVeinte(){ return window.doc(window.db, 'juegos', 'veinte'); }
 
+let _veinteFaseAnterior = null;
 function iniciarVeinte(){
+    _veinteFaseAnterior = null;
     if (window._unsubVeinte) window._unsubVeinte();
     window._unsubVeinte = window.onSnapshot(refVeinte(), (snap) => {
-        renderVeinte(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _veinteFaseAnterior === 'jugando' && window.sfx) {
+            const ultima = (datos.preguntas || [])[(datos.preguntas || []).length - 1];
+            const acerto = ultima && typeof ultima.respuesta === 'string' && ultima.respuesta.includes('correcto');
+            window.sfx[acerto ? 'acierto' : 'derrota']();
+        }
+        _veinteFaseAnterior = datos ? datos.fase : null;
+        renderVeinte(datos);
     }, (err) => {
         console.error('Error de Firestore en 20 preguntas:', err);
         document.getElementById('contenido-veinte').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -119,6 +128,7 @@ async function preguntarVeinte(){
     const texto = input.value.trim();
     if (!texto) return;
     vibrarJ(10);
+    if (window.sfx) window.sfx.click();
     const snap = await new Promise(res => { const u = window.onSnapshot(refVeinte(), s => { u(); res(s); }); });
     const data = snap.data();
     const preguntas = [...(data.preguntas || []), { pregunta: texto, respuesta: null }];

@@ -63,6 +63,7 @@
         <a href="index.html" class="btn-volver"><svg class="icono-svg"><use href="#icono-flecha-izq"></use></svg> Volver</a>
         <div style="display:flex; align-items:center; gap:8px;">
             <span id="chip-racha"></span>
+            <button class="btn-icono-header" data-btn-sonido onclick="alternarSonido()" title="Silenciar"><svg class="icono-svg"><use href="#icono-sonido"></use></svg></button>
             <button class="btn-icono-header" id="btn-tema" onclick="alternarTema()" title="Cambiar tema"><svg class="icono-svg"><use href="#icono-luna"></use></svg></button>
             <span class="chip-identidad" id="chip-identidad"></span>
         </div>
@@ -615,20 +616,21 @@
 <script type="module" src="js/firebase.js?v=7"></script>
 
 <!-- ==================== MÓDULOS COMPARTIDOS ==================== -->
+<script src="js/sfx.js?v=1"></script>
 <script src="js/usuario.js?v=6"></script>
 <script src="js/juegos-data.js?v=6"></script>
-<script src="js/puntos.js?v=6"></script>
+<script src="js/puntos.js?v=7"></script>
 <script src="js/historial.js?v=5"></script>
 <script src="js/racha.js?v=5"></script>
 <script src="js/presencia.js?v=5"></script>
 <script src="js/tema.js?v=6"></script>
-<script src="js/logros.js?v=5"></script>
+<script src="js/logros.js?v=6"></script>
 <script src="js/estadisticas.js?v=5"></script>
-<script src="js/records.js?v=5"></script>
+<script src="js/records.js?v=6"></script>
 <script src="js/cronometro.js?v=5"></script>
 <script src="js/compartir-imagen.js?v=5"></script>
 <script src="js/cargador-juegos.js?v=6"></script>
-<script src="js/navegacion.js?v=7"></script>
+<script src="js/navegacion.js?v=8"></script>
 
 <!-- ==================== LÓGICA DE CADA JUEGO ==================== -->
 

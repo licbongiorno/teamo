@@ -20,6 +20,7 @@ async function sumarPuntos(jugador, cantidad){
         // (antes se leía el valor y se escribía "leído + cantidad" por
         // separado, sin ninguna garantía de que no cambiara entre medio).
         await window.setDoc(refPuntos(), { [jugador]: window.increment(cantidad) }, { merge: true });
+        if (window.sfx) window.sfx.punto();
     } catch (e) {
         console.warn('No se pudo sumar puntos:', e);
     }

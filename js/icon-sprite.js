@@ -42,6 +42,8 @@
         '<symbol id="icono-chat" viewBox="0 0 24 24"><path d="M3 5.5h12.5a2 2 0 0 1 2 2v5.5a2 2 0 0 1-2 2H9L5 18v-3H3a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z"/><path d="M21 10.3v4.4a2 2 0 0 1-2 2h-.7v2.6L15.8 17"/></symbol>' +
         '<symbol id="icono-personas" viewBox="0 0 24 24"><circle cx="8.3" cy="8" r="3.1"/><path d="M2.3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.3" cy="9" r="2.5"/><path d="M14.8 20.2c.1-2.7 1.7-4.9 3.8-5.5"/></symbol>' +
         '<symbol id="icono-brote" viewBox="0 0 24 24"><path d="M12 21V10.5"/><path d="M12 10.5C12 6.5 9 4.3 5 4.2c-.1 4.6 3 7.1 7 6.3Z"/><path d="M12 13.3c0-3.5 2.5-5.2 6-5.2.1 3.7-2.4 6-6 5.2Z"/></symbol>' +
+        '<symbol id="icono-sonido" viewBox="0 0 24 24"><path d="M4 9.3h3.3L12 5.4v13.2l-4.7-3.9H4a1 1 0 0 1-1-1v-3.4a1 1 0 0 1 1-1Z"/><path d="M15.8 8.6a5 5 0 0 1 0 6.8M18.3 6a8.6 8.6 0 0 1 0 12"/></symbol>' +
+        '<symbol id="icono-sonido-mute" viewBox="0 0 24 24"><path d="M4 9.3h3.3L12 5.4v13.2l-4.7-3.9H4a1 1 0 0 1-1-1v-3.4a1 1 0 0 1 1-1Z"/><path d="M16.3 9.7l4.2 4.6M20.5 9.7l-4.2 4.6"/></symbol>' +
 
         '</defs>' +
         '</svg>';

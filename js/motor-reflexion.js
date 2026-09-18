@@ -59,6 +59,7 @@ function renderListaReflexion(juegoId, cartas){
 
 async function crearCartaReflexion(juegoId){
     vibrarJ(12);
+    if (window.sfx) window.sfx.cartaFlip();
     const cfg = window.CONFIG_REFLEXION[juegoId];
     const pregunta = cfg.banco[Math.floor(Math.random() * cfg.banco.length)];
     const docRef = await window.addDoc(_colReflexion(), {
@@ -73,9 +74,16 @@ function abrirCartaReflexion(juegoId, id){
     if (window['_unsubReflexionLista_' + juegoId]) { window['_unsubReflexionLista_' + juegoId](); window['_unsubReflexionLista_' + juegoId] = null; }
     if (window['_unsubReflexionActual_' + juegoId]) window['_unsubReflexionActual_' + juegoId]();
     window['_reflexionActualId_' + juegoId] = id;
+    let faseAnterior = null;
     window['_unsubReflexionActual_' + juegoId] = window.onSnapshot(_refReflexionCarta(id), (snap) => {
         if (!snap.exists()) { mostrarListaReflexion(juegoId); return; }
-        renderCartaReflexion(juegoId, { id: snap.id, ...snap.data() });
+        const datos = snap.data();
+        // Sonido de revelación sólo en la transición real (no al reabrir
+        // una ronda que ya estaba revelada de antes): así suena para los
+        // dos, cada uno en su propio dispositivo, apenas se completa.
+        if (faseAnterior === 'respondiendo' && datos.fase === 'revelado' && window.sfx) window.sfx.revelar();
+        faseAnterior = datos.fase;
+        renderCartaReflexion(juegoId, { id: snap.id, ...datos });
     }, (err) => console.error(`Error de Firestore en carta ${juegoId}:`, err));
 }
 
@@ -158,6 +166,7 @@ async function responderReflexionTexto(juegoId){
 
 async function responderReflexion(juegoId, valor){
     vibrarJ(12);
+    if (window.sfx) window.sfx.click();
     const id = window['_reflexionActualId_' + juegoId];
     if (!id) return;
     const ref = _refReflexionCarta(id);
@@ -174,6 +183,7 @@ async function responderReflexion(juegoId, valor){
 
 async function sortearReflexion(juegoId){
     vibrarJ([15, 30, 15]);
+    if (window.sfx) window.sfx.dado();
     const id = window['_reflexionActualId_' + juegoId];
     const ref = _refReflexionCarta(id);
     const snap = await new Promise(res => { const u = window.onSnapshot(ref, s => { u(); res(s); }); });

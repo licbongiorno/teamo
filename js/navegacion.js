@@ -1,6 +1,7 @@
 // ==================== NAVEGACIÓN ENTRE JUEGOS ====================
 async function abrirJuego(juego){
     vibrarJ(12);
+    if (window.sfx) window.sfx.abrirJuego();
     const pantalla = document.getElementById('pantalla-' + juego);
     if (!pantalla) return; // juego todavía no disponible
     document.querySelectorAll('.pantalla-juego').forEach(p => p.classList.remove('activa'));
@@ -92,6 +93,7 @@ async function abrirJuego(juego){
 }
 function cerrarJuego(){
     vibrarJ(12);
+    if (window.sfx) window.sfx.cerrarJuego();
     detenerListenersActivos();
     if (typeof detenerLatidoPresencia === 'function') detenerLatidoPresencia();
     if (typeof detenerCronometroTurno === 'function') detenerCronometroTurno();
@@ -186,6 +188,7 @@ function detenerListenersActivos(){
 
 function jugarAlAzar(){
     vibrarJ(15);
+    if (window.sfx) window.sfx.dado();
     if (!window.JUEGOS) return;
     const disponibles = window.JUEGOS.filter(j => j.disponible);
     if (!disponibles.length) return;

@@ -73,6 +73,7 @@ function mostrarToastLogro(logro){
         <div><div class="toast-logro-titulo">Logro desbloqueado</div><div class="toast-logro-nombre">${logro.nombre}</div></div>`;
     document.body.appendChild(toast);
     vibrarJ([15, 40, 15]);
+    if (window.sfx) window.sfx.logro();
     setTimeout(() => toast.classList.add('toast-logro-salir'), 3200);
     setTimeout(() => toast.remove(), 3700);
 }

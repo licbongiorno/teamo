@@ -4,6 +4,14 @@
    de las variables --fuente-* / --rosa de cada página) para que se vean
    igual en index.html, 1/index.html, juegos.html y categorias/*.html.
    ============================================================ */
+/* Accesibilidad, para las 8 páginas que cargan este archivo: varios
+   inputs/botones del sitio quitan el contorno nativo (outline:none)
+   para que no se vea feo al tocar con el dedo. Esto lo repone SÓLO
+   cuando el foco vino de teclado (:focus-visible no se dispara con
+   un tap/click de mouse/dedo), así alguien navegando sin mouse
+   siempre puede ver dónde está parado. */
+:focus-visible{ outline:2px solid rgba(255,194,217,0.85) !important; outline-offset:2px; }
+
 .gate-acceso {
     position: fixed; inset: 0; z-index: 999999;
     display: flex; align-items: center; justify-content: center;

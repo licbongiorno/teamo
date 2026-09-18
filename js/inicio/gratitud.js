@@ -61,6 +61,13 @@ let gratitudIniciado = false;
                     fecha: new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' }),
                     timestamp: window.serverTimestamp()
                 });
+                // Mismo detalle romántico que ya usa la Lista de Deseos al
+                // cumplir un sueño: un corazoncito sutil, para que dejar un
+                // "te amo por" se sienta como un pequeño festejo.
+                if (typeof lanzarCorazonSutil === 'function') {
+                    const btn = document.querySelector('.btn-enviar-gratitud');
+                    if (btn) { const r = btn.getBoundingClientRect(); lanzarCorazonSutil(r.left + r.width / 2, r.top + r.height / 2); }
+                }
             } catch (e) { console.error("Error gratitud:", e); }
         }
 

@@ -63,6 +63,13 @@ async function guardarEnMuro() {
                     timestamp: window.serverTimestamp()
                 });
                 textarea.value = '';
+                // Mismo corazoncito sutil que ya usa la Lista de Deseos al
+                // cumplir un sueño: dejar un recuerdo inmortalizado también
+                // se merece un pequeño festejo, no sólo un mensaje guardado.
+                if (typeof lanzarCorazonSutil === 'function') {
+                    const r = btn.getBoundingClientRect();
+                    lanzarCorazonSutil(r.left + r.width / 2, r.top + r.height / 2);
+                }
             } catch (e) { console.error("Error muro:", e); }
 
             btn.innerText = "Inmortalizar mensaje ✨";

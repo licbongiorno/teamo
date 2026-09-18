@@ -239,8 +239,8 @@ function renderDamas(estado){
             if (_damasDestinos.includes(idx)) clases += ' casilla-destino';
             let contenidoPieza = '';
             if (pieza) {
-                const color = pieza[0] === 'n' ? '⚪' : '⚫';
-                contenidoPieza = `<span class="pieza-tablero">${color}${esDamaCoronada(pieza) ? '<span class="corona-dama">👑</span>' : ''}</span>`;
+                const color = pieza[0] === 'n' ? 'blanca' : 'negra';
+                contenidoPieza = `<span class="ficha-damas ${color}${esDamaCoronada(pieza) ? ' coronada' : ''}"></span>`;
             }
             html += `<div class="${clases}" onclick="${(oscura && esMiTurno) ? `seleccionarCasillaDamas(${idx})` : ''}">${contenidoPieza}</div>`;
         }

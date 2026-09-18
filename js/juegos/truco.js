@@ -52,11 +52,15 @@ function calcularEnvido(cartas){
     if (mejor === 0) mejor = Math.max(...cartas.map(valorEnvido));
     return mejor;
 }
-function nombreCartaTruco(id){
+const NOMBRES_NUM_TRUCO = {1:'As', 10:'Sota', 11:'Caballo', 12:'Rey'};
+const EMOJI_PALO_TRUCO = {espada:'🗡️', basto:'🌳', oro:'🪙', copa:'🏆'};
+// Naipe con diseño real (misma estética que Chinchón/Escoba).
+function naipeTruco(id, onClickJs, extraClase){
+    if (!id) return `<div class="naipe-chinchon dorso"></div>`;
     const n = numDeCarta(id), p = paloDeCarta(id);
-    const nombresNum = {1:'As', 10:'Sota', 11:'Caballo', 12:'Rey'};
-    const nombresPalo = {espada:'Espada 🗡️', basto:'Basto 🌳', oro:'Oro 🪙', copa:'Copa 🏆'};
-    return `${nombresNum[n] || n} de ${nombresPalo[p]}`;
+    return `<div class="naipe-chinchon ${extraClase || ''}" ${onClickJs ? `onclick="${onClickJs}"` : ''}>
+        <span class="nc-palo">${EMOJI_PALO_TRUCO[p]}</span>${NOMBRES_NUM_TRUCO[n] || n}
+    </div>`;
 }
 function nombreCantoTruco(tipo){
     return {envido:'Envido', envido_envido:'Envido', real_envido:'Real Envido', falta_envido:'Falta Envido',
@@ -506,9 +510,9 @@ function renderTruco(estado){
         const mia = estado.cartasJugadas.find(c => c.jugador === miIdentidad && c.ronda === r);
         const delRival = estado.cartasJugadas.find(c => c.jugador === miRival && c.ronda === r);
         filaCartasArea += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; ${r<estado.rondaActual?'opacity:0.55;':''} border-bottom:${r<estado.rondaActual?'1px dashed rgba(255,255,255,0.1)':'none'};">
-            <span style="font-size:0.8rem;">${delRival ? nombreCartaTruco(delRival.carta) : '🂠 —'}</span>
+            ${delRival ? naipeTruco(delRival.carta) : '<div class="naipe-chinchon dorso"></div>'}
             <span style="font-size:0.7rem; opacity:0.5;">ronda ${r}</span>
-            <span style="font-size:0.8rem;">${mia ? nombreCartaTruco(mia.carta) : '—'}</span>
+            ${mia ? naipeTruco(mia.carta) : '<div class="naipe-chinchon" style="opacity:0.3;"></div>'}
         </div>`;
     }
 
@@ -567,9 +571,9 @@ function renderTruco(estado){
 
         html += `<div class="panel">
             <div class="texto-tenue" style="margin-bottom:8px;">Tu mano:</div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">`;
+            <div class="fila-cartas-chinchon">`;
         misDisponibles.forEach(c => {
-            html += `<button class="btn-secundario" style="flex:1; min-width:100px; ${esMiTurno ? '' : 'opacity:0.5;'}" ${esMiTurno ? '' : 'disabled'} onclick="jugarCartaTruco('${c}')">${nombreCartaTruco(c)}</button>`;
+            html += naipeTruco(c, esMiTurno ? `jugarCartaTruco('${c}')` : '', esMiTurno ? '' : 'deshabilitada');
         });
         html += `</div></div>`;
 

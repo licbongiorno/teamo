@@ -61,8 +61,8 @@ function renderTateti(estado){
         const esOscura = (Math.floor(i / 3) + i) % 2 === 1;
         let contenido = '';
         let claseExtra = '';
-        if (marca === 'nico') { contenido = '❌'; if (i === antiguaNico) claseExtra = ' marca-antigua'; }
-        if (marca === 'carito') { contenido = '⭕'; if (i === antiguaCarito) claseExtra = ' marca-antigua'; }
+        if (marca === 'nico') { contenido = '<span class="marca-tateti marca-x"></span>'; if (i === antiguaNico) claseExtra = ' marca-antigua'; }
+        if (marca === 'carito') { contenido = '<span class="marca-tateti marca-o"></span>'; if (i === antiguaCarito) claseExtra = ' marca-antigua'; }
         html += `<div class="casilla-tablero ${esOscura ? 'casilla-oscura' : 'casilla-clara'}${claseExtra}" onclick="jugarTateti(${i})">${contenido}</div>`;
     }
     html += `</div>`;

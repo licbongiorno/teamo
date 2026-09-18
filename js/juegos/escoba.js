@@ -19,11 +19,20 @@ function valorEscoba(c){
     if (n === 11) return 9;
     return 10; // Rey (12)
 }
+const NOMBRES_NUM_ESCOBA = {1:'As', 10:'Sota', 11:'Caballo', 12:'Rey'};
+const EMOJI_PALO_ESCOBA = {espada:'🗡️', basto:'🌳', oro:'🪙', copa:'🏆'};
 function nombreCartaEscoba(c){
     const n = numEscoba(c), p = paloEscoba(c);
-    const nombresNum = {1:'As', 10:'Sota', 11:'Caballo', 12:'Rey'};
-    const nombresPalo = {espada:'🗡️', basto:'🌳', oro:'🪙', copa:'🏆'};
-    return `${nombresNum[n] || n}${nombresPalo[p]}`;
+    return `${NOMBRES_NUM_ESCOBA[n] || n}${EMOJI_PALO_ESCOBA[p]}`;
+}
+// Naipe con diseño real (igual estética que Chinchón) en vez del botón
+// de texto plano — onClickJs va aparte porque mesa y mano usan
+// funciones distintas para el toque.
+function naipeEscoba(c, onClickJs, extraClase){
+    const n = numEscoba(c), p = paloEscoba(c);
+    return `<div class="naipe-chinchon ${extraClase || ''}" onclick="${onClickJs}">
+        <span class="nc-palo">${EMOJI_PALO_ESCOBA[p]}</span>${NOMBRES_NUM_ESCOBA[n] || n}
+    </div>`;
 }
 
 function refEscoba(){ return window.doc(window.db, 'juegos', 'escoba'); }
@@ -103,13 +112,13 @@ function renderEscoba(estado){
     </div>`;
 
     html += `<div class="panel"><div class="texto-tenue" style="margin-bottom:8px;">Mesa (tocá para sumar 15):</div>
-        <div style="display:flex; flex-wrap:wrap; gap:8px;">
-        ${(estado.mesa || []).map(c => `<button class="btn-secundario" style="width:auto; padding:8px 10px; ${_seleccionMesaEscoba.includes(c) ? 'border-color:var(--rosa); background:rgba(255,179,198,0.15);' : ''}" onclick="toggleMesaEscoba('${c}')">${nombreCartaEscoba(c)}</button>`).join('') || '<span class="texto-tenue">vacía</span>'}
+        <div class="fila-cartas-chinchon">
+        ${(estado.mesa || []).map(c => naipeEscoba(c, `toggleMesaEscoba('${c}')`, _seleccionMesaEscoba.includes(c) ? 'seleccionada' : '')).join('') || '<span class="texto-tenue">vacía</span>'}
         </div></div>`;
 
     html += `<div class="panel"><div class="texto-tenue" style="margin-bottom:8px;">Tu mano ${sumaSeleccion ? `(suma actual: ${sumaSeleccion})` : ''}:</div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        ${miMano.map(c => `<button class="btn-secundario" style="width:auto; padding:8px 10px; ${_cartaManoEscoba === c ? 'border-color:var(--celeste); background:rgba(168,216,255,0.15);' : ''} ${esMiTurno ? '' : 'opacity:0.5;'}" ${esMiTurno ? '' : 'disabled'} onclick="elegirManoEscoba('${c}')">${nombreCartaEscoba(c)}</button>`).join('')}
+        <div class="fila-cartas-chinchon">
+        ${miMano.map(c => naipeEscoba(c, esMiTurno ? `elegirManoEscoba('${c}')` : '', `${_cartaManoEscoba === c ? 'seleccionada' : ''} ${esMiTurno ? '' : 'deshabilitada'}`)).join('')}
         </div>
         <div class="btn-fila" style="margin-top:10px;">
             <button class="btn-principal" ${puedeLevantar ? '' : 'style="opacity:0.4;" disabled'} onclick="levantarEscoba()">Levantar 🧹</button>

@@ -69,6 +69,7 @@ function renderTermometro(registros){
 
 async function marcarTermometro(valor){
     vibrarJ(10);
+    if (window.sfx) window.sfx.toque();
     const hoy = _hoyTermometro();
     // ID fijo por día+autor en vez de buscar con una query y decidir si
     // hace falta addDoc o updateDoc: ese "buscar y después crear" podía

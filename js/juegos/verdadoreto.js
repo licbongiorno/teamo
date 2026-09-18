@@ -299,6 +299,7 @@ function pushLogVor(estado, mensaje){ return [...(estado?.historial || []), mens
 
 async function elegirVerdadOReto(tipo){
     vibrarJ(12);
+    if (window.sfx) window.sfx.cartaFlip();
     const estado = await leerVorActual();
     if (estado && estado.turno && estado.turno !== miIdentidad) return;
     let contenido, fase;
@@ -328,6 +329,7 @@ async function responderVerdad(){
 
 async function leerRespuestaVerdad(){
     vibrarJ(10);
+    if (window.sfx) window.sfx.revelar();
     const estado = await leerVorActual();
     if (!estado) return;
     const nuevosPuntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
@@ -340,6 +342,7 @@ async function leerRespuestaVerdad(){
 
 async function validarRetoVerdadOReto(){
     vibrarJ([15, 30, 15]);
+    if (window.sfx) window.sfx.acierto();
     const estado = await leerVorActual();
     if (!estado) return;
     const nuevosPuntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };

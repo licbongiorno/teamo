@@ -717,10 +717,15 @@ const PREGUNTAS_MENTEGEMELA = [
 
 function refMenteGemela(){ return window.doc(window.db, 'juegos', 'mentegemela'); }
 
+let _menteGemelaFaseAnterior = null;
 function iniciarMenteGemela(){
+    _menteGemelaFaseAnterior = null;
     if (window._unsubMenteGemela) window._unsubMenteGemela();
     window._unsubMenteGemela = window.onSnapshot(refMenteGemela(), (snap) => {
-        renderMenteGemela(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'revelado' && _menteGemelaFaseAnterior === 'jugando' && window.sfx) window.sfx.revelar();
+        _menteGemelaFaseAnterior = datos ? datos.fase : null;
+        renderMenteGemela(datos);
     }, (err) => {
         console.error('Error de Firestore en mentegemela:', err);
         document.getElementById('contenido-mentegemela').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -787,6 +792,7 @@ function renderMenteGemela(estado){
 
 function elegirMenteGemela(i, oi){
     vibrarJ(8);
+    if (window.sfx) window.sfx.toque();
     _respuestasLocalesMG[i] = oi;
     refrescarVistaMG();
 }

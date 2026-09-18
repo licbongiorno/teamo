@@ -1,10 +1,17 @@
 // ==================== MENTIRA O VERDAD ====================
 function refMentiraVerdad(){ return window.doc(window.db, 'juegos', 'mentiraverdad'); }
 
+let _mentiraVerdadFaseAnterior = null;
 function iniciarMentiraVerdad(){
+    _mentiraVerdadFaseAnterior = null;
     if (window._unsubMentiraVerdad) window._unsubMentiraVerdad();
     window._unsubMentiraVerdad = window.onSnapshot(refMentiraVerdad(), (snap) => {
-        renderMentiraVerdad(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'revelado' && _mentiraVerdadFaseAnterior === 'adivinando' && window.sfx) {
+            window.sfx[datos.eleccionRival === datos.indiceMentira ? 'acierto' : 'error']();
+        }
+        _mentiraVerdadFaseAnterior = datos ? datos.fase : null;
+        renderMentiraVerdad(datos);
     }, (err) => {
         console.error('Error de Firestore en mentiraverdad:', err);
         document.getElementById('contenido-mentiraverdad').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -80,6 +87,7 @@ async function enviarAfirmacionesMentiraVerdad(){
     if (afirmaciones.some(a => !a)) return;
     const indiceMentira = parseInt(document.querySelector('input[name="mentira-radio"]:checked').value, 10);
     vibrarJ(12);
+    if (window.sfx) window.sfx.cartaFlip();
     await window.updateDoc(refMentiraVerdad(), { afirmaciones, indiceMentira, fase: 'adivinando' });
 }
 

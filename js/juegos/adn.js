@@ -1730,10 +1730,15 @@ const PREGUNTAS_ADN = [
 
 function refAdn(){ return window.doc(window.db, 'juegos', 'adn'); }
 
+let _adnFaseAnterior = null;
 function iniciarAdn(){
+    _adnFaseAnterior = null;
     if (window._unsubAdn) window._unsubAdn();
     window._unsubAdn = window.onSnapshot(refAdn(), (snap) => {
-        renderAdn(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'revelado' && _adnFaseAnterior === 'jugando' && window.sfx) window.sfx.revelar();
+        _adnFaseAnterior = datos ? datos.fase : null;
+        renderAdn(datos);
     }, (err) => {
         console.error('Error de Firestore en adn:', err);
         document.getElementById('contenido-adn').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -1798,6 +1803,7 @@ function renderAdn(estado){
 
 function elegirAdn(i, oi){
     vibrarJ(8);
+    if (window.sfx) window.sfx.toque();
     _respuestasLocalesAdn[i] = oi;
     refrescarVistaAdn();
 }

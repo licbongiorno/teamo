@@ -68,7 +68,14 @@ function actualizarRuedaPremios(estado){
 
     if (_ultimaRotacionRuedaPremios !== null && nuevaRot !== _ultimaRotacionRuedaPremios) {
         if (mensaje) mensaje.innerText = 'Girando…';
-        setTimeout(() => { if (estado && estado.ganadorIndice != null) { revelar(estado.ganadorIndice); vibrarJ([15, 30, 15]); } }, 4200);
+        if (window.sfx) window.sfx.swoosh();
+        setTimeout(() => {
+            if (estado && estado.ganadorIndice != null) {
+                revelar(estado.ganadorIndice);
+                vibrarJ([15, 30, 15]);
+                if (window.sfx) window.sfx.revelar();
+            }
+        }, 4200);
     } else if (estado && estado.ganadorIndice != null) {
         revelar(estado.ganadorIndice);
     }

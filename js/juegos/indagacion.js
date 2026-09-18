@@ -178,9 +178,13 @@ function abrirCartaIndagacion(id){
     if (window._unsubIndagacionLista) { window._unsubIndagacionLista(); window._unsubIndagacionLista = null; }
     if (window._unsubIndagacionActual) window._unsubIndagacionActual();
     window._cartaIndagacionActualId = id;
+    let _faseAnteriorIndagacion = null;
     window._unsubIndagacionActual = window.onSnapshot(refCartaIndagacion(id), (snap) => {
         if (!snap.exists()) { mostrarListaIndagacion(); return; }
-        renderCartaIndagacion({ id: snap.id, ...snap.data() });
+        const datos = snap.data();
+        if (datos.fase === 'revelado' && _faseAnteriorIndagacion === 'necesita_adivinanza' && window.sfx) window.sfx.revelar();
+        _faseAnteriorIndagacion = datos.fase;
+        renderCartaIndagacion({ id: snap.id, ...datos });
     }, (err) => console.error('Error de Firestore en carta:', err));
 }
 
@@ -227,6 +231,7 @@ async function responderIndagacion(){
     const texto = document.getElementById('input-respuesta-indagacion').value.trim();
     if (!texto || !window._cartaIndagacionActualId) return;
     vibrarJ(12);
+    if (window.sfx) window.sfx.click();
     await window.updateDoc(refCartaIndagacion(window._cartaIndagacionActualId), {
         respuesta: texto, fase: 'necesita_adivinanza'
     });

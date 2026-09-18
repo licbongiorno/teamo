@@ -720,7 +720,12 @@
         .btn-cerrar-gratitud { background: none; border: none; color: white; font-size: 1.1rem; cursor: pointer; touch-action: manipulation; }
         .lista-gratitud { flex: 1; padding: 14px; overflow-y: auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; }
         .lista-gratitud .sin-mensajes { font-size: 0.82rem; color: rgba(255,255,255,0.55); font-style: italic; text-align: center; margin: auto; }
-        .tarjeta-gratitud { padding: 10px 14px; border-radius: 14px; background: rgba(245,217,168,0.1); font-family: var(--fuente-texto); }
+        .tarjeta-gratitud {
+            padding: 10px 14px; border-radius: 14px; background: rgba(245,217,168,0.1); font-family: var(--fuente-texto);
+            border-left: 3px solid rgba(245,217,168,0.4); animation: aparecerSuave 0.35s forwards;
+        }
+        .tarjeta-gratitud.gratitud-carito { border-left-color: #ffb8cf; }
+        .tarjeta-gratitud.gratitud-nico { border-left-color: #b2d4ff; }
         .tarjeta-gratitud .gr-autor { font-size: 0.75rem; color: #f5d9a0; font-weight: bold; margin-bottom: 3px; }
         .tarjeta-gratitud .gr-texto { font-size: 0.9rem; color: white; line-height: 1.4; }
         .tarjeta-gratitud .gr-fecha { font-size: 0.68rem; color: rgba(255,255,255,0.4); margin-top: 4px; }
@@ -795,7 +800,10 @@
             display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px;
             background: rgba(184,232,201,0.08); font-family: var(--fuente-texto); cursor: pointer; touch-action: manipulation;
             animation: aparecerSuave 0.3s forwards; transition: transform 0.2s ease, background 0.2s ease;
+            border-left: 3px solid rgba(184,232,201,0.35);
         }
+        .fila-deseo.deseo-carito { border-left-color: #ffb8cf; }
+        .fila-deseo.deseo-nico { border-left-color: #b2d4ff; }
         .fila-deseo:active { transform: scale(0.98); }
         .fila-deseo .check-deseo { font-size: 1.2rem; flex-shrink: 0; }
         .fila-deseo { flex-wrap: wrap; }

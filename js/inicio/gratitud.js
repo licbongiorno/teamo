@@ -22,7 +22,7 @@ let gratitudIniciado = false;
                     snapshot.forEach((docSnap) => {
                         const nota = docSnap.data();
                         const div = document.createElement('div');
-                        div.className = 'tarjeta-gratitud';
+                        div.className = `tarjeta-gratitud ${nota.autor === 'carito' ? 'gratitud-carito' : 'gratitud-nico'}`;
                         const autorEl = document.createElement('div');
                         autorEl.className = 'gr-autor';
                         autorEl.innerText = nota.autor === "carito" ? "Carito 💖" : "Nico 💙";

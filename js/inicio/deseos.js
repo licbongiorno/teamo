@@ -54,7 +54,7 @@ let deseosIniciado = false;
             lista.innerHTML = '';
             filtrados.forEach(({ id, data: deseo }) => {
                 const fila = document.createElement('div');
-                fila.className = `fila-deseo ${deseo.cumplido ? 'cumplido' : ''}`;
+                fila.className = `fila-deseo ${deseo.autor === 'carito' ? 'deseo-carito' : 'deseo-nico'} ${deseo.cumplido ? 'cumplido' : ''}`;
                 fila.onclick = (ev) => marcarDeseo(id, !!deseo.cumplido, ev);
                 const check = document.createElement('span');
                 check.className = 'check-deseo';

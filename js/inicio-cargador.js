@@ -5,7 +5,7 @@
 // que se migren más secciones (Ticket, Gratitud, Deseos, etc.) se
 // van agregando acá, sin tocar el resto.
 // ============================================================
-const VERSION_CACHE_INICIO = 3;
+const VERSION_CACHE_INICIO = 4;
 
 function scriptsNecesariosParaFeature(featureId) {
     if (featureId === 'preguntasindex') {

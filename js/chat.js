@@ -1,5 +1,10 @@
 // ==================== CHAT FLOTANTE ====================
+// El recibo de lectura compartido, el indicador de "mensaje nuevo" y
+// el zumbido viven en js/chat-comun.js (se usan igual acá y en
+// index.html). Este archivo sólo arma la lista de mensajes y el
+// envío, específicos de esta pantalla.
 let chatIniciadoJuegos = false;
+let _ultimoSnapshotChatJuegos = null;
 
 function toggleChat(event){
     if (event) event.stopPropagation();
@@ -12,30 +17,14 @@ function toggleChat(event){
             chatIniciadoJuegos = true;
             const q = window.query(window.collection(window.db, 'chat'), window.orderBy('timestamp', 'asc'));
             window.onSnapshot(q, (snapshot) => {
-                const contenedor = document.getElementById('mensajes-chat');
-                if (snapshot.empty) {
-                    contenedor.innerHTML = '<p class="sin-mensajes">Este espacio está esperando nuestras primeras palabras... escribí vos 💌</p>';
-                    return;
-                }
-                contenedor.innerHTML = '';
-                let ultimaEtiqueta = null;
-                snapshot.forEach((docSnap) => {
-                    const msg = docSnap.data();
-                    const fecha = msg.timestamp && msg.timestamp.toDate ? msg.timestamp.toDate() : new Date();
-                    const etiqueta = etiquetaFechaChatJuegos(fecha);
-                    if (etiqueta !== ultimaEtiqueta) {
-                        const sep = document.createElement('div');
-                        sep.className = 'separador-fecha-chat';
-                        sep.innerText = etiqueta;
-                        contenedor.appendChild(sep);
-                        ultimaEtiqueta = etiqueta;
-                    }
-                    const div = document.createElement('div');
-                    div.className = `burbuja-msg ${msg.autor === 'carito' ? 'msg-carito' : 'msg-nico'} ${msg.autor === miIdentidad ? 'msg-propio' : 'msg-otro'}`;
-                    div.innerText = msg.texto;
-                    contenedor.appendChild(div);
-                });
-                contenedor.scrollTop = contenedor.scrollHeight;
+                _ultimoSnapshotChatJuegos = snapshot;
+                renderMensajesChatJuegos(snapshot);
+                // Si llegan mensajes nuevos mientras el chat sigue abierto,
+                // los marcamos como vistos ahí mismo (si no, el recibo se
+                // queda con la hora en la que se abrió el panel, y un
+                // mensaje que llega un rato después quedaría "no leído"
+                // aunque lo estemos mirando en pantalla).
+                if (document.getElementById('chat-flotante').classList.contains('abierto')) marcarChatComoVisto();
             }, (err) => {
                 console.error('Error de Firestore en chat:', err);
                 const contenedor = document.getElementById('mensajes-chat');
@@ -44,6 +33,52 @@ function toggleChat(event){
         }
     }
 }
+
+function renderMensajesChatJuegos(snapshot){
+    const contenedor = document.getElementById('mensajes-chat');
+    if (!contenedor) return;
+    if (snapshot.empty) {
+        contenedor.innerHTML = '<p class="sin-mensajes">Este espacio está esperando nuestras primeras palabras... escribí vos 💌</p>';
+        return;
+    }
+    contenedor.innerHTML = '';
+    let ultimaEtiqueta = null;
+    let ultimoDivPropio = null;
+    let ultimaFechaPropia = null;
+    snapshot.forEach((docSnap) => {
+        const msg = docSnap.data();
+        const fecha = msg.timestamp && msg.timestamp.toDate ? msg.timestamp.toDate() : new Date();
+        const etiqueta = etiquetaFechaChatJuegos(fecha);
+        if (etiqueta !== ultimaEtiqueta) {
+            const sep = document.createElement('div');
+            sep.className = 'separador-fecha-chat';
+            sep.innerText = etiqueta;
+            contenedor.appendChild(sep);
+            ultimaEtiqueta = etiqueta;
+        }
+        const div = document.createElement('div');
+        div.className = `burbuja-msg ${msg.autor === 'carito' ? 'msg-carito' : 'msg-nico'} ${msg.autor === miIdentidad ? 'msg-propio' : 'msg-otro'}`;
+        div.innerText = msg.texto;
+        contenedor.appendChild(div);
+        if (msg.autor === miIdentidad) { ultimoDivPropio = div; ultimaFechaPropia = fecha.getTime(); }
+    });
+    // El "visto" sólo se muestra en el último mensaje propio (como
+    // WhatsApp), no en todos — se entiende igual y no llena la
+    // pantalla de textitos repetidos.
+    if (ultimoDivPropio) {
+        const marca = document.createElement('div');
+        marca.className = 'marca-visto-chat';
+        marca.innerText = (ultimaFechaPropia && ultimaFechaPropia <= window._vistoRivalChat) ? 'Visto ✓✓' : 'Enviado ✓';
+        ultimoDivPropio.appendChild(marca);
+    }
+    contenedor.scrollTop = contenedor.scrollHeight;
+}
+
+// Enganchado desde chat-comun.js cuando cambia el recibo de lectura
+// del otro, para refrescar el "Visto ✓✓" sin esperar un mensaje nuevo.
+window.actualizarChecksVistoChat = function(){
+    if (_ultimoSnapshotChatJuegos) renderMensajesChatJuegos(_ultimoSnapshotChatJuegos);
+};
 
 function etiquetaFechaChatJuegos(fecha){
     const hoy = new Date();
@@ -70,42 +105,4 @@ async function enviarMensajeChat(){
         console.error('Error chat:', e);
         input.value = texto;
     }
-}
-
-// ==================== INDICADOR DE MENSAJE NUEVO ====================
-// A diferencia del listener de arriba (que sólo arranca la primera vez
-// que se ABRE el panel), este escucha el último mensaje todo el tiempo,
-// desde que sabemos quiénes somos — así detecta mensajes nuevos del
-// otro aunque nunca hayamos abierto el chat en esta sesión.
-let _escuchaNoLeidosIniciada = false;
-
-function iniciarEscuchaChatNoLeidos(){
-    if (_escuchaNoLeidosIniciada || !miIdentidad) return;
-    _escuchaNoLeidosIniciada = true;
-    const q = window.query(
-        window.collection(window.db, 'chat'),
-        window.orderBy('timestamp', 'desc'),
-        window.limit(1)
-    );
-    window.onSnapshot(q, (snapshot) => {
-        if (snapshot.empty) return;
-        const msg = snapshot.docs[0].data();
-        if (msg.autor === miIdentidad) return; // mensaje propio, no cuenta como no leído
-        const fecha = msg.timestamp && msg.timestamp.toMillis ? msg.timestamp.toMillis() : Date.now();
-        const visto = Number(localStorage.getItem('chatVistoHasta_' + miIdentidad) || 0);
-        const chatFlotante = document.getElementById('chat-flotante');
-        const abierto = chatFlotante && chatFlotante.classList.contains('abierto');
-        if (fecha > visto && !abierto) marcarChatComoNoLeido(true);
-    }, (err) => console.error('Error escuchando no leídos del chat:', err));
-}
-
-function marcarChatComoNoLeido(hayNoLeido){
-    const burbuja = document.getElementById('burbuja-chat');
-    if (burbuja) burbuja.classList.toggle('no-leido', hayNoLeido);
-}
-
-function marcarChatComoVisto(){
-    if (!miIdentidad) return;
-    localStorage.setItem('chatVistoHasta_' + miIdentidad, String(Date.now()));
-    marcarChatComoNoLeido(false);
 }

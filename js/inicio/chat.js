@@ -1,10 +1,11 @@
 // ==================== CHAT ====================
 // Migrado del index inline. abrirChatInterno() es lo que llama el
 // cargador (ver toggleChat() en index.html). El indicador de "mensaje
-// no leído" (iniciarEscuchaChatNoLeidos, etc.) sigue siendo eager en
-// el script principal — tiene que funcionar aunque nunca se abra el
-// chat en esta sesión.
+// no leído", el recibo de lectura compartido y el zumbido siguen
+// siendo eager (viven en js/chat-comun.js) — tienen que funcionar
+// aunque nunca se abra el chat en esta sesión.
 let chatIniciado = false;
+let _ultimoSnapshotChatIndex = null;
 
 function abrirChatInterno() {
             document.getElementById('chat-flotante').classList.add('abierto');
@@ -15,30 +16,12 @@ function abrirChatInterno() {
                 chatIniciado = true;
                 const q = window.query(window.collection(window.db, "chat"), window.orderBy("timestamp", "asc"));
                 window.onSnapshot(q, (snapshot) => {
-                    const contenedor = document.getElementById('mensajes-chat');
-                    if (snapshot.empty) {
-                        contenedor.innerHTML = '<p class="sin-mensajes">Este espacio está esperando nuestras primeras palabras... escribí vos 💌</p>';
-                        return;
-                    }
-                    contenedor.innerHTML = '';
-                    let ultimaEtiquetaFecha = null;
-                    snapshot.forEach((doc) => {
-                        const msg = doc.data();
-                        const fechaMsg = msg.timestamp && msg.timestamp.toDate ? msg.timestamp.toDate() : new Date();
-                        const etiqueta = etiquetaFechaChat(fechaMsg);
-                        if (etiqueta !== ultimaEtiquetaFecha) {
-                            const separador = document.createElement('div');
-                            separador.className = 'separador-fecha-chat';
-                            separador.innerText = etiqueta;
-                            contenedor.appendChild(separador);
-                            ultimaEtiquetaFecha = etiqueta;
-                        }
-                        const div = document.createElement('div');
-                        div.className = `burbuja-msg ${msg.autor === "carito" ? 'msg-carito' : 'msg-nico'} ${msg.autor === miIdentidad ? 'msg-propio' : 'msg-otro'}`;
-                        div.innerText = msg.texto;
-                        contenedor.appendChild(div);
-                    });
-                    contenedor.scrollTop = contenedor.scrollHeight; // Auto-scroll
+                    _ultimoSnapshotChatIndex = snapshot;
+                    renderMensajesChatIndex(snapshot);
+                    // Mismo motivo que en juegos.html: si llegan mensajes
+                    // nuevos con el chat todavía abierto, los marcamos
+                    // vistos ahí mismo, no sólo al abrir el panel.
+                    if (document.getElementById('chat-flotante').classList.contains('abierto')) marcarChatComoVisto();
                 }, (error) => {
                     console.error('Error escuchando el chat:', error);
                     const contenedor = document.getElementById('mensajes-chat');
@@ -46,6 +29,49 @@ function abrirChatInterno() {
                 });
             }
         }
+
+function renderMensajesChatIndex(snapshot) {
+    const contenedor = document.getElementById('mensajes-chat');
+    if (!contenedor) return;
+    if (snapshot.empty) {
+        contenedor.innerHTML = '<p class="sin-mensajes">Este espacio está esperando nuestras primeras palabras... escribí vos 💌</p>';
+        return;
+    }
+    contenedor.innerHTML = '';
+    let ultimaEtiquetaFecha = null;
+    let ultimoDivPropio = null;
+    let ultimaFechaPropia = null;
+    snapshot.forEach((doc) => {
+        const msg = doc.data();
+        const fechaMsg = msg.timestamp && msg.timestamp.toDate ? msg.timestamp.toDate() : new Date();
+        const etiqueta = etiquetaFechaChat(fechaMsg);
+        if (etiqueta !== ultimaEtiquetaFecha) {
+            const separador = document.createElement('div');
+            separador.className = 'separador-fecha-chat';
+            separador.innerText = etiqueta;
+            contenedor.appendChild(separador);
+            ultimaEtiquetaFecha = etiqueta;
+        }
+        const div = document.createElement('div');
+        div.className = `burbuja-msg ${msg.autor === "carito" ? 'msg-carito' : 'msg-nico'} ${msg.autor === miIdentidad ? 'msg-propio' : 'msg-otro'}`;
+        div.innerText = msg.texto;
+        contenedor.appendChild(div);
+        if (msg.autor === miIdentidad) { ultimoDivPropio = div; ultimaFechaPropia = fechaMsg.getTime(); }
+    });
+    if (ultimoDivPropio) {
+        const marca = document.createElement('div');
+        marca.className = 'marca-visto-chat';
+        marca.innerText = (ultimaFechaPropia && ultimaFechaPropia <= window._vistoRivalChat) ? 'Visto ✓✓' : 'Enviado ✓';
+        ultimoDivPropio.appendChild(marca);
+    }
+    contenedor.scrollTop = contenedor.scrollHeight; // Auto-scroll
+}
+
+// Enganchado desde chat-comun.js cuando cambia el recibo de lectura
+// del otro, para refrescar el "Visto ✓✓" sin esperar un mensaje nuevo.
+window.actualizarChecksVistoChat = function(){
+    if (_ultimoSnapshotChatIndex) renderMensajesChatIndex(_ultimoSnapshotChatIndex);
+};
 
 async function enviarMensajeChat() {
             const input = document.getElementById('input-chat');

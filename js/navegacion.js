@@ -228,7 +228,7 @@ function renderMenuPrincipal(){
             const elegido = disponibles[semilla % disponibles.length];
             destacadoEl.innerHTML = `
                 <div class="tarjeta-juego-cat disponible destacado" onclick="abrirJuego('${elegido.id}')">
-                    <div class="icono-juego">${elegido.icono}</div>
+                    <div class="icono-juego">${elegido.iconoSvg ? `<svg class="icono-svg"><use href="#${elegido.iconoSvg}"></use></svg>` : elegido.icono}</div>
                     <div class="info-juego">
                         <h3>${elegido.nombre}</h3>
                         <p>${elegido.descripcion}</p>

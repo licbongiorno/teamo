@@ -32,7 +32,7 @@
 </div>
 <script src="../js/auth-gate.js"></script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function(){});</script>
-<script src="../js/icon-sprite.js?v=1"></script>
+<script src="../js/icon-sprite.js?v=2"></script>
 
 <div class="contenedor">
     <div class="encabezado">
@@ -53,13 +53,13 @@
         cont.innerHTML = juegos.map(j => {
             if (j.disponible) {
                 return `<a class="tarjeta-juego-cat disponible" href="../juegos.html?juego=${j.id}">
-                    <div class="icono-juego">${j.icono}</div>
+                    <div class="icono-juego">${j.iconoSvg ? `<svg class="icono-svg"><use href="#${j.iconoSvg}"></use></svg>` : j.icono}</div>
                     <div class="info-juego"><h3>${j.nombre}</h3><p>${j.descripcion}</p></div>
                     <span class="badge-disponible">Jugar</span>
                 </a>`;
             }
             return `<div class="tarjeta-juego-cat proximamente">
-                <div class="icono-juego">${j.icono}</div>
+                <div class="icono-juego">${j.iconoSvg ? `<svg class="icono-svg"><use href="#${j.iconoSvg}"></use></svg>` : j.icono}</div>
                 <div class="info-juego"><h3>${j.nombre}</h3><p>${j.descripcion}</p></div>
                 <span class="badge-proximamente">Próximamente</span>
             </div>`;

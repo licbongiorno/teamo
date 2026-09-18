@@ -206,7 +206,8 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 .tarjeta-juego-cat.disponible{ cursor:pointer; }
 .tarjeta-juego-cat.disponible:active{ transform:scale(0.97); background:rgba(255,255,255,0.1); }
 .tarjeta-juego-cat.proximamente{ opacity:0.55; cursor:default; }
-.tarjeta-juego-cat .icono-juego{ font-size:2rem; flex-shrink:0; width:48px; text-align:center; }
+.tarjeta-juego-cat .icono-juego{ font-size:2rem; flex-shrink:0; width:48px; text-align:center; display:flex; align-items:center; justify-content:center; }
+.tarjeta-juego-cat .icono-juego .icono-svg{ width:1.8rem; height:1.8rem; }
 .tarjeta-juego-cat .info-juego{ flex:1; }
 .tarjeta-juego-cat h3{ margin:0 0 3px; font-size:1rem; }
 .tarjeta-juego-cat p{ margin:0; font-size:0.76rem; opacity:0.7; line-height:1.35; }

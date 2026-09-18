@@ -43,6 +43,29 @@ function iniciarAhorcado(){
     });
 }
 
+// Dibuja la horca y el muñeco en SVG en vez del arte ASCII de antes
+// (una línea de texto monoespaciado con una carita 😵 no se leía bien
+// en pantallas chicas). Cada error suma una parte del cuerpo.
+function dibujoAhorcadoSVG(errores){
+    const partes = [
+        errores >= 1 ? '<circle cx="70" cy="38" r="10"/>' : '',
+        errores >= 2 ? '<line x1="70" y1="48" x2="70" y2="80"/>' : '',
+        errores >= 3 ? '<line x1="70" y1="56" x2="55" y2="70"/>' : '',
+        errores >= 4 ? '<line x1="70" y1="56" x2="85" y2="70"/>' : '',
+        errores >= 5 ? '<line x1="70" y1="80" x2="58" y2="100"/>' : '',
+        errores >= 6 ? '<line x1="70" y1="80" x2="82" y2="100"/>' : '',
+    ].join('');
+    return `<svg viewBox="0 0 110 120" class="ahorcado-svg">
+        <g class="ahorcado-horca">
+            <line x1="10" y1="112" x2="60" y2="112"/>
+            <line x1="25" y1="112" x2="25" y2="10"/>
+            <line x1="25" y1="10" x2="70" y2="10"/>
+            <line x1="70" y1="10" x2="70" y2="28"/>
+        </g>
+        <g class="ahorcado-muneco">${partes}</g>
+    </svg>`;
+}
+
 function renderAhorcado(estado){
     const cont = document.getElementById('contenido-ahorcado');
 
@@ -72,16 +95,7 @@ function renderAhorcado(estado){
     const letrasIntentadas = estado.letrasIntentadas || [];
     const erroresMax = estado.erroresMax || 6;
     const errores = estado.errores || 0;
-
-    const dibujos = [
-        `\n \n \n \n \n=====`,
-        `  ____\n |\n |\n |\n |\n=====`,
-        `  ____\n |    |\n |\n |\n |\n=====`,
-        `  ____\n |    |\n |    😵\n |\n |\n=====`,
-        `  ____\n |    |\n |    😵\n |    |\n |\n=====`,
-        `  ____\n |    |\n |    😵\n |   /|\n |\n=====`,
-        `  ____\n |    |\n |    😵\n |   /|\\\n |   / \n=====`
-    ];
+    const puntajes = estado.puntajes || { nico: 0, carito: 0 };
 
     // La fase ya viene decidida por quien adivinó la última letra (ver
     // intentarLetra), así los dos lados ven exactamente el mismo resultado
@@ -95,9 +109,10 @@ function renderAhorcado(estado){
         return mostrar ? ch.toUpperCase() : "_";
     }).join(" ");
 
-    let html = `<div class="panel texto-centro">
+    let html = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">Nico ${puntajes.nico || 0} — Carito ${puntajes.carito || 0}</div>
+    <div class="panel texto-centro">
         <div class="texto-tenue" style="margin-bottom:8px;">${soyProponente ? '👀 Vos elegiste la palabra' : '🎯 Te toca adivinar'} ${estado.categoria ? '· Pista: ' + estado.categoria : ''}</div>
-        <pre style="font-family:monospace; font-size:0.85rem; opacity:0.75; margin:4px 0 10px;">${dibujos[Math.min(errores, dibujos.length-1)]}</pre>
+        ${dibujoAhorcadoSVG(errores)}
         <div style="font-size:1.6rem; letter-spacing:3px; font-family:monospace; margin-bottom:10px; word-break:break-all;">${visual}</div>
         <div class="texto-tenue">Errores: ${errores} / ${erroresMax}</div>
     </div>`;
@@ -152,6 +167,9 @@ async function proponerPalabra(){
     if (boton) { boton.disabled = true; boton.innerText = 'Guardando…'; }
     const ref = window.doc(window.db, 'juegos', 'ahorcado');
     try {
+        const anterior = await new Promise((resolve) => {
+            const unsub = window.onSnapshot(ref, (s) => { unsub(); resolve(s.exists() ? s.data() : null); });
+        });
         await window.setDoc(ref, {
             palabra: palabra,
             categoria: categoria,
@@ -161,6 +179,7 @@ async function proponerPalabra(){
             erroresMax: 6,
             errores: 0,
             fase: 'jugando',
+            puntajes: anterior?.puntajes || { nico: 0, carito: 0 },
             actualizadoEn: window.serverTimestamp()
         });
         _formularioAhorcadoAbierto = false;
@@ -197,10 +216,16 @@ async function intentarLetra(letra){
         const erroresMax = estado.erroresMax || 6;
         const todasAdivinadas = letrasPalabra.every(l => l === ' ' || nuevasLetras.includes(l));
         let nuevaFase = 'jugando';
-        if (todasAdivinadas) nuevaFase = 'ganado';
-        else if (nuevosErrores >= erroresMax) nuevaFase = 'perdido';
+        const updates = { letrasIntentadas: nuevasLetras, errores: nuevosErrores };
+        if (todasAdivinadas) {
+            nuevaFase = 'ganado';
+            const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
+            puntajes[estado.adivinador] = (puntajes[estado.adivinador] || 0) + 1;
+            updates.puntajes = puntajes;
+        } else if (nuevosErrores >= erroresMax) nuevaFase = 'perdido';
+        updates.fase = nuevaFase;
 
-        await window.updateDoc(ref, { letrasIntentadas: nuevasLetras, errores: nuevosErrores, fase: nuevaFase });
+        await window.updateDoc(ref, updates);
         if (nuevaFase === 'ganado' && typeof registrarEvento === 'function') {
             registrarEvento('gano_partida', `Adivinaron la palabra en el Ahorcado`);
         }

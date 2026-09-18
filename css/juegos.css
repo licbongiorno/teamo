@@ -137,6 +137,15 @@
 .numero-cuenta-regresiva-ya{ font-size:2.6rem; -webkit-text-fill-color:initial; color:var(--verde); }
 @keyframes pulsoCuentaRegresiva{ 0%{ transform:scale(1.7); opacity:0; } 60%{ transform:scale(0.95); opacity:1; } 100%{ transform:scale(1); } }
 
+/* ============ AHORCADO ============ */
+/* Antes era arte ASCII en un <pre> con una carita 😵 — un dibujo real
+   se lee mejor y se banca cualquier tamaño de pantalla. */
+.ahorcado-svg{ width:min(45vw,120px); height:auto; margin:0 auto 8px; display:block; }
+.ahorcado-horca{ stroke:var(--texto); stroke-width:3; stroke-linecap:round; opacity:0.55; fill:none; }
+.ahorcado-muneco{ stroke:var(--rosa); stroke-width:4; stroke-linecap:round; fill:var(--rosa); }
+.ahorcado-muneco circle{ animation: rebotarLogro 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+.ahorcado-muneco line{ animation: aparecerSuave 0.3s ease; }
+
 /* ============ ANIMACIONES COMPARTIDAS (revelados, victorias, feedback) ============ */
 @keyframes revelarFade { from { opacity:0; transform:translateY(14px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
 .reflexion-reveal, .revelado-animado { animation: revelarFade 0.5s cubic-bezier(0.22,1,0.36,1); }

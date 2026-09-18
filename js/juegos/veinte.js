@@ -25,8 +25,11 @@ function iniciarVeinte(){
 function renderVeinte(estado){
     const cont = document.getElementById('contenido-veinte');
 
+    const puntajes = (estado && estado.puntajes) || { nico: 0, carito: 0 };
+
     if (!estado || estado.fase === 'terminado') {
-        cont.innerHTML = `<div class="panel texto-centro">
+        cont.innerHTML = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">🎯 Adivinadas — Nico ${puntajes.nico || 0} — Carito ${puntajes.carito || 0}</div>
+        <div class="panel texto-centro">
             <p class="texto-tenue">Uno piensa algo (persona, objeto o lugar) y el otro hace preguntas de sí/no hasta adivinar. Máximo 20 preguntas.</p>
             ${estado && estado.fase === 'terminado' ? `<div class="texto-tenue" style="margin-bottom:10px;">La respuesta anterior era: <b>${escaparHtml(estado.palabra || '')}</b></div>` : ''}
             <button class="btn-principal" onclick="empezarVeinte()">🤔 Yo pienso algo</button>
@@ -52,7 +55,8 @@ function renderVeinte(estado){
 
     // fase 'jugando'
     const preguntas = estado.preguntas || [];
-    let html = `<div class="panel texto-centro">
+    let html = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">🎯 Adivinadas — Nico ${puntajes.nico || 0} — Carito ${puntajes.carito || 0}</div>
+    <div class="panel texto-centro">
         <div class="texto-tenue">${soyPensador ? `${nombreJugador(miRival)} está adivinando` : 'Preguntá algo que se responda sí o no'}</div>
         <div style="font-size:1.2rem; margin-top:6px;">${preguntas.length} / 20 preguntas</div>
     </div>`;
@@ -112,7 +116,11 @@ function renderVeinte(estado){
 
 async function empezarVeinte(){
     vibrarJ(12);
-    await window.setDoc(refVeinte(), { fase: 'pensando', pensador: miIdentidad, palabra: null, preguntas: [] });
+    const anterior = await new Promise(res => { const u = window.onSnapshot(refVeinte(), s => { u(); res(s.exists() ? s.data() : null); }); });
+    await window.setDoc(refVeinte(), {
+        fase: 'pensando', pensador: miIdentidad, palabra: null, preguntas: [],
+        puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
+    });
 }
 
 async function confirmarPalabraVeinte(){
@@ -153,10 +161,16 @@ async function adivinarVeinte(){
     const snap = await new Promise(res => { const u = window.onSnapshot(refVeinte(), s => { u(); res(s); }); });
     const data = snap.data();
     const acierto = intento.toLowerCase() === (data.palabra || '').toLowerCase();
-    await window.updateDoc(refVeinte(), {
+    const updates = {
         fase: 'terminado',
         preguntas: [...(data.preguntas || []), { pregunta: `¿Es "${intento}"?`, respuesta: acierto ? '🎉 ¡Sí, correcto!' : 'No 😅' }]
-    });
+    };
+    if (acierto) {
+        const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
+        puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
+        updates.puntajes = puntajes;
+    }
+    await window.updateDoc(refVeinte(), updates);
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', acierto ? `Adivinaron en 20 Preguntas` : `Jugaron una ronda de 20 Preguntas`);
     }

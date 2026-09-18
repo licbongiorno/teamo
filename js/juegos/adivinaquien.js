@@ -145,8 +145,11 @@ function renderAdivinaQuien(estado){
         return;
     }
 
+    const puntajes = estado.puntajes || { nico: 0, carito: 0 };
+
     if (estado.fase === 'terminado') {
-        cont.innerHTML = `<div class="panel texto-centro logro-animado">
+        cont.innerHTML = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">Nico ${puntajes.nico || 0} — Carito ${puntajes.carito || 0}</div>
+        <div class="panel texto-centro logro-animado">
             <div style="font-size:1.2rem; margin-bottom:8px;">${estado.ganador === 'empate' ? '🤝 Empate' : `🏆 ¡Ganó ${nombreJugador(estado.ganador)}!`}</div>
             <div class="texto-tenue">El personaje de Nico era ${estado.secretoNico} · El de Carito era ${estado.secretoCarito}</div>
             <button class="btn-principal" style="margin-top:14px;" onclick="nuevaPartidaAdivinaQuien()">🔁 Jugar de nuevo</button>
@@ -155,7 +158,8 @@ function renderAdivinaQuien(estado){
     }
 
     const miSecreto = estado[`secreto${miIdentidad === 'nico' ? 'Nico' : 'Carito'}`];
-    let html = `<div class="panel texto-centro">
+    let html = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">Nico ${puntajes.nico || 0} — Carito ${puntajes.carito || 0}</div>
+    <div class="panel texto-centro">
         <div class="texto-tenue">Tu personaje secreto:</div>
         <div style="font-size:2.5rem;" class="latir">${miSecreto}</div>
     </div>`;
@@ -196,8 +200,10 @@ async function nuevaPartidaAdivinaQuien(){
     vibrarJ(12);
     _descartadosAQ = new Set(); _modoArriesgoAQ = false;
     const barajado = [...POOL_ADIVINAQUIEN].sort(() => Math.random() - 0.5);
+    const anterior = await new Promise(res => { const u = window.onSnapshot(refAdivinaQuien(), s => { u(); res(s.exists() ? s.data() : null); }); });
     await window.setDoc(refAdivinaQuien(), {
-        fase: 'jugando', secretoNico: barajado[0], secretoCarito: barajado[1], ganador: null
+        fase: 'jugando', secretoNico: barajado[0], secretoCarito: barajado[1], ganador: null,
+        puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
     });
 }
 
@@ -209,5 +215,8 @@ async function arriesgarAdivinaQuien(emoji){
     if (data.fase !== 'jugando') return;
     const secretoRival = data[`secreto${miIdentidad === 'nico' ? 'Carito' : 'Nico'}`];
     const acerte = emoji === secretoRival;
-    await window.updateDoc(refAdivinaQuien(), { fase: 'terminado', ganador: acerte ? miIdentidad : miRival });
+    const ganador = acerte ? miIdentidad : miRival;
+    const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
+    puntajes[ganador] = (puntajes[ganador] || 0) + 1;
+    await window.updateDoc(refAdivinaQuien(), { fase: 'terminado', ganador, puntajes });
 }

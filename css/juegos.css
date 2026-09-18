@@ -123,3 +123,53 @@
     animation: fxDestelloPantalla 0.4s ease-out forwards;
 }
 @keyframes fxDestelloPantalla{ 0%{ opacity:1; } 100%{ opacity:0; } }
+
+/* ============ NAIPES (UNO y Chinchón) ============ */
+.fila-cartas-uno, .fila-cartas-chinchon{ display:flex; gap:7px; flex-wrap:wrap; justify-content:center; }
+.naipe-uno{
+    width:52px; height:74px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:1.05rem; color:white; cursor:pointer; flex-shrink:0; position:relative;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4), inset 0 0 0 2px rgba(255,255,255,0.25);
+    transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.15s ease;
+    border:2px solid rgba(255,255,255,0.15);
+}
+.naipe-uno:active{ transform:scale(0.93); }
+.naipe-uno.deshabilitada{ opacity:0.55; cursor:default; }
+.naipe-uno.rojo{ background:linear-gradient(145deg,#f0705c,#c93a26); }
+.naipe-uno.amarillo{ background:linear-gradient(145deg,#f5cf5f,#d19c14); color:#2b2230; }
+.naipe-uno.verde{ background:linear-gradient(145deg,#5ec97c,#237a3d); }
+.naipe-uno.azul{ background:linear-gradient(145deg,#5f92f5,#2452b8); }
+.naipe-uno.comodin{ background:linear-gradient(145deg,#c9b6ff,#8a5fe0,#5f92f5,#5ec97c); font-size:0.75rem; text-align:center; padding:4px; }
+
+.naipe-chinchon{
+    width:46px; height:66px; border-radius:8px; background:linear-gradient(160deg,#fdf6f0,#f0e4d8);
+    color:#2b2230; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-weight:800; font-size:0.85rem; cursor:pointer; flex-shrink:0; position:relative;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4); border:2px solid transparent;
+    transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.naipe-chinchon:active{ transform:scale(0.93); }
+.naipe-chinchon.seleccionada{ transform:translateY(-10px); border-color:var(--rosa); box-shadow:0 8px 18px rgba(255,179,198,0.5); }
+.naipe-chinchon .nc-palo{ font-size:1.2rem; }
+.naipe-chinchon.dorso{ background:linear-gradient(145deg,#3a2a55,#6b4a8f); }
+.naipe-chinchon.en-grupo{ box-shadow:0 4px 10px rgba(184,232,201,0.5), inset 0 0 0 2px #b8e8c9; }
+
+/* ============ SUDOKU DE A DOS ============ */
+.tablero-sudoku{
+    display:grid; grid-template-columns:repeat(9,1fr); width:100%; aspect-ratio:1/1;
+    border-radius:10px; overflow:hidden; border:2px solid var(--borde); background:var(--borde);
+    gap:1px;
+}
+.celda-sudoku{
+    background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center;
+    font-size:min(4.2vw,20px); font-weight:700; cursor:pointer; aspect-ratio:1/1;
+    transition:background 0.15s ease;
+}
+.celda-sudoku.dada{ background:rgba(255,255,255,0.09); color:var(--texto); opacity:0.75; cursor:default; }
+.celda-sudoku.llenada{ color:var(--celeste); animation:rebotarLogro 0.3s ease; }
+.celda-sudoku.seleccionada{ background:rgba(255,179,198,0.22); box-shadow:inset 0 0 0 2px var(--rosa); }
+.celda-sudoku.borde-izq{ box-shadow:inset 2.5px 0 0 rgba(255,179,198,0.55); }
+.celda-sudoku.borde-arr{ box-shadow:inset 0 2.5px 0 rgba(255,179,198,0.55); }
+.celda-sudoku.borde-izq.borde-arr{ box-shadow:inset 2.5px 0 0 rgba(255,179,198,0.55), inset 0 2.5px 0 rgba(255,179,198,0.55); }
+.celda-sudoku.seleccionada.borde-izq{ box-shadow:inset 0 0 0 2px var(--rosa), inset 2.5px 0 0 rgba(255,179,198,0.55); }
+.celda-sudoku.seleccionada.borde-arr{ box-shadow:inset 0 0 0 2px var(--rosa), inset 0 2.5px 0 rgba(255,179,198,0.55); }

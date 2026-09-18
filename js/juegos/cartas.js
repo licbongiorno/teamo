@@ -107,6 +107,7 @@ async function enviarCartaTiempo(){
         fechaApertura = Date.now() + 86400000; // por defecto, mañana
     }
     vibrarJ([15, 30, 15]);
+    if (window.sfx) window.sfx.swoosh();
     await window.addDoc(window.collection(window.db, 'juegos'), {
         tipo: 'carta-tiempo', autor: miIdentidad, destinatario: miRival, texto,
         creadaEn: Date.now(), fechaApertura, abierta: false, fechaAbierta: null
@@ -134,6 +135,7 @@ async function renderCartaTiempoAbierta(c){
     if (!puedeVer) { mostrarListaCartas(); return; }
 
     if (c.destinatario === miIdentidad && !c.abierta) {
+        if (window.sfx) window.sfx.revelar();
         await window.updateDoc(refCartaTiempo(c.id), { abierta: true, fechaAbierta: Date.now() });
         return; // el propio onSnapshot va a re-renderizar con abierta:true
     }

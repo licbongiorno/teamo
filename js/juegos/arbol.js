@@ -9,10 +9,16 @@ const ETAPAS_ARBOL = [
 
 function refArbol(){ return window.doc(window.db, 'juegos', 'arbol'); }
 
+let _arbolEtapaAnterior = null;
 function iniciarArbol(){
+    _arbolEtapaAnterior = null;
     if (window._unsubArbol) window._unsubArbol();
     window._unsubArbol = window.onSnapshot(refArbol(), (snap) => {
-        renderArbol(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        const idxEtapa = ETAPAS_ARBOL.indexOf(etapaArbol(datos?.puntos || 0));
+        if (window.sfx && _arbolEtapaAnterior !== null && idxEtapa > _arbolEtapaAnterior) window.sfx.logro();
+        _arbolEtapaAnterior = idxEtapa;
+        renderArbol(datos);
     }, (err) => {
         console.error('Error de Firestore en arbol:', err);
         document.getElementById('contenido-arbol').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -52,6 +58,7 @@ function renderArbol(estado){
 
 async function agregarPuntosArbol(cantidad, mensaje){
     vibrarJ([12, 20, 12]);
+    if (window.sfx) window.sfx.pop();
     // Transacción: leer y despues escribir por separado hacía que, si
     // Nico y Carito sumaban puntos casi al mismo tiempo, el que escribe
     // último pisara la suma del otro (uno de los dos aportes se perdía).

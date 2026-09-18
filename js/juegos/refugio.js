@@ -88,8 +88,9 @@ async function colocarEnRefugio(celda){
         tx.set(puntosRef, { [miIdentidad]: (puntos[miIdentidad] || 0) - item.costo }, { merge: true });
         return { ok: true };
     });
-    if (!resultado.ok) { vibrarJ([10, 30, 10]); return; }
+    if (!resultado.ok) { vibrarJ([10, 30, 10]); if (window.sfx) window.sfx.error(); return; }
     vibrarJ([15, 30, 15]);
+    if (window.sfx) window.sfx.moneda();
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} agregó ${item.nombre || 'algo'} a El Refugio`);
     }

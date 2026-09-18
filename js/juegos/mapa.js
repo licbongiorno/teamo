@@ -80,6 +80,7 @@ async function agregarLugarMapa(){
     const descripcion = document.getElementById('input-desc-lugar').value.trim();
     if (!nombre) return;
     vibrarJ(12);
+    if (window.sfx) window.sfx.pop();
     await window.addDoc(window.collection(window.db, 'juegos'), {
         tipo: 'lugar-mapa', nombre, descripcion, categoria: _categoriaElegidaMapa,
         autor: miIdentidad, creadoEn: Date.now()

@@ -148,6 +148,7 @@ async function regarJardin(){
             const nuevoProgreso = estado.formaElegida ? (estado.progreso || 0) : Math.min(100, (estado.progreso || 0) + CRECIMIENTO_POR_CUIDADO_JARDIN);
             tx.update(ref, { ultimoRiego: window.serverTimestamp(), progreso: nuevoProgreso });
         });
+        if (window.sfx) window.sfx.pop();
         if (typeof registrarEvento === 'function') {
             registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} regó El Jardín Compartido`);
         }
@@ -164,6 +165,7 @@ async function darSolJardin(){
             const nuevoProgreso = estado.formaElegida ? (estado.progreso || 0) : Math.min(100, (estado.progreso || 0) + CRECIMIENTO_POR_CUIDADO_JARDIN);
             tx.update(ref, { ultimoSol: window.serverTimestamp(), progreso: nuevoProgreso });
         });
+        if (window.sfx) window.sfx.pop();
     } catch (e) { console.error('Error dando sol al jardín:', e); }
 }
 
@@ -177,6 +179,7 @@ async function elegirFormaJardin(forma){
             formaElegida: forma,
             historial: pushLog(estado, `🌟 El jardín se convirtió en ${nombreForma}, entre los dos.`)
         });
+        if (window.sfx) window.sfx.logro();
     } catch (e) { console.error('Error eligiendo la forma final del jardín:', e); }
 }
 

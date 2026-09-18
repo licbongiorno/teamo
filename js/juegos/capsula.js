@@ -4,10 +4,16 @@
 // fecha que elijan. Se abre sola cuando llega el día.
 function refCapsula(){ return window.doc(window.db, 'juegos', 'capsula'); }
 
+let _capsulaAbiertaAnterior = null;
 function iniciarCapsula(){
+    _capsulaAbiertaAnterior = null;
     if (window._unsubCapsula) window._unsubCapsula();
     window._unsubCapsula = window.onSnapshot(refCapsula(), (snap) => {
-        renderCapsula(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        const abierta = !!datos && Date.now() >= datos.fechaApertura;
+        if (window.sfx && _capsulaAbiertaAnterior === false && abierta) window.sfx.logro();
+        _capsulaAbiertaAnterior = datos ? abierta : null;
+        renderCapsula(datos);
     }, (err) => {
         console.error('Error de Firestore en cápsula:', err);
         document.getElementById('contenido-capsula').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -79,6 +85,7 @@ function renderCapsula(estado){
 
 async function crearCapsula(dias){
     vibrarJ(12);
+    if (window.sfx) window.sfx.swoosh();
     await window.setDoc(refCapsula(), {
         fechaApertura: Date.now() + dias * 86400000, items: [], creadaEn: Date.now()
     });
@@ -103,6 +110,7 @@ async function agregarItemCapsula(){
     });
     if (!agregado) return;
     input.value = '';
+    if (window.sfx) window.sfx.pop();
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} agregó algo a la Cápsula del Tiempo`);
     }

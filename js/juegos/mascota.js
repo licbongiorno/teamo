@@ -79,6 +79,7 @@ function renderMascota(estado){
 
 async function cuidarMascota(tipo){
     vibrarJ(15);
+    if (window.sfx) window.sfx.moneda();
     const estado = await new Promise(res => { const u = window.onSnapshot(refMascota(), s => { u(); res(s.exists() ? s.data() : {}); }); });
     const ahora = Date.now();
     const historial = [...(estado.historial || []), { tipo, autor: miIdentidad, timestamp: ahora }].slice(-10);

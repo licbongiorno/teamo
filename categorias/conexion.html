@@ -34,11 +34,11 @@
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(function(){});</script>
 <script src="../js/icon-sprite.js?v=5"></script>
 
-<div class="contenedor">
+<div class="contenedor" style="--color-cat:#c9b6ff;">
     <div class="encabezado">
         <a href="../juegos.html" class="btn-volver"><svg class="icono-svg"><use href="#icono-flecha-izq"></use></svg> Categorías</a>
     </div>
-    <div class="titulo-app" style="--color-cat:#c9b6ff;"><svg class="icono-svg"><use href="#icono-chat"></use></svg> Conexión</div>
+    <div class="titulo-app"><svg class="icono-svg"><use href="#icono-chat"></use></svg> Conexión</div>
     <div class="subtitulo-app">Para conocerse mejor, preguntarse cosas y comparar qué tanto coinciden.</div>
     <input type="text" id="buscador-categoria" class="input-buscador" placeholder="🔍 Filtrar por nombre..." autocomplete="off" oninput="filtrarCategoria()">
     <div class="lista-juegos-categoria" id="lista-juegos-categoria"></div>

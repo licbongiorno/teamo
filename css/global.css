@@ -218,15 +218,22 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 .input-buscador:focus{ border-color:rgba(255,179,198,0.5); }
 
 .lista-juegos-categoria{ display:flex; flex-direction:column; gap:12px; }
+/* --color-cat viene heredado de .contenedor en categorias/*.html (cada
+   página de categoría lo trae puesto), así toda la lista se tiñe con
+   el color de esa categoría en vez de verse gris pareja. En juegos.html
+   (sin --color-cat en contexto, por ejemplo la sugerencia del día) cae
+   al rosa por defecto. */
 .tarjeta-juego-cat{
-    background:var(--panel); border:1px solid var(--borde); border-radius:18px; padding:16px;
+    background:var(--panel); border:1px solid var(--borde);
+    border-left:3px solid color-mix(in srgb, var(--color-cat, var(--rosa)) 55%, var(--borde));
+    border-radius:18px; padding:16px;
     display:flex; align-items:center; gap:14px; text-decoration:none; color:var(--texto);
     transition:transform 0.2s ease, background 0.2s ease;
 }
 .tarjeta-juego-cat.disponible{ cursor:pointer; }
 .tarjeta-juego-cat.disponible:active{ transform:scale(0.97); background:rgba(255,255,255,0.1); }
 .tarjeta-juego-cat.proximamente{ opacity:0.55; cursor:default; }
-.tarjeta-juego-cat .icono-juego{ font-size:2rem; flex-shrink:0; width:48px; text-align:center; display:flex; align-items:center; justify-content:center; }
+.tarjeta-juego-cat .icono-juego{ font-size:2rem; flex-shrink:0; width:48px; text-align:center; display:flex; align-items:center; justify-content:center; color:var(--color-cat, var(--texto)); }
 .tarjeta-juego-cat .icono-juego .icono-svg{ width:1.8rem; height:1.8rem; }
 .tarjeta-juego-cat .info-juego{ flex:1; }
 .tarjeta-juego-cat h3{ margin:0 0 3px; font-size:1rem; }
@@ -257,13 +264,17 @@ html[data-tema="claro"], html[data-tema="claro"] body{
     background: radial-gradient(ellipse 140% 90% at 50% 0%, #fffaf9 0%, var(--bg-oscuro) 55%, #efe3fa 100%);
 }
 html[data-tema="claro"] .texto-tenue{ opacity:0.62; }
-html[data-tema="claro"] .panel,
-html[data-tema="claro"] .tarjeta-juego-cat{
+html[data-tema="claro"] .panel{
     background: rgba(60,40,30,0.05); border-color: rgba(60,40,30,0.13);
 }
-/* .tarjeta-categoria queda afuera de la regla de arriba a propósito:
-   así conserva su tinte pastel por categoría (--color-cat) también en
-   tema claro, en vez de volver todo al mismo beige plano. */
+html[data-tema="claro"] .tarjeta-juego-cat{
+    background: rgba(60,40,30,0.05); border-top-color: rgba(60,40,30,0.13);
+    border-right-color: rgba(60,40,30,0.13); border-bottom-color: rgba(60,40,30,0.13);
+}
+/* .tarjeta-categoria y el borde izquierdo de .tarjeta-juego-cat quedan
+   afuera de estos resets a propósito: así conservan su tinte pastel
+   por categoría (--color-cat) también en tema claro, en vez de volver
+   todo al mismo beige plano. */
 
 .btn-icono-header{
     background:transparent; border:1px solid var(--borde); border-radius:50%;

@@ -25,6 +25,7 @@ function iniciarRitmo(){
         if (datos && datos.fase === 'terminado' && _ritmoFaseAnterior && _ritmoFaseAnterior !== 'terminado' && window.sfx) {
             if (!datos.ganador) window.sfx.empate();
             else window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _ritmoFaseAnterior = datos ? datos.fase : null;
         renderRitmo(datos);

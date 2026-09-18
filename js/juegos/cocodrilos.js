@@ -17,6 +17,7 @@ function iniciarCocodrilos(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'terminado' && _cocodrilosFaseAnterior && _cocodrilosFaseAnterior !== 'terminado' && window.sfx) {
             window.sfx[datos.contador >= META_COCODRILOS ? 'logro' : 'derrota']();
+            if (window.fx && (datos.contador >= META_COCODRILOS)) window.fx.confeti();
         }
         _cocodrilosFaseAnterior = datos ? datos.fase : null;
         renderCocodrilos(datos);

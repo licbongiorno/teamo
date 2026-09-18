@@ -20,6 +20,7 @@ function iniciarReflejos(){
                 const ahora = datos.puntajes || { nico: 0, carito: 0 };
                 const gano = ahora.nico > (antes.nico || 0) ? 'nico' : (ahora.carito > (antes.carito || 0) ? 'carito' : null);
                 if (gano) window.sfx[gano === miIdentidad ? 'victoria' : 'derrota']();
+                if (gano === miIdentidad && window.fx) window.fx.confeti();
             }
         }
         _reflejosFaseAnterior = datos ? datos.fase : null;

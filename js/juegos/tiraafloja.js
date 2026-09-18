@@ -11,6 +11,7 @@ function iniciarTiraAfloja(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'terminado' && _tiraAflojaFaseAnterior === 'jugando' && window.sfx) {
             window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _tiraAflojaFaseAnterior = datos ? datos.fase : null;
         renderTiraAfloja(datos);

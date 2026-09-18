@@ -81,7 +81,11 @@ function abrirCartaReflexion(juegoId, id){
         // Sonido de revelación sólo en la transición real (no al reabrir
         // una ronda que ya estaba revelada de antes): así suena para los
         // dos, cada uno en su propio dispositivo, apenas se completa.
-        if (faseAnterior === 'respondiendo' && datos.fase === 'revelado' && window.sfx) window.sfx.revelar();
+        if (faseAnterior === 'respondiendo' && datos.fase === 'revelado') {
+            if (window.sfx) window.sfx.revelar();
+            const cfg = window.CONFIG_REFLEXION[juegoId];
+            if (cfg.tipo === 'opciones' && datos.respuestas.nico === datos.respuestas.carito && window.fx) window.fx.confeti();
+        }
         faseAnterior = datos.fase;
         renderCartaReflexion(juegoId, { id: snap.id, ...datos });
     }, (err) => console.error(`Error de Firestore en carta ${juegoId}:`, err));

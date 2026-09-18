@@ -74,6 +74,7 @@ function mostrarToastLogro(logro){
     document.body.appendChild(toast);
     vibrarJ([15, 40, 15]);
     if (window.sfx) window.sfx.logro();
+    if (window.fx) window.fx.confeti();
     setTimeout(() => toast.classList.add('toast-logro-salir'), 3200);
     setTimeout(() => toast.remove(), 3700);
 }

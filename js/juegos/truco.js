@@ -115,6 +115,7 @@ function iniciarTruco(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'terminado' && _trucoFaseAnterior && _trucoFaseAnterior !== 'terminado' && window.sfx) {
             window.sfx[datos.ganadorPartida === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganadorPartida === miIdentidad)) window.fx.confeti();
         }
         _trucoFaseAnterior = datos ? datos.fase : null;
         renderTruco(datos);

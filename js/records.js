@@ -27,6 +27,7 @@ async function actualizarRecordSiSupera(juego, valor){
         if (valor <= actual) return false;
         await window.setDoc(ref, { [juego]: valor }, { merge: true });
         if (window.sfx) window.sfx.logro();
+        if (window.fx) window.fx.confeti();
         return true;
     } catch (e) {
         console.warn('No se pudo actualizar el record de', juego, e);

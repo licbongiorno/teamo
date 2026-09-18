@@ -18,6 +18,7 @@ function iniciarCarreraGlobos(){
         if (datos && datos.fase === 'terminado' && _carreraGlobosFaseAnterior && _carreraGlobosFaseAnterior !== 'terminado' && window.sfx) {
             if (!datos.ganador) window.sfx.empate();
             else window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _carreraGlobosFaseAnterior = datos ? datos.fase : null;
         renderCarreraGlobos(datos);

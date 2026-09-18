@@ -14,6 +14,7 @@ function iniciarConecta4(){
         if (datos && datos.fase === 'terminado' && _conecta4FaseAnterior === 'jugando' && window.sfx) {
             if (datos.ganador === 'empate') window.sfx.empate();
             else window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _conecta4FaseAnterior = datos ? datos.fase : null;
         renderConecta4(datos);

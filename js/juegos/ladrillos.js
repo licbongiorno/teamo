@@ -16,6 +16,7 @@ function iniciarLadrillos(){
     window._unsubLadrillos = window.onSnapshot(refLadrillos(), (snap) => {
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'terminado' && _ladrillosFaseAnterior === 'jugando' && window.sfx) window.sfx.logro();
+        if (window.fx) window.fx.confeti();
         _ladrillosFaseAnterior = datos ? datos.fase : null;
         renderLadrillos(datos);
     }, (err) => {

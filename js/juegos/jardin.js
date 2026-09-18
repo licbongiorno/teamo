@@ -180,6 +180,7 @@ async function elegirFormaJardin(forma){
             historial: pushLog(estado, `🌟 El jardín se convirtió en ${nombreForma}, entre los dos.`)
         });
         if (window.sfx) window.sfx.logro();
+        if (window.fx) window.fx.confeti();
     } catch (e) { console.error('Error eligiendo la forma final del jardín:', e); }
 }
 

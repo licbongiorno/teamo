@@ -201,6 +201,7 @@ async function finalizarRondaFrutas(puntajeObtenido){
         console.error('No se pudo guardar el puntaje de frutas:', e);
     }
     if (window.sfx) window.sfx[esNuevoMejor ? 'logro' : 'derrota']();
+    if (esNuevoMejor && window.fx) window.fx.confeti();
 
     const cont = document.getElementById('contenido-frutas');
     cont.innerHTML = `

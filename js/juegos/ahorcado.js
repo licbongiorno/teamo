@@ -33,6 +33,7 @@ function iniciarAhorcado(){
         if (datos && (datos.fase === 'ganado' || datos.fase === 'perdido') &&
             _ahorcadoFaseAnterior === 'jugando' && window.sfx) {
             window.sfx[datos.fase === 'ganado' ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.fase === 'ganado')) window.fx.confeti();
         }
         _ahorcadoFaseAnterior = datos ? datos.fase : null;
         renderAhorcado(datos);

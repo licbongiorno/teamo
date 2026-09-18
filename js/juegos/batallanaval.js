@@ -12,6 +12,7 @@ function iniciarBatallaNaval(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'terminado' && _batallaNavalFaseAnterior === 'atacando' && window.sfx) {
             window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _batallaNavalFaseAnterior = datos ? datos.fase : null;
         renderBatallaNaval(datos);

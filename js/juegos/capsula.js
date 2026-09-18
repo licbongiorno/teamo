@@ -12,6 +12,7 @@ function iniciarCapsula(){
         const datos = snap.exists() ? snap.data() : null;
         const abierta = !!datos && Date.now() >= datos.fechaApertura;
         if (window.sfx && _capsulaAbiertaAnterior === false && abierta) window.sfx.logro();
+        if (window.fx) window.fx.confeti();
         _capsulaAbiertaAnterior = datos ? abierta : null;
         renderCapsula(datos);
     }, (err) => {

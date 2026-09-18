@@ -24,6 +24,7 @@ function iniciarBloques(){
         if (data && data.fase === 'terminado' && _bloquesFaseAnterior && _bloquesFaseAnterior !== 'terminado' && window.sfx) {
             if (!data.ganador) window.sfx.empate();
             else window.sfx[data.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (data.ganador === miIdentidad)) window.fx.confeti();
         }
         _bloquesFaseAnterior = data ? data.fase : null;
         manejarSnapshotBloques(data);

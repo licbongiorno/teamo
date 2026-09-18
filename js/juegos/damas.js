@@ -27,6 +27,7 @@ function iniciarDamas(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'terminado' && _damasFaseAnterior === 'jugando' && window.sfx) {
             window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _damasFaseAnterior = datos ? datos.fase : null;
         renderDamas(datos);

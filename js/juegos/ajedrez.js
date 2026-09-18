@@ -25,6 +25,7 @@ function iniciarAjedrez(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'terminado' && _ajedrezFaseAnterior === 'jugando' && window.sfx) {
             window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _ajedrezFaseAnterior = datos ? datos.fase : null;
         renderAjedrez(datos);

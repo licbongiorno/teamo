@@ -121,6 +121,7 @@ function iniciarAdivinaQuien(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'terminado' && _adivinaQuienFaseAnterior && _adivinaQuienFaseAnterior !== 'terminado' && window.sfx) {
             window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _adivinaQuienFaseAnterior = datos ? datos.fase : null;
         renderAdivinaQuien(datos);

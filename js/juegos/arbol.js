@@ -17,6 +17,7 @@ function iniciarArbol(){
         const datos = snap.exists() ? snap.data() : null;
         const idxEtapa = ETAPAS_ARBOL.indexOf(etapaArbol(datos?.puntos || 0));
         if (window.sfx && _arbolEtapaAnterior !== null && idxEtapa > _arbolEtapaAnterior) window.sfx.logro();
+        if (window.fx) window.fx.confeti();
         _arbolEtapaAnterior = idxEtapa;
         renderArbol(datos);
     }, (err) => {

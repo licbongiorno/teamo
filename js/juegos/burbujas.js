@@ -20,6 +20,7 @@ function iniciarBurbujas(){
             const p = datos.puntajes || { nico: 0, carito: 0 };
             if (p.nico === p.carito) window.sfx.empate();
             else window.sfx[(p.nico > p.carito ? 'nico' : 'carito') === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && ((p.nico > p.carito ? 'nico' : 'carito') === miIdentidad)) window.fx.confeti();
         }
         _burbujasFaseAnterior = datos ? datos.fase : null;
         renderBurbujas(datos);

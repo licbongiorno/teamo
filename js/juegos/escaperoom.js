@@ -35,6 +35,7 @@ function iniciarEscapeRoom(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && window.sfx && _escapeRoomEtapaAnterior !== null && datos.etapaActual > _escapeRoomEtapaAnterior) {
             window.sfx[datos.etapaActual >= ETAPAS_ESCAPEROOM.length ? 'logro' : 'acierto']();
+            if (window.fx && (datos.etapaActual >= ETAPAS_ESCAPEROOM.length)) window.fx.confeti();
         }
         _escapeRoomEtapaAnterior = datos ? datos.etapaActual : null;
         renderEscapeRoom(datos);

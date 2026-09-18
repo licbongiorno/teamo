@@ -17,6 +17,7 @@ function iniciarTateti(){
         if (datos && datos.fase === 'terminado' && _tatetiFaseAnterior === 'jugando' && window.sfx) {
             if (datos.ganador === 'empate') window.sfx.empate();
             else window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+            if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _tatetiFaseAnterior = datos ? datos.fase : null;
         renderTateti(datos);

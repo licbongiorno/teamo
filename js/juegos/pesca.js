@@ -19,6 +19,7 @@ function iniciarPesca(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'terminado' && _pescaFaseAnterior && _pescaFaseAnterior !== 'terminado' && window.sfx) {
             window.sfx[datos.contador >= META_PESCA ? 'logro' : 'derrota']();
+            if (window.fx && (datos.contador >= META_PESCA)) window.fx.confeti();
         }
         _pescaFaseAnterior = datos ? datos.fase : null;
         renderPesca(datos);

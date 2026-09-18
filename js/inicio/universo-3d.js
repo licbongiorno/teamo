@@ -53,6 +53,128 @@
         return 'rgba(253,246,240,' + alfa + ')';
     }
 
+    // ---------------- Planetas (fondo, decorativos, tonos pasteles) ----------------
+    // Mismos colores que ya usa el resto del sitio (rosa/lila/menta/melocotón
+    // pastel) para que se sienta parte del mismo universo, no algo pegado.
+    var PLANETAS = [
+        { xFrac: 0.14, yFrac: 0.12, r: 20, centro: '#fff0f6', borde: '#ffb3c6', anillo: false, parallax: 32, freq: 0.7, fase: 0.3 },
+        { xFrac: 0.87, yFrac: 0.58, r: 15, centro: '#f2ecff', borde: '#c9b6ff', anillo: true, parallax: 28, freq: 0.55, fase: 1.8 },
+        { xFrac: 0.16, yFrac: 0.88, r: 11, centro: '#eafffb', borde: '#a8edea', anillo: false, parallax: 24, freq: 0.85, fase: 3.1 }
+    ];
+
+    function dibujarPlanetas(t) {
+        PLANETAS.forEach(function (p) {
+            var bobY = reducirMovimiento ? 0 : Math.sin(t / 1000 * p.freq + p.fase) * 4;
+            var px = p.xFrac * anchoCss + parallaxX * p.parallax;
+            var py = p.yFrac * altoCss + bobY + parallaxY * p.parallax;
+
+            if (p.anillo) {
+                ctx.save();
+                ctx.translate(px, py);
+                ctx.rotate(-0.35);
+                ctx.scale(1, 0.32);
+                ctx.beginPath();
+                ctx.arc(0, 0, p.r * 1.75, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(201,182,255,0.55)';
+                ctx.lineWidth = 2.2;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            var grad = ctx.createRadialGradient(px - p.r * 0.35, py - p.r * 0.35, p.r * 0.1, px, py, p.r);
+            grad.addColorStop(0, p.centro);
+            grad.addColorStop(1, p.borde);
+            ctx.save();
+            ctx.shadowColor = p.borde;
+            ctx.shadowBlur = 14;
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(px, py, p.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+    }
+
+    // ---------------- Sol (glow suave, un solo foco cálido pastel) ----------------
+    var SOL = { xFrac: 0.82, yFrac: 0.1, r: 17, fase: 0 };
+
+    function dibujarSol(t) {
+        var px = SOL.xFrac * anchoCss + parallaxX * 20;
+        var py = SOL.yFrac * altoCss + parallaxY * 20;
+        var pulso = reducirMovimiento ? 1 : 0.9 + 0.1 * Math.sin(t / 1000 * 0.6);
+
+        var halo = ctx.createRadialGradient(px, py, 0, px, py, SOL.r * 5.5 * pulso);
+        halo.addColorStop(0, 'rgba(255,224,179,0.5)');
+        halo.addColorStop(0.4, 'rgba(255,214,214,0.16)');
+        halo.addColorStop(1, 'rgba(255,214,214,0)');
+        ctx.save();
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(px, py, SOL.r * 5.5 * pulso, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        var nucleo = ctx.createRadialGradient(px - SOL.r * 0.3, py - SOL.r * 0.3, 1, px, py, SOL.r);
+        nucleo.addColorStop(0, '#fffdf5');
+        nucleo.addColorStop(1, '#ffd8a8');
+        ctx.save();
+        ctx.fillStyle = nucleo;
+        ctx.beginPath();
+        ctx.arc(px, py, SOL.r * pulso, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // ---------------- Meteoritos (campo lento, distinto de las fugaces) ----------------
+    // Rocas chiquitas a la deriva, con sombreado en dos tonos (no un
+    // trazo de luz como las fugaces) — dan sensación de profundidad y
+    // movimiento constante sin robarle protagonismo al corazón.
+    var meteoros = [];
+    function crearMeteoros() {
+        meteoros = [];
+        for (var i = 0; i < 5; i++) {
+            meteoros.push({
+                x: Math.random(), y: Math.random(),
+                r: 2.5 + Math.random() * 3.5,
+                velX: (0.006 + Math.random() * 0.01) * (Math.random() < 0.5 ? 1 : -1),
+                velY: 0.004 + Math.random() * 0.008,
+                rot: Math.random() * Math.PI * 2,
+                velRot: (Math.random() < 0.5 ? 1 : -1) * (0.2 + Math.random() * 0.3),
+                tinte: Math.random() < 0.5 ? ['#ffd9ea', '#ffb3c6'] : ['#e4dbff', '#c9b6ff']
+            });
+        }
+    }
+
+    function dibujarMeteoros(dtSeg) {
+        meteoros.forEach(function (m) {
+            if (!reducirMovimiento) {
+                m.x = (m.x + m.velX * dtSeg + 1) % 1;
+                m.y = (m.y + m.velY * dtSeg + 1) % 1;
+                m.rot += m.velRot * dtSeg;
+            }
+            var px = m.x * anchoCss + parallaxX * 18;
+            var py = m.y * altoCss + parallaxY * 18;
+            ctx.save();
+            ctx.translate(px, py);
+            ctx.rotate(m.rot);
+            var grad = ctx.createLinearGradient(-m.r, -m.r, m.r, m.r);
+            grad.addColorStop(0, m.tinte[0]);
+            grad.addColorStop(1, m.tinte[1]);
+            ctx.fillStyle = grad;
+            ctx.globalAlpha = 0.75;
+            ctx.beginPath();
+            // Piedrita con lados un poco irregulares en vez de un círculo perfecto.
+            ctx.moveTo(m.r, 0);
+            ctx.lineTo(m.r * 0.3, m.r * 0.9);
+            ctx.lineTo(-m.r * 0.8, m.r * 0.5);
+            ctx.lineTo(-m.r * 0.9, -m.r * 0.4);
+            ctx.lineTo(m.r * 0.2, -m.r);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        });
+    }
+
     // ---------------- Estrellas fugaces ----------------
     function programarProximaFugaz(t) {
         proximaFugazEn = t + 2600 + Math.random() * 5200;
@@ -119,10 +241,16 @@
 
     // ---------------- Loop principal ----------------
     var parallaxX = 0, parallaxY = 0; // -1..1, viene del tilt del corazón
+    var ultimoFrameT = 0;
 
     function dibujarFrame(t) {
         if (!animando) return;
+        var dtSeg = ultimoFrameT ? Math.min((t - ultimoFrameT) / 1000, 0.1) : 0;
+        ultimoFrameT = t;
         ctx.clearRect(0, 0, anchoCss, altoCss);
+
+        dibujarSol(t);
+        dibujarPlanetas(t);
 
         capas.forEach(function (capa) {
             var cfg = capa.cfg;
@@ -143,6 +271,7 @@
             });
         });
 
+        dibujarMeteoros(dtSeg);
         if (!reducirMovimiento) dibujarFugaces(t);
         rafId = requestAnimationFrame(dibujarFrame);
     }
@@ -221,6 +350,7 @@
             if (!canvas) return;
             ctx = canvas.getContext('2d');
             crearCapas();
+            crearMeteoros();
             window.addEventListener('resize', ajustarTamano);
             if (lienzo) {
                 lienzo.addEventListener('pointermove', onPunteroMueve);
@@ -232,6 +362,7 @@
         ajustarTamano();
         if (animando) return;
         animando = true;
+        ultimoFrameT = 0;
         fugaces = [];
         programarProximaFugaz(performance.now());
         rafId = requestAnimationFrame(dibujarFrame);

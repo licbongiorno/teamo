@@ -8,11 +8,16 @@ const COLORES_LADRILLOS = ['#ffb3c6', '#c9b6ff', '#a8d8ff', '#a8edea', '#f5d9a0'
 
 function refLadrillos(){ return window.doc(window.db, 'juegos', 'ladrillos'); }
 
+let _ladrillosFaseAnterior = null;
 function iniciarLadrillos(){
     _ladrillosMostrados = false;
+    _ladrillosFaseAnterior = null;
     if (window._unsubLadrillos) window._unsubLadrillos();
     window._unsubLadrillos = window.onSnapshot(refLadrillos(), (snap) => {
-        renderLadrillos(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _ladrillosFaseAnterior === 'jugando' && window.sfx) window.sfx.logro();
+        _ladrillosFaseAnterior = datos ? datos.fase : null;
+        renderLadrillos(datos);
     }, (err) => {
         console.error('Error de Firestore en ladrillos:', err);
         document.getElementById('contenido-ladrillos').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -123,6 +128,7 @@ async function romperLadrillo(indice){
     });
     if (!resultado) return;
     vibrarJ(8);
+    if (window.sfx) window.sfx.golpe();
     if (!resultado.quedan && typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `Limpiaron la pared en Rompe Ladrillos a Dúo`);
     }

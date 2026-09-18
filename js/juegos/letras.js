@@ -89,9 +89,17 @@ function abrirEscritura(id){
     if (window._unsubLetrasLista) { window._unsubLetrasLista(); window._unsubLetrasLista = null; }
     if (window._unsubEscrituraActual) window._unsubEscrituraActual();
     window._escrituraActualId = id;
+    let _fragmentosAnteriores = null;
     window._unsubEscrituraActual = window.onSnapshot(refEscritura(id), (snap) => {
         if (!snap.exists()) { mostrarListaEscrituras(); return; }
-        renderEscritura({ id: snap.id, ...snap.data() });
+        const datos = snap.data();
+        const fragmentos = datos.fragmentos || [];
+        if (window.sfx && _fragmentosAnteriores !== null && fragmentos.length > _fragmentosAnteriores) {
+            const ultimo = fragmentos[fragmentos.length - 1];
+            if (ultimo && ultimo.autor !== miIdentidad) window.sfx.pop();
+        }
+        _fragmentosAnteriores = fragmentos.length;
+        renderEscritura({ id: snap.id, ...datos });
     }, (err) => {
         console.error('Error de Firestore en escritura:', err);
     });
@@ -142,6 +150,7 @@ async function agregarFragmento(){
     const texto = input.value.trim();
     if (!texto || !window._escrituraActualId) return;
     vibrarJ(12);
+    if (window.sfx) window.sfx.click();
     const id = window._escrituraActualId;
     const snap = await new Promise(res => { const u = window.onSnapshot(refEscritura(id), s => { u(); res(s); }); });
     if (!snap.exists()) return;

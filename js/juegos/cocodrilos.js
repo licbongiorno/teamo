@@ -7,12 +7,19 @@ const CANTIDAD_POZOS = 9;
 
 function refCocodrilos(){ return window.doc(window.db, 'juegos', 'cocodrilos'); }
 
+let _cocodrilosFaseAnterior = null;
 function iniciarCocodrilos(){
     const cont = document.getElementById('contenido-cocodrilos');
     if (cont) delete cont.dataset.jugandoLocal;
+    _cocodrilosFaseAnterior = null;
     if (window._unsubCocodrilos) window._unsubCocodrilos();
     window._unsubCocodrilos = window.onSnapshot(refCocodrilos(), (snap) => {
-        renderCocodrilos(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _cocodrilosFaseAnterior && _cocodrilosFaseAnterior !== 'terminado' && window.sfx) {
+            window.sfx[datos.contador >= META_COCODRILOS ? 'logro' : 'derrota']();
+        }
+        _cocodrilosFaseAnterior = datos ? datos.fase : null;
+        renderCocodrilos(datos);
     }, (err) => {
         console.error('Error de Firestore en cocodrilos:', err);
         if (cont && cont.dataset.jugandoLocal !== '1') {
@@ -122,7 +129,7 @@ async function martillarCocodrilo(indice){
         tx.update(ref, { pozos, contador: (data.contador || 0) + 1 });
         return true;
     });
-    if (golpeado) vibrarJ(15);
+    if (golpeado) { vibrarJ(15); if (window.sfx) window.sfx.golpe(); }
 }
 
 let _spawnCocodrilosActivo = false;

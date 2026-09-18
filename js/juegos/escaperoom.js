@@ -27,10 +27,17 @@ const ETAPAS_ESCAPEROOM = [
 
 function refEscapeRoom(){ return window.doc(window.db, 'juegos', 'escaperoom'); }
 
+let _escapeRoomEtapaAnterior = null;
 function iniciarEscapeRoom(){
+    _escapeRoomEtapaAnterior = null;
     if (window._unsubEscapeRoom) window._unsubEscapeRoom();
     window._unsubEscapeRoom = window.onSnapshot(refEscapeRoom(), (snap) => {
-        renderEscapeRoom(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && window.sfx && _escapeRoomEtapaAnterior !== null && datos.etapaActual > _escapeRoomEtapaAnterior) {
+            window.sfx[datos.etapaActual >= ETAPAS_ESCAPEROOM.length ? 'logro' : 'acierto']();
+        }
+        _escapeRoomEtapaAnterior = datos ? datos.etapaActual : null;
+        renderEscapeRoom(datos);
     }, (err) => {
         console.error('Error de Firestore en escape room:', err);
         document.getElementById('contenido-escaperoom').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -119,6 +126,7 @@ async function intentarEscapeRoom(){
         }
     } else {
         vibrarJ([10, 30, 10]);
+        if (window.sfx) window.sfx.error();
         await window.updateDoc(refEscapeRoom(), { intentosFallidos: (data.intentosFallidos || 0) + 1 });
     }
 }

@@ -276,9 +276,10 @@ async function adivinarDibujo(){
     const data = snap.data();
     if (!data || data.dibujante === miIdentidad) return;
     input.value = '';
-    if (intento !== data.palabra.toLowerCase()) { vibrarJ([10, 30, 10]); return; }
+    if (intento !== data.palabra.toLowerCase()) { vibrarJ([10, 30, 10]); if (window.sfx) window.sfx.error(); return; }
 
     vibrarJ([15, 30, 15]);
+    if (window.sfx) window.sfx.acierto();
     // Sólo suma punto a quien adivinó (miIdentidad, ya que arriba se
     // descartó el caso de que el dibujante intente "adivinar" su propia
     // palabra) — antes se sumaba a los dos siempre, así que el marcador

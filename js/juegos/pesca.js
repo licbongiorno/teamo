@@ -9,12 +9,19 @@ const EMOJI_PECES = ['🐟', '🐠', '🐡'];
 
 function refPesca(){ return window.doc(window.db, 'juegos', 'pesca'); }
 
+let _pescaFaseAnterior = null;
 function iniciarPesca(){
     const cont = document.getElementById('contenido-pesca');
     if (cont) delete cont.dataset.jugandoLocal;
+    _pescaFaseAnterior = null;
     if (window._unsubPesca) window._unsubPesca();
     window._unsubPesca = window.onSnapshot(refPesca(), (snap) => {
-        renderPesca(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _pescaFaseAnterior && _pescaFaseAnterior !== 'terminado' && window.sfx) {
+            window.sfx[datos.contador >= META_PESCA ? 'logro' : 'derrota']();
+        }
+        _pescaFaseAnterior = datos ? datos.fase : null;
+        renderPesca(datos);
     }, (err) => {
         console.error('Error de Firestore en pesca:', err);
         if (cont && cont.dataset.jugandoLocal !== '1') {
@@ -131,6 +138,7 @@ function arrancarCanvasPesca(horaFin){
     async function atrapar(o){
         if (terminando) return;
         vibrarJ(12);
+        if (window.sfx) window.sfx.pop();
         try {
             // increment() es un field transform atómico de Firestore: a
             // diferencia de leer el contador y escribir "leído + 1" por

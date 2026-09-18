@@ -1749,10 +1749,16 @@ let _respuestasLocalesAdn = [];
 
 function renderAdn(estado){
     const cont = document.getElementById('contenido-adn');
-    if (!estado || estado.fase === 'sin_ronda') {
+    if (!estado || estado.fase === 'sin_ronda' || estado.fase === 'esperando') {
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">${PREGUNTAS_ADN.length} preguntas para armar el "ADN" visual de la pareja. No es un test clínico, sólo curiosidad.</p>
-            <button class="btn-principal" onclick="nuevaRondaAdn()">Empezar</button>
+            <div class="texto-tenue" style="margin-bottom:10px;">
+                ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+            </div>
+            <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoAdn()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🧬'}</button>
         </div>`;
         return;
     }
@@ -1773,7 +1779,7 @@ function renderAdn(estado){
                 <div class="barra-medidor"><div class="relleno-medidor barra-crecer" style="width:${pct}%; background:linear-gradient(90deg,var(--rosa),var(--lila));"></div></div>
             </div>`;
         });
-        html += `</div><button class="btn-principal" onclick="nuevaRondaAdn()">🔁 Otra ronda</button>
+        html += `</div><button class="btn-principal" onclick="reiniciarAdn()">🔁 Otra ronda</button>
         <button class="btn-secundario" style="margin-top:8px;" onclick="compartirResultadoAdn()">📸 Descargar como imagen</button>`;
         cont.innerHTML = html;
         window._ultimoResultadoAdn = { conteos, total };
@@ -1812,10 +1818,29 @@ async function refrescarVistaAdn(){
     if (snap.exists()) renderAdn(snap.data());
 }
 
-async function nuevaRondaAdn(){
+// Mismo patrón "los dos listos" que el resto de los clásicos: antes
+// "Empezar"/"Otra ronda" reiniciaba directo, así que se podía arrancar
+// una ronda sin que el otro estuviera ahí para responder.
+async function marcarListoAdn(){
     vibrarJ(12);
     _respuestasLocalesAdn = [];
-    await window.setDoc(refAdn(), { fase: 'jugando', respuestasNico: null, respuestasCarito: null });
+    const ref = refAdn();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.listos?.[miIdentidad]) return;
+        const listos = { ...(estado?.listos || {}), [miIdentidad]: true };
+        if (listos.nico && listos.carito) {
+            tx.set(ref, { fase: 'jugando', listos: {}, respuestasNico: null, respuestasCarito: null });
+        } else {
+            tx.set(ref, { fase: 'esperando', listos }, { merge: true });
+        }
+    });
+}
+
+async function reiniciarAdn(){
+    vibrarJ(12);
+    await window.setDoc(refAdn(), { fase: 'esperando', listos: {} });
 }
 
 async function enviarAdn(){

@@ -31,10 +31,16 @@ function tableroVacioTateti(){ return new Array(9).fill(null); }
 
 function renderTateti(estado){
     const cont = document.getElementById('contenido-tateti');
-    if (!estado || estado.fase === 'sin_partida') {
+    if (!estado || estado.fase === 'sin_partida' || estado.fase === 'esperando') {
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Tres en línea, pero cada uno sólo tiene 3 marcas activas: al poner la 4ta, se te borra la más vieja.</p>
-            <button class="btn-principal" onclick="nuevaPartidaTateti()">Empezar partida</button>
+            <div class="texto-tenue" style="margin-bottom:10px;">
+                ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+            </div>
+            <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoTateti()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! ❌⭕'}</button>
         </div>`;
         return;
     }
@@ -50,7 +56,7 @@ function renderTateti(estado){
     if (estado.fase === 'terminado') {
         html += `<div class="panel texto-centro">
             <div style="font-size:1.2rem; margin-bottom:10px;">${estado.ganador === 'empate' ? '🤝 ¡Empate!' : `🏆 ¡Ganó ${nombreJugador(estado.ganador)}!`}</div>
-            <button class="btn-principal" onclick="nuevaPartidaTateti()">🔁 Jugar de nuevo</button>
+            <button class="btn-principal" onclick="reiniciarTateti()">🔁 Jugar de nuevo</button>
         </div>`;
     } else {
         const esMiTurno = estado.turno === miIdentidad;
@@ -72,18 +78,38 @@ function renderTateti(estado){
     cont.innerHTML = html;
 }
 
-async function nuevaPartidaTateti(){
+// Antes esto arrancaba (o reiniciaba) la partida apenas UNO tocaba el
+// botón, sin esperar al otro — mismo bug que tenía Escoba/Tira y
+// Afloja al principio de la sesión: cualquiera podía pisarle una
+// partida en curso al otro. Ahora sigue el patrón "los dos listos"
+// (transacción: recién arranca cuando ve las DOS marcas adentro de la
+// misma transacción, así nunca hay ventana rota).
+async function marcarListoTateti(){
+    vibrarJ(12);
+    const ref = refTateti();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.listos?.[miIdentidad]) return;
+        const listos = { ...(estado?.listos || {}), [miIdentidad]: true };
+        if (listos.nico && listos.carito) {
+            tx.set(ref, {
+                fase: 'jugando', listos,
+                tablero: tableroVacioTateti(),
+                colas: { nico: [], carito: [] },
+                turno: 'nico', ganador: null, lineaGanadora: null,
+                puntajes: estado?.puntajes || { nico: 0, carito: 0 }
+            });
+        } else {
+            tx.set(ref, { fase: 'esperando', listos, puntajes: estado?.puntajes || { nico: 0, carito: 0 } }, { merge: true });
+        }
+    });
+}
+
+async function reiniciarTateti(){
     vibrarJ(12);
     const anterior = await new Promise(res => { const u = window.onSnapshot(refTateti(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refTateti(), {
-        fase: 'jugando',
-        tablero: tableroVacioTateti(),
-        colas: { nico: [], carito: [] },
-        turno: 'nico',
-        ganador: null,
-        lineaGanadora: null,
-        puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
-    });
+    await window.setDoc(refTateti(), { fase: 'esperando', listos: {}, puntajes: anterior?.puntajes || { nico: 0, carito: 0 } });
 }
 
 // Devuelve el combo ganador ([a,b,c]) o null, para poder resaltarlo

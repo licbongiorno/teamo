@@ -128,10 +128,16 @@ let _trazoActual = null;
 
 function renderDibujaYAdivina(estado){
     const cont = document.getElementById('contenido-dibujayadivina');
-    if (!estado || estado.fase === 'sin_partida') {
+    if (!estado || estado.fase === 'sin_partida' || estado.fase === 'esperando') {
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Uno dibuja con el dedo, el otro adivina. Al acertar, se cambian los roles.</p>
-            <button class="btn-principal" onclick="nuevaPartidaDibujaYAdivina()">Empezar</button>
+            <div class="texto-tenue" style="margin-bottom:10px;">
+                ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+            </div>
+            <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoDibujaYAdivina()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🎨'}</button>
             <button class="btn-secundario" style="margin-top:8px;" onclick="mostrarGaleriaDibujos()">🖼️ Ver galería</button>
         </div>`;
         return;
@@ -260,11 +266,25 @@ function elegirPalabraNueva(excluir){
     return palabra;
 }
 
-async function nuevaPartidaDibujaYAdivina(){
+// Mismo patrón "los dos listos" que el resto de los clásicos: antes
+// "Empezar" arrancaba directo, así que uno podía quedar dibujando
+// para nadie si el otro todavía no había abierto el juego.
+async function marcarListoDibujaYAdivina(){
     vibrarJ(12);
-    await window.setDoc(refDibujaYAdivina(), {
-        fase: 'jugando', dibujante: 'nico', palabra: elegirPalabraNueva(null),
-        trazos: [], puntajes: { nico: 0, carito: 0 }
+    const ref = refDibujaYAdivina();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.listos?.[miIdentidad]) return;
+        const listos = { ...(estado?.listos || {}), [miIdentidad]: true };
+        if (listos.nico && listos.carito) {
+            tx.set(ref, {
+                fase: 'jugando', listos: {}, dibujante: 'nico', palabra: elegirPalabraNueva(null),
+                trazos: [], puntajes: { nico: 0, carito: 0 }
+            });
+        } else {
+            tx.set(ref, { fase: 'esperando', listos }, { merge: true });
+        }
     });
 }
 

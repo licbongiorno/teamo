@@ -28,10 +28,16 @@ function tableroVacioC4(){ return new Array(FILAS_C4 * COLS_C4).fill(null); }
 
 function renderConecta4(estado){
     const cont = document.getElementById('contenido-conecta4');
-    if (!estado || estado.fase === 'sin_partida') {
+    if (!estado || estado.fase === 'sin_partida' || estado.fase === 'esperando') {
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">El clásico de las fichas que caen. Primero en hacer 4 en línea gana.</p>
-            <button class="btn-principal" onclick="nuevaPartidaConecta4()">Empezar partida</button>
+            <div class="texto-tenue" style="margin-bottom:10px;">
+                ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+            </div>
+            <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoConecta4()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🔴🟡'}</button>
         </div>`;
         return;
     }
@@ -43,7 +49,7 @@ function renderConecta4(estado){
     if (estado.fase === 'terminado') {
         html += `<div class="panel texto-centro">
             <div style="font-size:1.2rem; margin-bottom:10px;">${estado.ganador === 'empate' ? '🤝 ¡Empate!' : `🏆 ¡Ganó ${nombreJugador(estado.ganador)}!`}</div>
-            <button class="btn-principal" onclick="nuevaPartidaConecta4()">🔁 Revancha</button>
+            <button class="btn-principal" onclick="reiniciarConecta4()">🔁 Revancha</button>
         </div>`;
     } else {
         const esMiTurno = estado.turno === miIdentidad;
@@ -67,13 +73,32 @@ function renderConecta4(estado){
     cont.innerHTML = html;
 }
 
-async function nuevaPartidaConecta4(){
+// Mismo patrón "los dos listos" que Ta-Te-Ti/Ajedrez/Escoba: antes
+// cualquiera podía arrancar o reiniciar sin el otro, pisándole una
+// partida en curso.
+async function marcarListoConecta4(){
+    vibrarJ(12);
+    const ref = refConecta4();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.listos?.[miIdentidad]) return;
+        const listos = { ...(estado?.listos || {}), [miIdentidad]: true };
+        if (listos.nico && listos.carito) {
+            tx.set(ref, {
+                fase: 'jugando', listos, tablero: tableroVacioC4(), turno: 'nico', ganador: null,
+                lineaGanadora: null, puntajes: estado?.puntajes || { nico: 0, carito: 0 }
+            });
+        } else {
+            tx.set(ref, { fase: 'esperando', listos, puntajes: estado?.puntajes || { nico: 0, carito: 0 } }, { merge: true });
+        }
+    });
+}
+
+async function reiniciarConecta4(){
     vibrarJ(12);
     const anterior = await new Promise(res => { const u = window.onSnapshot(refConecta4(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refConecta4(), {
-        fase: 'jugando', tablero: tableroVacioC4(), turno: 'nico', ganador: null,
-        lineaGanadora: null, puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
-    });
+    await window.setDoc(refConecta4(), { fase: 'esperando', listos: {}, puntajes: anterior?.puntajes || { nico: 0, carito: 0 } });
 }
 
 function filaLibreC4(tablero, col){

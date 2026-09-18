@@ -31,11 +31,17 @@ function renderBatallaNaval(estado){
     const campoDisparos = miIdentidad === 'nico' ? 'disparosNico' : 'disparosCarito';
     const campoDisparosRival = miIdentidad === 'nico' ? 'disparosCarito' : 'disparosNico';
 
-    if (!estado || estado.fase === 'sin_partida') {
+    if (!estado || estado.fase === 'sin_partida' || estado.fase === 'esperando') {
         _seleccionFlotaBN = [];
+        const listoYo = estado?.listos?.[miIdentidad];
+        const listoRival = estado?.listos?.[miRival];
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Tablero de ${TAM_TABLERO_BN}x${TAM_TABLERO_BN}. Ubiquen su flota (${CELDAS_FLOTA_BN} celdas) y después ataquen por turnos.</p>
-            <button class="btn-principal" onclick="nuevaPartidaBatallaNaval()">Empezar partida</button>
+            <div class="texto-tenue" style="margin-bottom:10px;">
+                ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+            </div>
+            <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoBatallaNaval()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🚢'}</button>
         </div>`;
         return;
     }
@@ -63,7 +69,7 @@ function renderBatallaNaval(estado){
     if (estado.fase === 'terminado') {
         cont.innerHTML = `<div class="panel texto-centro">
             <div style="font-size:1.2rem; margin-bottom:14px;">🏆 ¡Ganó ${nombreJugador(estado.ganador)}!</div>
-            <button class="btn-principal" onclick="nuevaPartidaBatallaNaval()">🔁 Revancha</button>
+            <button class="btn-principal" onclick="reiniciarBatallaNaval()">🔁 Revancha</button>
         </div>`;
         return;
     }
@@ -110,15 +116,37 @@ async function refrescarVistaBN(){
     if (snap.exists()) renderBatallaNaval(snap.data());
 }
 
-async function nuevaPartidaBatallaNaval(){
+// Mismo patrón "los dos listos" que el resto de los clásicos: antes
+// "Empezar partida"/"Revancha" reiniciaba directo con un setDoc, así
+// que cualquiera podía pisarle una partida en curso al otro con un
+// toque. Ahora primero confirman los dos (esta transacción) y recién
+// ahí se pasa a 'colocando' (que ya tenía su propio "los dos listos"
+// para la flota).
+async function marcarListoBatallaNaval(){
+    vibrarJ(12);
+    const ref = refBatallaNaval();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado?.listos?.[miIdentidad]) return;
+        const listos = { ...(estado?.listos || {}), [miIdentidad]: true };
+        if (listos.nico && listos.carito) {
+            tx.set(ref, {
+                fase: 'colocando', listos: {},
+                barcosNico: [], barcosCarito: [],
+                disparosNico: [], disparosCarito: [],
+                turno: 'nico', ganador: null
+            });
+        } else {
+            tx.set(ref, { fase: 'esperando', listos }, { merge: true });
+        }
+    });
+}
+
+async function reiniciarBatallaNaval(){
     vibrarJ(12);
     _seleccionFlotaBN = [];
-    await window.setDoc(refBatallaNaval(), {
-        fase: 'colocando', listos: {},
-        barcosNico: [], barcosCarito: [],
-        disparosNico: [], disparosCarito: [],
-        turno: 'nico', ganador: null
-    });
+    await window.setDoc(refBatallaNaval(), { fase: 'esperando', listos: {} });
 }
 
 async function confirmarFlotaBN(){

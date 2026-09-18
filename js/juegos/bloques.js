@@ -68,9 +68,9 @@ function renderBloques(estado){
 
     if (estado.fase === 'jugando') {
         const restante = (estado.horaInicio || Date.now()) - Date.now();
-        if (restante > 0) {
-            cont.innerHTML = `<div class="panel texto-centro" style="font-size:2rem;">${Math.ceil(restante / 1000)}</div>`;
-            _cuentaRegresivaBloques = setTimeout(() => renderBloques(estado), Math.min(restante, 200));
+        if (restante > -500) {
+            cont.innerHTML = htmlCuentaRegresivaArcade(restante);
+            _cuentaRegresivaBloques = setTimeout(() => renderBloques(estado), restante > 0 ? Math.min(restante, 200) : 150);
             return;
         }
         jugarRondaBloques();

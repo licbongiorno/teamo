@@ -120,6 +120,17 @@
 @keyframes pulsoFuego{ 0%,100%{ filter:brightness(1);} 50%{ filter:brightness(1.15);} }
 .texto-reflejos{ font-family:var(--fuente-titulo); font-size:1.8rem; color:var(--texto); text-align:center; padding:0 20px; }
 
+/* ============ CUENTA REGRESIVA COMPARTIDA (juegos en tiempo real) ============ */
+.cuenta-regresiva-arcade{ padding:34px 0; }
+.numero-cuenta-regresiva{
+    font-family:var(--fuente-titulo); font-size:4rem; line-height:1;
+    background:linear-gradient(135deg,var(--rosa),var(--celeste));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation: pulsoCuentaRegresiva 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+.numero-cuenta-regresiva-ya{ font-size:2.6rem; -webkit-text-fill-color:initial; color:var(--verde); }
+@keyframes pulsoCuentaRegresiva{ 0%{ transform:scale(1.7); opacity:0; } 60%{ transform:scale(0.95); opacity:1; } 100%{ transform:scale(1); } }
+
 /* ============ ANIMACIONES COMPARTIDAS (revelados, victorias, feedback) ============ */
 @keyframes revelarFade { from { opacity:0; transform:translateY(14px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
 .reflexion-reveal, .revelado-animado { animation: revelarFade 0.5s cubic-bezier(0.22,1,0.36,1); }

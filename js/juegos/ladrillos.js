@@ -2,6 +2,10 @@
 // Colaborativo: una pared compartida de ladrillos (6x8 = 48). Cada
 // toque de cualquiera rompe un ladrillo. Se cronometra cuánto tardan
 // los dos juntos en dejarla vacía. Se guarda el mejor tiempo.
+// Antes arrancaba apenas uno tocaba "Empezar" (uno solo podía romper
+// toda la pared sin que el otro llegara a entrar): ahora espera a que
+// los dos estén listos, con la misma cuenta regresiva de los demás
+// juegos en vivo (ver arcade-comun.js).
 const FILAS_LADRILLOS = 8, COLUMNAS_LADRILLOS = 6;
 const TOTAL_LADRILLOS = FILAS_LADRILLOS * COLUMNAS_LADRILLOS;
 const COLORES_LADRILLOS = ['#ffb3c6', '#c9b6ff', '#a8d8ff', '#a8edea', '#f5d9a0'];
@@ -32,9 +36,11 @@ function nuevaParedLadrillos(){
 }
 
 let _ladrillosMostrados = false;
+let _cuentaRegresivaLadrillos = null;
 
 function renderLadrillos(estado){
     const cont = document.getElementById('contenido-ladrillos');
+    if (_cuentaRegresivaLadrillos) { clearTimeout(_cuentaRegresivaLadrillos); _cuentaRegresivaLadrillos = null; }
 
     if (!estado || estado.fase === 'sin_partida') {
         _ladrillosMostrados = false;
@@ -43,8 +49,27 @@ function renderLadrillos(estado){
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Pared compartida de ${TOTAL_LADRILLOS} ladrillos. Entre los dos, a la vez, rompanla lo más rápido posible.</p>
             ${mejor ? `<div class="texto-tenue" style="margin-bottom:10px;">🏆 Mejor tiempo: ${(mejor / 1000).toFixed(1)}s</div>` : ''}
-            <button class="btn-principal" onclick="empezarLadrillos()">Empezar</button>
+            <button class="btn-principal" onclick="marcarListoLadrillos()">Empezar</button>
         </div>`;
+        return;
+    }
+
+    if (estado.fase === 'esperando') {
+        _ladrillosMostrados = false;
+        if (window._tickLadrillos) { clearInterval(window._tickLadrillos); window._tickLadrillos = null; }
+        const listoYo = estado.listos?.[miIdentidad];
+        const listoRival = estado.listos?.[miRival];
+        const mejor = estado.mejorTiempoMs;
+        cont.innerHTML = `<div class="panel texto-centro">
+            <p class="texto-tenue">Pared compartida de ${TOTAL_LADRILLOS} ladrillos. Entre los dos, a la vez, rompanla lo más rápido posible.</p>
+            ${mejor ? `<div class="texto-tenue" style="margin-bottom:10px;">🏆 Mejor tiempo: ${(mejor / 1000).toFixed(1)}s</div>` : ''}
+            <div class="texto-tenue" style="margin-bottom:10px;">
+                ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+            </div>
+            <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoLadrillos()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🧱'}</button>
+        </div>`;
+        if (listoYo && listoRival) iniciarRondaArcadeSiCorresponde(refLadrillos(), 'ladrillos', 0, { ladrillos: nuevaParedLadrillos() });
         return;
     }
 
@@ -56,12 +81,20 @@ function renderLadrillos(estado){
             <div style="font-size:1.3rem; margin-bottom:6px;">🎉 ¡Pared limpia!</div>
             <div style="font-size:1.6rem;">${tiempo.toFixed(1)}s</div>
             <div class="texto-tenue" style="margin-top:6px;">${estado.mejorTiempoMs && estado.mejorTiempoMs < (tiempo*1000 - 1) ? `Mejor marca sigue siendo ${(estado.mejorTiempoMs/1000).toFixed(1)}s` : '🏆 ¡Nuevo mejor tiempo!'}</div>
-            <button class="btn-principal" style="margin-top:14px;" onclick="empezarLadrillos()">🔁 Otra pared</button>
+            <button class="btn-principal" style="margin-top:14px;" onclick="revanchaLadrillos()">🔁 Otra pared</button>
         </div>`;
         return;
     }
 
-    // jugando
+    // fase === 'jugando'
+    const restante = (estado.horaInicio || Date.now()) - Date.now();
+    if (restante > -500) {
+        _ladrillosMostrados = false;
+        cont.innerHTML = htmlCuentaRegresivaArcade(restante);
+        _cuentaRegresivaLadrillos = setTimeout(() => renderLadrillos(estado), restante > 0 ? Math.min(restante, 200) : 150);
+        return;
+    }
+
     if (!_ladrillosMostrados) {
         _ladrillosMostrados = true;
         let html = `<div class="panel texto-centro">
@@ -92,13 +125,21 @@ function renderLadrillos(estado){
     if (elR) elR.innerText = `${restantes} ladrillos quedan`;
 }
 
-async function empezarLadrillos(){
+async function marcarListoLadrillos(){
     vibrarJ(12);
-    const snap = await new Promise(res => { const u = window.onSnapshot(refLadrillos(), s => { u(); res(s); }); });
-    const anterior = snap.exists() ? snap.data() : null;
+    const estado = await new Promise(res => { const u = window.onSnapshot(refLadrillos(), s => { u(); res(s.exists() ? s.data() : null); }); });
     await window.setDoc(refLadrillos(), {
-        fase: 'jugando', ladrillos: nuevaParedLadrillos(), horaInicio: Date.now(),
-        mejorTiempoMs: anterior?.mejorTiempoMs || null
+        fase: 'esperando',
+        listos: { ...(estado?.listos || {}), [miIdentidad]: true },
+        mejorTiempoMs: estado?.mejorTiempoMs || null
+    }, { merge: true });
+}
+
+async function revanchaLadrillos(){
+    vibrarJ(10);
+    const estado = await new Promise(res => { const u = window.onSnapshot(refLadrillos(), s => { u(); res(s.exists() ? s.data() : null); }); });
+    await window.setDoc(refLadrillos(), {
+        fase: 'esperando', listos: {}, mejorTiempoMs: estado?.mejorTiempoMs || null
     });
 }
 

@@ -26,6 +26,22 @@ async function iniciarRondaArcadeSiCorresponde(refDoc, juegoId, duracionMs, extr
     setTimeout(() => { _iniciandoRondaArcade[juegoId] = false; }, 1000);
 }
 
+// HTML compartido para el "3, 2, 1, ¡Ya!" que se ve mientras
+// horaInicio todavía no llegó: mismo momento para los dos (calculado
+// contra el horaInicio guardado en Firestore, no contra el reloj de
+// cada dispositivo por separado), así arrancan realmente parejos.
+function htmlCuentaRegresivaArcade(restanteMs){
+    if (restanteMs > 0) {
+        return `<div class="panel texto-centro cuenta-regresiva-arcade">
+            <div class="numero-cuenta-regresiva">${Math.ceil(restanteMs / 1000)}</div>
+        </div>`;
+    }
+    return `<div class="panel texto-centro cuenta-regresiva-arcade">
+        <div class="numero-cuenta-regresiva numero-cuenta-regresiva-ya">¡YA!</div>
+    </div>`;
+}
+window.htmlCuentaRegresivaArcade = htmlCuentaRegresivaArcade;
+
 // Escribe el puntaje propio "en vivo" sin saturar Firestore: como
 // mucho una escritura cada `intervaloMs`.
 const _ultimaEscrituraVivo = {};

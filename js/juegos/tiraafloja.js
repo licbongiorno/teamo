@@ -1,5 +1,9 @@
 // ==================== TIRA Y AFLOJA ====================
 // posicion: 0 = gana Nico, 100 = gana Carito, 50 = centro.
+// Es una carrera de toques en tiempo real: antes arrancaba apenas
+// uno tocaba "Empezar", sin esperar al otro (se podía "ganar" solo,
+// jugando contra nadie). Ahora sigue el mismo patrón "ambos listos"
+// + cuenta regresiva de los demás duelos en vivo (ver arcade-comun.js).
 function refTiraAfloja(){ return window.doc(window.db, 'juegos', 'tiraafloja'); }
 
 let _tiraAflojaFaseAnterior = null;
@@ -23,17 +27,37 @@ function iniciarTiraAfloja(){
 
 let _toquesLocalesTA = 0;
 let _taRondaMontada = false;
+let _cuentaRegresivaTA = null;
 
 function renderTiraAfloja(estado){
     const cont = document.getElementById('contenido-tiraafloja');
+    if (_cuentaRegresivaTA) { clearTimeout(_cuentaRegresivaTA); _cuentaRegresivaTA = null; }
     if (window._intervaloTA) { clearInterval(window._intervaloTA); window._intervaloTA = null; }
 
     if (!estado || estado.fase === 'sin_partida') {
         _taRondaMontada = false;
         cont.innerHTML = `<div class="panel texto-centro">
             <p class="texto-tenue">Toques rápidos para llevar el corazón a tu lado. Nico empuja hacia arriba, Carito hacia abajo.</p>
-            <button class="btn-principal" onclick="nuevaPartidaTiraAfloja()">Empezar</button>
+            <button class="btn-principal" onclick="marcarListoTiraAfloja()">Empezar</button>
         </div>`;
+        return;
+    }
+
+    if (estado.fase === 'esperando') {
+        _taRondaMontada = false;
+        const listoYo = estado.listos?.[miIdentidad];
+        const listoRival = estado.listos?.[miRival];
+        const p = estado.puntajes || { nico: 0, carito: 0 };
+        cont.innerHTML = `<div class="panel texto-centro">
+            <p class="texto-tenue">Toques rápidos para llevar el corazón a tu lado. Nico empuja hacia arriba, Carito hacia abajo.</p>
+            <div class="texto-tenue" style="margin:10px 0;">Nico ${p.nico || 0} — Carito ${p.carito || 0}</div>
+            <div class="texto-tenue" style="margin-bottom:10px;">
+                ${nombreJugador(miIdentidad)}: ${listoYo ? '✅ listo/a' : '⏳ esperando'}<br>
+                ${nombreJugador(miRival)}: ${listoRival ? '✅ listo/a' : '⏳ esperando'}
+            </div>
+            <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoTiraAfloja()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! ❤️'}</button>
+        </div>`;
+        if (listoYo && listoRival) iniciarRondaArcadeSiCorresponde(refTiraAfloja(), 'tiraafloja', 0, { posicion: 50, ganador: null });
         return;
     }
 
@@ -43,8 +67,16 @@ function renderTiraAfloja(estado){
         cont.innerHTML = `<div class="panel texto-centro logro-animado">
             <div style="font-size:1.2rem; margin-bottom:8px;">🏆 ¡Ganó ${nombreJugador(estado.ganador)}!</div>
             <div class="texto-tenue">Nico ${p.nico || 0} — Carito ${p.carito || 0}</div>
-            <button class="btn-principal" style="margin-top:14px;" onclick="nuevaPartidaTiraAfloja()">🔁 Revancha</button>
+            <button class="btn-principal" style="margin-top:14px;" onclick="revanchaTiraAfloja()">🔁 Revancha</button>
         </div>`;
+        return;
+    }
+
+    // fase === 'jugando'
+    const restante = (estado.horaInicio || Date.now()) - Date.now();
+    if (restante > -500) {
+        cont.innerHTML = htmlCuentaRegresivaArcade(restante);
+        _cuentaRegresivaTA = setTimeout(() => renderTiraAfloja(estado), restante > 0 ? Math.min(restante, 200) : 150);
         return;
     }
 
@@ -88,6 +120,16 @@ function tocarTiraAfloja(){
     if (area) { area.classList.remove('sacudir'); void area.offsetWidth; area.classList.add('sacudir'); }
 }
 
+async function marcarListoTiraAfloja(){
+    vibrarJ(12);
+    const estado = await new Promise(res => { const u = window.onSnapshot(refTiraAfloja(), s => { u(); res(s.exists() ? s.data() : null); }); });
+    await window.setDoc(refTiraAfloja(), {
+        fase: 'esperando',
+        listos: { ...(estado?.listos || {}), [miIdentidad]: true },
+        puntajes: estado?.puntajes || { nico: 0, carito: 0 }
+    }, { merge: true });
+}
+
 async function sincronizarTiraAfloja(){
     if (_toquesLocalesTA === 0) return;
     const toques = _toquesLocalesTA;
@@ -110,12 +152,12 @@ async function sincronizarTiraAfloja(){
     await window.updateDoc(refTiraAfloja(), updates);
 }
 
-async function nuevaPartidaTiraAfloja(){
-    vibrarJ(12);
+async function revanchaTiraAfloja(){
+    vibrarJ(10);
     _toquesLocalesTA = 0;
     const snap = await new Promise(res => { const u = window.onSnapshot(refTiraAfloja(), s => { u(); res(s); }); });
     const anterior = snap.exists() ? snap.data() : null;
     await window.setDoc(refTiraAfloja(), {
-        fase: 'jugando', posicion: 50, ganador: null, puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
+        fase: 'esperando', listos: {}, puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
     });
 }

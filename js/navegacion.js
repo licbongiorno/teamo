@@ -82,6 +82,9 @@ async function abrirJuego(juego){
     if (juego === 'stroop') iniciarStroop();
     if (juego === 'anagramas') iniciarAnagramas();
     if (juego === 'tipeo') iniciarTipeo();
+    if (juego === 'topo') iniciarTopo();
+    if (juego === 'blancomovil') iniciarBlancoMovil();
+    if (juego === 'buscaminas') iniciarBuscaminas();
 
     // Presencia: mientras estamos en un juego (no en el menú), avisamos
     // cada tanto que estamos acá, para que el otro vea "está jugando

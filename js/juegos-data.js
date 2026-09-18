@@ -96,6 +96,11 @@ window.JUEGOS = [
     { id:'stroop',     nombre:'Stroop a Dos',          icono:'🎨', iconoSvg:'icono-gotas-color', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: tocá el color de la tinta, no el que dice la palabra. Más difícil de lo que parece.' },
     { id:'anagramas',  nombre:'Carrera de Anagramas',  icono:'🔤', iconoSvg:'icono-letras-caoticas', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: letras desordenadas, el primero en escribir la palabra correcta gana la ronda.' },
     { id:'tipeo',      nombre:'Tipeo Relámpago',       icono:'⌨️', iconoSvg:'icono-teclado', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: la misma frase para los dos, el primero en escribirla igual suma el punto.' },
+
+    // ---- DUELOS EN TIEMPO REAL (tanda 2) ----
+    { id:'topo',        nombre:'Topo Veloz',           icono:'🐹', iconoSvg:'icono-topo', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: el topo aparece en un pozo al azar, tocalo antes de que se esconda.' },
+    { id:'blancomovil', nombre:'Blanco Móvil',         icono:'🎯', iconoSvg:'icono-diana', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: un anillo se cierra sobre el blanco, tocalo lo más cerca posible del centro.' },
+    { id:'buscaminas',  nombre:'Buscaminas Relámpago', icono:'💣', iconoSvg:'icono-mina', categoria:'competencia', disponible:true, descripcion:'Mismo tablero para los dos: el primero que pisa una mina pierde la ronda.' },
 ];
 
 window.obtenerJuegosDeCategoria = function(categoriaId){

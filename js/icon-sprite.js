@@ -104,6 +104,11 @@
         '<symbol id="icono-letras-caoticas" viewBox="0 0 24 24"><text x="5" y="10" font-size="8" font-weight="700" transform="rotate(-12 5 10)" fill="currentColor" stroke="none">A</text><text x="14" y="8" font-size="8" font-weight="700" transform="rotate(10 14 8)" fill="currentColor" stroke="none">B</text><text x="4" y="20" font-size="8" font-weight="700" transform="rotate(8 4 20)" fill="currentColor" stroke="none">C</text><text x="13" y="19" font-size="8" font-weight="700" transform="rotate(-10 13 19)" fill="currentColor" stroke="none">D</text></symbol>' +
         '<symbol id="icono-teclado" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M5.5 9.5h.01M8.5 9.5h.01M11.5 9.5h.01M14.5 9.5h.01M17.5 9.5h.01M5.5 12.5h.01M8.5 12.5h.01M11.5 12.5h.01M14.5 12.5h.01M17.5 12.5h.01" stroke-width="2.6"/><rect x="6.5" y="15" width="11" height="1.8" rx=".9" fill="currentColor" stroke="none"/></symbol>' +
 
+        // --- Duelos en tiempo real (tanda 2) ---
+        '<symbol id="icono-topo" viewBox="0 0 24 24"><path d="M2.5 19a9.5 3 0 0 0 19 0Z"/><path d="M8.5 19c0-3.8 1.6-8 3.5-8s3.5 4.2 3.5 8"/><circle cx="10.6" cy="14.3" r=".8" fill="currentColor" stroke="none"/><circle cx="13.4" cy="14.3" r=".8" fill="currentColor" stroke="none"/></symbol>' +
+        '<symbol id="icono-diana" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.3"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>' +
+        '<symbol id="icono-mina" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="6"/><path d="M12 3v3M6.5 6.5l1.8 1.8M17.5 6.5l-1.8 1.8M4 13.5h3M17 13.5h3"/><circle cx="9.7" cy="11.3" r="1.1" fill="currentColor" stroke="none"/></symbol>' +
+
         '</defs>' +
         '</svg>';
 

@@ -45,7 +45,7 @@
 </div>
 <script src="js/auth-gate.js"></script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});</script>
-<script src="js/icon-sprite.js?v=4"></script>
+<script src="js/icon-sprite.js?v=5"></script>
 
 <!-- ==================== MODAL DE ACCESO ==================== -->
 <div id="modal-acceso" class="modal-fondo oculto">
@@ -648,6 +648,38 @@
         </div>
         <div id="contenido-buscaminas"></div>
     </div>
+    <!-- ==================== ✊ PIEDRA, PAPEL O TIJERA ==================== -->
+    <div id="pantalla-ppt" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">✊ Piedra, Papel o Tijera</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-ppt"></div>
+    </div>
+    <!-- ==================== 🧠 TRIVIA RELÁMPAGO ==================== -->
+    <div id="pantalla-trivia" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🧠 Trivia Relámpago</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-trivia"></div>
+    </div>
+    <!-- ==================== 🔴 SIMÓN DICE A DOS ==================== -->
+    <div id="pantalla-simon" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔴 Simón Dice a Dos</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-simon"></div>
+    </div>
+    <!-- ==================== 🍓 MEMORIA RELÁMPAGO ==================== -->
+    <div id="pantalla-memoriarelampago" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🍓 Memoria Relámpago</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-memoriarelampago"></div>
+    </div>
 </div>
 
 <!-- ==================== CHAT FLOTANTE ==================== -->
@@ -679,7 +711,7 @@
 <script src="js/fx.js?v=1"></script>
 <script src="js/usuario.js?v=6"></script>
 <script src="js/chat-comun.js?v=1"></script>
-<script src="js/juegos-data.js?v=9"></script>
+<script src="js/juegos-data.js?v=10"></script>
 <script src="js/puntos.js?v=7"></script>
 <script src="js/historial.js?v=6"></script>
 <script src="js/desafio-semanal.js?v=1"></script>
@@ -691,8 +723,8 @@
 <script src="js/records.js?v=6"></script>
 <script src="js/cronometro.js?v=5"></script>
 <script src="js/compartir-imagen.js?v=5"></script>
-<script src="js/cargador-juegos.js?v=12"></script>
-<script src="js/navegacion.js?v=12"></script>
+<script src="js/cargador-juegos.js?v=13"></script>
+<script src="js/navegacion.js?v=13"></script>
 
 <!-- ==================== LÓGICA DE CADA JUEGO ==================== -->
 

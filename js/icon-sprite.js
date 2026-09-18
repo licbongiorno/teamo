@@ -109,6 +109,12 @@
         '<symbol id="icono-diana" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.3"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></symbol>' +
         '<symbol id="icono-mina" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="6"/><path d="M12 3v3M6.5 6.5l1.8 1.8M17.5 6.5l-1.8 1.8M4 13.5h3M17 13.5h3"/><circle cx="9.7" cy="11.3" r="1.1" fill="currentColor" stroke="none"/></symbol>' +
 
+        // --- Duelos en tiempo real (tanda 3) ---
+        '<symbol id="icono-puno" viewBox="0 0 24 24"><path d="M6 11V8a2.3 2.3 0 0 1 4.6 0M10.6 10.6V7.3a2.3 2.3 0 0 1 4.6 0v3.3M15.2 10.8V8.3a2.2 2.2 0 0 1 4.4 0V14c0 4-2.8 7-7 7h-1.2c-2 0-3.2-.6-4.4-2l-3-3.5c-.7-.9-.5-2 .4-2.6.8-.5 1.8-.3 2.5.4l1.3 1.4V11a2 2 0 0 1 2-2Z"/></symbol>' +
+        '<symbol id="icono-rayo-pregunta" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></symbol>' +
+        '<symbol id="icono-cuatro-colores" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5" fill="currentColor" stroke="none"/><rect x="3" y="13" width="8" height="8" rx="1.5" fill="currentColor" stroke="none"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></symbol>' +
+        '<symbol id="icono-cartas-rayo" viewBox="0 0 24 24"><rect x="2.5" y="5" width="11" height="15" rx="2"/><rect x="10.5" y="7" width="11" height="15" rx="2" transform="rotate(12 16 14.5)"/><path d="M9.2 10.5 6.5 14.5h2.4l-1.6 4 3.9-5h-2.3l1.5-3Z" fill="currentColor" stroke="none"/></symbol>' +
+
         '</defs>' +
         '</svg>';
 

@@ -101,6 +101,12 @@ window.JUEGOS = [
     { id:'topo',        nombre:'Topo Veloz',           icono:'🐹', iconoSvg:'icono-topo', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: el topo aparece en un pozo al azar, tocalo antes de que se esconda.' },
     { id:'blancomovil', nombre:'Blanco Móvil',         icono:'🎯', iconoSvg:'icono-diana', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: un anillo se cierra sobre el blanco, tocalo lo más cerca posible del centro.' },
     { id:'buscaminas',  nombre:'Buscaminas Relámpago', icono:'💣', iconoSvg:'icono-mina', categoria:'competencia', disponible:true, descripcion:'Mismo tablero para los dos: el primero que pisa una mina pierde la ronda.' },
+
+    // ---- DUELOS EN TIEMPO REAL (tanda 3) ----
+    { id:'ppt',              nombre:'Piedra, Papel o Tijera', icono:'✊', iconoSvg:'icono-puno', categoria:'competencia', disponible:true, descripcion:'El clásico de toda la vida, pero llevando la cuenta. Mejor de 5.' },
+    { id:'trivia',           nombre:'Trivia Relámpago',       icono:'🧠', iconoSvg:'icono-rayo-pregunta', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: la misma pregunta para los dos, el primero en acertar suma el punto.' },
+    { id:'simon',            nombre:'Simón Dice a Dos',       icono:'🔴', iconoSvg:'icono-cuatro-colores', categoria:'competencia', disponible:true, descripcion:'Miren la secuencia de colores y repitanla cada uno en su pantalla. Crece un color por nivel.' },
+    { id:'memoriarelampago', nombre:'Memoria Relámpago',      icono:'🍓', iconoSvg:'icono-cartas-rayo', categoria:'competencia', disponible:true, descripcion:'Un mismo mazo para los dos: el que arma una pareja se la lleva. Gana quien junte más.' },
 ];
 
 window.obtenerJuegosDeCategoria = function(categoriaId){

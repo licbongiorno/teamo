@@ -159,6 +159,15 @@
 }
 @keyframes encogerAnillo{ 0%{ transform:scale(2.4); opacity:0.9; } 100%{ transform:scale(0.15); opacity:0; } }
 
+/* ============ SIMÓN DICE A DOS ============ */
+.grilla-simon{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; max-width:260px; margin:0 auto; }
+.pad-simon{ aspect-ratio:1/1; border-radius:16px; opacity:0.35; transition:opacity 0.1s ease, transform 0.1s ease; cursor:pointer; }
+.pad-simon-prendido{ opacity:1; transform:scale(0.96); }
+.pad-celeste{ background:var(--celeste); }
+.pad-rosa{ background:var(--rosa); }
+.pad-lila{ background:var(--lila); }
+.pad-verde{ background:var(--verde); }
+
 /* ============ ANIMACIONES COMPARTIDAS (revelados, victorias, feedback) ============ */
 @keyframes revelarFade { from { opacity:0; transform:translateY(14px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
 .reflexion-reveal, .revelado-animado { animation: revelarFade 0.5s cubic-bezier(0.22,1,0.36,1); }

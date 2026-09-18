@@ -243,6 +243,7 @@ function iniciarJuegos(){
     renderMenuPrincipal();
     if (typeof aplicarTemaGuardado === 'function') aplicarTemaGuardado();
     if (typeof registrarActividadRacha === 'function') registrarActividadRacha();
+    if (typeof iniciarDesafioSemanal === 'function') iniciarDesafioSemanal();
     if (typeof iniciarEscuchaPresencia === 'function') iniciarEscuchaPresencia();
     // El indicador de "mensaje nuevo" en la burbuja de chat empieza a
     // escuchar apenas sabemos quiénes somos, no recién cuando se abre

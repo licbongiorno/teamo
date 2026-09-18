@@ -38,6 +38,57 @@ async function iniciarEstadisticas(){
     renderEstadisticas(contadores, logrosDoc.desbloqueados || {}, puntos || {}, racha);
 }
 
+// Categorías de eventos que cuentan para el "nivel de variedad": jugar
+// siempre lo mismo no suma niveles, probar cosas distintas sí. Cada
+// tipo de evento de _ETIQUETAS_CONTADOR + los géneros de juego más
+// generales (arcade, cooperativos) sumados por registrarEvento en otros
+// lados quedan afuera a propósito — el nivel mide variedad de EXPERIENCIA
+// (charla profunda, tablero, escritura, etc), no cuántos juegos distintos.
+const _CATEGORIAS_VARIEDAD = {
+    gano_truco: 'tablero', gano_ajedrez: 'tablero', gano_damas: 'tablero', gano_partida: 'tablero',
+    reflexion_completada: 'conexion', carta_indagacion: 'conexion', espejo_respondido: 'conexion', mentegemela_coincidencia: 'conexion',
+    carta_tiempo_enviada: 'cuidado', cuidado_compartido: 'cuidado',
+    letra_agregada: 'creativo', dibujo_completado: 'creativo',
+};
+const _NIVELES_VARIEDAD = [
+    { desde: 0, nombre: 'Recién arrancando' },
+    { desde: 1, nombre: 'Curiosos' },
+    { desde: 2, nombre: 'Exploradores' },
+    { desde: 3, nombre: 'Compinches' },
+    { desde: 4, nombre: 'Equipo completo' },
+];
+function calcularNivelVariedad(contadores){
+    const categoriasConActividad = new Set(
+        Object.entries(contadores)
+            .filter(([tipo, valor]) => valor > 0 && _CATEGORIAS_VARIEDAD[tipo])
+            .map(([tipo]) => _CATEGORIAS_VARIEDAD[tipo])
+    );
+    const n = categoriasConActividad.size;
+    let nivel = _NIVELES_VARIEDAD[0];
+    for (const nv of _NIVELES_VARIEDAD) if (n >= nv.desde) nivel = nv;
+    return { nivel: _NIVELES_VARIEDAD.indexOf(nivel) + 1, nombre: nivel.nombre, categorias: n, total: 4 };
+}
+
+// Calendario de los últimos 35 días (5 semanas): un cuadradito por día,
+// resaltado si esa fecha está en el historial de racha compartida.
+function renderCalendarioRacha(diasAmbos){
+    const set = new Set(diasAmbos || []);
+    const hoy = new Date();
+    const celdas = [];
+    for (let i = 34; i >= 0; i--) {
+        const d = new Date(hoy);
+        d.setDate(d.getDate() - i);
+        const fecha = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        celdas.push({ fecha, jugado: set.has(fecha), esHoy: i === 0 });
+    }
+    return `<div class="panel">
+        <div class="texto-tenue" style="margin-bottom:8px;">🗓️ Últimos 35 días jugando juntos</div>
+        <div class="calendario-racha">
+            ${celdas.map(c => `<div class="celda-racha ${c.jugado ? 'jugado' : ''} ${c.esHoy ? 'es-hoy' : ''}" title="${c.fecha}${c.jugado ? ' · jugaron los dos' : ''}"></div>`).join('')}
+        </div>
+    </div>`;
+}
+
 function renderEstadisticas(contadores, desbloqueados, puntos, racha){
     const cont = document.getElementById('contenido-estadisticas');
 
@@ -52,6 +103,16 @@ function renderEstadisticas(contadores, desbloqueados, puntos, racha){
             <div><div style="font-size:1.4rem;">🏅</div><div class="texto-tenue">${racha.mejorRacha || 0} mejor racha</div></div>
             <div><div style="font-size:1.4rem;">💙💖</div><div class="texto-tenue">${(puntos.nico || 0) + (puntos.carito || 0)} puntos totales</div></div>
         </div>
+    </div>`;
+
+    html += renderCalendarioRacha(racha.diasAmbos);
+
+    const nv = calcularNivelVariedad(contadores);
+    html += `<div class="panel texto-centro">
+        <div class="texto-tenue" style="margin-bottom:4px;">Nivel ${nv.nivel} de 5</div>
+        <div style="font-family:var(--fuente-titulo); font-size:1.3rem;">${nv.nombre}</div>
+        <div class="barra-progreso-jardin" style="margin-top:8px;"><div class="relleno-progreso-jardin barra-crecer" style="width:${(nv.categorias / nv.total) * 100}%;"></div></div>
+        <div class="texto-tenue" style="margin-top:6px; font-size:0.75rem;">Probaron ${nv.categorias} de ${nv.total} tipos de juego distintos</div>
     </div>`;
 
     const filas = Object.keys(_ETIQUETAS_CONTADOR)

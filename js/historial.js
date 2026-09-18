@@ -28,6 +28,9 @@ async function registrarEvento(tipo, detalle){
     if (typeof window.sumarContadorYVerificarLogros === 'function') {
         window.sumarContadorYVerificarLogros(tipo);
     }
+    if (typeof window.registrarProgresoDesafioSemanal === 'function') {
+        window.registrarProgresoDesafioSemanal(tipo);
+    }
 }
 
 // Trae los ultimos 'limite' eventos (una sola vez, no en vivo, para

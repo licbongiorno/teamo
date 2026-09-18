@@ -270,6 +270,27 @@ html[data-tema="claro"] .tarjeta-juego-cat{
 .tarjeta-logro-icono{ font-size:1.6rem; margin-bottom:4px; }
 .tarjeta-logro-nombre{ font-size:0.65rem; line-height:1.25; }
 
+/* ==================== CALENDARIO DE RACHA ==================== */
+.calendario-racha{
+    display:grid; grid-template-columns:repeat(7, 1fr); gap:5px;
+}
+.celda-racha{
+    aspect-ratio:1; border-radius:6px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.06);
+}
+.celda-racha.jugado{
+    background:linear-gradient(135deg, var(--rosa), var(--celeste));
+    border-color:transparent;
+}
+.celda-racha.es-hoy{
+    box-shadow:0 0 0 2px var(--bg-oscuro), 0 0 0 3px rgba(255,255,255,0.6);
+}
+
+/* ==================== DESAFÍO SEMANAL ==================== */
+.desafio-semanal-completo{
+    background:rgba(168,237,234,0.1); border-color:rgba(168,237,234,0.35);
+}
+
 .toast-logro{
     position:fixed; top:calc(16px + env(safe-area-inset-top,0px)); left:50%; transform:translateX(-50%);
     z-index:10100; display:flex; align-items:center; gap:10px;

@@ -42,6 +42,12 @@ async function registrarActividadRacha(){
         let mejorRacha = datos.mejorRacha || 0;
         let ultimaFechaAmbos = datos.ultimaFechaAmbos || null;
 
+        // Historial de días en que jugaron los dos: alimenta el calendario
+        // de actividad en "Nuestra Historia". Se guarda aparte de la racha
+        // consecutiva (que se corta si saltean un día) — este historial
+        // nunca se resetea, sólo se recorta a los últimos 90 días.
+        const diasAmbos = [...(datos.diasAmbos || [])];
+
         const ambosHoy = ultimoDia.nico === hoy && ultimoDia.carito === hoy;
         if (ambosHoy && ultimaFechaAmbos !== hoy) {
             const diff = ultimaFechaAmbos ? _diasEntre(ultimaFechaAmbos, hoy) : null;
@@ -49,9 +55,11 @@ async function registrarActividadRacha(){
             else rachaActual = 1;
             ultimaFechaAmbos = hoy;
             mejorRacha = Math.max(mejorRacha, rachaActual);
+            if (!diasAmbos.includes(hoy)) diasAmbos.push(hoy);
         }
+        while (diasAmbos.length > 90) diasAmbos.shift();
 
-        await window.setDoc(ref, { ultimoDia, rachaActual, mejorRacha, ultimaFechaAmbos }, { merge: true });
+        await window.setDoc(ref, { ultimoDia, rachaActual, mejorRacha, ultimaFechaAmbos, diasAmbos }, { merge: true });
         renderChipRacha(rachaActual);
         if (typeof window.verificarLogroDeValor === 'function') {
             window.verificarLogroDeValor('racha_dias', rachaActual);

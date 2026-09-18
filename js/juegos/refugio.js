@@ -8,6 +8,19 @@ const CATALOGO_REFUGIO = [
     { id: 'piso', nombre: 'Piso de microcemento', emoji: '⬜', costo: 5 },
     { id: 'planta', nombre: 'Planta', emoji: '🪴', costo: 3 },
     { id: 'luz', nombre: 'Luces cálidas', emoji: '✨', costo: 4 },
+    { id: 'flores', nombre: 'Flores', emoji: '🌸', costo: 2 },
+    { id: 'estrella', nombre: 'Estrella decorativa', emoji: '⭐', costo: 3 },
+    { id: 'guirnalda', nombre: 'Guirnalda', emoji: '🎐', costo: 4 },
+    { id: 'farol', nombre: 'Farol', emoji: '🏮', costo: 5 },
+    { id: 'silla', nombre: 'Silla', emoji: '🪑', costo: 6 },
+    { id: 'arbolito', nombre: 'Arbolito', emoji: '🌳', costo: 6 },
+    { id: 'hamaca', nombre: 'Hamaca', emoji: '🎋', costo: 7 },
+    { id: 'sombrilla', nombre: 'Sombrilla', emoji: '⛱️', costo: 8 },
+    { id: 'fogata', nombre: 'Fogata', emoji: '🔥', costo: 9 },
+    { id: 'perro', nombre: 'Perrito', emoji: '🐶', costo: 12 },
+    { id: 'gato', nombre: 'Gatito', emoji: '🐈', costo: 12 },
+    { id: 'fuente', nombre: 'Fuente de agua', emoji: '⛲', costo: 15 },
+    { id: 'cartel', nombre: 'Cartel "Nuestro Refugio"', emoji: '🪧', costo: 20 },
 ];
 
 function refRefugio(){ return window.doc(window.db, 'juegos', 'refugio'); }

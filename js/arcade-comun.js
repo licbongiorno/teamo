@@ -53,6 +53,34 @@ function sincronizarPuntajeEnVivo(refDoc, campo, valor, intervaloMs){
     window.updateDoc(refDoc, { [campo]: valor }).catch(() => {});
 }
 
+// PRNG determinista chiquito (mulberry32): a partir del mismo número
+// de ronda, los dos dispositivos generan exactamente el mismo
+// problema/palabra/opciones sin tener que guardar el contenido de la
+// ronda en Firestore (menos escrituras, cero desincronización).
+function rngRonda(semilla){
+    let a = semilla >>> 0;
+    return function(){
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+function elegirRnd(rng, lista){ return lista[Math.floor(rng() * lista.length)]; }
+function enteroRnd(rng, min, max){ return min + Math.floor(rng() * (max - min + 1)); }
+// Baraja "lista" in-place con Fisher-Yates usando el rng determinista.
+function barajarRnd(rng, lista){
+    for (let i = lista.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [lista[i], lista[j]] = [lista[j], lista[i]];
+    }
+    return lista;
+}
+window.rngRonda = rngRonda;
+window.elegirRnd = elegirRnd;
+window.enteroRnd = enteroRnd;
+window.barajarRnd = barajarRnd;
+
 window.marcarListoArcade = marcarListoArcade;
 window.iniciarRondaArcadeSiCorresponde = iniciarRondaArcadeSiCorresponde;
 window.sincronizarPuntajeEnVivo = sincronizarPuntajeEnVivo;

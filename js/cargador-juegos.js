@@ -12,7 +12,7 @@ const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maq
 // Estos juegos son "en vivo, los dos a la vez" y comparten la
 // bureaucracia de js/arcade-comun.js (esperar a que ambos estén
 // listos, arrancar sincronizados con cuenta regresiva, etc).
-const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carreraglobos', 'ritmo', 'bloques', 'cocodrilos', 'pesca', 'ladrillos', 'tiraafloja'];
+const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carreraglobos', 'ritmo', 'bloques', 'cocodrilos', 'pesca', 'ladrillos', 'tiraafloja', 'calculo', 'stroop', 'anagramas', 'tipeo'];
 
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja

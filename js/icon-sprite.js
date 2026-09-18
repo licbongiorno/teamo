@@ -98,6 +98,12 @@
         '<symbol id="icono-adn" viewBox="0 0 24 24"><path d="M6 3c0 7 12 11 12 18M18 3c0 7-12 11-12 18"/><path d="M7.3 7h9.4M6.4 12h11.2M7.3 17h9.4"/></symbol>' +
         '<symbol id="icono-sudoku" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/><circle cx="6" cy="6" r=".9" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="18" r=".9" fill="currentColor" stroke="none"/></symbol>' +
 
+        // --- Duelos en tiempo real (tanda 1) ---
+        '<symbol id="icono-calculadora" viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2"/><rect x="7.3" y="5" width="9.4" height="4" rx=".6"/><circle cx="8" cy="12.3" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12.3" r=".9" fill="currentColor" stroke="none"/><circle cx="16" cy="12.3" r=".9" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="16" r=".9" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r=".9" fill="currentColor" stroke="none"/></symbol>' +
+        '<symbol id="icono-gotas-color" viewBox="0 0 24 24"><path d="M7 3.5c0 3-3 4.8-3 8.2a3 3 0 0 0 6 0c0-3.4-3-5.2-3-8.2Z"/><path d="M16 8c0 2.6-2.6 4-2.6 7a2.6 2.6 0 0 0 5.2 0c0-3-2.6-4.4-2.6-7Z"/></symbol>' +
+        '<symbol id="icono-letras-caoticas" viewBox="0 0 24 24"><text x="5" y="10" font-size="8" font-weight="700" transform="rotate(-12 5 10)" fill="currentColor" stroke="none">A</text><text x="14" y="8" font-size="8" font-weight="700" transform="rotate(10 14 8)" fill="currentColor" stroke="none">B</text><text x="4" y="20" font-size="8" font-weight="700" transform="rotate(8 4 20)" fill="currentColor" stroke="none">C</text><text x="13" y="19" font-size="8" font-weight="700" transform="rotate(-10 13 19)" fill="currentColor" stroke="none">D</text></symbol>' +
+        '<symbol id="icono-teclado" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M5.5 9.5h.01M8.5 9.5h.01M11.5 9.5h.01M14.5 9.5h.01M17.5 9.5h.01M5.5 12.5h.01M8.5 12.5h.01M11.5 12.5h.01M14.5 12.5h.01M17.5 12.5h.01" stroke-width="2.6"/><rect x="6.5" y="15" width="11" height="1.8" rx=".9" fill="currentColor" stroke="none"/></symbol>' +
+
         '</defs>' +
         '</svg>';
 

@@ -90,6 +90,12 @@ window.JUEGOS = [
     { id:'cocodrilos', nombre:'Martillo de Cocodrilos', icono:'🐊', iconoSvg:'icono-cocodrilo', categoria:'cooperativosvivo', disponible:true, descripcion:'Cooperativo en vivo: los dos martillan el mismo tablero. ¿Llegan a la meta juntos?' },
     { id:'pesca',      nombre:'Pesca Cooperativa',     icono:'🎣', iconoSvg:'icono-anzuelo', categoria:'cooperativosvivo', disponible:true, descripcion:'Cooperativo en vivo: entre los dos, pesquen los peces que cruzan la pantalla.' },
     { id:'ladrillos',  nombre:'Rompe Ladrillos a Dúo', icono:'🧱', iconoSvg:'icono-ladrillos', categoria:'cooperativosvivo', disponible:true, descripcion:'Cooperativo: una pared compartida, ¿cuánto tardan los dos en dejarla limpia?' },
+
+    // ---- DUELOS EN TIEMPO REAL (tanda 1) ----
+    { id:'calculo',    nombre:'Cálculo Mental Rayo',   icono:'🧮', iconoSvg:'icono-calculadora', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: la misma cuenta para los dos, el primero en tocar la respuesta correcta suma el punto.' },
+    { id:'stroop',     nombre:'Stroop a Dos',          icono:'🎨', iconoSvg:'icono-gotas-color', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: tocá el color de la tinta, no el que dice la palabra. Más difícil de lo que parece.' },
+    { id:'anagramas',  nombre:'Carrera de Anagramas',  icono:'🔤', iconoSvg:'icono-letras-caoticas', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: letras desordenadas, el primero en escribir la palabra correcta gana la ronda.' },
+    { id:'tipeo',      nombre:'Tipeo Relámpago',       icono:'⌨️', iconoSvg:'icono-teclado', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: la misma frase para los dos, el primero en escribirla igual suma el punto.' },
 ];
 
 window.obtenerJuegosDeCategoria = function(categoriaId){

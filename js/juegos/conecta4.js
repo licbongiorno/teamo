@@ -37,7 +37,9 @@ function renderConecta4(estado){
     }
 
     const tablero = estado.tablero || tableroVacioC4();
-    let html = '';
+    const puntajes = estado.puntajes || { nico: 0, carito: 0 };
+    const lineaGanadora = estado.lineaGanadora || [];
+    let html = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">Nico ${puntajes.nico || 0} — Carito ${puntajes.carito || 0}</div>`;
     if (estado.fase === 'terminado') {
         html += `<div class="panel texto-centro">
             <div style="font-size:1.2rem; margin-bottom:10px;">${estado.ganador === 'empate' ? '🤝 ¡Empate!' : `🏆 ¡Ganó ${nombreJugador(estado.ganador)}!`}</div>
@@ -56,7 +58,8 @@ function renderConecta4(estado){
             let contenido = '';
             if (marca === 'nico') contenido = '<span class="ficha-c4 ficha-nico"></span>';
             if (marca === 'carito') contenido = '<span class="ficha-c4 ficha-carito"></span>';
-            html += `<div class="casilla-tablero casilla-oscura" onclick="jugarConecta4(${c})">${contenido}</div>`;
+            const claseGanadora = lineaGanadora.includes(i) ? ' casilla-ganadora' : '';
+            html += `<div class="casilla-tablero casilla-oscura${claseGanadora}" onclick="jugarConecta4(${c})">${contenido}</div>`;
         }
     }
     html += `</div>`;
@@ -66,8 +69,10 @@ function renderConecta4(estado){
 
 async function nuevaPartidaConecta4(){
     vibrarJ(12);
+    const anterior = await new Promise(res => { const u = window.onSnapshot(refConecta4(), s => { u(); res(s.exists() ? s.data() : null); }); });
     await window.setDoc(refConecta4(), {
-        fase: 'jugando', tablero: tableroVacioC4(), turno: 'nico', ganador: null
+        fase: 'jugando', tablero: tableroVacioC4(), turno: 'nico', ganador: null,
+        lineaGanadora: null, puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
     });
 }
 
@@ -78,18 +83,21 @@ function filaLibreC4(tablero, col){
     return -1;
 }
 
-function hayGanadorC4(tablero, fila, col, jugador){
+// Devuelve las 4 casillas en línea que ganaron (para resaltarlas) o
+// null si todavía no hay 4 en línea.
+function lineaGanadoraC4(tablero, fila, col, jugador){
     const direcciones = [[0,1],[1,0],[1,1],[1,-1]];
-    return direcciones.some(([df, dc]) => {
-        let cuenta = 1;
+    for (const [df, dc] of direcciones) {
+        const linea = [[fila, col]];
         for (const signo of [1, -1]) {
             let f = fila + df * signo, c = col + dc * signo;
             while (f >= 0 && f < FILAS_C4 && c >= 0 && c < COLS_C4 && tablero[f * COLS_C4 + c] === jugador) {
-                cuenta++; f += df * signo; c += dc * signo;
+                linea.push([f, c]); f += df * signo; c += dc * signo;
             }
         }
-        return cuenta >= 4;
-    });
+        if (linea.length >= 4) return linea.map(([f, c]) => f * COLS_C4 + c);
+    }
+    return null;
 }
 
 async function jugarConecta4(col){
@@ -105,9 +113,14 @@ async function jugarConecta4(col){
     tablero[fila * COLS_C4 + col] = miIdentidad;
     if (window.sfx) window.sfx.rebote();
     let updates = { tablero };
-    if (hayGanadorC4(tablero, fila, col, miIdentidad)) {
+    const lineaGanadora = lineaGanadoraC4(tablero, fila, col, miIdentidad);
+    if (lineaGanadora) {
         updates.fase = 'terminado';
         updates.ganador = miIdentidad;
+        updates.lineaGanadora = lineaGanadora;
+        const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
+        puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
+        updates.puntajes = puntajes;
         vibrarJ([15, 30, 15]);
     } else if (tablero.every(c => c)) {
         updates.fase = 'terminado';

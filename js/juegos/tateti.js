@@ -43,8 +43,10 @@ function renderTateti(estado){
     const colas = estado.colas || { nico: [], carito: [] };
     const antiguaNico = colas.nico.length >= 3 ? colas.nico[0] : null;
     const antiguaCarito = colas.carito.length >= 3 ? colas.carito[0] : null;
+    const puntajes = estado.puntajes || { nico: 0, carito: 0 };
+    const lineaGanadora = estado.lineaGanadora || [];
 
-    let html = '';
+    let html = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">Nico ${puntajes.nico || 0} — Carito ${puntajes.carito || 0}</div>`;
     if (estado.fase === 'terminado') {
         html += `<div class="panel texto-centro">
             <div style="font-size:1.2rem; margin-bottom:10px;">${estado.ganador === 'empate' ? '🤝 ¡Empate!' : `🏆 ¡Ganó ${nombreJugador(estado.ganador)}!`}</div>
@@ -60,9 +62,9 @@ function renderTateti(estado){
         const marca = tablero[i];
         const esOscura = (Math.floor(i / 3) + i) % 2 === 1;
         let contenido = '';
-        let claseExtra = '';
-        if (marca === 'nico') { contenido = '<span class="marca-tateti marca-x"></span>'; if (i === antiguaNico) claseExtra = ' marca-antigua'; }
-        if (marca === 'carito') { contenido = '<span class="marca-tateti marca-o"></span>'; if (i === antiguaCarito) claseExtra = ' marca-antigua'; }
+        let claseExtra = lineaGanadora.includes(i) ? ' casilla-ganadora' : '';
+        if (marca === 'nico') { contenido = '<span class="marca-tateti marca-x"></span>'; if (i === antiguaNico) claseExtra += ' marca-antigua'; }
+        if (marca === 'carito') { contenido = '<span class="marca-tateti marca-o"></span>'; if (i === antiguaCarito) claseExtra += ' marca-antigua'; }
         html += `<div class="casilla-tablero ${esOscura ? 'casilla-oscura' : 'casilla-clara'}${claseExtra}" onclick="jugarTateti(${i})">${contenido}</div>`;
     }
     html += `</div>`;
@@ -72,17 +74,22 @@ function renderTateti(estado){
 
 async function nuevaPartidaTateti(){
     vibrarJ(12);
+    const anterior = await new Promise(res => { const u = window.onSnapshot(refTateti(), s => { u(); res(s.exists() ? s.data() : null); }); });
     await window.setDoc(refTateti(), {
         fase: 'jugando',
         tablero: tableroVacioTateti(),
         colas: { nico: [], carito: [] },
         turno: 'nico',
-        ganador: null
+        ganador: null,
+        lineaGanadora: null,
+        puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
     });
 }
 
+// Devuelve el combo ganador ([a,b,c]) o null, para poder resaltarlo
+// en el tablero además de sólo saber quién ganó.
 function ganadorTateti(tablero, jugador){
-    return COMBOS_TATETI.some(([a, b, c]) => tablero[a] === jugador && tablero[b] === jugador && tablero[c] === jugador);
+    return COMBOS_TATETI.find(([a, b, c]) => tablero[a] === jugador && tablero[b] === jugador && tablero[c] === jugador) || null;
 }
 
 async function jugarTateti(idx){
@@ -104,9 +111,14 @@ async function jugarTateti(idx){
     tablero[idx] = miIdentidad;
 
     let updates = { tablero, colas };
-    if (ganadorTateti(tablero, miIdentidad)) {
+    const lineaGanadora = ganadorTateti(tablero, miIdentidad);
+    if (lineaGanadora) {
         updates.fase = 'terminado';
         updates.ganador = miIdentidad;
+        updates.lineaGanadora = lineaGanadora;
+        const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
+        puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
+        updates.puntajes = puntajes;
     } else {
         updates.turno = miIdentidad === 'nico' ? 'carito' : 'nico';
     }

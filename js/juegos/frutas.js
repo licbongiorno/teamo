@@ -150,6 +150,7 @@ function arrancarCanvasFrutas(){
                     actualizarVidasUI();
                     vibrarJ([20,40,20,40,20]);
                     if (window.sfx) window.sfx.error();
+                    if (window.fx) window.fx.sacudirJuego();
                     terminarPartida();
                     break;
                 } else if (f.tipo === 'corazon') {

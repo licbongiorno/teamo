@@ -52,6 +52,12 @@
         el.classList.add('sacudir');
     }
 
+    // Sacude la pantalla del juego que esté abierto — para errores
+    // puntuales, sin tener que pasarle un elemento concreto.
+    function sacudirJuego() {
+        sacudir(document.querySelector('.pantalla-juego.activa'));
+    }
+
     // Resalta un elemento con el mismo "pop" que ya usan los logros.
     function destacar(el) {
         if (!el || reduceMovimiento()) return;
@@ -71,5 +77,5 @@
         setTimeout(() => el.remove(), 420);
     }
 
-    window.fx = { confeti, sacudir, destacar, destello };
+    window.fx = { confeti, sacudir, sacudirJuego, destacar, destello };
 })();

@@ -128,6 +128,7 @@ async function intentarEscapeRoom(){
     } else {
         vibrarJ([10, 30, 10]);
         if (window.sfx) window.sfx.error();
+        if (window.fx) window.fx.sacudirJuego();
         await window.updateDoc(refEscapeRoom(), { intentosFallidos: (data.intentosFallidos || 0) + 1 });
     }
 }

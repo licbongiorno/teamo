@@ -213,7 +213,7 @@ async function jugarCartaUno(indice){
     const top = estado.descarte[estado.descarte.length - 1];
     const valorTop = valorUno(top);
     const puedeJugar = esComodinUno(carta) || colorUno(carta) === estado.colorActual || valorUno(carta) === valorTop;
-    if (!puedeJugar) { vibrarJ([10, 30, 10]); if (window.sfx) window.sfx.error(); return; }
+    if (!puedeJugar) { vibrarJ([10, 30, 10]); if (window.sfx) window.sfx.error(); if (window.fx) window.fx.sacudirJuego(); return; }
 
     if (esComodinUno(carta)) {
         _comodinPendienteUno = { indice };

@@ -168,6 +168,32 @@
 .pad-lila{ background:var(--lila); }
 .pad-verde{ background:var(--verde); }
 
+/* ============ CHOKUREI (MASCOTA VIRTUAL) ============ */
+.chokurei-nivel{
+    display:inline-block; background:rgba(245,217,160,0.15); border:1px solid rgba(245,217,160,0.4);
+    border-radius:20px; padding:3px 12px; font-size:0.75rem; margin-bottom:10px;
+}
+.chokurei-escena{ font-size:4.5rem; line-height:1.1; margin:4px auto 2px; display:inline-block; animation: chokureiRespirar 2.6s ease-in-out infinite; }
+.chokurei-feliz{ animation: chokureiSaltar 0.9s ease-in-out infinite; }
+.chokurei-triste{ animation: chokureiRespirar 3.6s ease-in-out infinite; filter:saturate(0.85); }
+.chokurei-deprimido{ animation: chokureiRespirar 4.5s ease-in-out infinite; filter:saturate(0.5) brightness(0.85); }
+.chokurei-fiesta{ animation: chokureiBailar 0.5s ease-in-out infinite; }
+.chokurei-enferma{ animation: chokureiTiritar 0.35s ease-in-out infinite; }
+@keyframes chokureiRespirar{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.04); } }
+@keyframes chokureiSaltar{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
+@keyframes chokureiBailar{ 0%,100%{ transform:rotate(-6deg); } 50%{ transform:rotate(6deg); } }
+@keyframes chokureiTiritar{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(3px); } }
+.chokurei-accesorio{ position:absolute; top:-4px; right:calc(50% - 38px); font-size:1.6rem; }
+.chokurei-banner-cumple{
+    background:linear-gradient(135deg, rgba(255,179,198,0.25), rgba(245,217,160,0.25));
+    border:1px solid rgba(245,217,160,0.5); border-radius:16px; padding:14px; text-align:center;
+    margin-bottom:12px; animation: aparecerSuave 0.4s ease;
+}
+.chokurei-banner-regalo{
+    background:rgba(168,237,234,0.15); border:1px solid rgba(168,237,234,0.4); border-radius:16px;
+    padding:12px; text-align:center; margin-bottom:12px; animation: aparecerSuave 0.4s ease, destelloSuave 1.6s ease-in-out infinite; cursor:pointer;
+}
+
 /* ============ ANIMACIONES COMPARTIDAS (revelados, victorias, feedback) ============ */
 @keyframes revelarFade { from { opacity:0; transform:translateY(14px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
 .reflexion-reveal, .revelado-animado { animation: revelarFade 0.5s cubic-bezier(0.22,1,0.36,1); }

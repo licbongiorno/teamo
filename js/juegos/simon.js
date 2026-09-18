@@ -96,7 +96,7 @@ function renderSimon(estado){
     if (restanteInicio > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refSimon(), 'simon');
         cont.innerHTML = htmlCuentaRegresivaArcade(restanteInicio);
-        _cuentaRegresivaSimon = setTimeout(() => renderSimon(estado), restanteInicio > 0 ? Math.min(restanteInicio, 200) : 150);
+        _cuentaRegresivaSimon = setTimeout(() => renderSimon(estado), msHastaProximoTickArcade(restanteInicio));
         return;
     }
 

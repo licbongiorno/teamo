@@ -60,7 +60,7 @@ function renderPesca(estado){
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refPesca(), 'pesca');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-            _cuentaRegresivaPesca = setTimeout(() => renderPesca(estado), restante > 0 ? Math.min(restante, 200) : 150);
+            _cuentaRegresivaPesca = setTimeout(() => renderPesca(estado), msHastaProximoTickArcade(restante));
             return;
         }
         jugarRondaPesca(estado.horaFin);

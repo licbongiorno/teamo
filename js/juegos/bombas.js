@@ -60,7 +60,7 @@ function renderBombas(estado){
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBombas(), 'bombas');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-            _cuentaRegresivaBombas = setTimeout(() => renderBombas(estado), restante > 0 ? Math.min(restante, 200) : 150);
+            _cuentaRegresivaBombas = setTimeout(() => renderBombas(estado), msHastaProximoTickArcade(restante));
             return;
         }
         jugarRondaBombas(estado.horaFin);

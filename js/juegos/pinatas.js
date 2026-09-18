@@ -66,7 +66,7 @@ function renderPinatas(estado){
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refPinatas(), 'pinatas');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-            _cuentaRegresivaPinatas = setTimeout(() => renderPinatas(estado), restante > 0 ? Math.min(restante, 200) : 150);
+            _cuentaRegresivaPinatas = setTimeout(() => renderPinatas(estado), msHastaProximoTickArcade(restante));
             return;
         }
         jugarRondaPinatas(estado.horaFin);

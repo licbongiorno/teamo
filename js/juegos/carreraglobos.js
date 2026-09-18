@@ -59,7 +59,7 @@ function renderCarreraGlobos(estado){
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refCarreraGlobos(), 'carreraglobos');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-            _cuentaRegresivaGlobos = setTimeout(() => renderCarreraGlobos(estado), restante > 0 ? Math.min(restante, 200) : 150);
+            _cuentaRegresivaGlobos = setTimeout(() => renderCarreraGlobos(estado), msHastaProximoTickArcade(restante));
             return;
         }
         jugarRondaCarreraGlobos(estado.horaFin);

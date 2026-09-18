@@ -90,7 +90,7 @@ function renderAnagramas(estado){
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refAnagramas(), 'anagramas');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-        _cuentaRegresivaAnagramas = setTimeout(() => renderAnagramas(estado), restante > 0 ? Math.min(restante, 200) : 150);
+        _cuentaRegresivaAnagramas = setTimeout(() => renderAnagramas(estado), msHastaProximoTickArcade(restante));
         return;
     }
 

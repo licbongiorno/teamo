@@ -62,7 +62,7 @@ function renderCocodrilos(estado){
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refCocodrilos(), 'cocodrilos');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-            _cuentaRegresivaCocodrilos = setTimeout(() => renderCocodrilos(estado), restante > 0 ? Math.min(restante, 200) : 150);
+            _cuentaRegresivaCocodrilos = setTimeout(() => renderCocodrilos(estado), msHastaProximoTickArcade(restante));
             return;
         }
         renderTableroCocodrilos(estado);

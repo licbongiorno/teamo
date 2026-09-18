@@ -63,7 +63,7 @@ function renderBlancoMovil(estado){
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBlancoMovil(), 'blancomovil');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-            _cuentaRegresivaBlancoMovil = setTimeout(() => renderBlancoMovil(estado), restante > 0 ? Math.min(restante, 200) : 150);
+            _cuentaRegresivaBlancoMovil = setTimeout(() => renderBlancoMovil(estado), msHastaProximoTickArcade(restante));
             return;
         }
         jugarRondaBlancoMovil(estado.horaFin);

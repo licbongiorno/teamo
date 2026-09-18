@@ -84,7 +84,7 @@ function renderCalculo(estado){
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refCalculo(), 'calculo');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-        _cuentaRegresivaCalculo = setTimeout(() => renderCalculo(estado), restante > 0 ? Math.min(restante, 200) : 150);
+        _cuentaRegresivaCalculo = setTimeout(() => renderCalculo(estado), msHastaProximoTickArcade(restante));
         return;
     }
 

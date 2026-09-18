@@ -95,7 +95,7 @@ function renderTrivia(estado){
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refTrivia(), 'trivia');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-        _cuentaRegresivaTrivia = setTimeout(() => renderTrivia(estado), restante > 0 ? Math.min(restante, 200) : 150);
+        _cuentaRegresivaTrivia = setTimeout(() => renderTrivia(estado), msHastaProximoTickArcade(restante));
         return;
     }
 

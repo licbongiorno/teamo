@@ -92,7 +92,7 @@ function renderLadrillos(estado){
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refLadrillos(), 'ladrillos');
         _ladrillosMostrados = false;
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-        _cuentaRegresivaLadrillos = setTimeout(() => renderLadrillos(estado), restante > 0 ? Math.min(restante, 200) : 150);
+        _cuentaRegresivaLadrillos = setTimeout(() => renderLadrillos(estado), msHastaProximoTickArcade(restante));
         return;
     }
 

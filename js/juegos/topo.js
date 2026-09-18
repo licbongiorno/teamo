@@ -63,7 +63,7 @@ function renderTopo(estado){
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refTopo(), 'topo');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-            _cuentaRegresivaTopo = setTimeout(() => renderTopo(estado), restante > 0 ? Math.min(restante, 200) : 150);
+            _cuentaRegresivaTopo = setTimeout(() => renderTopo(estado), msHastaProximoTickArcade(restante));
             return;
         }
         jugarRondaTopo(estado.horaFin);

@@ -71,7 +71,7 @@ function renderBloques(estado){
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBloques(), 'bloques');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-            _cuentaRegresivaBloques = setTimeout(() => renderBloques(estado), restante > 0 ? Math.min(restante, 200) : 150);
+            _cuentaRegresivaBloques = setTimeout(() => renderBloques(estado), msHastaProximoTickArcade(restante));
             return;
         }
         jugarRondaBloques();

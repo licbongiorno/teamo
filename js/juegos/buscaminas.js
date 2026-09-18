@@ -87,7 +87,7 @@ function renderBuscaminas(estado){
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBuscaminas(), 'buscaminas');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-        _cuentaRegresivaBuscaminas = setTimeout(() => renderBuscaminas(estado), restante > 0 ? Math.min(restante, 200) : 150);
+        _cuentaRegresivaBuscaminas = setTimeout(() => renderBuscaminas(estado), msHastaProximoTickArcade(restante));
         return;
     }
 

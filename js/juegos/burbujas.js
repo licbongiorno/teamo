@@ -61,7 +61,7 @@ function renderBurbujas(estado){
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBurbujas(), 'burbujas');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
-            _cuentaRegresivaBurbujas = setTimeout(() => renderBurbujas(estado), restante > 0 ? Math.min(restante, 200) : 150);
+            _cuentaRegresivaBurbujas = setTimeout(() => renderBurbujas(estado), msHastaProximoTickArcade(restante));
             return;
         }
         jugarRondaBurbujas(estado.horaFin);

@@ -71,6 +71,22 @@ function htmlCuentaRegresivaArcade(restanteMs){
 }
 window.htmlCuentaRegresivaArcade = htmlCuentaRegresivaArcade;
 
+// Cuánto esperar antes del próximo re-render de la cuenta regresiva.
+// Antes cada juego reintentaba cada ~200ms sin importar nada más — eso
+// significa que el número "3, 2, 1" se reconstruía de cero 4-5 veces
+// por segundo, y como .numero-cuenta-regresiva tiene una animación de
+// "aparecer" (pulsoCuentaRegresiva) que se reinicia cada vez que se
+// vuelve a crear el elemento, el resultado era un parpadeo constante
+// en vez de un número quieto que cambia una vez por segundo. Ahora se
+// calcula el tiempo exacto hasta que el número mostrado (Math.ceil de
+// segundos) vaya a cambiar, y sólo se re-renderiza en ese momento.
+function msHastaProximoTickArcade(restanteMs){
+    if (restanteMs <= 0) return 150; // ya se ve "¡YA!"; hay que sondear seguido para pasar a jugar apenas corresponda
+    const segundoActual = Math.ceil(restanteMs / 1000);
+    return Math.max(50, restanteMs - (segundoActual - 1) * 1000 + 30);
+}
+window.msHastaProximoTickArcade = msHastaProximoTickArcade;
+
 // Autoreparación: si un documento quedó en un estado roto — fase que
 // no es 'sin_partida'/'esperando'/'terminado' pero sin un horaInicio
 // válido — antes eso dejaba a los dos jugadores mirando "¡YA!" para

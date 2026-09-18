@@ -39,6 +39,7 @@ window.JUEGOS = [
     { id:'memoria',    nombre:'Memoria de Emojis',    icono:'🧠', iconoSvg:'icono-mosaico', categoria:'competencia', disponible:true, descripcion:'Memorizá la secuencia antes de que desaparezca.' },
     { id:'adivinaquien', nombre:'Adivina Quién',      icono:'❓', iconoSvg:'icono-rostro-interrogante', categoria:'competencia', disponible:true, descripcion:'Personaje secreto en emojis: preguntá y arriesgá.' },
     { id:'decisiones', nombre:'Duelo de Decisiones',  icono:'🎯', iconoSvg:'icono-cruce', categoria:'competencia', disponible:true, descripcion:'Situaciones con 4 opciones: ¿eligen lo mismo?' },
+    { id:'quientienerazon', nombre:'¿Quién Tiene Razón?', icono:'⚖️', iconoSvg:'icono-balanza', categoria:'competencia', disponible:true, descripcion:'El marcador permanente de sus discusiones tontas. Nunca se cierra el debate.' },
 
     // ---- CONEXIÓN ----
     { id:'indagacion', nombre:'Cartas de Indagación', icono:'🌙', iconoSvg:'icono-luna', categoria:'conexion',    disponible:true,  descripcion:'Preguntas profundas para antes de dormir: respondé y adiviná qué respondió el otro.' },

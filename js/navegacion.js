@@ -87,6 +87,7 @@ async function abrirJuego(juego){
     if (juego === 'buscaminas') iniciarBuscaminas();
     if (juego === 'ppt') iniciarPPT();
     if (juego === 'trivia') iniciarTrivia();
+    if (juego === 'quientienerazon') iniciarQuienTieneRazon();
     if (juego === 'simon') iniciarSimon();
     if (juego === 'memoriarelampago') iniciarMemoriaRelampago();
 

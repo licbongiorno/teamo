@@ -286,6 +286,20 @@
 .celda-sudoku.seleccionada.borde-izq{ box-shadow:inset 0 0 0 2px var(--rosa), inset 2.5px 0 0 rgba(255,179,198,0.55); }
 .celda-sudoku.seleccionada.borde-arr{ box-shadow:inset 0 0 0 2px var(--rosa), inset 0 2.5px 0 rgba(255,179,198,0.55); }
 
+/* ============ ¿QUIÉN TIENE RAZÓN? ============ */
+.tarjeta-razon{ text-align:left; }
+.pregunta-razon{ font-weight:700; margin-bottom:10px; line-height:1.35; }
+.barra-razon{ margin-bottom:10px; }
+.fila-votos-razon{ display:flex; gap:10px; }
+.btn-voto-razon{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:10px; border-radius:12px; border:1px solid var(--borde);
+    background:rgba(255,255,255,0.06); color:var(--texto); font-family:var(--fuente-texto);
+    font-size:0.95rem; cursor:pointer; transition:transform 0.12s cubic-bezier(0.34,1.56,0.64,1), background 0.15s ease;
+}
+.btn-voto-razon:active{ transform:scale(0.94); background:rgba(255,255,255,0.12); }
+.num-voto-razon{ font-weight:700; opacity:0.85; }
+
 /* ============ ACCESIBILIDAD: MENOS MOVIMIENTO ============ */
 /* Mismo criterio que ya usa css/refugio.css y js/fx.js: quien pidió
    menos movimiento en su sistema no debería tener que ver a Chokurei

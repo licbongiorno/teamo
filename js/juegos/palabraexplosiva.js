@@ -106,10 +106,15 @@ const DURACION_PE = 30;
 
 function refPalabraExplosiva(){ return window.doc(window.db, 'juegos', 'palabraexplosiva'); }
 
+let _palabraExplosivaFaseAnterior = null;
 function iniciarPalabraExplosiva(){
+    _palabraExplosivaFaseAnterior = null;
     if (window._unsubPalabraExplosiva) window._unsubPalabraExplosiva();
     window._unsubPalabraExplosiva = window.onSnapshot(refPalabraExplosiva(), (snap) => {
-        renderPalabraExplosiva(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'revelado' && _palabraExplosivaFaseAnterior === 'jugando' && window.sfx) window.sfx.revelar();
+        _palabraExplosivaFaseAnterior = datos ? datos.fase : null;
+        renderPalabraExplosiva(datos);
     }, (err) => {
         console.error('Error de Firestore en palabraexplosiva:', err);
         document.getElementById('contenido-palabraexplosiva').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -181,11 +186,20 @@ function renderPalabraExplosiva(estado){
     </div>`;
     cont.innerHTML = html;
 
+    let _ultimoSegPE = null;
     window._timerPE = setInterval(() => {
         const r = Math.max(0, DURACION_PE - Math.floor((Date.now() - estado.inicioEn) / 1000));
         const el = document.getElementById('cronometro-pe');
         if (el) el.innerText = r + 's';
-        if (r <= 0) { clearInterval(window._timerPE); window._timerPE = null; enviarPalabraExplosiva(); }
+        if (r !== _ultimoSegPE) {
+            _ultimoSegPE = r;
+            if (window.sfx && r > 0 && r <= 5) window.sfx.tick();
+        }
+        if (r <= 0) {
+            clearInterval(window._timerPE); window._timerPE = null;
+            if (window.sfx) window.sfx.explosion();
+            enviarPalabraExplosiva();
+        }
     }, 500);
 }
 
@@ -196,6 +210,7 @@ function agregarPalabraPE(){
     _palabrasLocalesPE.push(val);
     input.value = '';
     vibrarJ(8);
+    if (window.sfx) window.sfx.pop();
     refrescarVistaPE();
 }
 function quitarPalabraPE(i){ _palabrasLocalesPE.splice(i, 1); refrescarVistaPE(); }

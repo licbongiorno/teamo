@@ -5,10 +5,26 @@
 // ya usa el Truco para arrancar.
 function refReflejos(){ return window.doc(window.db, 'juegos', 'reflejos'); }
 
+let _reflejosFaseAnterior = null;
+let _reflejosPuntajesAnteriores = null;
 function iniciarReflejos(){
+    _reflejosFaseAnterior = null;
+    _reflejosPuntajesAnteriores = null;
     if (window._unsubReflejos) window._unsubReflejos();
     window._unsubReflejos = window.onSnapshot(refReflejos(), (snap) => {
-        renderReflejos(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (window.sfx && datos) {
+            if (datos.fase === 'fuego' && _reflejosFaseAnterior === 'preparados') window.sfx.tiempoFinal();
+            if (datos.fase === 'terminado' && _reflejosFaseAnterior !== 'terminado') {
+                const antes = _reflejosPuntajesAnteriores || { nico: 0, carito: 0 };
+                const ahora = datos.puntajes || { nico: 0, carito: 0 };
+                const gano = ahora.nico > (antes.nico || 0) ? 'nico' : (ahora.carito > (antes.carito || 0) ? 'carito' : null);
+                if (gano) window.sfx[gano === miIdentidad ? 'victoria' : 'derrota']();
+            }
+        }
+        _reflejosFaseAnterior = datos ? datos.fase : null;
+        _reflejosPuntajesAnteriores = datos ? datos.puntajes : null;
+        renderReflejos(datos);
     }, (err) => {
         console.error('Error de Firestore en reflejos:', err);
         document.getElementById('contenido-reflejos').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;

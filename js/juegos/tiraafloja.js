@@ -2,11 +2,18 @@
 // posicion: 0 = gana Nico, 100 = gana Carito, 50 = centro.
 function refTiraAfloja(){ return window.doc(window.db, 'juegos', 'tiraafloja'); }
 
+let _tiraAflojaFaseAnterior = null;
 function iniciarTiraAfloja(){
     _taRondaMontada = false;
+    _tiraAflojaFaseAnterior = null;
     if (window._unsubTiraAfloja) window._unsubTiraAfloja();
     window._unsubTiraAfloja = window.onSnapshot(refTiraAfloja(), (snap) => {
-        renderTiraAfloja(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _tiraAflojaFaseAnterior === 'jugando' && window.sfx) {
+            window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _tiraAflojaFaseAnterior = datos ? datos.fase : null;
+        renderTiraAfloja(datos);
     }, (err) => {
         console.error('Error de Firestore en tiraafloja:', err);
         document.getElementById('contenido-tiraafloja').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -75,6 +82,7 @@ function renderTiraAfloja(estado){
 function tocarTiraAfloja(){
     _toquesLocalesTA++;
     vibrarJ(6);
+    if (window.sfx) window.sfx.tick();
     const area = document.getElementById('area-toque-ta');
     if (area) { area.classList.remove('sacudir'); void area.offsetWidth; area.classList.add('sacudir'); }
 }

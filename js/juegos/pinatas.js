@@ -7,6 +7,7 @@ const TIEMPO_VIDA_PINATA = 1200;
 
 function refPinatas(){ return window.doc(window.db, 'juegos', 'pinatas'); }
 
+let _pinatasFaseAnterior = null;
 function iniciarPinatas(){
     // Por si quedó una ronda anterior corriendo en segundo plano (se
     // salió de esta pantalla a mitad de partida y se volvió a entrar
@@ -16,9 +17,17 @@ function iniciarPinatas(){
     if (window._detenerRondaPinatas) { window._detenerRondaPinatas(); window._detenerRondaPinatas = null; }
     const cont = document.getElementById('contenido-pinatas');
     if (cont) delete cont.dataset.jugandoLocal;
+    _pinatasFaseAnterior = null;
     if (window._unsubPinatas) window._unsubPinatas();
     window._unsubPinatas = window.onSnapshot(refPinatas(), (snap) => {
-        renderPinatas(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _pinatasFaseAnterior && _pinatasFaseAnterior !== 'terminado' && window.sfx) {
+            const p = datos.puntajes || { nico: 0, carito: 0 };
+            if (p.nico === p.carito) window.sfx.empate();
+            else window.sfx[(p.nico > p.carito ? 'nico' : 'carito') === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _pinatasFaseAnterior = datos ? datos.fase : null;
+        renderPinatas(datos);
     }, (err) => {
         console.error('Error de Firestore en piñatas:', err);
         if (cont && cont.dataset.jugandoLocal !== '1') {
@@ -134,6 +143,7 @@ function arrancarPinatas(horaFin){
             puntaje += Math.max(1, combo);
             combo++;
             vibrarJ(12);
+            if (window.sfx) window.sfx[combo >= 3 ? 'acierto' : 'golpe']();
             actualizarUI();
             sincronizarPuntajeEnVivo(refPinatas(), miIdentidad === 'nico' ? 'puntajeVivoNico' : 'puntajeVivoCarito', puntaje);
         };

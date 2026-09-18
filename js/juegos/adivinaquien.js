@@ -113,10 +113,17 @@ const POOL_ADIVINAQUIEN = [
 
 function refAdivinaQuien(){ return window.doc(window.db, 'juegos', 'adivinaquien'); }
 
+let _adivinaQuienFaseAnterior = null;
 function iniciarAdivinaQuien(){
+    _adivinaQuienFaseAnterior = null;
     if (window._unsubAdivinaQuien) window._unsubAdivinaQuien();
     window._unsubAdivinaQuien = window.onSnapshot(refAdivinaQuien(), (snap) => {
-        renderAdivinaQuien(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _adivinaQuienFaseAnterior && _adivinaQuienFaseAnterior !== 'terminado' && window.sfx) {
+            window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _adivinaQuienFaseAnterior = datos ? datos.fase : null;
+        renderAdivinaQuien(datos);
     }, (err) => {
         console.error('Error de Firestore en adivinaquien:', err);
         document.getElementById('contenido-adivinaquien').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;

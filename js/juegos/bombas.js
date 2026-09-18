@@ -7,12 +7,21 @@ const PROB_BOMBA_BOMBAS = 0.22;
 
 function refBombas(){ return window.doc(window.db, 'juegos', 'bombas'); }
 
+let _bombasFaseAnterior = null;
 function iniciarBombas(){
     const cont = document.getElementById('contenido-bombas');
     if (cont) delete cont.dataset.jugandoLocal;
+    _bombasFaseAnterior = null;
     if (window._unsubBombas) window._unsubBombas();
     window._unsubBombas = window.onSnapshot(refBombas(), (snap) => {
-        renderBombas(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _bombasFaseAnterior && _bombasFaseAnterior !== 'terminado' && window.sfx) {
+            const p = datos.puntajes || { nico: 0, carito: 0 };
+            if (p.nico === p.carito) window.sfx.empate();
+            else window.sfx[(p.nico > p.carito ? 'nico' : 'carito') === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _bombasFaseAnterior = datos ? datos.fase : null;
+        renderBombas(datos);
     }, (err) => {
         console.error('Error de Firestore en bombas:', err);
         if (cont && cont.dataset.jugandoLocal !== '1') {
@@ -136,8 +145,8 @@ function arrancarCanvasBombas(horaFin){
             const o = objetos[i];
             if (Math.hypot(o.x - x, o.y - y) < o.r + 8) {
                 objetos.splice(i, 1);
-                if (o.esBomba) { puntaje = Math.max(0, puntaje - 1); vibrarJ([10, 30, 10]); }
-                else { puntaje++; vibrarJ(10); }
+                if (o.esBomba) { puntaje = Math.max(0, puntaje - 1); vibrarJ([10, 30, 10]); if (window.sfx) window.sfx.explosion(); }
+                else { puntaje++; vibrarJ(10); if (window.sfx) window.sfx.moneda(); }
                 const marcador = document.getElementById('marcador-yo-bombas');
                 if (marcador) marcador.innerText = puntaje;
                 sincronizarPuntajeEnVivo(refBombas(), miIdentidad === 'nico' ? 'puntajeVivoNico' : 'puntajeVivoCarito', puntaje);

@@ -8,6 +8,7 @@ const PULSOS_RITMO = 16;
 
 function refRitmo(){ return window.doc(window.db, 'juegos', 'ritmo'); }
 
+let _ritmoFaseAnterior = null;
 function iniciarRitmo(){
     // Por si quedó el loop de una ronda anterior corriendo (se salió de
     // esta pantalla a mitad de partida y se volvió a entrar antes de
@@ -17,9 +18,16 @@ function iniciarRitmo(){
     if (window._tickRitmoTimeout) { clearTimeout(window._tickRitmoTimeout); window._tickRitmoTimeout = null; }
     const cont = document.getElementById('contenido-ritmo');
     if (cont) delete cont.dataset.jugandoLocal;
+    _ritmoFaseAnterior = null;
     if (window._unsubRitmo) window._unsubRitmo();
     window._unsubRitmo = window.onSnapshot(refRitmo(), (snap) => {
-        renderRitmo(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _ritmoFaseAnterior && _ritmoFaseAnterior !== 'terminado' && window.sfx) {
+            if (!datos.ganador) window.sfx.empate();
+            else window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _ritmoFaseAnterior = datos ? datos.fase : null;
+        renderRitmo(datos);
     }, (err) => {
         console.error('Error de Firestore en ritmo:', err);
         if (cont && cont.dataset.jugandoLocal !== '1') {
@@ -118,6 +126,7 @@ function arrancarLoopRitmo(horaInicio){
         const el = document.getElementById('pulso-ritmo');
         if (el) { el.style.transform = 'scale(1.4)'; setTimeout(() => { if (el) el.style.transform = 'scale(1)'; }, 150); }
         vibrarJ(8);
+        if (window.sfx) window.sfx.tick();
         const c = document.getElementById('contador-pulso-ritmo');
         if (c) c.innerText = `Pulso ${_pulsoActualRitmo} / ${PULSOS_RITMO}`;
 
@@ -137,6 +146,7 @@ function tocarRitmo(){
     vibrarJ(10);
     const ahora = performance.now();
     const error = Math.abs(ahora - _horaUltimoPulsoRitmo);
+    if (window.sfx) window.sfx[error < 150 ? 'acierto' : 'toque']();
     _erroresRitmo.push(error);
     const u = document.getElementById('ultimo-toque-ritmo');
     if (u) u.innerText = error < 150 ? '🎯 ¡Justo!' : error < 350 ? '👍 Cerca' : '😅 Lejos';

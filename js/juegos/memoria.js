@@ -4,10 +4,15 @@ const NIVELES_MEMORIA = [5, 6, 7, 8, 10];
 
 function refMemoria(){ return window.doc(window.db, 'juegos', 'memoria'); }
 
+let _memoriaFaseAnterior = null;
 function iniciarMemoria(){
+    _memoriaFaseAnterior = null;
     if (window._unsubMemoria) window._unsubMemoria();
     window._unsubMemoria = window.onSnapshot(refMemoria(), (snap) => {
-        renderMemoria(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'revelado' && _memoriaFaseAnterior === 'jugando' && window.sfx) window.sfx.revelar();
+        _memoriaFaseAnterior = datos ? datos.fase : null;
+        renderMemoria(datos);
     }, (err) => {
         console.error('Error de Firestore en memoria:', err);
         document.getElementById('contenido-memoria').innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
@@ -101,6 +106,7 @@ function mostrarSecuenciaMemoria(){
 
 function tocarEmojiMemoria(e){
     vibrarJ(8);
+    if (window.sfx) window.sfx.toque();
     _intentoLocalMemoria.push(e);
     refrescarVistaMemoria();
 }

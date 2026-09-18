@@ -7,12 +7,20 @@ const TOQUES_PARA_GANAR_GLOBOS = 40;
 
 function refCarreraGlobos(){ return window.doc(window.db, 'juegos', 'carreraglobos'); }
 
+let _carreraGlobosFaseAnterior = null;
 function iniciarCarreraGlobos(){
     const cont = document.getElementById('contenido-carreraglobos');
     if (cont) delete cont.dataset.jugandoLocal;
+    _carreraGlobosFaseAnterior = null;
     if (window._unsubCarreraGlobos) window._unsubCarreraGlobos();
     window._unsubCarreraGlobos = window.onSnapshot(refCarreraGlobos(), (snap) => {
-        renderCarreraGlobos(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _carreraGlobosFaseAnterior && _carreraGlobosFaseAnterior !== 'terminado' && window.sfx) {
+            if (!datos.ganador) window.sfx.empate();
+            else window.sfx[datos.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _carreraGlobosFaseAnterior = datos ? datos.fase : null;
+        renderCarreraGlobos(datos);
     }, (err) => {
         console.error('Error de Firestore en carrera de globos:', err);
         if (cont && cont.dataset.jugandoLocal !== '1') {
@@ -131,6 +139,7 @@ async function tocarCarreraGlobos(){
     if (_terminandoGlobos) return;
     _toquesLocalesGlobos++;
     vibrarJ(6);
+    if (window.sfx) window.sfx.tick();
     const pct = Math.min(100, (_toquesLocalesGlobos / TOQUES_PARA_GANAR_GLOBOS) * 100);
     const barra = document.getElementById('barra-yo-globos');
     const globo = document.getElementById('globo-yo');

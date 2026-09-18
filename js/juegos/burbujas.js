@@ -8,12 +8,21 @@ const PROB_PINCHE_BURBUJAS = 0.22;
 
 function refBurbujas(){ return window.doc(window.db, 'juegos', 'burbujas'); }
 
+let _burbujasFaseAnterior = null;
 function iniciarBurbujas(){
     const cont = document.getElementById('contenido-burbujas');
     if (cont) delete cont.dataset.jugandoLocal;
+    _burbujasFaseAnterior = null;
     if (window._unsubBurbujas) window._unsubBurbujas();
     window._unsubBurbujas = window.onSnapshot(refBurbujas(), (snap) => {
-        renderBurbujas(snap.exists() ? snap.data() : null);
+        const datos = snap.exists() ? snap.data() : null;
+        if (datos && datos.fase === 'terminado' && _burbujasFaseAnterior && _burbujasFaseAnterior !== 'terminado' && window.sfx) {
+            const p = datos.puntajes || { nico: 0, carito: 0 };
+            if (p.nico === p.carito) window.sfx.empate();
+            else window.sfx[(p.nico > p.carito ? 'nico' : 'carito') === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _burbujasFaseAnterior = datos ? datos.fase : null;
+        renderBurbujas(datos);
     }, (err) => {
         console.error('Error de Firestore en burbujas:', err);
         if (cont && cont.dataset.jugandoLocal !== '1') {
@@ -137,8 +146,8 @@ function arrancarCanvasBurbujas(horaFin){
             const o = objetos[i];
             if (Math.hypot(o.x - x, o.y - y) < o.r + 8) {
                 objetos.splice(i, 1);
-                if (o.esPinche) { puntaje = Math.max(0, puntaje - 1); vibrarJ([10, 30, 10]); }
-                else { puntaje++; vibrarJ(10); }
+                if (o.esPinche) { puntaje = Math.max(0, puntaje - 1); vibrarJ([10, 30, 10]); if (window.sfx) window.sfx.error(); }
+                else { puntaje++; vibrarJ(10); if (window.sfx) window.sfx.pop(); }
                 const marcador = document.getElementById('marcador-yo-burbujas');
                 if (marcador) marcador.innerText = puntaje;
                 sincronizarPuntajeEnVivo(refBurbujas(), miIdentidad === 'nico' ? 'puntajeVivoNico' : 'puntajeVivoCarito', puntaje);

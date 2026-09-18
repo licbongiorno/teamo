@@ -149,17 +149,20 @@ function arrancarCanvasFrutas(){
                     vidas = 0;
                     actualizarVidasUI();
                     vibrarJ([20,40,20,40,20]);
+                    if (window.sfx) window.sfx.error();
                     terminarPartida();
                     break;
                 } else if (f.tipo === 'corazon') {
                     vidas++;
                     actualizarVidasUI();
                     vibrarJ(15);
+                    if (window.sfx) window.sfx.moneda();
                 } else {
                     puntaje++;
                     const marcador = document.getElementById('marcador-yo-frutas');
                     if (marcador) marcador.innerText = puntaje;
                     vibrarJ(10);
+                    if (window.sfx) window.sfx.pop();
                 }
             } else if (f.y > canvas.height + 20) {
                 objetos.splice(i,1);
@@ -167,6 +170,7 @@ function arrancarCanvasFrutas(){
                     vidas--;
                     actualizarVidasUI();
                     vibrarJ([10,30,10]);
+                    if (window.sfx) window.sfx.toque();
                     if (vidas <= 0) { terminarPartida(); break; }
                 }
             }
@@ -196,6 +200,7 @@ async function finalizarRondaFrutas(puntajeObtenido){
     } catch (e) {
         console.error('No se pudo guardar el puntaje de frutas:', e);
     }
+    if (window.sfx) window.sfx[esNuevoMejor ? 'logro' : 'derrota']();
 
     const cont = document.getElementById('contenido-frutas');
     cont.innerHTML = `

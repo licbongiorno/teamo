@@ -13,12 +13,19 @@ const INTERVALO_CAIDA_BLOQUES = 650;
 
 function refBloques(){ return window.doc(window.db, 'juegos', 'bloques'); }
 
+let _bloquesFaseAnterior = null;
 function iniciarBloques(){
     const cont = document.getElementById('contenido-bloques');
     if (cont) delete cont.dataset.jugandoLocal;
+    _bloquesFaseAnterior = null;
     if (window._unsubBloques) window._unsubBloques();
     window._unsubBloques = window.onSnapshot(refBloques(), (snap) => {
         const data = snap.exists() ? snap.data() : null;
+        if (data && data.fase === 'terminado' && _bloquesFaseAnterior && _bloquesFaseAnterior !== 'terminado' && window.sfx) {
+            if (!data.ganador) window.sfx.empate();
+            else window.sfx[data.ganador === miIdentidad ? 'victoria' : 'derrota']();
+        }
+        _bloquesFaseAnterior = data ? data.fase : null;
         manejarSnapshotBloques(data);
         if (cont && cont.dataset.jugandoLocal !== '1') renderBloques(data);
     }, (err) => {
@@ -172,6 +179,7 @@ function limpiarFilasBloques(){
         _puntajeBloques += filasLimpiadas * 10;
         _lineasAcumBloques += filasLimpiadas;
         vibrarJ([10, 20, 10]);
+        if (window.sfx) window.sfx[filasLimpiadas >= 2 ? 'acierto' : 'pop']();
         const elP = document.getElementById('puntaje-bloques');
         if (elP) elP.innerText = _puntajeBloques + ' pts';
         sincronizarPuntajeEnVivo(refBloques(), miIdentidad === 'nico' ? 'puntajeNico' : 'puntajeCarito', _puntajeBloques, 400);

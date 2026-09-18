@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://s.ytimg.com">
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="dns-prefetch" href="https://www.youtube.com">
-    <link rel="stylesheet" href="css/refugio.css?v=6">
+    <link rel="stylesheet" href="css/refugio.css?v=7">
     <link rel="stylesheet" href="css/auth-gate.css">
 </head>
 
@@ -158,6 +158,32 @@
         <canvas id="universo-canvas-estrellas" class="universo-canvas-estrellas" aria-hidden="true"></canvas>
         <div class="universo-titulo-principal">Nuestro universo</div>
         <div class="universo-subtitulo-principal">Cada estrella es un pedacito nuestro. Elegí cuál explorar 💫</div>
+
+        <!-- EL CLIMA DEL CORAZÓN: un ritual mudo — marcás cómo estás hoy y
+             el otro lo ve sin tener que preguntar. Nada se abre solo, ni
+             se le avisa al otro con sonido ni vibración: sólo queda ahí,
+             como un climita chiquito, para quien lo quiera mirar. -->
+        <div id="clima-corazon" class="clima-corazon">
+            <button class="clima-persona" id="btn-clima-mio" onclick="toggleSelectorClima(event)" title="Marcar cómo estoy hoy">
+                <span class="clima-emoji" id="clima-emoji-mio">➕</span>
+                <span class="clima-etiqueta">Vos hoy</span>
+            </button>
+            <div class="clima-persona clima-persona-rival" id="clima-persona-rival">
+                <span class="clima-emoji" id="clima-emoji-rival">—</span>
+                <span class="clima-etiqueta" id="clima-etiqueta-rival">Su clima</span>
+            </div>
+            <div id="selector-clima" class="selector-clima">
+                <button onclick="elegirClima('🥰', event)" aria-label="Enamorado/a">🥰</button>
+                <button onclick="elegirClima('😊', event)" aria-label="Feliz">😊</button>
+                <button onclick="elegirClima('😌', event)" aria-label="Tranquilo/a">😌</button>
+                <button onclick="elegirClima('😴', event)" aria-label="Cansado/a">😴</button>
+                <button onclick="elegirClima('😔', event)" aria-label="Bajón">😔</button>
+                <button onclick="elegirClima('🤯', event)" aria-label="A mil">🤯</button>
+                <button onclick="elegirClima('🥳', event)" aria-label="Con ganas de festejar">🥳</button>
+                <button onclick="elegirClima('🤒', event)" aria-label="Medio pachucho/a">🤒</button>
+            </div>
+        </div>
+
         <div class="lienzo-corazon" id="lienzo-corazon-3d">
             <svg viewBox="0 0 100 100" preserveAspectRatio="none">
                 <defs>
@@ -481,6 +507,6 @@
          de index-refugio.js (que usa estas funciones). -->
     <script src="js/chat-comun.js?v=1"></script>
 
-    <script src="js/index-refugio.js?v=4"></script>
+    <script src="js/index-refugio.js?v=5"></script>
 </body>
 </html>

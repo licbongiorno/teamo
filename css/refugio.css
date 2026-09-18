@@ -1180,6 +1180,52 @@
             text-shadow: 0 1px 4px rgba(0,0,0,0.75), 0 0 10px rgba(0,0,0,0.4);
             transition: opacity 0.9s ease 0.08s, transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0.08s;
         }
+
+        /* ---------------- EL CLIMA DEL CORAZÓN ---------------- */
+        .universo-corazon.viaje .clima-corazon { opacity: 0; transform: scale(0.85); }
+        .clima-corazon {
+            display: flex; gap: 10px; align-items: center; justify-content: center;
+            margin: -10px 0 20px; flex-shrink: 0; position: relative; z-index: 2;
+            transition: opacity 0.9s ease 0.12s, scale 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 0.12s;
+        }
+        .clima-persona {
+            display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; padding: 7px 14px 7px 10px;
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            font-family: var(--fuente-texto); color: #fdf6f0; cursor: pointer; touch-action: manipulation;
+            transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s, box-shadow 0.3s;
+        }
+        button.clima-persona:active { transform: scale(0.94); }
+        .clima-persona-rival { cursor: default; }
+        /* Cuando el otro marcó su clima hoy, un brillo pastel bien sutil
+           para que se note sin gritar — es un vistazo, no una alarma. */
+        .clima-persona-rival.con-clima {
+            border-color: rgba(255,194,217,0.5); box-shadow: 0 0 14px rgba(255,194,217,0.25);
+        }
+        .clima-emoji {
+            width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.12);
+            display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0;
+        }
+        .clima-etiqueta { font-size: 0.68rem; opacity: 0.75; white-space: nowrap; }
+        .selector-clima {
+            position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%) scale(0.9);
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+            background: rgba(15,10,20,0.92); border: 1px solid rgba(255,194,217,0.25);
+            border-radius: 20px; padding: 12px; z-index: 20;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+            opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .selector-clima.mostrar { opacity: 1; transform: translateX(-50%) scale(1); pointer-events: auto; }
+        .selector-clima button {
+            width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.08);
+            font-size: 1.25rem; cursor: pointer; touch-action: manipulation;
+            transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), background 0.2s;
+        }
+        .selector-clima button:active { transform: scale(0.85); background: rgba(255,194,217,0.25); }
+        @media (prefers-reduced-motion: reduce) {
+            .clima-persona, .selector-clima, .selector-clima button { transition-duration: 0.15s !important; }
+        }
+
         .lienzo-corazon {
             position: relative; width: min(84vw, 380px); aspect-ratio: 11 / 10;
             flex-shrink: 0; margin: 0 auto;

@@ -1175,9 +1175,49 @@
 
         // El núcleo del corazón manda una sorpresa al azar entre los seis efectos existentes:
         // recompensa variable, cada toque puede traer algo distinto.
+        // Piropos absurdos: distinto tono que frasesDeAmorFlotantes (esas
+        // son sinceras/poéticas y aparecen solas cada tanto) — estos son
+        // adrede ridículos, para sacar una carcajada más que un suspiro.
+        // Reutilizan el mismo cartel flotante (#frase-flotante-amor) para
+        // no sumar otro elemento de UI nuevo.
+        const piroposAbsurdos = [
+            "Sos más cálido/a que el wifi de la casa de mi abuela.",
+            "Si fueras una notificación, nunca te silenciaría.",
+            "Tenés una sonrisa mejor que encontrar plata en un pantalón viejo.",
+            "Sos mi personaje favorito de esta historia, y eso que ni hay competencia.",
+            "Más lindo/a que un cargador que sí entra al primer intento.",
+            "Si el amor fuera wifi, tendría 5 de 5 barras con vos.",
+            "Sos la excepción a mi regla de no creer en las cosas buenas.",
+            "Contigo hasta esperar el colectivo se siente bien.",
+            "Sos mejor que ese capítulo que dejás para \"solo uno más\".",
+            "Si fueras un emoji, serías el que nunca me cansa de usar.",
+            "Más raro/a que vos, imposible. Más lindo/a, tampoco.",
+            "Sos la razón por la que reviso el celu con una sonrisa boba.",
+            "Ni el mejor meme del día me hace reír tanto como vos.",
+            "Sos tan de mi equipo que ni en Piedra Papel o Tijera te gano.",
+            "Si el corazón tuviera wifi, el tuyo sería mi red favorita.",
+        ];
+        let _indicePiropoAnterior = -1;
+        function lanzarPiropoAbsurdo(event) {
+            if (event) event.stopPropagation();
+            vibrar([20, 40, 20]);
+            cerrarMenuPrincipal();
+            const el = document.getElementById('frase-flotante-amor');
+            if (!el) return;
+            let indice;
+            do { indice = Math.floor(Math.random() * piroposAbsurdos.length); }
+            while (indice === _indicePiropoAnterior && piroposAbsurdos.length > 1);
+            _indicePiropoAnterior = indice;
+            el.textContent = '😜 ' + piroposAbsurdos[indice];
+            el.classList.remove('mostrar');
+            void el.offsetWidth;
+            el.classList.add('mostrar');
+            setTimeout(() => el.classList.remove('mostrar'), 5200);
+        }
+
         function lanzarSorpresaAleatoria(event) {
             if (event) event.stopPropagation();
-            const efectos = [lanzarLluviaTeAmo, lanzarLluviaBesosMenu, lanzarLluviaAbrazos, lanzarLluviaChocolate, lanzarLluviaFlores, lanzarLluviaEstrellas];
+            const efectos = [lanzarLluviaTeAmo, lanzarLluviaBesosMenu, lanzarLluviaAbrazos, lanzarLluviaChocolate, lanzarLluviaFlores, lanzarLluviaEstrellas, lanzarPiropoAbsurdo];
             const elegido = efectos[Math.floor(Math.random() * efectos.length)];
             if (typeof elegido === 'function') elegido(event);
         }
@@ -1200,6 +1240,7 @@
             miIdentidad = e.detail.usuario;
             miRival = miIdentidad === 'nico' ? 'carito' : 'nico';
             iniciarEscuchaChatNoLeidos(); // ya tiene su propio guard, no se duplica si ya había arrancado
+            iniciarEscuchaClima();
         });
         // chatIniciado, muroIniciado, gratitudIniciado y deseosIniciado
         // ahora viven en sus propios módulos (js/inicio/*.js).
@@ -1224,6 +1265,7 @@
                 miRival = miIdentidad === 'nico' ? 'carito' : 'nico';
                 localStorage.setItem("identidadRefugio", miIdentidad);
                 iniciarEscuchaChatNoLeidos();
+                iniciarEscuchaClima();
                 document.getElementById('modal-acceso').classList.add('oculto');
                 document.getElementById('input-clave').value = '';
                 document.getElementById('error-clave').innerText = "";
@@ -1322,6 +1364,64 @@
         // igual que los separadores de fecha de WhatsApp.
         /* function etiquetaFechaChat(fecha) -> migrado a js/inicio/ */
         
+
+        // ==================== EL CLIMA DEL CORAZÓN ====================
+        // Ritual mudo, no un juego: cada uno marca un emoji de "cómo está
+        // hoy" y el otro lo ve reflejado sin tener que preguntar ni
+        // mandar nada — a diferencia del zumbido, esto no vibra ni suena
+        // del lado de nadie, sólo queda ahí para quien lo quiera mirar.
+        function refClimaCorazon(){ return window.doc(window.db, 'juegos', 'clima-corazon'); }
+        function _fechaHoyClima(){
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+        let _unsubClima = null;
+        function iniciarEscuchaClima(){
+            if (_unsubClima || !miIdentidad) return;
+            const etRival = document.getElementById('clima-etiqueta-rival');
+            if (etRival) etRival.textContent = `${nombreJugador(miRival)} hoy`;
+            _unsubClima = window.onSnapshot(refClimaCorazon(), (snap) => {
+                renderClima(snap.exists() ? snap.data() : {});
+            }, (err) => console.error('Error escuchando el clima del corazón:', err));
+        }
+        function renderClima(datos){
+            const hoy = _fechaHoyClima();
+            const mio = datos[miIdentidad];
+            const rival = datos[miRival];
+            const elMio = document.getElementById('clima-emoji-mio');
+            if (elMio) elMio.textContent = (mio && mio.fecha === hoy) ? mio.emoji : '➕';
+            const elRival = document.getElementById('clima-emoji-rival');
+            const elRivalCont = document.getElementById('clima-persona-rival');
+            const hayRivalHoy = !!(rival && rival.fecha === hoy);
+            if (elRival) elRival.textContent = hayRivalHoy ? rival.emoji : '—';
+            if (elRivalCont) elRivalCont.classList.toggle('con-clima', hayRivalHoy);
+        }
+        function toggleSelectorClima(event){
+            if (event) event.stopPropagation();
+            if (!miIdentidad) { requerirIdentidad(null); return; }
+            const sel = document.getElementById('selector-clima');
+            if (sel) sel.classList.toggle('mostrar');
+        }
+        async function elegirClima(emoji, event){
+            if (event) event.stopPropagation();
+            if (!miIdentidad) return;
+            vibrar(12);
+            const sel = document.getElementById('selector-clima');
+            if (sel) sel.classList.remove('mostrar');
+            const elMio = document.getElementById('clima-emoji-mio');
+            if (elMio) elMio.textContent = emoji; // optimista: no espera el viaje a Firestore para sentirse instantáneo
+            try {
+                await window.setDoc(refClimaCorazon(), { [miIdentidad]: { emoji, fecha: _fechaHoyClima() } }, { merge: true });
+            } catch (e) { console.error('No se pudo guardar el clima del corazón:', e); }
+        }
+        // Cerrar el selector si tocan afuera de él (mismo patrón que
+        // cualquier menú desplegable del sitio).
+        document.addEventListener('click', (e) => {
+            const sel = document.getElementById('selector-clima');
+            if (sel && sel.classList.contains('mostrar') && !e.target.closest('#clima-corazon')) {
+                sel.classList.remove('mostrar');
+            }
+        });
 
         // --- Lógica del Muro en el Tiempo ---
         function abrirMuro(event) { if (event) event.stopPropagation(); requerirIdentidad('muro'); }

@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://s.ytimg.com">
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="dns-prefetch" href="https://www.youtube.com">
-    <link rel="stylesheet" href="css/refugio.css?v=5">
+    <link rel="stylesheet" href="css/refugio.css?v=6">
     <link rel="stylesheet" href="css/auth-gate.css">
 </head>
 
@@ -88,7 +88,10 @@
                     <img class="foto-puerta" src="https://i.postimg.cc/QtLY0Cnx/78df8d38-6373-43d9-9323-70ba109c8c91.png" alt="Carito" loading="lazy" decoding="async">
                 </div>
                 <div id="puerta-id" class="puerta" onclick="interaccionPuerta(event)">
+                    <div class="bisagra bisagra-arriba"></div>
+                    <div class="bisagra bisagra-abajo"></div>
                     <div class="panel"></div>
+                    <div class="placa-pomo"></div>
                     <div class="pomo"></div>
                     <div class="panel panel-largo"></div>
                 </div>
@@ -471,13 +474,13 @@
     <!-- Cielo con profundidad (parallax), fugaces e inclinación 3D del
          corazón para la pantalla "Nuestro universo" — se activa/apaga
          desde mostrarUniversoCorazon()/entrarALaCarta() en index-refugio.js. -->
-    <script src="js/inicio/universo-3d.js?v=2"></script>
+    <script src="js/inicio/universo-3d.js?v=3"></script>
 
     <!-- Recibo de lectura compartido, indicador de "no leído" y zumbido
          del chat — compartido con juegos.html, tiene que cargar antes
          de index-refugio.js (que usa estas funciones). -->
     <script src="js/chat-comun.js?v=1"></script>
 
-    <script src="js/index-refugio.js?v=3"></script>
+    <script src="js/index-refugio.js?v=4"></script>
 </body>
 </html>

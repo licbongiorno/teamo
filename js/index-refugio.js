@@ -1037,46 +1037,12 @@
                         vibrar([40, 60, 40, 60, 120]); // el momento más emotivo
                         reproducirAcordeMagico(); lanzarExplosionCanvas();
 
-                        setTimeout(() => {
-                            // Todas las burbujas quedan "listas" (mostrar) para que sus paneles
-                            // funcionen apenas alguien las toque desde el universo — pero nada
-                            // se dispara ni se abre solo, incluido el libro.
-                            const repFlotante = document.getElementById('reproductor-flotante');
-                            repFlotante.style.display = 'flex';
-                            setTimeout(() => repFlotante.classList.add('mostrar'), 100);
-
-                            const chatFlotante = document.getElementById('chat-flotante');
-                            chatFlotante.style.display = 'flex';
-                            setTimeout(() => chatFlotante.classList.add('mostrar'), 150);
-
-                            const muroFlotante = document.getElementById('muro-flotante');
-                            muroFlotante.style.display = 'flex';
-                            setTimeout(() => muroFlotante.classList.add('mostrar'), 200);
-
-                            const gratitudFlotante = document.getElementById('gratitud-flotante');
-                            gratitudFlotante.style.display = 'flex';
-                            setTimeout(() => gratitudFlotante.classList.add('mostrar'), 250);
-
-                            const deseosFlotante = document.getElementById('deseos-flotante');
-                            deseosFlotante.style.display = 'flex';
-                            setTimeout(() => deseosFlotante.classList.add('mostrar'), 300);
-
-                            const preguntasFlotante = document.getElementById('preguntas-flotante');
-                            preguntasFlotante.style.display = 'flex';
-                            setTimeout(() => preguntasFlotante.classList.add('mostrar'), 350);
-
-                            const relojFlotante = document.getElementById('reloj-flotante');
-                            relojFlotante.style.display = 'flex';
-                            setTimeout(() => relojFlotante.classList.add('mostrar'), 400);
-
-                            const sorpresaFlotante = document.getElementById('sorpresa-flotante');
-                            sorpresaFlotante.style.display = 'flex';
-                            setTimeout(() => sorpresaFlotante.classList.add('mostrar'), 450);
-
-                            // La constelación-corazón es la nueva puerta de entrada:
-                            // cada quien elige qué tocar, incluida "La Carta".
-                            mostrarUniversoCorazon();
-                        }, 2000);
+                        // A partir de acá, en vez de esperar quietos con la puerta
+                        // abierta y recién después mostrar el universo de golpe, toda
+                        // la escena de la puerta se disuelve/acerca (como si avanzáramos
+                        // hacia adentro) mientras arranca el salto a las estrellas — ver
+                        // mostrarUniversoCorazonConViaje().
+                        setTimeout(mostrarUniversoCorazonConViaje, 400);
                     }, 400);
                 }
             }
@@ -1088,6 +1054,74 @@
             document.getElementById('scroll-aviso').style.display = 'none';
             setTimeout(() => universo.classList.add('activo'), 50);
             if (typeof window.iniciarUniversoEstrellas === 'function') window.iniciarUniversoEstrellas();
+        }
+
+        // Todas las burbujas flotantes (chat, muro, gratitud, etc.) quedan
+        // "listas" para que sus paneles funcionen apenas alguien las toque
+        // desde el universo — pero nada se dispara ni se abre solo.
+        function mostrarBurbujasFlotantes() {
+            const repFlotante = document.getElementById('reproductor-flotante');
+            repFlotante.style.display = 'flex';
+            setTimeout(() => repFlotante.classList.add('mostrar'), 100);
+
+            const chatFlotante = document.getElementById('chat-flotante');
+            chatFlotante.style.display = 'flex';
+            setTimeout(() => chatFlotante.classList.add('mostrar'), 150);
+
+            const muroFlotante = document.getElementById('muro-flotante');
+            muroFlotante.style.display = 'flex';
+            setTimeout(() => muroFlotante.classList.add('mostrar'), 200);
+
+            const gratitudFlotante = document.getElementById('gratitud-flotante');
+            gratitudFlotante.style.display = 'flex';
+            setTimeout(() => gratitudFlotante.classList.add('mostrar'), 250);
+
+            const deseosFlotante = document.getElementById('deseos-flotante');
+            deseosFlotante.style.display = 'flex';
+            setTimeout(() => deseosFlotante.classList.add('mostrar'), 300);
+
+            const preguntasFlotante = document.getElementById('preguntas-flotante');
+            preguntasFlotante.style.display = 'flex';
+            setTimeout(() => preguntasFlotante.classList.add('mostrar'), 350);
+
+            const relojFlotante = document.getElementById('reloj-flotante');
+            relojFlotante.style.display = 'flex';
+            setTimeout(() => relojFlotante.classList.add('mostrar'), 400);
+
+            const sorpresaFlotante = document.getElementById('sorpresa-flotante');
+            sorpresaFlotante.style.display = 'flex';
+            setTimeout(() => sorpresaFlotante.classList.add('mostrar'), 450);
+        }
+
+        // Sólo para el momento exacto de abrir la puerta por primera vez:
+        // en vez de mostrar el universo de golpe, arranca el "salto a las
+        // estrellas" (iniciarViajeEstrellas en universo-3d.js) — la escena
+        // de la puerta se disuelve, el cielo del universo ya está
+        // dibujando el salto, y el título/corazón/burbujas recién
+        // aparecen cuando el salto está por terminar. volverAlUniverso()
+        // y entrarALaCarta() siguen usando la mostrarUniversoCorazon()
+        // de siempre (instantánea) — el viaje es sólo para la puerta.
+        function mostrarUniversoCorazonConViaje() {
+            document.querySelector('.pantalla-puerta').classList.add('viaje-salida');
+
+            const universo = document.getElementById('universo-corazon');
+            universo.style.display = 'flex';
+            universo.classList.add('viaje');
+            document.getElementById('scroll-aviso').style.display = 'none';
+            setTimeout(() => universo.classList.add('activo'), 50);
+
+            const alTerminarViaje = () => {
+                universo.classList.remove('viaje');
+                mostrarBurbujasFlotantes();
+            };
+            if (typeof window.iniciarViajeEstrellas === 'function') {
+                window.iniciarViajeEstrellas(alTerminarViaje);
+            } else {
+                // Respaldo por si universo-3d.js todavía no cargó: el
+                // universo igual aparece, sin el efecto del salto.
+                if (typeof window.iniciarUniversoEstrellas === 'function') window.iniciarUniversoEstrellas();
+                setTimeout(alTerminarViaje, 300);
+            }
         }
 
         // Entrar al libro es una elección: se toca "La Carta" en el corazón,

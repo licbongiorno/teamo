@@ -239,6 +239,107 @@
         }
     }
 
+    // ---------------- Viaje a las estrellas (al abrir la puerta) ----------------
+    // Efecto "salto a hiperespacio": un puñado de estrellas nace cerca
+    // del centro (donde está la luz de la puerta) y sale disparada hacia
+    // afuera, cada una dibujada como una raya (no un punto) que se
+    // alarga con la velocidad — el mismo truco visual de cualquier
+    // "warp speed" de película, con canvas 2D puro. Se desacelera solas
+    // hasta fundirse en el cielo tranquilo de siempre, así la transición
+    // se siente continua y no un corte entre dos animaciones distintas.
+    var enViaje = false, viajeInicioT = 0;
+    var DURACION_VIAJE_MS = 2000;
+    var warpStars = [];
+
+    function crearWarpStars() {
+        warpStars = [];
+        var cantidad = reducirMovimiento ? 0 : 90;
+        for (var i = 0; i < cantidad; i++) {
+            warpStars.push({
+                angulo: Math.random() * Math.PI * 2,
+                // Arrancan a distintas distancias del centro (no todas
+                // juntas en el mismo punto) y con su propia velocidad
+                // base, así no se ven como un anillo perfecto sino como
+                // un campo de estrellas real.
+                dist: Math.random() * 40,
+                velBase: 260 + Math.random() * 420,
+                grosor: 0.6 + Math.random() * 1.3,
+                tinte: Math.random() < 0.2 ? 'lila' : (Math.random() < 0.4 ? 'rosa' : 'blanco')
+            });
+        }
+    }
+
+    // Suaviza el arranque y sobre todo el final (para que la desaceleración
+    // se sienta natural y no como si las estrellas frenaran en seco).
+    function easeOutCubic(x) { return 1 - Math.pow(1 - x, 3); }
+
+    function dibujarWarpStars(t, progreso) {
+        var cx = anchoCss / 2, cy = altoCss * 0.42;
+        // Intensidad: fuerte al principio, se apaga sobre el final del
+        // viaje (así el cielo normal ya se ve bastante antes de que las
+        // rayas desaparezcan del todo, y el corte no se nota).
+        var intensidad = Math.max(0, 1 - easeOutCubic(progreso));
+        if (intensidad <= 0.01) return;
+        var factorVel = 1 + intensidad * 3.2; // más rápido al principio del salto
+        warpStars.forEach(function (s) {
+            s.dist += s.velBase * factorVel * 0.016;
+            var maxDist = Math.max(anchoCss, altoCss) * 0.75;
+            if (s.dist > maxDist) { s.dist = Math.random() * 30; s.angulo = Math.random() * Math.PI * 2; }
+            var dx = Math.cos(s.angulo), dy = Math.sin(s.angulo);
+            var x = cx + dx * s.dist, y = cy + dy * s.dist;
+            var largo = 14 + s.dist * 0.22 * intensidad; // raya más larga cuanto más "rápido" va
+            var x0 = x - dx * largo, y0 = y - dy * largo;
+            var alfa = intensidad * (0.35 + 0.65 * Math.min(s.dist / 90, 1));
+            var grad = ctx.createLinearGradient(x0, y0, x, y);
+            grad.addColorStop(0, colorEstrella(s.tinte, 0));
+            grad.addColorStop(1, colorEstrella(s.tinte, alfa));
+            ctx.save();
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = s.grosor;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.restore();
+        });
+
+        // Destello inicial: un resplandor cálido que se apaga rápido,
+        // como si la luz de la puerta siguiera ahí un instante.
+        var flash = Math.max(0, 1 - progreso / 0.35);
+        if (flash > 0.01) {
+            var halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(anchoCss, altoCss) * 0.6);
+            halo.addColorStop(0, 'rgba(255,232,214,' + (0.55 * flash) + ')');
+            halo.addColorStop(0.4, 'rgba(255,194,217,' + (0.22 * flash) + ')');
+            halo.addColorStop(1, 'rgba(255,194,217,0)');
+            ctx.save();
+            ctx.fillStyle = halo;
+            ctx.fillRect(0, 0, anchoCss, altoCss);
+            ctx.restore();
+        }
+    }
+
+    window.iniciarViajeEstrellas = function (alTerminar) {
+        // Sin animaciones (prefers-reduced-motion): salteamos el salto y
+        // vamos directo al cielo tranquilo — lo mismo que ya hace el
+        // resto del sitio en esta situación.
+        if (reducirMovimiento) {
+            window.iniciarUniversoEstrellas();
+            if (typeof alTerminar === 'function') alTerminar();
+            return;
+        }
+        window.iniciarUniversoEstrellas();
+        crearWarpStars();
+        enViaje = true;
+        viajeInicioT = performance.now();
+        if (typeof alTerminar === 'function') {
+            // Se llama un poco antes de que el viaje termine del todo,
+            // así el corazón/título aparecen mientras las últimas rayas
+            // todavía se apagan — no esperan a un corte seco.
+            setTimeout(alTerminar, DURACION_VIAJE_MS * 0.72);
+        }
+    };
+
     // ---------------- Loop principal ----------------
     var parallaxX = 0, parallaxY = 0; // -1..1, viene del tilt del corazón
     var ultimoFrameT = 0;
@@ -249,6 +350,18 @@
         ultimoFrameT = t;
         ctx.clearRect(0, 0, anchoCss, altoCss);
 
+        var progresoViaje = 1;
+        if (enViaje) {
+            progresoViaje = Math.min((t - viajeInicioT) / DURACION_VIAJE_MS, 1);
+            if (progresoViaje >= 1) enViaje = false;
+        }
+        // El cielo de siempre se desvanece adentro desde el principio del
+        // viaje (no espera a que el salto termine), así la transición es
+        // un cruce entre las dos animaciones y no una atrás de la otra.
+        var alfaCieloNormal = enViaje ? Math.min(progresoViaje / 0.6, 1) : 1;
+
+        ctx.save();
+        ctx.globalAlpha = alfaCieloNormal;
         dibujarSol(t);
         dibujarPlanetas(t);
 
@@ -273,6 +386,10 @@
 
         dibujarMeteoros(dtSeg);
         if (!reducirMovimiento) dibujarFugaces(t);
+        ctx.restore();
+
+        if (enViaje) dibujarWarpStars(t, progresoViaje);
+
         rafId = requestAnimationFrame(dibujarFrame);
     }
 

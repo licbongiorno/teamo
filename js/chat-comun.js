@@ -12,6 +12,9 @@
 //   3) El zumbido: un aviso al estilo del "Nudge" del viejo MSN
 //      Messenger — sacude la pantalla del otro para llamarle la
 //      atención, con un enfriamiento para que no se pueda spamear.
+//   4) "Pensé en vos": lo opuesto del zumbido a propósito — un
+//      corazón que sube despacio y se desvanece, sin vibración fuerte
+//      ni sonido, para un gesto tierno que no interrumpe nada.
 //
 // Este archivo se auto-inyecta su propio <style> al cargarse, así
 // funciona igual en juegos.html (que carga css/global.css) y en
@@ -23,6 +26,8 @@
     estilos.textContent = `
         .btn-zumbido-chat{ background:none; border:none; font-size:1.05rem; cursor:pointer; touch-action:manipulation; padding:0 4px; color:#ffc2d9; }
         .btn-zumbido-chat:disabled{ opacity:0.4; font-size:0.72rem; cursor:default; }
+        .btn-pense-en-vos{ background:none; border:none; font-size:1.05rem; cursor:pointer; touch-action:manipulation; padding:0 4px; color:#ff9fc0; }
+        .btn-pense-en-vos:disabled{ opacity:0.4; font-size:0.72rem; cursor:default; }
         .marca-visto-chat{ font-size:0.65rem; opacity:0.6; margin-top:3px; text-align:right; }
         @keyframes zumbidoSacudida{
             0%,100%{ transform:translate(0,0); }
@@ -32,12 +37,28 @@
             70%{ transform:translate(-4px,0); } 80%{ transform:translate(4px,0); } 90%{ transform:translate(-2px,0); }
         }
         .zumbido-sacudida{ animation:zumbidoSacudida 0.6s ease; }
+        .pense-en-vos-corazon{
+            position:fixed; left:50%; bottom:18%; transform:translateX(-50%);
+            font-size:2.6rem; z-index:99998; pointer-events:none;
+            animation:penseEnVosSubir 3.2s ease-out forwards;
+            filter:drop-shadow(0 0 12px rgba(255,159,192,0.7));
+        }
+        @keyframes penseEnVosSubir{
+            0%{ opacity:0; transform:translateX(-50%) translateY(0) scale(0.6); }
+            15%{ opacity:1; transform:translateX(-50%) translateY(-20px) scale(1.15); }
+            30%{ transform:translateX(-50%) translateY(-40px) scale(1); }
+            100%{ opacity:0; transform:translateX(-50%) translateY(-220px) scale(1.05); }
+        }
+        @media (prefers-reduced-motion: reduce){
+            .pense-en-vos-corazon{ animation:none; opacity:0.9; bottom:40%; }
+        }
     `;
     document.head.appendChild(estilos);
 })();
 
 function _refChatVisto(){ return window.doc(window.db, 'juegos', 'chat-visto'); }
 function _refZumbido(){ return window.doc(window.db, 'juegos', 'zumbido'); }
+function _refPenseEnVos(){ return window.doc(window.db, 'juegos', 'pense-en-vos'); }
 
 // vibrarJ existe en juegos.html (js/usuario.js), vibrar existe en
 // index.html (js/index-refugio.js) — probamos la que haya.
@@ -90,6 +111,7 @@ function iniciarEscuchaChatNoLeidos(){
     _escuchaNoLeidosIniciada = true;
     iniciarEscuchaChatVisto();
     iniciarEscuchaZumbido();
+    iniciarEscuchaPenseEnVos();
     const q = window.query(
         window.collection(window.db, 'chat'),
         window.orderBy('timestamp', 'desc'),
@@ -161,4 +183,66 @@ function _actualizarBotonZumbido(){
     btn.disabled = true;
     btn.innerText = Math.ceil(restante / 1000) + 's';
     setTimeout(_actualizarBotonZumbido, 250);
+}
+
+// ==================== "PENSÉ EN VOS" (latido silencioso) ====================
+// A propósito lo opuesto del zumbido: nada de vibración fuerte ni
+// sonido ni sacudida — sólo un corazón que sube despacio y se
+// desvanece, para decir "estás en mi cabeza" sin interrumpir nada del
+// otro lado.
+const COOLDOWN_PENSE_MS = 8000;
+let _ultimoPenseEnviado = 0;
+let _ultimoPenseVisto = Date.now();
+let _unsubPenseEnVos = null;
+
+function iniciarEscuchaPenseEnVos(){
+    if (_unsubPenseEnVos || !miIdentidad) return;
+    _unsubPenseEnVos = window.onSnapshot(_refPenseEnVos(), (snap) => {
+        if (!snap.exists()) return;
+        const datos = snap.data();
+        if (datos.de === miIdentidad || !datos.enviadoEn) return;
+        if (datos.enviadoEn <= _ultimoPenseVisto) return;
+        _ultimoPenseVisto = datos.enviadoEn;
+        dispararEfectoPenseEnVos();
+    }, (err) => console.error('Error escuchando "pensé en vos":', err));
+}
+
+function dispararEfectoPenseEnVos(){
+    const corazon = document.createElement('div');
+    corazon.className = 'pense-en-vos-corazon';
+    corazon.textContent = '💗';
+    document.body.appendChild(corazon);
+    setTimeout(() => corazon.remove(), 3200);
+    // Vibración mínima, más para "avisar sin gritar" que para llamar
+    // la atención — nada comparable a la del zumbido.
+    _vibrarChat([12]);
+}
+
+async function enviarPenseEnVos(){
+    if (!miIdentidad) return;
+    const ahora = Date.now();
+    if (ahora - _ultimoPenseEnviado < COOLDOWN_PENSE_MS) return;
+    _ultimoPenseEnviado = ahora;
+    _actualizarBotonPenseEnVos();
+    // Optimista: el propio corazoncito también se ve del lado de quien
+    // lo manda, como confirmación de que salió.
+    dispararEfectoPenseEnVos();
+    try {
+        await window.setDoc(_refPenseEnVos(), { de: miIdentidad, enviadoEn: ahora });
+    } catch (e) {
+        console.warn('No se pudo enviar "pensé en vos":', e);
+        _ultimoPenseEnviado = 0;
+        _actualizarBotonPenseEnVos();
+    }
+}
+window.enviarPenseEnVos = enviarPenseEnVos;
+
+function _actualizarBotonPenseEnVos(){
+    const btn = document.getElementById('btn-pense-en-vos');
+    if (!btn) return;
+    const restante = COOLDOWN_PENSE_MS - (Date.now() - _ultimoPenseEnviado);
+    if (restante <= 0) { btn.disabled = false; btn.innerText = '💗'; return; }
+    btn.disabled = true;
+    btn.innerText = Math.ceil(restante / 1000) + 's';
+    setTimeout(_actualizarBotonPenseEnVos, 250);
 }

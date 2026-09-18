@@ -463,6 +463,7 @@
         <div class="panel-chat" id="panel-chat">
             <div class="header-chat">
                 <span class="titulo-chat">Nuestro Chat 💬</span>
+                <button class="btn-pense-en-vos" id="btn-pense-en-vos" onclick="enviarPenseEnVos()" title="Mandar un &quot;pensé en vos&quot;">💗</button>
                 <button class="btn-zumbido-chat" id="btn-zumbido-chat" onclick="enviarZumbido()" title="Mandar un zumbido">📳</button>
                 <button class="btn-cerrar-chat" onclick="toggleChat(event)">✕</button>
             </div>
@@ -505,7 +506,7 @@
     <!-- Recibo de lectura compartido, indicador de "no leído" y zumbido
          del chat — compartido con juegos.html, tiene que cargar antes
          de index-refugio.js (que usa estas funciones). -->
-    <script src="js/chat-comun.js?v=1"></script>
+    <script src="js/chat-comun.js?v=2"></script>
 
     <script src="js/index-refugio.js?v=5"></script>
 </body>

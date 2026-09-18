@@ -493,4 +493,82 @@
         animando = false;
         if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     };
+
+    // ---------------- Pausa automática cuando un panel tapa el cielo ----------------
+    // Antes esto sólo se apagaba al entrar a "El Libro" (entrarALaCarta).
+    // Pero Gratitud, Deseos, Preguntas, Ticket, Sanación, Reloj y el Chat
+    // se abren ENCIMA de la constelación-corazón sin que nadie llame a
+    // detenerUniversoEstrellas() — el cielo (estrellas + planetas + sol +
+    // meteoritos, cada uno recalculando sus degradés 60 veces por
+    // segundo) seguía dibujándose de fondo, invisible, compitiendo por el
+    // hilo principal con cosas como escribir en el Muro. Un
+    // MutationObserver mirando estos contenedores puntuales evita tener
+    // que tocar cada función abrir/cerrar de cada panel por separado (son
+    // ocho, con convenciones de clase distintas entre sí).
+    // "El Libro" (#contenedor) queda afuera de esta lista a propósito:
+    // a diferencia de estos paneles, nunca usa display:none para
+    // mostrarse/ocultarse (siempre ocupa toda la pantalla en el DOM, así
+    // el universo lo tapa por encima con position:fixed), así que
+    // offsetParent lo vería "visible" todo el tiempo y el universo nunca
+    // volvería a arrancar. Esa transición ya la maneja directamente
+    // entrarALaCarta()/volverAlUniverso() en index-refugio.js.
+    var IDS_PANELES_SOBRE_UNIVERSO = [
+        'chat-flotante', 'modal-muro', 'gratitud-flotante', 'deseos-flotante',
+        'preguntas-flotante', 'modal-ticket', 'modal-sanacion', 'reloj-flotante'
+    ];
+
+    // Ojo con esto: los "*-flotante" (chat/gratitud/deseos/preguntas/
+    // reloj) tienen DOS niveles — la burbuja circular queda con
+    // style.display:flex para siempre apenas se abre la puerta (así se
+    // ve el ícono todo el tiempo), y recién ".abierto" indica si el
+    // PANEL de adentro está expandido. Si sólo mirara offsetParent, la
+    // burbuja siempre visible haría que esto piense que el panel está
+    // abierto para siempre después del primer toque. modal-muro/
+    // modal-ticket/modal-sanacion en cambio son de un solo nivel:
+    // aparecen y desaparecen enteros con la clase "oculto".
+    function elementoConsideradoAbierto(id) {
+        var el = document.getElementById(id);
+        if (!el) return false;
+        if (el.classList.contains('oculto')) return false;
+        if (el.classList.contains('abierto')) return true;
+        if (id.indexOf('-flotante') !== -1) return false; // burbuja visible, panel cerrado
+        // offsetParent no sirve acá: por spec da null en TODO elemento
+        // position:fixed (como estos modales) esté o no visible en
+        // realidad, así que en vez de eso se mira el display calculado.
+        return getComputedStyle(el).display !== 'none';
+    }
+
+    function algunPanelVisible() {
+        return IDS_PANELES_SOBRE_UNIVERSO.some(elementoConsideradoAbierto);
+    }
+
+    function reevaluarPausaUniverso() {
+        var universo = document.getElementById('universo-corazon');
+        var universoActivo = universo && universo.classList.contains('activo');
+        if (algunPanelVisible()) {
+            window.detenerUniversoEstrellas();
+        } else if (universoActivo) {
+            // Sólo retoma si la constelación sigue siendo la pantalla de
+            // fondo — si el panel que se cerró en realidad reveló "El
+            // Libro" u otra pantalla, esa pantalla se encarga de arrancar
+            // lo que le corresponda por su cuenta.
+            window.iniciarUniversoEstrellas();
+        }
+    }
+
+    var _observerPanelesArrancado = false;
+    function iniciarObservadorPaneles() {
+        if (_observerPanelesArrancado) return;
+        _observerPanelesArrancado = true;
+        var observer = new MutationObserver(reevaluarPausaUniverso);
+        IDS_PANELES_SOBRE_UNIVERSO.forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) observer.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', iniciarObservadorPaneles);
+    } else {
+        iniciarObservadorPaneles();
+    }
 })();

@@ -142,6 +142,68 @@
         });
     }
 
+    // ---------------- Constelación propia (un logro, una estrella fija) ----------------
+    // A diferencia de las estrellas de fondo (que derivan y titilan al
+    // azar en capas con parallax), cada logro desbloqueado suma una
+    // estrella FIJA — misma posición siempre, calculada a partir del id
+    // del logro (hash simple, sin guardar coordenadas en Firestore) — y
+    // conectada con la anterior en el orden en que se desbloquearon, así
+    // arman con el tiempo una constelación única que sólo esta pareja
+    // tiene. Los datos llegan desde index-refugio.js (que sí puede leer
+    // Firestore) vía window.actualizarConstelacionUniverso(...).
+    function _hashTextoConstelacion(s) {
+        let h = 2166136261;
+        for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+        return (h >>> 0) / 4294967296; // 0..1
+    }
+    function _posEstrellaConstelacion(id) {
+        return {
+            xFrac: 0.08 + _hashTextoConstelacion(id + '|x') * 0.84,
+            yFrac: 0.06 + _hashTextoConstelacion(id + '|y') * 0.48, // mitad superior: no se pisa con el corazón/panel de abajo
+            fase: _hashTextoConstelacion(id + '|f') * Math.PI * 2,
+        };
+    }
+    var _estrellasConstelacion = []; // [{id, xFrac, yFrac, fase}, ...] en orden de desbloqueo
+    // Llamado desde index-refugio.js con la lista de ids de logros
+    // desbloqueados, ya ordenada por fecha (más viejo primero).
+    window.actualizarConstelacionUniverso = function (idsOrdenados) {
+        _estrellasConstelacion = (idsOrdenados || []).map(function (id) {
+            var pos = _posEstrellaConstelacion(id);
+            return { id: id, xFrac: pos.xFrac, yFrac: pos.yFrac, fase: pos.fase };
+        });
+    };
+
+    function dibujarConstelacion(t) {
+        if (!_estrellasConstelacion.length) return;
+        var puntos = _estrellasConstelacion.map(function (e) {
+            return {
+                x: e.xFrac * anchoCss + parallaxX * 10,
+                y: e.yFrac * altoCss + parallaxY * 10,
+            };
+        });
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(245,217,160,0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        puntos.forEach(function (p, i) { if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); });
+        ctx.stroke();
+        ctx.restore();
+
+        _estrellasConstelacion.forEach(function (e, i) {
+            var p = puntos[i];
+            var alfa = reducirMovimiento ? 0.95 : 0.7 + 0.3 * Math.sin(t / 1000 * 0.8 + e.fase);
+            ctx.save();
+            ctx.shadowColor = 'rgba(245,217,160,0.9)';
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = 'rgba(255,238,204,' + alfa + ')';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+    }
+
     // ---------------- Sol (glow suave, un solo foco cálido pastel) ----------------
     var SOL = { xFrac: 0.82, yFrac: 0.1, r: 17, fase: 0 };
 
@@ -411,6 +473,7 @@
         ctx.globalAlpha = alfaCieloNormal;
         dibujarSol(t);
         dibujarPlanetas(t);
+        dibujarConstelacion(t);
 
         capas.forEach(function (capa) {
             var cfg = capa.cfg;

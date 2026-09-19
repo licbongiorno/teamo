@@ -1241,6 +1241,7 @@
             miRival = miIdentidad === 'nico' ? 'carito' : 'nico';
             iniciarEscuchaChatNoLeidos(); // ya tiene su propio guard, no se duplica si ya había arrancado
             iniciarEscuchaClima();
+            iniciarEscuchaConstelacion();
         });
         // chatIniciado, muroIniciado, gratitudIniciado y deseosIniciado
         // ahora viven en sus propios módulos (js/inicio/*.js).
@@ -1266,6 +1267,7 @@
                 localStorage.setItem("identidadRefugio", miIdentidad);
                 iniciarEscuchaChatNoLeidos();
                 iniciarEscuchaClima();
+                iniciarEscuchaConstelacion();
                 document.getElementById('modal-acceso').classList.add('oculto');
                 document.getElementById('input-clave').value = '';
                 document.getElementById('error-clave').innerText = "";
@@ -1405,6 +1407,25 @@
                 window.actualizarClimaUniverso(nicoHoy, caritoHoy);
             }
         }
+
+        // ==================== CONSTELACIÓN PROPIA ====================
+        // Cada logro desbloqueado (juegos/logros, mismo documento que ya
+        // usa "Nuestra Historia" en juegos.html) suma una estrella fija al
+        // cielo del Universo — universo-3d.js la dibuja, esto sólo le pasa
+        // la lista de ids en orden de desbloqueo.
+        let _unsubConstelacion = null;
+        function iniciarEscuchaConstelacion(){
+            if (_unsubConstelacion || !miIdentidad) return;
+            _unsubConstelacion = window.onSnapshot(window.doc(window.db, 'juegos', 'logros'), (snap) => {
+                const desbloqueados = snap.exists() ? (snap.data().desbloqueados || {}) : {};
+                const idsOrdenados = Object.keys(desbloqueados)
+                    .sort((a, b) => (desbloqueados[a].fecha || 0) - (desbloqueados[b].fecha || 0));
+                if (typeof window.actualizarConstelacionUniverso === 'function') {
+                    window.actualizarConstelacionUniverso(idsOrdenados);
+                }
+            }, (err) => console.error('Error escuchando la constelación:', err));
+        }
+
         function toggleSelectorClima(event){
             if (event) event.stopPropagation();
             if (!miIdentidad) { requerirIdentidad(null); return; }

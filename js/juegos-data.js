@@ -50,6 +50,7 @@ window.JUEGOS = [
     { id:'mentiraverdad', nombre:'Mentira o Verdad',  icono:'🎭', iconoSvg:'icono-mascara', categoria:'conexion',    disponible:true, descripcion:'Tres afirmaciones, una es mentira. ¿La descubrís?' },
     { id:'detective',  nombre:'Detective de Nosotros', icono:'🔍', iconoSvg:'icono-lupa', categoria:'conexion',    disponible:true, descripcion:'Pistas sobre momentos que vivieron juntos, a adivinar entre los dos.' },
     { id:'nuncapregunte', nombre:'Lo que nunca te pregunté', icono:'💭', iconoSvg:'icono-globo-pensamiento', categoria:'conexion', disponible:true, descripcion:'Preguntas inesperadas para conversaciones profundas.' },
+    { id:'serenata',   nombre:'Serenata a Ciegas',      icono:'🎤', iconoSvg:'icono-microfono', categoria:'conexion', disponible:true, descripcion:'Grabá tarareando una canción sin decir cuál es. El otro la escucha a ciegas y arriesga qué tema es.' },
 
     // ---- REFLEXIÓN ----
     { id:'espejo',     nombre:'El Espejo',             icono:'🪞', iconoSvg:'icono-espejo-mano', categoria:'reflexion',   disponible:true, descripcion:'Respondé y predecí qué respondió el otro. Sin diagnósticos, sólo curiosidad.' },

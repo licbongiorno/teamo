@@ -57,16 +57,63 @@
     // Mismos colores que ya usa el resto del sitio (rosa/lila/menta/melocotón
     // pastel) para que se sienta parte del mismo universo, no algo pegado.
     var PLANETAS = [
-        { xFrac: 0.14, yFrac: 0.12, r: 20, centro: '#fff0f6', borde: '#ffb3c6', anillo: false, parallax: 32, freq: 0.7, fase: 0.3 },
+        { xFrac: 0.14, yFrac: 0.12, r: 20, centro: '#fff0f6', borde: '#ffb3c6', anillo: false, parallax: 32, freq: 0.7, fase: 0.3, climaHumor: true },
         { xFrac: 0.87, yFrac: 0.58, r: 15, centro: '#f2ecff', borde: '#c9b6ff', anillo: true, parallax: 28, freq: 0.55, fase: 1.8 },
         { xFrac: 0.16, yFrac: 0.88, r: 11, centro: '#eafffb', borde: '#a8edea', anillo: false, parallax: 24, freq: 0.85, fase: 3.1 }
     ];
 
+    // ---------------- Planeta del humor (refleja "El Clima del Corazón") ----------------
+    // El primer planeta no es sólo decorativo: si alguno de los dos
+    // marcó hoy cómo está en El Clima del Corazón (index-refugio.js),
+    // este planeta se tiñe con esos colores — igual para los dos, sea
+    // quien sea quien esté mirando la pantalla, porque ambos leen el
+    // mismo documento de Firestore. Si nadie marcó nada hoy, se queda
+    // con su rosa pastel de siempre.
+    var MAPA_COLOR_CLIMA = {
+        '🥰': { centro: '#fff0f6', borde: '#ff8fab' },
+        '😊': { centro: '#fffceb', borde: '#ffd27a' },
+        '😌': { centro: '#eafffb', borde: '#a8edea' },
+        '😴': { centro: '#f1eef8', borde: '#b8b3cc' },
+        '😔': { centro: '#e9eff6', borde: '#8fa3bf' },
+        '🤯': { centro: '#fff1e8', borde: '#ff9d6b' },
+        '🥳': { centro: '#fff0fb', borde: '#ffb3ec' },
+        '🤒': { centro: '#f2f6e9', borde: '#b8cc8f' }
+    };
+    var _climaPlanetaHoy = null; // { nico: '🥰'|null, carito: '😊'|null } o null si nadie marcó nada hoy
+
+    function _hexACanales(hex) {
+        var n = parseInt(hex.replace('#', ''), 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+    function _mezclarHex(hexA, hexB) {
+        var a = _hexACanales(hexA), b = _hexACanales(hexB);
+        var r = Math.round((a[0] + b[0]) / 2), g = Math.round((a[1] + b[1]) / 2), bl = Math.round((a[2] + b[2]) / 2);
+        return '#' + [r, g, bl].map(function (c) { return c.toString(16).padStart(2, '0'); }).join('');
+    }
+    function _colorPlanetaClima() {
+        if (!_climaPlanetaHoy) return null;
+        var a = _climaPlanetaHoy.nico ? MAPA_COLOR_CLIMA[_climaPlanetaHoy.nico] : null;
+        var b = _climaPlanetaHoy.carito ? MAPA_COLOR_CLIMA[_climaPlanetaHoy.carito] : null;
+        if (!a && !b) return null;
+        if (a && !b) return a;
+        if (b && !a) return b;
+        return { centro: _mezclarHex(a.centro, b.centro), borde: _mezclarHex(a.borde, b.borde) };
+    }
+    // Llamado desde index-refugio.js cada vez que cambia El Clima del
+    // Corazón, con los emojis de HOY de cada uno (o null si no marcaron).
+    window.actualizarClimaUniverso = function (nicoEmoji, caritoEmoji) {
+        _climaPlanetaHoy = (nicoEmoji || caritoEmoji) ? { nico: nicoEmoji || null, carito: caritoEmoji || null } : null;
+    };
+
     function dibujarPlanetas(t) {
+        var colorClima = _colorPlanetaClima();
         PLANETAS.forEach(function (p) {
             var bobY = reducirMovimiento ? 0 : Math.sin(t / 1000 * p.freq + p.fase) * 4;
             var px = p.xFrac * anchoCss + parallaxX * p.parallax;
             var py = p.yFrac * altoCss + bobY + parallaxY * p.parallax;
+            var usaColorClima = p.climaHumor && colorClima;
+            var centro = usaColorClima ? colorClima.centro : p.centro;
+            var borde = usaColorClima ? colorClima.borde : p.borde;
 
             if (p.anillo) {
                 ctx.save();
@@ -82,11 +129,11 @@
             }
 
             var grad = ctx.createRadialGradient(px - p.r * 0.35, py - p.r * 0.35, p.r * 0.1, px, py, p.r);
-            grad.addColorStop(0, p.centro);
-            grad.addColorStop(1, p.borde);
+            grad.addColorStop(0, centro);
+            grad.addColorStop(1, borde);
             ctx.save();
-            ctx.shadowColor = p.borde;
-            ctx.shadowBlur = 14;
+            ctx.shadowColor = borde;
+            ctx.shadowBlur = usaColorClima ? (18 + (reducirMovimiento ? 0 : Math.sin(t / 600) * 4)) : 14;
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.arc(px, py, p.r, 0, Math.PI * 2);

@@ -184,6 +184,8 @@
 @keyframes chokureiBailar{ 0%,100%{ transform:rotate(-6deg); } 50%{ transform:rotate(6deg); } }
 @keyframes chokureiTiritar{ 0%,100%{ transform:translateX(0); } 50%{ transform:translateX(3px); } }
 .chokurei-accesorio{ position:absolute; top:-4px; right:calc(50% - 38px); font-size:1.6rem; }
+.chokurei-sombrero-festivo{ position:absolute; top:-8px; left:calc(50% - 40px); font-size:1.6rem; transform:rotate(-18deg); animation: chokureiSombreroTitilar 1.4s ease-in-out infinite; }
+@keyframes chokureiSombreroTitilar{ 0%,100%{ transform:rotate(-18deg) scale(1); } 50%{ transform:rotate(-18deg) scale(1.12); } }
 .chokurei-banner-cumple{
     background:linear-gradient(135deg, rgba(255,179,198,0.25), rgba(245,217,160,0.25));
     border:1px solid rgba(245,217,160,0.5); border-radius:16px; padding:14px; text-align:center;
@@ -326,7 +328,7 @@
 @media (prefers-reduced-motion: reduce){
     .chokurei-escena, .chokurei-feliz, .chokurei-triste, .chokurei-deprimido, .chokurei-fiesta, .chokurei-enferma,
     .casilla-ganadora, .marca-antigua, .area-fuego, .destello, .latir, .chokurei-banner-regalo,
-    .semaforo-verde, .semaforo-shake {
+    .semaforo-verde, .semaforo-shake, .chokurei-sombrero-festivo {
         animation: none !important;
     }
 }

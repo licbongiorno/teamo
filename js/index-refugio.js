@@ -1395,6 +1395,15 @@
             const hayRivalHoy = !!(rival && rival.fecha === hoy);
             if (elRival) elRival.textContent = hayRivalHoy ? rival.emoji : '—';
             if (elRivalCont) elRivalCont.classList.toggle('con-clima', hayRivalHoy);
+
+            // El planeta del humor (universo-3d.js) refleja el mismo clima
+            // para los dos, así que se calcula de nico/carito directo (no
+            // de mio/rival, que dependen de quién está mirando).
+            if (typeof window.actualizarClimaUniverso === 'function') {
+                const nicoHoy = (datos.nico && datos.nico.fecha === hoy) ? datos.nico.emoji : null;
+                const caritoHoy = (datos.carito && datos.carito.fecha === hoy) ? datos.carito.emoji : null;
+                window.actualizarClimaUniverso(nicoHoy, caritoHoy);
+            }
         }
         function toggleSelectorClima(event){
             if (event) event.stopPropagation();

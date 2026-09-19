@@ -162,10 +162,16 @@ function renderMascota(estado){
     }
 
     const accesorioHtml = accesorio ? `<span class="chokurei-accesorio">${accesorio.emoji}</span>` : '';
+    // Gorrito de fiesta: aparece en su cumpleaños (aunque ya se haya
+    // festejado hoy) y mientras dura una fiesta tirada — son las dos
+    // únicas "fechas especiales" que el sitio ya sabe reconocer solo,
+    // sin que nadie tenga que cargar cumpleaños ni aniversarios a mano.
+    const esFechaEspecial = esCumple || fiestaActiva;
+    const sombreroHtml = esFechaEspecial ? `<span class="chokurei-sombrero-festivo">🎉</span>` : '';
 
     html += `<div class="panel texto-centro">
         <div class="chokurei-nivel">Nivel ${nivel} · Chokurei ${etapa.nombre}</div>
-        <div class="chokurei-escena chokurei-${mood.id}" style="position:relative;">${etapa.emoji}${accesorioHtml}</div>
+        <div class="chokurei-escena chokurei-${mood.id}" style="position:relative;">${etapa.emoji}${accesorioHtml}${sombreroHtml}</div>
         <div class="texto-tenue" style="margin:4px 0 2px;">${edadDias} día${edadDias === 1 ? '' : 's'} con nosotros</div>
         <div style="margin-bottom:10px; font-size:0.85rem;">${mood.emoji} ${mood.msg}</div>
         <div class="barra-progreso-jardin" title="${xpEnNivel}/50 XP para el próximo nivel"><div class="relleno-progreso-jardin" style="width:${(xpEnNivel / 50) * 100}%;"></div></div>

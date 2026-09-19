@@ -45,7 +45,7 @@
 </div>
 <script src="js/auth-gate.js"></script>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});</script>
-<script src="js/icon-sprite.js?v=6"></script>
+<script src="js/icon-sprite.js?v=7"></script>
 
 <!-- ==================== MODAL DE ACCESO ==================== -->
 <div id="modal-acceso" class="modal-fondo oculto">
@@ -436,6 +436,14 @@
             <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
         </div>
         <div id="contenido-menumisterioso"></div>
+    </div>
+    <!-- ==================== 🚦 EL SEMÁFORO ==================== -->
+    <div id="pantalla-semaforo" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🚦 El Semáforo</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-semaforo"></div>
     </div>
     <!-- ==================== 💌 CARTA PARA ABRIR DESPUÉS ==================== -->
     <div id="pantalla-cartas" class="pantalla-juego">

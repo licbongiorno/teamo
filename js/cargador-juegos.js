@@ -12,12 +12,12 @@ const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maq
 // Estos juegos son "en vivo, los dos a la vez" y comparten la
 // bureaucracia de js/arcade-comun.js (esperar a que ambos estén
 // listos, arrancar sincronizados con cuenta regresiva, etc).
-const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carreraglobos', 'ritmo', 'bloques', 'cocodrilos', 'pesca', 'ladrillos', 'tiraafloja', 'calculo', 'stroop', 'anagramas', 'tipeo', 'topo', 'blancomovil', 'buscaminas', 'ppt', 'trivia', 'simon', 'memoriarelampago'];
+const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carreraglobos', 'ritmo', 'bloques', 'cocodrilos', 'pesca', 'ladrillos', 'tiraafloja', 'calculo', 'stroop', 'anagramas', 'tipeo', 'topo', 'blancomovil', 'buscaminas', 'ppt', 'trivia', 'simon', 'memoriarelampago', 'semaforo'];
 
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 23;
+const VERSION_CACHE = 24;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)

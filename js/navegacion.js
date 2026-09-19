@@ -89,6 +89,7 @@ async function abrirJuego(juego){
     if (juego === 'trivia') iniciarTrivia();
     if (juego === 'quientienerazon') iniciarQuienTieneRazon();
     if (juego === 'menumisterioso') iniciarMenuMisterioso();
+    if (juego === 'semaforo') iniciarSemaforo();
     if (juego === 'simon') iniciarSimon();
     if (juego === 'memoriarelampago') iniciarMemoriaRelampago();
 

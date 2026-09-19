@@ -286,6 +286,25 @@
 .celda-sudoku.seleccionada.borde-izq{ box-shadow:inset 0 0 0 2px var(--rosa), inset 2.5px 0 0 rgba(255,179,198,0.55); }
 .celda-sudoku.seleccionada.borde-arr{ box-shadow:inset 0 0 0 2px var(--rosa), inset 0 2.5px 0 rgba(255,179,198,0.55); }
 
+/* ============ EL SEMÁFORO ============ */
+.semaforo-luz{
+    width:min(70vw,220px); aspect-ratio:1/1; margin:16px auto 0; border-radius:28px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+    cursor:pointer; user-select:none; transition:background 0.15s ease, transform 0.1s ease;
+    box-shadow:inset 0 6px 14px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.3);
+}
+.semaforo-luz span{ font-size:3rem; line-height:1; }
+.semaforo-luz .semaforo-texto{ font-size:0.85rem; font-weight:600; }
+.semaforo-luz.semaforo-roja{ background:linear-gradient(135deg,#e63950,#ff6b6b); }
+.semaforo-luz.semaforo-verde{ background:linear-gradient(135deg,#4fd68c,var(--verde)); animation:semaforoPop 0.3s ease; }
+.semaforo-luz:active{ transform:scale(0.96); }
+.semaforo-luz.semaforo-shake{ animation:semaforoShake 0.4s ease; }
+@keyframes semaforoPop{ 0%{ transform:scale(1); } 45%{ transform:scale(1.08); } 100%{ transform:scale(1); } }
+@keyframes semaforoShake{
+    0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-6px); } 40%{ transform:translateX(6px); }
+    60%{ transform:translateX(-4px); } 80%{ transform:translateX(4px); }
+}
+
 /* ============ ¿QUIÉN TIENE RAZÓN? ============ */
 .tarjeta-razon{ text-align:left; }
 .pregunta-razon{ font-weight:700; margin-bottom:10px; line-height:1.35; }
@@ -306,7 +325,8 @@
    respirando sin parar ni destellos infinitos en cada casilla ganada. */
 @media (prefers-reduced-motion: reduce){
     .chokurei-escena, .chokurei-feliz, .chokurei-triste, .chokurei-deprimido, .chokurei-fiesta, .chokurei-enferma,
-    .casilla-ganadora, .marca-antigua, .area-fuego, .destello, .latir, .chokurei-banner-regalo {
+    .casilla-ganadora, .marca-antigua, .area-fuego, .destello, .latir, .chokurei-banner-regalo,
+    .semaforo-verde, .semaforo-shake {
         animation: none !important;
     }
 }

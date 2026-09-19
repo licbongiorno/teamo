@@ -133,11 +133,10 @@ function renderCartaReflexion(juegoId, c){
         }
         if (cfg.compartirWhatsApp && cfg.numerosWhatsApp) {
             html += `<div class="panel texto-centro">
-                <div class="texto-tenue" style="margin-bottom:8px;">Mandar esta pregunta y respuestas por WhatsApp:</div>
-                <div class="btn-fila">
-                    <button class="btn-secundario" onclick="compartirReflexionWhatsApp('${juegoId}', 'nico')">A Nico 💙</button>
-                    <button class="btn-secundario" onclick="compartirReflexionWhatsApp('${juegoId}', 'carito')">A Carito 💖</button>
-                </div>
+                <button class="btn-secundario" style="display:flex; align-items:center; justify-content:center; gap:8px;" onclick="compartirReflexionWhatsApp('${juegoId}', miRival)">
+                    <svg class="icono-svg" style="color:#25D366;"><use href="#icono-whatsapp"></use></svg>
+                    Mandarle esto a ${nombreJugador(miRival)}
+                </button>
             </div>`;
         }
     }

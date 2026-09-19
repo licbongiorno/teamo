@@ -1912,6 +1912,11 @@
            juegos) se vea bien acá. Todo escopado bajo #contenido-preguntasindex
            para no pisar ningún estilo existente de la página (en particular,
            ".panel" ya se usa para los paneles de madera de la puerta). */
+        /* El body de esta página define color:#333 (pensado para otros
+           fondos claros), pero este panel es oscuro (rgba(15,10,20,0.92))
+           — sin este color explícito, el texto de la pregunta heredaba
+           ese gris oscuro y quedaba casi invisible sobre el fondo oscuro. */
+        #contenido-preguntasindex { color: #fdf6f0; }
         #contenido-preguntasindex .panel {
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
             border-radius: 16px; padding: 16px; margin-bottom: 12px; width: auto; height: auto; box-shadow: none;

@@ -25,13 +25,14 @@
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
         font-src 'self' https://fonts.gstatic.com;
         img-src 'self' data: https:;
+        media-src 'self' data: blob:;
     ">
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://www.youtube.com">
     <link rel="preconnect" href="https://s.ytimg.com">
     <link rel="preconnect" href="https://i.ytimg.com">
     <link rel="dns-prefetch" href="https://www.youtube.com">
-    <link rel="stylesheet" href="css/refugio.css?v=7">
+    <link rel="stylesheet" href="css/refugio.css?v=8">
     <link rel="stylesheet" href="css/auth-gate.css">
 </head>
 
@@ -54,7 +55,7 @@
     </div>
     <script src="js/auth-gate.js"></script>
     <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});</script>
-    <script src="js/icon-sprite.js?v=10"></script>
+    <script src="js/icon-sprite.js?v=11"></script>
     <script src="js/bienvenida.js?v=1"></script>
 
     <div id="vineta-calida"></div>
@@ -464,7 +465,7 @@
             <div class="header-chat">
                 <span class="titulo-chat">Nuestro Chat 💬</span>
                 <button class="btn-pense-en-vos" id="btn-pense-en-vos" onclick="enviarPenseEnVos()" title="Mandar un &quot;pensé en vos&quot;">💗</button>
-                <button class="btn-zumbido-chat" id="btn-zumbido-chat" onclick="enviarZumbido()" title="Mandar un zumbido">📳</button>
+                <button class="btn-zumbido-chat" id="btn-zumbido-chat" onclick="enviarZumbido()" title="Mandar un zumbido"><svg class="icono-svg"><use href="#icono-zumbido"></use></svg></button>
                 <button class="btn-cerrar-chat" onclick="toggleChat(event)">✕</button>
             </div>
             <div class="mensajes-chat" id="mensajes-chat"></div>

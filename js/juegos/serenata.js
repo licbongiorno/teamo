@@ -19,7 +19,14 @@ function _escaparTextoSerenata(texto){
 }
 
 function _elegirMimeTypeSerenata(){
-    const candidatos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    // El orden importa: Safari/iOS no soporta webm ni ogg (ni para grabar
+    // ni para reproducir después con <audio>), así que probamos variantes
+    // de mp4/aac antes de caer en las de webm — si el navegador no
+    // reconoce un candidato, isTypeSupported() da false y seguimos.
+    const candidatos = [
+        'audio/mp4;codecs=mp4a.40.2', 'audio/mp4',
+        'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'
+    ];
     if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
     for (const m of candidatos) { if (MediaRecorder.isTypeSupported(m)) return m; }
     return '';
@@ -67,9 +74,17 @@ function renderListaSerenatas(serenatas){
     cont.innerHTML = html;
 }
 
+// Si el audio no puede reproducirse (formato no soportado por este
+// navegador — más común en iOS con grabaciones viejas en webm), esto
+// lo avisa en vez de quedarse en silencio sin que nadie entienda por qué.
+function _audioErrorSerenata(el){
+    el.outerHTML = '<p class="texto-tenue" style="margin:8px 0;">⚠️ Este audio no se pudo reproducir en este navegador.</p>';
+}
+window._audioErrorSerenata = _audioErrorSerenata;
+
 function _htmlTarjetaSerenata(s){
     const esMia = s.autor === miIdentidad;
-    const audioTag = s.audio ? `<audio controls src="${s.audio}" style="width:100%; margin:8px 0;"></audio>` : '';
+    const audioTag = s.audio ? `<audio controls preload="metadata" src="${s.audio}" style="width:100%; margin:8px 0;" onerror="_audioErrorSerenata(this)"></audio>` : '';
     if (esMia) {
         const estadoTxt = s.estado === 'revelado'
             ? `${nombreJugador(miRival)} arriesgó: <b>${_escaparTextoSerenata(s.adivinanza)}</b> ${s.acertada === true ? '✅ ¡Le achuntó!' : (s.acertada === false ? '❌ No le achuntó.' : '')}`
@@ -154,14 +169,19 @@ async function alternarGrabacionSerenata(){
     }
     const mimeType = _elegirMimeTypeSerenata();
     try {
-        _grabadorSerenataRecorder = mimeType
-            ? new MediaRecorder(_grabadorSerenataStream, { mimeType, audioBitsPerSecond: 24000 })
-            : new MediaRecorder(_grabadorSerenataStream);
+        _grabadorSerenataRecorder = new MediaRecorder(_grabadorSerenataStream, { ...(mimeType ? { mimeType } : {}), audioBitsPerSecond: 24000 });
     } catch (e) {
-        console.error('No se pudo iniciar la grabación:', e);
-        if (estadoEl) estadoEl.innerText = '⚠️ Este navegador no puede grabar audio.';
-        _grabadorSerenataStream.getTracks().forEach(t => t.stop());
-        return;
+        // Algunos navegadores tiran si no les gusta audioBitsPerSecond sin
+        // un mimeType explícito: reintentamos sin ninguna opción antes de
+        // rendirnos del todo.
+        try {
+            _grabadorSerenataRecorder = new MediaRecorder(_grabadorSerenataStream);
+        } catch (e2) {
+            console.error('No se pudo iniciar la grabación:', e2);
+            if (estadoEl) estadoEl.innerText = '⚠️ Este navegador no puede grabar audio.';
+            _grabadorSerenataStream.getTracks().forEach(t => t.stop());
+            return;
+        }
     }
     _grabadorSerenataChunks = [];
     _grabadorSerenataRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) _grabadorSerenataChunks.push(e.data); };
@@ -191,7 +211,7 @@ function mostrarPreviaGrabacionSerenata(){
     const cont = document.getElementById('grabador-serenata');
     if (!cont || !_grabadorSerenataAudioUri) return;
     cont.innerHTML = `<div class="panel texto-centro">
-        <audio controls src="${_grabadorSerenataAudioUri}" style="width:100%; margin-bottom:10px;"></audio>
+        <audio controls preload="metadata" src="${_grabadorSerenataAudioUri}" style="width:100%; margin-bottom:10px;" onerror="_audioErrorSerenata(this)"></audio>
         <input type="text" id="input-titulo-serenata" placeholder="¿Qué canción es? (esto no lo ve ${nombreJugador(miRival)} hasta que adivine)" maxlength="80" style="width:100%; box-sizing:border-box; font-family:var(--fuente-texto); background:rgba(255,255,255,0.06); color:var(--texto); border:1px solid var(--borde); border-radius:12px; padding:10px; margin-bottom:8px;">
         <div style="display:flex; gap:8px;">
             <button class="btn-secundario" style="flex:1;" onclick="mostrarGrabadorSerenata()">🔁 Grabar de nuevo</button>

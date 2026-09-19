@@ -21,7 +21,12 @@ function _fechaHoyCapsula(){
 }
 
 function _elegirMimeTypeCapsula(){
-    const candidatos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    // El orden importa: Safari/iOS no soporta webm ni ogg (ni para grabar
+    // ni para reproducir después), así que probamos mp4/aac primero.
+    const candidatos = [
+        'audio/mp4;codecs=mp4a.40.2', 'audio/mp4',
+        'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus'
+    ];
     if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
     for (const m of candidatos) { if (MediaRecorder.isTypeSupported(m)) return m; }
     return '';
@@ -71,12 +76,25 @@ async function reproducirCapsulaVoz(){
     const capsula = datos[_campoCapsula(miRival)];
     if (!capsula || !capsula.audio) return;
     vibrarJ(15);
+    // Reproducimos PRIMERO y sólo borramos si arrancó a sonar de
+    // verdad — si el formato no es compatible con este navegador (algo
+    // más común en iOS con grabaciones viejas), avisamos en vez de
+    // perder la cápsula para siempre sin que nadie la haya escuchado.
     try {
         const audio = new Audio(capsula.audio);
-        audio.play().catch(e => console.error('No se pudo reproducir la cápsula:', e));
-    } catch (e) { console.error('No se pudo reproducir la cápsula:', e); }
-    // Se autodestruye apenas se aprieta play: a partir de acá ya no
-    // existe para nadie más, ni siquiera para volver a escucharla.
+        await audio.play();
+    } catch (e) {
+        console.error('No se pudo reproducir la cápsula:', e);
+        const cont = document.getElementById('contenido-capsulavoz');
+        if (cont) {
+            const aviso = document.createElement('p');
+            aviso.className = 'texto-tenue';
+            aviso.style.margin = '8px 0';
+            aviso.innerText = '⚠️ No se pudo reproducir en este navegador. Probá desde otro dispositivo.';
+            cont.prepend(aviso);
+        }
+        return;
+    }
     try {
         await window.setDoc(refCapsulaVoz(), { [_campoCapsula(miRival)]: null }, { merge: true });
     } catch (e) { console.error('No se pudo borrar la cápsula tras escucharla:', e); }
@@ -115,14 +133,16 @@ async function alternarGrabacionCapsulaVoz(){
     }
     const mimeType = _elegirMimeTypeCapsula();
     try {
-        _grabadorCapsulaRecorder = mimeType
-            ? new MediaRecorder(_grabadorCapsulaStream, { mimeType, audioBitsPerSecond: 24000 })
-            : new MediaRecorder(_grabadorCapsulaStream);
+        _grabadorCapsulaRecorder = new MediaRecorder(_grabadorCapsulaStream, { ...(mimeType ? { mimeType } : {}), audioBitsPerSecond: 24000 });
     } catch (e) {
-        console.error('No se pudo iniciar la grabación:', e);
-        if (estadoEl) estadoEl.innerText = '⚠️ Este navegador no puede grabar audio.';
-        _grabadorCapsulaStream.getTracks().forEach(t => t.stop());
-        return;
+        try {
+            _grabadorCapsulaRecorder = new MediaRecorder(_grabadorCapsulaStream);
+        } catch (e2) {
+            console.error('No se pudo iniciar la grabación:', e2);
+            if (estadoEl) estadoEl.innerText = '⚠️ Este navegador no puede grabar audio.';
+            _grabadorCapsulaStream.getTracks().forEach(t => t.stop());
+            return;
+        }
     }
     _grabadorCapsulaChunks = [];
     _grabadorCapsulaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) _grabadorCapsulaChunks.push(e.data); };
@@ -152,7 +172,7 @@ function mostrarPreviaCapsulaVoz(){
     const cont = document.getElementById('grabador-capsula-voz');
     if (!cont || !_grabadorCapsulaAudioUri) return;
     cont.innerHTML = `<div class="panel texto-centro">
-        <audio controls src="${_grabadorCapsulaAudioUri}" style="width:100%; margin-bottom:10px;"></audio>
+        <audio controls preload="metadata" src="${_grabadorCapsulaAudioUri}" style="width:100%; margin-bottom:10px;"></audio>
         <div style="display:flex; gap:8px;">
             <button class="btn-secundario" style="flex:1;" onclick="mostrarGrabadorCapsulaVoz()">🔁 Grabar de nuevo</button>
             <button class="btn-principal" style="flex:1;" onclick="guardarCapsulaVoz()">Mandar</button>

@@ -70,6 +70,7 @@ window.JUEGOS = [
     { id:'refugio',    nombre:'El Refugio',            icono:'🏡', iconoSvg:'icono-casa', categoria:'cuidado', disponible:true, descripcion:'Diseñen juntos un patio virtual con lo que van ganando.' },
     { id:'puntoencuentro', nombre:'Punto de Encuentro', icono:'📍', iconoSvg:'icono-pin-mapa', categoria:'cuidado', disponible:true, descripcion:'La línea de tiempo viva de todo lo que construyeron acá.' },
     { id:'dibujayadivina', nombre:'Dibuja y Adivina',  icono:'🎨', iconoSvg:'icono-paleta', categoria:'cooperativosvivo', disponible:true, descripcion:'Uno dibuja con el dedo, el otro adivina la palabra.' },
+    { id:'menumisterioso', nombre:'Menú Misterioso',  icono:'🍳', iconoSvg:'icono-olla', categoria:'cooperativosvivo', disponible:true, descripcion:'3 ingredientes al azar para cada uno: inventen un plato imaginario y revélenlo a la vez.' },
     { id:'cartas',     nombre:'Carta para abrir después', icono:'💌', iconoSvg:'icono-sobre', categoria:'cuidado', disponible:true, descripcion:'Escribí una carta que se abre recién en la fecha que elijas.' },
     { id:'capsula',    nombre:'Cápsula del Tiempo',    icono:'📦', iconoSvg:'icono-capsula', categoria:'cuidado', disponible:true, descripcion:'Vayan agregando notas y predicciones a una cápsula que se abre sola en la fecha que elijan.' },
     { id:'mapa',       nombre:'Mapa de Nuestros Lugares', icono:'🗺️', iconoSvg:'icono-mapa-doblado', categoria:'cuidado', disponible:true, descripcion:'Guarden lugares importantes: recuerdos, lugares para visitar y sitios clave.' },

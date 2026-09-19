@@ -97,6 +97,7 @@
         '<symbol id="icono-gemelos" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><circle cx="15" cy="8" r="4"/><path d="M3.5 20c0-3.6 2.5-6.5 5.5-6.5M20.5 20c0-3.6-2.5-6.5-5.5-6.5"/></symbol>' +
         '<symbol id="icono-adn" viewBox="0 0 24 24"><path d="M6 3c0 7 12 11 12 18M18 3c0 7-12 11-12 18"/><path d="M7.3 7h9.4M6.4 12h11.2M7.3 17h9.4"/></symbol>' +
         '<symbol id="icono-sudoku" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/><circle cx="6" cy="6" r=".9" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="18" r=".9" fill="currentColor" stroke="none"/></symbol>' +
+        '<symbol id="icono-olla" viewBox="0 0 24 24"><path d="M4 11h16v3a6.5 6.5 0 0 1-6.5 6.5h-3A6.5 6.5 0 0 1 4 14v-3Z"/><path d="M2 11h20M9 11V8M15 11V8"/><path d="M9.5 3.5c-1 1-1 2 0 3M14.5 3.5c-1 1-1 2 0 3"/></symbol>' +
 
         // --- Duelos en tiempo real (tanda 1) ---
         '<symbol id="icono-calculadora" viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2"/><rect x="7.3" y="5" width="9.4" height="4" rx=".6"/><circle cx="8" cy="12.3" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="12.3" r=".9" fill="currentColor" stroke="none"/><circle cx="16" cy="12.3" r=".9" fill="currentColor" stroke="none"/><circle cx="8" cy="16" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="16" r=".9" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r=".9" fill="currentColor" stroke="none"/></symbol>' +

@@ -93,6 +93,7 @@ async function abrirJuego(juego){
     if (juego === 'serenata') iniciarSerenata();
     if (juego === 'debeuna') iniciarDebeUna();
     if (juego === 'duelomemes') iniciarDueloMemes();
+    if (juego === 'traductorenojos') iniciarTraductorEnojos();
     if (juego === 'simon') iniciarSimon();
     if (juego === 'memoriarelampago') iniciarMemoriaRelampago();
 

@@ -53,6 +53,7 @@ window.JUEGOS = [
     { id:'nuncapregunte', nombre:'Lo que nunca te pregunté', icono:'💭', iconoSvg:'icono-globo-pensamiento', categoria:'conexion', disponible:true, descripcion:'Preguntas inesperadas para conversaciones profundas.' },
     { id:'serenata',   nombre:'Serenata a Ciegas',      icono:'🎤', iconoSvg:'icono-microfono', categoria:'conexion', disponible:true, descripcion:'Grabá tarareando una canción sin decir cuál es. El otro la escucha a ciegas y arriesga qué tema es.' },
     { id:'traductorenojos', nombre:'Traductor de Enojos', icono:'💬', iconoSvg:'icono-chat', categoria:'conexion', disponible:true, descripcion:'Escribí cómo te sentís con toda la bronca y mirá cómo suena una versión más calmada, antes de la charla de verdad.' },
+    { id:'capsulavoz', nombre:'Cápsula de Voz Diaria', icono:'🎙️', iconoSvg:'icono-microfono', categoria:'conexion', disponible:true, descripcion:'Un mensajito de voz de hasta 10 segundos, una vez por día. Se autodestruye apenas el otro lo escucha.' },
 
     // ---- REFLEXIÓN ----
     { id:'espejo',     nombre:'El Espejo',             icono:'🪞', iconoSvg:'icono-espejo-mano', categoria:'reflexion',   disponible:true, descripcion:'Respondé y predecí qué respondió el otro. Sin diagnósticos, sólo curiosidad.' },

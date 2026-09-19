@@ -95,6 +95,7 @@ async function abrirJuego(juego){
     if (juego === 'duelomemes') iniciarDueloMemes();
     if (juego === 'traductorenojos') iniciarTraductorEnojos();
     if (juego === 'barometro') iniciarBarometro();
+    if (juego === 'capsulavoz') iniciarCapsulaVoz();
     if (juego === 'simon') iniciarSimon();
     if (juego === 'memoriarelampago') iniciarMemoriaRelampago();
 

@@ -64,6 +64,7 @@ window.JUEGOS = [
     { id:'antesdedormir', nombre:'Antes de Dormir',    icono:'🌜', iconoSvg:'icono-luna-zzz', categoria:'reflexion',   disponible:true, descripcion:'Rutina nocturna de 5 preguntas: emoción, gratitud y algo divertido.' },
     { id:'album',      nombre:'Nuestro Álbum Invisible', icono:'📸', iconoSvg:'icono-camara', categoria:'reflexion', disponible:true, descripcion:'Describan escenas que guardarían para siempre, sin fotos de verdad.' },
     { id:'destino',    nombre:'El Destino Decide',     icono:'🎡', iconoSvg:'icono-ruleta', categoria:'reflexion',   disponible:true, descripcion:'Voten un plan; si no coinciden, decide la ruleta.' },
+    { id:'nostalgia',  nombre:'Modo Nostalgia',        icono:'🎁', iconoSvg:'icono-regalo', categoria:'reflexion',   disponible:true, descripcion:'El resumen del mes que acaba de terminar: días jugados juntos, logros y momentos guardados.' },
 
     // ---- COOPERATIVOS ----
     { id:'letras',     nombre:'Letras Compartidas',    icono:'🪶', iconoSvg:'icono-pluma', categoria:'cooperativosvivo', disponible:true,  descripcion:'Cadáver exquisito: escriben una historia de a turnos, cada uno con su color.' },

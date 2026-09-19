@@ -96,6 +96,7 @@ async function abrirJuego(juego){
     if (juego === 'traductorenojos') iniciarTraductorEnojos();
     if (juego === 'barometro') iniciarBarometro();
     if (juego === 'capsulavoz') iniciarCapsulaVoz();
+    if (juego === 'nostalgia') iniciarNostalgia();
     if (juego === 'simon') iniciarSimon();
     if (juego === 'memoriarelampago') iniciarMemoriaRelampago();
 
@@ -301,6 +302,7 @@ function iniciarJuegos(){
     if (typeof registrarActividadRacha === 'function') registrarActividadRacha();
     if (typeof iniciarDesafioSemanal === 'function') iniciarDesafioSemanal();
     if (typeof iniciarEscuchaPresencia === 'function') iniciarEscuchaPresencia();
+    _verificarNostalgiaNueva();
     // El indicador de "mensaje nuevo" en la burbuja de chat empieza a
     // escuchar apenas sabemos quiénes somos, no recién cuando se abre
     // el chat (así detecta mensajes que llegaron mientras no mirábamos).
@@ -312,4 +314,36 @@ function iniciarJuegos(){
     if (juegoPedido && document.getElementById('pantalla-' + juegoPedido)) {
         abrirJuego(juegoPedido);
     }
+}
+
+// ==================== AVISO DE MODO NOSTALGIA ====================
+// Cuando arranca un mes nuevo (comparado con el último que vieron en
+// este dispositivo), avisa con un toast que el resumen del mes
+// anterior está listo. Se guarda en localStorage (por dispositivo,
+// no compartido) — no hace falta tocar Firestore para esto, y cada
+// uno lo ve una sola vez por mes en su propio teléfono.
+function _verificarNostalgiaNueva(){
+    try {
+        const hoy = new Date();
+        const claveMesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+        const ultimaVista = localStorage.getItem('nostalgiaVista');
+        if (ultimaVista === claveMesActual) return; // ya se mostró este mes en este dispositivo
+        localStorage.setItem('nostalgiaVista', claveMesActual);
+        if (!ultimaVista) return; // primera vez que se abre el sitio: no hay "mes pasado" que mostrar todavía
+        _mostrarToastNostalgia();
+    } catch (e) { /* localStorage puede fallar en modo privado; no rompe nada */ }
+}
+
+function _mostrarToastNostalgia(){
+    const toast = document.createElement('div');
+    toast.className = 'toast-logro';
+    toast.style.cursor = 'pointer';
+    toast.innerHTML = `<div class="toast-logro-icono">🎁</div>
+        <div><div class="toast-logro-titulo">Modo Nostalgia</div><div class="toast-logro-nombre">Su resumen del mes pasado está listo</div></div>`;
+    toast.onclick = () => { toast.remove(); abrirJuego('nostalgia'); };
+    document.body.appendChild(toast);
+    vibrarJ([15, 40, 15]);
+    if (window.sfx) window.sfx.logro();
+    setTimeout(() => toast.classList.add('toast-logro-salir'), 5500);
+    setTimeout(() => toast.remove(), 6000);
 }

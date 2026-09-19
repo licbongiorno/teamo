@@ -68,6 +68,7 @@ window.JUEGOS = [
     { id:'ruleta',     nombre:'Ruleta de Citas',       icono:'🎡', iconoSvg:'icono-ruleta', categoria:'cooperativosvivo', disponible:true,  descripcion:'Giren juntos y dejen que el azar elija el plan de hoy.' },
     { id:'mascota',    nombre:'Mascota Virtual',       icono:'🐱', iconoSvg:'icono-pata', categoria:'cuidado', disponible:true, descripcion:'Cuiden a Chokurei entre los dos: comida, juego y mimos.' },
     { id:'arbol',      nombre:'Nuestro Árbol',         icono:'🌳', iconoSvg:'icono-arbol', categoria:'cuidado', disponible:true, descripcion:'Cada gesto lindo lo hace crecer, de semilla a árbol florecido.' },
+    { id:'debeuna',    nombre:'Te Debo Una',           icono:'🎫', iconoSvg:'icono-ticket', categoria:'cuidado', disponible:true, descripcion:'Anotá los favores del otro para no olvidarlos — se cobran cuando quieran.' },
     { id:'refugio',    nombre:'El Refugio',            icono:'🏡', iconoSvg:'icono-casa', categoria:'cuidado', disponible:true, descripcion:'Diseñen juntos un patio virtual con lo que van ganando.' },
     { id:'puntoencuentro', nombre:'Punto de Encuentro', icono:'📍', iconoSvg:'icono-pin-mapa', categoria:'cuidado', disponible:true, descripcion:'La línea de tiempo viva de todo lo que construyeron acá.' },
     { id:'dibujayadivina', nombre:'Dibuja y Adivina',  icono:'🎨', iconoSvg:'icono-paleta', categoria:'cooperativosvivo', disponible:true, descripcion:'Uno dibuja con el dedo, el otro adivina la palabra.' },

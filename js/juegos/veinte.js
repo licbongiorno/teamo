@@ -137,20 +137,23 @@ async function preguntarVeinte(){
     if (!texto) return;
     vibrarJ(10);
     if (window.sfx) window.sfx.click();
-    const snap = await new Promise(res => { const u = window.onSnapshot(refVeinte(), s => { u(); res(s); }); });
-    const data = snap.data();
-    const preguntas = [...(data.preguntas || []), { pregunta: texto, respuesta: null }];
-    await window.updateDoc(refVeinte(), { preguntas });
+    // jugadaSegura (ver js/jugada-segura.js): un doble toque ya no
+    // manda la misma pregunta dos veces (y gasta dos de las 20).
+    const res = await window.jugadaSegura(refVeinte(), (data) => {
+        if (!data || data.fase !== 'jugando') return null;
+        return { preguntas: [...(data.preguntas || []), { pregunta: texto, respuesta: null }] };
+    });
+    if (res) input.value = '';
 }
 
 async function responderVeinte(respuesta){
     vibrarJ(10);
-    const snap = await new Promise(res => { const u = window.onSnapshot(refVeinte(), s => { u(); res(s); }); });
-    const data = snap.data();
-    const preguntas = [...(data.preguntas || [])];
-    if (!preguntas.length) return;
-    preguntas[preguntas.length - 1] = { ...preguntas[preguntas.length - 1], respuesta };
-    await window.updateDoc(refVeinte(), { preguntas });
+    await window.jugadaSegura(refVeinte(), (data) => {
+        const preguntas = [...(data?.preguntas || [])];
+        if (!preguntas.length) return null;
+        preguntas[preguntas.length - 1] = { ...preguntas[preguntas.length - 1], respuesta };
+        return { preguntas };
+    });
 }
 
 async function adivinarVeinte(){
@@ -171,6 +174,7 @@ async function adivinarVeinte(){
         updates.puntajes = puntajes;
     }
     await window.updateDoc(refVeinte(), updates);
+    if (acierto && typeof registrarVictoria === 'function') registrarVictoria('veinte', miIdentidad);
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', acierto ? `Adivinaron en 20 Preguntas` : `Jugaron una ronda de 20 Preguntas`);
     }

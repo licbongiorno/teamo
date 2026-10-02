@@ -59,6 +59,7 @@ function renderTopo(estado){
     }
 
     if (estado.fase === 'jugando') {
+        if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
         const restante = (estado.horaInicio || Date.now()) - Date.now();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refTopo(), 'topo');
@@ -181,24 +182,10 @@ function arrancarTopo(horaFin){
 
 async function finalizarRondaTopo(puntajeObtenido){
     vibrarJ([15, 30, 15]);
-    try {
-        const campo = miIdentidad === 'nico' ? 'terminoNico' : 'terminoCarito';
-        const campoPtos = miIdentidad === 'nico' ? 'ptsFinalesNico' : 'ptsFinalesCarito';
-        await window.updateDoc(refTopo(), { [campo]: true, [campoPtos]: puntajeObtenido });
-        const snap = await new Promise(res => { const u = window.onSnapshot(refTopo(), s => { u(); res(s); }); });
-        const data = snap.data();
-        if (data.terminoNico && data.terminoCarito) {
-            const puntajes = { nico: data.ptsFinalesNico || 0, carito: data.ptsFinalesCarito || 0 };
-            await window.updateDoc(refTopo(), { fase: 'terminado', puntajes });
-            if (typeof registrarEvento === 'function') {
-                registrarEvento('gano_partida', `Jugaron Topo Veloz (${puntajes.nico} - ${puntajes.carito})`);
-            }
-        }
-    } catch (e) {
-        console.error('No se pudo finalizar la ronda de topo:', e);
-    }
-    const cont = document.getElementById('contenido-topo');
-    delete cont.dataset.jugandoLocal;
+    // Cierre en transacción + redibujo final (ver cerrarRondaArcade en
+    // js/arcade-comun.js): antes la ronda podía quedar trabada sin
+    // mostrar el marcador hasta actualizar la página.
+    await cerrarRondaArcade(refTopo(), 'topo', puntajeObtenido, renderTopo, 'Jugaron Topo Veloz');
 }
 
 async function revanchaTopo(){

@@ -57,6 +57,7 @@ function renderBurbujas(estado){
     }
 
     if (estado.fase === 'jugando') {
+        if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
         const restante = (estado.horaInicio || Date.now()) - Date.now();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBurbujas(), 'burbujas');
@@ -200,24 +201,10 @@ function arrancarCanvasBurbujas(horaFin){
 
 async function finalizarRondaBurbujas(puntajeObtenido){
     vibrarJ([15, 30, 15]);
-    try {
-        const campo = miIdentidad === 'nico' ? 'terminoNico' : 'terminoCarito';
-        const campoPtos = miIdentidad === 'nico' ? 'ptsFinalesNico' : 'ptsFinalesCarito';
-        await window.updateDoc(refBurbujas(), { [campo]: true, [campoPtos]: puntajeObtenido });
-        const snap = await new Promise(res => { const u = window.onSnapshot(refBurbujas(), s => { u(); res(s); }); });
-        const data = snap.data();
-        if (data.terminoNico && data.terminoCarito) {
-            const puntajes = { nico: data.ptsFinalesNico || 0, carito: data.ptsFinalesCarito || 0 };
-            await window.updateDoc(refBurbujas(), { fase: 'terminado', puntajes });
-            if (typeof registrarEvento === 'function') {
-                registrarEvento('gano_partida', `Jugaron Rompe Burbujas (${puntajes.nico} - ${puntajes.carito})`);
-            }
-        }
-    } catch (e) {
-        console.error('No se pudo finalizar la ronda de burbujas:', e);
-    }
-    const cont = document.getElementById('contenido-burbujas');
-    delete cont.dataset.jugandoLocal;
+    // Cierre en transacción + redibujo final (ver cerrarRondaArcade en
+    // js/arcade-comun.js): antes la ronda podía quedar trabada sin
+    // mostrar el marcador hasta actualizar la página.
+    await cerrarRondaArcade(refBurbujas(), 'burbujas', puntajeObtenido, renderBurbujas, 'Jugaron Rompe Burbujas');
 }
 
 async function revanchaBurbujas(){

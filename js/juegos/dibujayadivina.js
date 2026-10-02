@@ -231,12 +231,11 @@ function configurarCanvasDibujo(estado, soyDibujante){
         if (!_dibujando) return;
         _dibujando = false;
         if (_trazoActual && _trazoActual.puntos.length > 1) {
-            const snap = await new Promise(res => { const u = window.onSnapshot(refDibujaYAdivina(), s => { u(); res(s); }); });
-            const data = snap.data();
-            if (data) {
-                const trazos = [...(data.trazos || []), _trazoActual];
-                await window.updateDoc(refDibujaYAdivina(), { trazos });
-            }
+            // arrayUnion: agrega SÓLO este trazo del lado del servidor. Antes
+            // se leía el dibujo entero y se reescribía cada vez (cada vez más
+            // pesado y lento, y dos trazos rápidos podían pisarse entre sí).
+            const trazo = { ..._trazoActual, id: Date.now() + Math.random() };
+            await window.updateDoc(refDibujaYAdivina(), { trazos: window.arrayUnion(trazo) }).catch(e => console.warn('No se pudo guardar el trazo:', e));
         }
         _trazoActual = null;
     }

@@ -23,7 +23,7 @@
 ">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:ital,wght@0,300;0,500;1,400;0,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/global.css">
-<link rel="stylesheet" href="css/juegos.css">
+<link rel="stylesheet" href="css/juegos.css?v=5">
 <link rel="stylesheet" href="css/mobile.css">
 <link rel="stylesheet" href="css/auth-gate.css">
 </head>
@@ -78,6 +78,7 @@
         <div id="aviso-presencia"></div>
 
         <button class="btn-secundario" style="width:100%; margin-bottom:14px;" onclick="abrirJuego('estadisticas')"><svg class="icono-svg"><use href="#icono-grafico"></use></svg> Nuestra Historia</button>
+        <button class="btn-secundario" style="width:100%; margin-bottom:14px;" onclick="abrirJuego('ranking')">🏆 Ranking general</button>
 
         <input type="text" id="buscador-juegos" class="input-buscador" placeholder="🔍 Buscar un juego por nombre..." autocomplete="off" oninput="buscarJuegos()">
         <div id="resultados-busqueda-juegos" class="lista-juegos-categoria" style="display:none; margin-bottom:14px;"></div>
@@ -566,6 +567,86 @@
         </div>
         <div id="contenido-trivianosotros"></div>
     </div>
+    <!-- ==================== 🤔 ¿Qué Preferís? ==================== -->
+    <div id="pantalla-queprefieres" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🤔 ¿Qué Preferís?</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-queprefieres"></div>
+    </div>
+    <!-- ==================== 👉 ¿Quién es más probable que…? ==================== -->
+    <div id="pantalla-masprobable" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">👉 ¿Quién es más probable que…?</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-masprobable"></div>
+    </div>
+    <!-- ==================== ✏️ Completá la Frase ==================== -->
+    <div id="pantalla-completafrase" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">✏️ Completá la Frase</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-completafrase"></div>
+    </div>
+    <!-- ==================== ☀️ La Pregunta del Día ==================== -->
+    <div id="pantalla-preguntadia" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">☀️ La Pregunta del Día</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-preguntadia"></div>
+    </div>
+    <!-- ==================== ✍️ Te Pregunto Yo ==================== -->
+    <div id="pantalla-tepreguntoyo" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">✍️ Te Pregunto Yo</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-tepreguntoyo"></div>
+    </div>
+    <!-- ==================== ⚪ Reversi ==================== -->
+    <div id="pantalla-reversi" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">⚪ Reversi</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-reversi"></div>
+    </div>
+    <!-- ==================== ✏️ Puntos y Cajitas ==================== -->
+    <div id="pantalla-cajitas" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">✏️ Puntos y Cajitas</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-cajitas"></div>
+    </div>
+    <!-- ==================== 🎲 Generala ==================== -->
+    <div id="pantalla-generala" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🎲 Generala</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-generala"></div>
+    </div>
+    <!-- ==================== 🔤 Tutti Frutti en vivo ==================== -->
+    <div id="pantalla-tuttifrutti" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔤 Tutti Frutti en vivo</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-tuttifrutti"></div>
+    </div>
+    <!-- ==================== 🔠 BATALLA DE PALABRAS ==================== -->
+    <div id="pantalla-palabras" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🔠 Batalla de Palabras</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-palabras"></div>
+    </div>
     <!-- ==================== 🎵 BATALLA DE CANCIONES ==================== -->
     <div id="pantalla-batallacanciones" class="pantalla-juego">
         <div class="fila-superior-juego">
@@ -575,6 +656,14 @@
         <div id="contenido-batallacanciones"></div>
     </div>
     <!-- ==================== NUESTRA HISTORIA ==================== -->
+    <!-- ==================== 🏆 RANKING GENERAL ==================== -->
+    <div id="pantalla-ranking" class="pantalla-juego">
+        <div class="fila-superior-juego">
+            <span class="titulo-juego">🏆 Ranking general</span>
+            <button class="btn-cerrar-juego" onclick="cerrarJuego()">✕</button>
+        </div>
+        <div id="contenido-ranking"></div>
+    </div>
     <div id="pantalla-estadisticas" class="pantalla-juego">
         <div class="fila-superior-juego">
             <span class="titulo-juego">📊 Nuestra Historia</span>
@@ -791,33 +880,34 @@
 </div>
 
 <!-- ==================== FIREBASE (módulo, corre una sola vez) ==================== -->
-<script type="module" src="js/firebase.js?v=7"></script>
+<script type="module" src="js/firebase.js?v=8"></script>
 
 <!-- ==================== MÓDULOS COMPARTIDOS ==================== -->
 <script src="js/sfx.js?v=1"></script>
 <script src="js/fx.js?v=1"></script>
 <script src="js/usuario.js?v=6"></script>
-<script src="js/chat-comun.js?v=2"></script>
-<script src="js/juegos-data.js?v=10"></script>
+<script src="js/jugada-segura.js?v=1"></script>
+<script src="js/chat-comun.js?v=3"></script>
+<script src="js/juegos-data.js?v=15"></script>
 <script src="js/puntos.js?v=7"></script>
-<script src="js/historial.js?v=6"></script>
+<script src="js/historial.js?v=8"></script>
 <script src="js/desafio-semanal.js?v=1"></script>
-<script src="js/racha.js?v=6"></script>
+<script src="js/racha.js?v=7"></script>
 <script src="js/presencia.js?v=5"></script>
 <script src="js/tema.js?v=6"></script>
-<script src="js/logros.js?v=6"></script>
-<script src="js/estadisticas.js?v=7"></script>
-<script src="js/records.js?v=6"></script>
+<script src="js/logros.js?v=7"></script>
+<script src="js/estadisticas.js?v=8"></script>
+<script src="js/records.js?v=7"></script>
 <script src="js/cronometro.js?v=5"></script>
 <script src="js/compartir-imagen.js?v=5"></script>
-<script src="js/cargador-juegos.js?v=14"></script>
-<script src="js/navegacion.js?v=14"></script>
+<script src="js/cargador-juegos.js?v=19"></script>
+<script src="js/navegacion.js?v=19"></script>
 
 <!-- ==================== LÓGICA DE CADA JUEGO ==================== -->
 
 
 <!-- ==================== CHAT ==================== -->
-<script src="js/chat.js?v=6"></script>
+<script src="js/chat.js?v=7"></script>
 
 <script>
     // firebase.js es un módulo: puede terminar de correr un instante

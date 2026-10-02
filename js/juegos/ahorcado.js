@@ -229,6 +229,7 @@ async function intentarLetra(letra){
         if (nuevaFase === 'ganado' && typeof registrarEvento === 'function') {
             registrarEvento('gano_partida', `Adivinaron la palabra en el Ahorcado`);
         }
+        if (nuevaFase === 'ganado') { if (typeof registrarVictoria === 'function') registrarVictoria('ahorcado', estado.adivinador); }
     } finally {
         cont.dataset.bloqueado = '0';
     }

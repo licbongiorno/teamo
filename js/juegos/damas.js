@@ -166,35 +166,48 @@ async function seleccionarCasillaDamas(idx){
     }
     if (!_damasDestinos.includes(idx)) return;
 
-    const nuevoTablero = [...tablero];
-    const pieza = nuevoTablero[_damasSeleccion];
-    nuevoTablero[_damasSeleccion] = null;
+    const origen = _damasSeleccion;
     const captura = _damasCapturasActuales.find(c => c.destino === idx);
-    let mensaje = captura ? `${nombreJugador(miIdentidad)} comió una ficha.` : `${nombreJugador(miIdentidad)} movió una ficha.`;
-    if (captura) nuevoTablero[captura.capturada] = null;
+    _damasSeleccion = null; _damasDestinos = []; _damasCapturasActuales = [];
 
-    const filaDestino = Math.floor(idx/8);
-    let piezaFinal = pieza;
-    if (!esDamaCoronada(pieza) && ((miIdentidad==='nico' && filaDestino===7) || (miIdentidad==='carito' && filaDestino===0))) {
-        piezaFinal = pieza + 'D';
-        mensaje += ' ¡Corona dama! 👑';
-    }
-    nuevoTablero[idx] = piezaFinal;
+    // La jugada se calcula sobre el tablero que se vio al elegir, pero
+    // se escribe en una transacción que confirma que el tablero y el
+    // turno siguen iguales en el servidor (ver js/jugada-segura.js).
+    // Antes, dos toques rápidos podían mover dos fichas en un turno.
+    const tableroVisto = JSON.stringify(tablero);
+    const res = await window.jugadaSegura(refDamas(), (actual) => {
+        if (!actual || actual.fase !== 'jugando' || actual.turno !== miIdentidad) return null;
+        if (JSON.stringify(actual.tablero) !== tableroVisto) return null;
+        const nuevoTablero = [...actual.tablero];
+        const pieza = nuevoTablero[origen];
+        nuevoTablero[origen] = null;
+        let mensaje = captura ? `${nombreJugador(miIdentidad)} comió una ficha.` : `${nombreJugador(miIdentidad)} movió una ficha.`;
+        if (captura) nuevoTablero[captura.capturada] = null;
+
+        const filaDestino = Math.floor(idx/8);
+        let piezaFinal = pieza;
+        if (!esDamaCoronada(pieza) && ((miIdentidad==='nico' && filaDestino===7) || (miIdentidad==='carito' && filaDestino===0))) {
+            piezaFinal = pieza + 'D';
+            mensaje += ' ¡Corona dama! 👑';
+        }
+        nuevoTablero[idx] = piezaFinal;
+
+        const quedanRival = nuevoTablero.some(p => esRivalFichaDamas(p, miIdentidad));
+        const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(actual, mensaje) };
+        if (!quedanRival) {
+            updates.fase = 'terminado';
+            updates.ganador = miIdentidad;
+            updates.historial = pushLog(actual, `${mensaje} 🏆 ¡${nombreJugador(miIdentidad)} ganó la partida!`);
+        }
+        return updates;
+    });
+    if (!res) { renderDamas(await leerDamasActual()); return; }
 
     vibrarJ(captura ? [10,20,10] : 10);
     if (window.sfx) window.sfx[captura ? 'golpe' : 'rebote']();
-    _damasSeleccion = null; _damasDestinos = []; _damasCapturasActuales = [];
-
-    const quedanRival = nuevoTablero.some(p => esRivalFichaDamas(p, miIdentidad));
-    const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(estado, mensaje) };
-    if (!quedanRival) {
-        updates.fase = 'terminado';
-        updates.ganador = miIdentidad;
-        updates.historial = pushLog(estado, `${mensaje} 🏆 ¡${nombreJugador(miIdentidad)} ganó la partida!`);
-    }
-    await window.updateDoc(refDamas(), updates);
-    if (!quedanRival && typeof registrarEvento === 'function') {
+    if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_damas', `${nombreJugador(miIdentidad)} le ganó a ${nombreJugador(miRival)} en Damas`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('damas', miIdentidad);
     }
 }
 

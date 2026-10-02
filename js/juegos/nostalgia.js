@@ -24,7 +24,7 @@ async function iniciarNostalgia(){
         const [racha, logrosDoc, eventos] = await Promise.all([
             _leerDocUnaVez('racha'),
             _leerDocUnaVez('logros'),
-            (typeof window.leerUltimosEventos === 'function') ? window.leerUltimosEventos(500) : Promise.resolve([]),
+            (typeof window.leerUltimosEventos === 'function') ? window.leerUltimosEventos(1000, inicio) : Promise.resolve([]),
         ]);
 
         const diasDelMes = (racha.diasAmbos || []).filter(f => {

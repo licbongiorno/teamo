@@ -240,6 +240,11 @@
                             renderizarSanacion();
                         }
                     }
+                }, (err) => {
+                    // Antes no había manejo de error: si la escucha se cortaba,
+                    // las fechas del otro no llegaban más hasta actualizar.
+                    console.warn('Se cortó la sincronización de la sanación:', err);
+                    sanacionFirestoreIniciada = false;
                 });
             } catch (e) { console.warn('No se pudo suscribir la sanación a Firestore:', e); }
         }

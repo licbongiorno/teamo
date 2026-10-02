@@ -33,28 +33,76 @@ async function registrarEvento(tipo, detalle){
     }
 }
 
-// Trae los ultimos 'limite' eventos (una sola vez, no en vivo, para
-// no dejar un listener abierto en juegos que solo quieren mostrar
-// un resumen puntual).
-async function leerUltimosEventos(limite){
+// Antes se pedían TODOS los eventos guardados desde siempre (filtrando
+// sólo por tipo) y recién después se ordenaban y recortaban acá: cada
+// visita a Punto de Encuentro / Nostalgia bajaba miles de documentos
+// y tardaba cada vez más. Ahora se piden ya ordenados por fecha y con
+// límite. (Se ordena por "creadoEn" solo, que Firestore indexa sin
+// configurar nada; los pocos documentos de otros tipos que también
+// tienen ese campo se descartan acá.)
+function _consultaEventos(limite, desde){
+    return window.query(
+        window.collection(window.db, 'juegos'),
+        window.where('creadoEn', '>=', desde || 0),
+        window.orderBy('creadoEn', 'desc'),
+        window.limit(Math.min(2000, (limite || 20) * 2 + 40))
+    );
+}
+function _eventosDeSnapshot(snap, limite){
+    const eventos = [];
+    snap.forEach(d => { const e = d.data(); if (e.tipo === 'evento-historial') eventos.push(e); });
+    return eventos.slice(0, limite || 20);
+}
+
+// Trae los ultimos 'limite' eventos (una sola vez). 'desde' (ms,
+// opcional) corta los más viejos que esa fecha.
+async function leerUltimosEventos(limite, desde){
     if (!window.db) return [];
     try {
-        const q = window.query(window.collection(window.db, 'juegos'), window.where('tipo', '==', 'evento-historial'));
         const snap = await new Promise((res, rej) => {
-            const u = window.onSnapshot(q, s => { u(); res(s); }, e => { u(); rej(e); });
+            const u = window.onSnapshot(_consultaEventos(limite, desde), s => { u(); res(s); }, e => { u(); rej(e); });
         });
-        const eventos = [];
-        snap.forEach(d => eventos.push(d.data()));
-        eventos.sort((a, b) => (b.creadoEn || 0) - (a.creadoEn || 0));
-        return eventos.slice(0, limite || 20);
+        return _eventosDeSnapshot(snap, limite);
     } catch (e) {
         console.warn('No se pudo leer el historial:', e);
         return [];
     }
 }
 
+// Igual, pero en vivo: callback(eventos) cada vez que hay un evento
+// nuevo. Devuelve la función para dejar de escuchar.
+function escucharUltimosEventos(limite, callback){
+    return window.onSnapshot(_consultaEventos(limite), (snap) => callback(_eventosDeSnapshot(snap, limite)),
+        (e) => console.warn('No se pudo escuchar el historial:', e));
+}
+
+// ==================== RANKING GENERAL ====================
+// Un solo documento ('juegos/ranking') con las partidas ganadas por cada
+// uno, en total y por juego. Lo suma el dispositivo que cierra cada
+// partida (una sola vez por partida) con increment(), así no se pisan
+// aunque terminen dos juegos a la vez. Lo muestra "Ranking" en el menú.
+async function registrarVictoria(juegoId, ganador){
+    if (!window.db || (ganador !== 'nico' && ganador !== 'carito')) return;
+    try {
+        await window.setDoc(window.doc(window.db, 'juegos', 'ranking'), {
+            total: { [ganador]: window.increment(1) },
+            porJuego: { [juegoId]: { [ganador]: window.increment(1) } },
+            ultima: { juego: juegoId, ganador, fecha: Date.now() }
+        }, { merge: true });
+    } catch (e) {
+        console.warn('No se pudo sumar la victoria al ranking:', e);
+    }
+}
+function ganadorPorPuntos(p){
+    if (!p || (p.nico || 0) === (p.carito || 0)) return null;
+    return (p.nico || 0) > (p.carito || 0) ? 'nico' : 'carito';
+}
+window.registrarVictoria = registrarVictoria;
+window.ganadorPorPuntos = ganadorPorPuntos;
+
 window.registrarEvento = registrarEvento;
 window.leerUltimosEventos = leerUltimosEventos;
+window.escucharUltimosEventos = escucharUltimosEventos;
 
 // ============================================================
 // pushLog - utilidad compartida para el historial corto que

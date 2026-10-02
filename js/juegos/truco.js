@@ -136,16 +136,27 @@ async function iniciarPartidaTrucoSiCorresponde(estado){
     _iniciandoTruco = true;
     try {
         const manoElegida = Math.random() < 0.5 ? 'nico' : 'carito';
-        await repartirNuevaManoTruco(estado, manoElegida, { nico:0, carito:0 });
+        await repartirNuevaManoTruco(estado, manoElegida, { nico:0, carito:0 }, 'esperando');
     } finally {
         setTimeout(() => { _iniciandoTruco = false; }, 2000);
     }
 }
 
-async function repartirNuevaManoTruco(estadoPrevio, manoElegida, puntajesIniciales){
+// faseEsperada: sólo se reparte si el documento sigue en esa fase al
+// momento de escribir (transacción). Antes, al quedar los dos listos,
+// las DOS pantallas repartían a la vez con mazos distintos y la última
+// escritura pisaba a la primera: a uno le cambiaban las cartas de golpe.
+// Lo mismo si los dos tocaban "Repartir siguiente mano" juntos.
+async function repartirNuevaManoTruco(estadoPrevio, manoElegida, puntajesIniciales, faseEsperada){
     const mazo = crearMazoTruco();
     const cartasNico = mazo.slice(0,3), cartasCarito = mazo.slice(3,6);
-    await window.setDoc(refTruco(), {
+    const ref = refTruco();
+    await window.runTransaction(window.db, async (tx) => {
+    const snap = await tx.get(ref);
+    const actual = snap.exists() ? snap.data() : null;
+    if (!actual || actual.fase !== faseEsperada) return;
+    if (faseEsperada === 'esperando' && !(actual.listos?.nico && actual.listos?.carito)) return;
+    tx.set(ref, {
         fase: 'jugando',
         puntosParaGanar: estadoPrevio.puntosParaGanar || 30,
         puntajes: puntajesIniciales || estadoPrevio.puntajes || {nico:0, carito:0},
@@ -167,6 +178,7 @@ async function repartirNuevaManoTruco(estadoPrevio, manoElegida, puntajesInicial
         manoGanadorTexto: null,
         ganadorPartida: null
     }, { merge: false });
+    });
 }
 
 async function elegirMetaTruco(meta){
@@ -222,7 +234,7 @@ async function jugarCartaTruco(cartaId){
         updates.jugadorEnTurno = miRival;
         await window.updateDoc(refTruco(), updates);
         if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
         }
         return;
     }
@@ -243,7 +255,7 @@ async function jugarCartaTruco(cartaId){
         updates.jugadorEnTurno = siguienteLider;
         await window.updateDoc(refTruco(), updates);
         if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
         }
     }
 }
@@ -266,7 +278,7 @@ async function finalizarManoTruco(estado, updatesParciales, ganadorHand){
     }
     await window.updateDoc(refTruco(), updates);
     if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
     }
 }
 
@@ -274,7 +286,7 @@ async function siguienteManoTruco(){
     const estado = await leerTrucoActual();
     if (!estado || estado.fase !== 'mano_terminada') return;
     const siguienteMano = estado.mano === 'nico' ? 'carito' : 'nico';
-    await repartirNuevaManoTruco(estado, siguienteMano, estado.puntajes);
+    await repartirNuevaManoTruco(estado, siguienteMano, estado.puntajes, 'mano_terminada');
 }
 
 // Version simplificada de la flor: cantarla suma 3 puntos directo
@@ -303,7 +315,7 @@ async function cantarFlorTruco(){
     }
     await window.updateDoc(refTruco(), updates);
     if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
     }
 }
 
@@ -388,7 +400,7 @@ async function responderQuieroTruco(){
     }
     await window.updateDoc(refTruco(), updates);
     if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
     }
 }
 async function responderNoQuieroTruco(){
@@ -407,7 +419,7 @@ async function responderNoQuieroTruco(){
         if (nuevosPuntajes[canto.de] >= estado.puntosParaGanar) { updates.fase = 'terminado'; updates.ganadorPartida = canto.de; }
         await window.updateDoc(refTruco(), updates);
         if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
         }
     } else {
         const puntos = canto.nivel;
@@ -423,7 +435,7 @@ async function responderNoQuieroTruco(){
         }
         await window.updateDoc(refTruco(), updates);
         if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
         }
     }
 }
@@ -446,7 +458,7 @@ async function irseAlMazoTruco(){
     }
     await window.updateDoc(refTruco(), updates);
     if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
     }
 }
 async function reiniciarTruco(){
@@ -614,3 +626,19 @@ function renderTruco(estado){
 
     cont.innerHTML = html;
 }
+
+// Candado contra doble toque (ver js/jugada-segura.js). Antes cada
+// acción leía el estado afuera de una transacción y después escribía:
+// dos toques rápidos sobre dos cartas distintas leían el mismo estado
+// ("es tu turno") y se jugaban las dos cartas en el mismo turno; lo
+// mismo con cantar dos veces, o querer + no querer. Con el candado,
+// mientras una acción del Truco está en curso en este dispositivo,
+// cualquier otro toque se ignora; cuando termina, la siguiente acción
+// ya lee el estado actualizado.
+['jugarCartaTruco', 'siguienteManoTruco', 'cantarFlorTruco', 'cantarEnvido', 'escalarEnvido',
+ 'cantarTruco', 'escalarTruco', 'responderQuieroTruco', 'responderNoQuieroTruco', 'irseAlMazoTruco',
+ 'ajustarPuntajeTruco'].forEach((nombre) => {
+    const original = window[nombre];
+    if (typeof original !== 'function') return;
+    window[nombre] = (...args) => window.conCandado('truco', () => original(...args));
+});

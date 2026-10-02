@@ -174,31 +174,35 @@ async function confirmarFlotaBN(){
 }
 
 async function atacarBN(i){
-    vibrarJ(12);
-    const snap = await new Promise(res => { const u = window.onSnapshot(refBatallaNaval(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (data.fase !== 'atacando' || data.turno !== miIdentidad) return;
+    // Transacción (ver js/jugada-segura.js): antes dos toques rápidos
+    // podían disparar dos veces en un mismo turno aunque el primero
+    // fuera agua.
     const campoDisparos = miIdentidad === 'nico' ? 'disparosNico' : 'disparosCarito';
     const campoBarcosRival = miIdentidad === 'nico' ? 'barcosCarito' : 'barcosNico';
-    if ((data[campoDisparos] || []).includes(i)) return;
+    const res = await window.jugadaSegura(refBatallaNaval(), (data) => {
+        if (!data || data.fase !== 'atacando' || data.turno !== miIdentidad) return null;
+        if ((data[campoDisparos] || []).includes(i)) return null;
 
-    const disparos = [...(data[campoDisparos] || []), i];
-    const barcosRival = data[campoBarcosRival] || [];
-    const tocado = barcosRival.includes(i);
+        const disparos = [...(data[campoDisparos] || []), i];
+        const barcosRival = data[campoBarcosRival] || [];
+        const tocado = barcosRival.includes(i);
+        const hundioTodo = tocado && barcosRival.every(idx => disparos.includes(idx));
+        const updates = { [campoDisparos]: disparos };
+        if (hundioTodo) {
+            updates.fase = 'terminado';
+            updates.ganador = miIdentidad;
+        } else if (!tocado) {
+            updates.turno = miIdentidad === 'nico' ? 'carito' : 'nico';
+        }
+        // si tocó, sigue jugando (turno extra por acierto)
+        return updates;
+    });
+    if (!res) return;
+    const tocado = (res.estado[campoBarcosRival] || []).includes(i);
     vibrarJ(tocado ? [20, 40, 20] : 10);
     if (window.sfx) window.sfx[tocado ? 'golpe' : 'swoosh']();
-
-    const hundioTodo = tocado && barcosRival.every(idx => disparos.includes(idx));
-    let updates = { [campoDisparos]: disparos };
-    if (hundioTodo) {
-        updates.fase = 'terminado';
-        updates.ganador = miIdentidad;
-    } else if (!tocado) {
-        updates.turno = miIdentidad === 'nico' ? 'carito' : 'nico';
-    }
-    // si tocó, sigue jugando (turno extra por acierto)
-    await window.updateDoc(refBatallaNaval(), updates);
-    if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_partida', `${nombreJugador(updates.ganador)} ganó a Batalla Naval`);
+    if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
+        registrarEvento('gano_partida', `${nombreJugador(res.cambios.ganador)} ganó a Batalla Naval`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('batallanaval', res.cambios.ganador);
     }
 }

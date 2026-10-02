@@ -155,7 +155,7 @@ async function responderAnagrama(rondaEsperada){
         vibrarJ(15);
         if (window.sfx) window.sfx.acierto();
         if (resultado.gano && typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó la Carrera de Anagramas`);
+            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó la Carrera de Anagramas`); if (typeof registrarVictoria === 'function') registrarVictoria('anagramas', miIdentidad);
         }
     } else {
         vibrarJ([10, 30, 10]);

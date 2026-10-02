@@ -8,7 +8,7 @@
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {
-    getFirestore, doc, setDoc, updateDoc, onSnapshot, serverTimestamp,
+    initializeFirestore, doc, enableNetwork, disableNetwork, setDoc, updateDoc, onSnapshot, serverTimestamp,
     deleteField, collection, addDoc, query, where, orderBy, limit,
     runTransaction, increment, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -24,7 +24,11 @@ const firebaseConfig = {
     measurementId: "G-VDJ7B6SDW4"
 };
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// experimentalAutoDetectLongPolling: algunas redes móviles y proxies
+// "retienen" la conexión de streaming de Firestore y los cambios del
+// otro llegan tarde o recién al actualizar la página. Con esto el SDK
+// detecta esa situación y pasa a long-polling, que sí llega al toque.
+const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
 const auth = getAuth(app);
 
 window.db = db;
@@ -73,3 +77,33 @@ onAuthStateChanged(auth, (user) => {
 signInAnonymously(auth).catch((err) => {
     console.error('No se pudo iniciar la sesión anónima:', err);
 });
+
+// ==================== RECONEXIÓN AL VOLVER A LA APP ====================
+// Cuando el celular bloquea la pantalla o la app queda en segundo plano,
+// el navegador congela la página y corta la conexión. Al volver,
+// Firestore reconecta solo, pero con una espera que puede llegar a
+// decenas de segundos: mientras tanto no llega nada de lo que hizo el
+// otro y parece que "hay que actualizar la página". Acá forzamos la
+// reconexión inmediata al volver a la pestaña o al recuperar internet.
+let _ultimaReconexion = 0;
+async function reconectarFirestore(){
+    const ahora = Date.now();
+    if (ahora - _ultimaReconexion < 3000) return;
+    _ultimaReconexion = ahora;
+    try {
+        await disableNetwork(db);
+        await enableNetwork(db);
+    } catch (e) {
+        console.warn('No se pudo reconectar Firestore:', e);
+    }
+}
+let _ocultaDesde = 0;
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') { _ocultaDesde = Date.now(); return; }
+    // Sólo si estuvo oculta un rato (un cambio de pestaña de 1 segundo no
+    // necesita reconectar).
+    if (_ocultaDesde && Date.now() - _ocultaDesde > 5000) reconectarFirestore();
+});
+window.addEventListener('online', reconectarFirestore);
+window.addEventListener('pageshow', (e) => { if (e.persisted) reconectarFirestore(); });
+window.reconectarFirestore = reconectarFirestore;

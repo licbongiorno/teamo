@@ -7,17 +7,17 @@
 // Estos 11 juegos comparten el motor genérico de "responder y revelar"
 // (js/motor-reflexion.js), así que necesitan ese archivo además del suyo.
 // Esta lista tiene que coincidir con JUEGOS_MOTOR_REFLEXION de navegacion.js.
-const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones'];
+const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones', 'queprefieres', 'masprobable', 'completafrase', 'preguntadia', 'tepreguntoyo'];
 
 // Estos juegos son "en vivo, los dos a la vez" y comparten la
 // bureaucracia de js/arcade-comun.js (esperar a que ambos estén
 // listos, arrancar sincronizados con cuenta regresiva, etc).
-const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carreraglobos', 'ritmo', 'bloques', 'cocodrilos', 'pesca', 'ladrillos', 'tiraafloja', 'calculo', 'stroop', 'anagramas', 'tipeo', 'topo', 'blancomovil', 'buscaminas', 'ppt', 'trivia', 'simon', 'memoriarelampago', 'semaforo'];
+const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carreraglobos', 'ritmo', 'bloques', 'cocodrilos', 'pesca', 'ladrillos', 'tiraafloja', 'calculo', 'stroop', 'anagramas', 'tipeo', 'topo', 'blancomovil', 'buscaminas', 'ppt', 'trivia', 'simon', 'memoriarelampago', 'semaforo', 'palabras'];
 
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 33;
+const VERSION_CACHE = 39;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)
@@ -25,6 +25,11 @@ function scriptsNecesariosPara(juegoId) {
     // compartida — no hay nada más que bajar bajo demanda para esta pantalla.
     if (juegoId === 'estadisticas') return [];
     const propio = `js/juegos/${juegoId}.js?v=${VERSION_CACHE}`;
+    // La Pregunta del Día reusa el banco grande del "Ping Pong de
+    // Preguntas" del inicio, así que baja también ese archivo.
+    if (juegoId === 'preguntadia') {
+        return [`js/motor-reflexion.js?v=${VERSION_CACHE}`, `js/inicio/preguntas.js?v=${VERSION_CACHE}`, propio];
+    }
     if (JUEGOS_QUE_USAN_MOTOR_REFLEXION.includes(juegoId)) {
         return [`js/motor-reflexion.js?v=${VERSION_CACHE}`, propio];
     }

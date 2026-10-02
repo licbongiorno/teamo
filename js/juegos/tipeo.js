@@ -156,7 +156,7 @@ async function responderTipeo(rondaEsperada){
         vibrarJ(15);
         if (window.sfx) window.sfx.acierto();
         if (resultado.gano && typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Tipeo Relámpago`);
+            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Tipeo Relámpago`); if (typeof registrarVictoria === 'function') registrarVictoria('tipeo', miIdentidad);
         }
     } else {
         vibrarJ([10, 30, 10]);

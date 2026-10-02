@@ -35,6 +35,11 @@ async function abrirJuego(juego){
     if (juego === 'verdadoreto') iniciarVerdadOReto();
     if (juego === 'tateti') iniciarTateti();
     if (juego === 'conecta4') iniciarConecta4();
+    if (juego === 'reversi') iniciarReversi();
+    if (juego === 'cajitas') iniciarCajitas();
+    if (juego === 'generala') iniciarGenerala();
+    if (juego === 'tuttifrutti') iniciarTuttiFrutti();
+    if (juego === 'palabras') iniciarPalabras();
     if (juego === 'reflejos') iniciarReflejos();
     if (juego === 'mascota') iniciarMascota();
     if (juego === 'escoba') iniciarEscoba();
@@ -45,7 +50,7 @@ async function abrirJuego(juego){
     // Los juegos de "responder y revelar" comparten un mismo motor
     // genérico (js/motor-reflexion.js): todos arrancan igual, sólo
     // cambia su configuración (banco de preguntas y textos).
-    const JUEGOS_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones'];
+    const JUEGOS_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones', 'queprefieres', 'masprobable', 'completafrase', 'preguntadia', 'tepreguntoyo'];
     if (JUEGOS_MOTOR_REFLEXION.includes(juego)) iniciarReflexionGenerico(juego);
 
     if (juego === 'mentegemela') iniciarMenteGemela();
@@ -66,6 +71,7 @@ async function abrirJuego(juego){
     if (juego === 'termometro') iniciarTermometro();
     if (juego === 'veinte') iniciarVeinte();
     if (juego === 'estadisticas') iniciarEstadisticas();
+    if (juego === 'ranking') iniciarRanking();
     if (juego === 'sudoku') iniciarSudoku();
     if (juego === 'uno') iniciarUno();
     if (juego === 'chinchon') iniciarChinchon();
@@ -125,7 +131,22 @@ function cerrarJuego(){
     const query = params.toString();
     history.replaceState(null, '', query ? '?' + query : window.location.pathname);
 }
+// Escuchas que pertenecen al menú (no a un juego) y tienen que seguir
+// vivas aunque se cierre el juego.
+const _ESCUCHAS_PERMANENTES = ['_unsubDesafioSemanal'];
 function detenerListenersActivos(){
+    // Antes acá se cortaban sólo 5 escuchas; las de los otros ~70 juegos
+    // quedaban abiertas para siempre después de cerrarlos (bajando datos
+    // y redibujando pantallas ocultas en cada cambio). Con varios juegos
+    // abiertos en una misma visita, la app se ponía cada vez más lenta.
+    // Ahora se corta toda escucha de juego (window._unsub*). Cada juego
+    // vuelve a abrir la suya en su iniciar*() al reabrirlo.
+    Object.keys(window).forEach((clave) => {
+        if (!clave.startsWith('_unsub') || _ESCUCHAS_PERMANENTES.includes(clave)) return;
+        const fn = window[clave];
+        if (typeof fn === 'function') { try { fn(); } catch (e) { /* ya estaba cortada */ } }
+        window[clave] = null;
+    });
     if (window._unsubAhorcado) { window._unsubAhorcado(); window._unsubAhorcado = null; }
     if (window._unsubFrutas) { window._unsubFrutas(); window._unsubFrutas = null; }
     if (window._unsubTruco) { window._unsubTruco(); window._unsubTruco = null; }

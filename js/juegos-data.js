@@ -25,7 +25,7 @@ window.JUEGOS = [
     { id:'ahorcado',   nombre:'Ahorcado',            icono:'🔤', iconoSvg:'icono-horca', categoria:'clasicos',    disponible:true,  descripcion:'Uno propone una palabra secreta, el otro la adivina letra por letra.' },
     { id:'truco',      nombre:'Truco Argentino',     icono:'🃏', iconoSvg:'icono-cartas', categoria:'clasicos',    disponible:true,  descripcion:'El clásico de a dos, con envido y truco, reglas reales.' },
     { id:'damas',      nombre:'Damas',                icono:'⚫', iconoSvg:'icono-ficha-dama', categoria:'clasicos',    disponible:true,  descripcion:'El tablero de siempre, con damas voladoras al coronar.' },
-    { id:'ajedrez',    nombre:'Ajedrez',              icono:'♟️', iconoSvg:'icono-peon', categoria:'clasicos',    disponible:true,  descripcion:'Partida completa: enroque, al paso, jaque y jaque mate.' },
+    { id:'ajedrez',    nombre:'Ajedrez',              icono:'♟️', iconoSvg:'icono-peon', categoria:'clasicos',    disponible:true,  descripcion:'Partida completa: enroque, captura al paso, coronación, jaque mate y tablas.' },
     { id:'tateti',     nombre:'Ta-Te-Ti Infinito',   icono:'❌', iconoSvg:'icono-grilla-equis', categoria:'clasicos',    disponible:true, descripcion:'Tres en línea, pero cada jugador sólo tiene 3 marcas activas.' },
     { id:'conecta4',   nombre:'Conecta 4',            icono:'🔴', iconoSvg:'icono-cuatro-en-linea', categoria:'clasicos',    disponible:true, descripcion:'El clásico de las fichas que caen, a 4 en línea.' },
     { id:'escoba',     nombre:'Escoba de 15',        icono:'🧹', iconoSvg:'icono-escoba', categoria:'clasicos',    disponible:true, descripcion:'Cartas españolas: sumá 15 y levantá la mesa.' },
@@ -117,6 +117,18 @@ window.JUEGOS = [
     { id:'trivia',           nombre:'Trivia Relámpago',       icono:'🧠', iconoSvg:'icono-rayo-pregunta', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: la misma pregunta para los dos, el primero en acertar suma el punto.' },
     { id:'simon',            nombre:'Simón Dice a Dos',       icono:'🔴', iconoSvg:'icono-cuatro-colores', categoria:'competencia', disponible:true, descripcion:'Miren la secuencia de colores y repitanla cada uno en su pantalla. Crece un color por nivel.' },
     { id:'memoriarelampago', nombre:'Memoria Relámpago',      icono:'🍓', iconoSvg:'icono-cartas-rayo', categoria:'competencia', disponible:true, descripcion:'Un mismo mazo para los dos: el que arma una pareja se la lleva. Gana quien junte más.' },
+    // ---- JUEGOS DE PREGUNTAS (fase 2) ----
+    { id:'queprefieres', nombre:'¿Qué Preferís?', icono:'🤔', iconoSvg:'icono-balanza', categoria:'conexion', disponible:true, descripcion:'Dos opciones, cada uno elige a solas. Lleva la cuenta de cuántas veces coinciden.' },
+    { id:'masprobable', nombre:'¿Quién es más probable que…?', icono:'👉', iconoSvg:'icono-pregunta', categoria:'conexion', disponible:true, descripcion:'Voten a solas quién de los dos haría cada cosa. ¿Piensan lo mismo?' },
+    { id:'completafrase', nombre:'Completá la Frase', icono:'✏️', iconoSvg:'icono-pluma', categoria:'conexion', disponible:true, descripcion:'Una frase empezada que cada uno completa a su manera. Se revelan juntas.' },
+    { id:'preguntadia', nombre:'La Pregunta del Día', icono:'☀️', iconoSvg:'icono-sol', categoria:'conexion', disponible:true, descripcion:'Una pregunta nueva cada día, la misma para los dos. Se puede mandar por WhatsApp.' },
+    { id:'tepreguntoyo', nombre:'Te Pregunto Yo', icono:'✍️', iconoSvg:'icono-chat', categoria:'conexion', disponible:true, descripcion:'Escribí tu propia pregunta, mandásela por WhatsApp y revelen las respuestas juntos.' },
+    // ---- COMPETENCIA (fase 3) ----
+    { id:'reversi', nombre:'Reversi', icono:'⚪', iconoSvg:'icono-ficha-dama', categoria:'clasicos', disponible:true, descripcion:'Encerrá las fichas del otro para darlas vuelta. Gana quien tenga más al final.' },
+    { id:'cajitas', nombre:'Puntos y Cajitas', icono:'✏️', iconoSvg:'icono-grilla-equis', categoria:'clasicos', disponible:true, descripcion:'Trazá líneas por turno: el que cierra una cajita se la queda y vuelve a jugar.' },
+    { id:'generala', nombre:'Generala', icono:'🎲', iconoSvg:'icono-dado', categoria:'competencia', disponible:true, descripcion:'Los dados de siempre: escalera, full, póker y generala, con planilla para los dos.' },
+    { id:'palabras', nombre:'Batalla de Palabras', icono:'🔠', iconoSvg:'icono-letras-caoticas', categoria:'competencia', disponible:true, descripcion:'Misma grilla de letras, 90 segundos para armar palabras. Después se revisan entre ustedes.' },
+    { id:'tuttifrutti', nombre:'Tutti Frutti en vivo', icono:'🔤', iconoSvg:'icono-letras-caoticas', categoria:'competencia', disponible:true, descripcion:'Misma letra, mismas categorías. El primero que completa canta ¡BASTA! y se corrigen entre ustedes.' },
 ];
 
 window.obtenerJuegosDeCategoria = function(categoriaId){

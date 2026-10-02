@@ -33,15 +33,28 @@ async function iniciarEstadisticas(){
     cont.innerHTML = `<div class="panel texto-centro texto-tenue">Cargando…</div>`;
     registrarEvento('visita_estadisticas', `${nombreJugador(miIdentidad)} miro Nuestra Historia`);
 
-    const [contadores, logrosDoc, puntos, racha] = await Promise.all([
-        _leerDocUnaVez('contadores'),
-        _leerDocUnaVez('logros'),
-        new Promise((res) => { if (window.escucharPuntos) { const u = window.escucharPuntos((p) => { res(p); }); } else res({}); }),
-        _leerDocUnaVez('racha'),
-    ]);
-
-    _ultimoResumenEstadisticas = { contadores, desbloqueados: logrosDoc.desbloqueados || {}, puntos: puntos || {}, racha };
-    renderEstadisticas(contadores, logrosDoc.desbloqueados || {}, puntos || {}, racha);
+    // En vivo: antes se leía todo una sola vez al entrar (si el otro
+    // jugaba algo con la pantalla abierta, los números y el calendario
+    // no cambiaban hasta actualizar), y la escucha de puntos que se
+    // abría acá no se cerraba nunca: cada visita sumaba una más.
+    const datos = { contadores: null, logros: null, puntos: null, racha: null };
+    const dibujar = () => {
+        if (Object.values(datos).some(v => v === null)) return; // esperar a tener todo
+        const desbloqueados = datos.logros.desbloqueados || {};
+        _ultimoResumenEstadisticas = { contadores: datos.contadores, desbloqueados, puntos: datos.puntos, racha: datos.racha };
+        renderEstadisticas(datos.contadores, desbloqueados, datos.puntos, datos.racha);
+    };
+    const escuchar = (id, campo) => window.onSnapshot(window.doc(window.db, 'juegos', id),
+        (snap) => { datos[campo] = snap.exists() ? snap.data() : {}; dibujar(); },
+        (err) => { console.warn('Estadísticas: no se pudo leer', id, err); datos[campo] = datos[campo] || {}; dibujar(); });
+    const cortes = [
+        escuchar('contadores', 'contadores'),
+        escuchar('logros', 'logros'),
+        escuchar('racha', 'racha'),
+        window.escucharPuntos ? window.escucharPuntos((p) => { datos.puntos = p; dibujar(); }) : (datos.puntos = {}, null),
+    ].filter(Boolean);
+    if (window._unsubEstadisticas) window._unsubEstadisticas();
+    window._unsubEstadisticas = () => cortes.forEach(c => c());
 }
 
 // Categorías de eventos que cuentan para el "nivel de variedad": jugar

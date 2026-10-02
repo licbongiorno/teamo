@@ -215,16 +215,19 @@ async function fallarSimon(){
     if (window.sfx) window.sfx.error();
     if (window.fx) window.fx.sacudirJuego();
     const ref = refSimon();
-    await window.runTransaction(window.db, async (tx) => {
+    const cerre = await window.runTransaction(window.db, async (tx) => {
         const snap = await tx.get(ref);
         const data = snap.data();
-        if (!data || data.fase !== 'jugando' || data.perdedor) return;
+        if (!data || data.fase !== 'jugando' || data.perdedor) return false;
         const victorias = { ...(data.victorias || { nico: 0, carito: 0 }) };
         victorias[miRival] = (victorias[miRival] || 0) + 1;
         tx.update(ref, { fase: 'terminado', perdedor: miIdentidad, ganador: miRival, victorias });
+        return true;
     });
-    if (typeof registrarEvento === 'function') {
-        registrarEvento('gano_partida', `Jugaron Simón Dice a Dos`);
+    // Antes se registraba aunque la partida ya estuviera cerrada.
+    if (cerre) {
+        if (typeof registrarEvento === 'function') registrarEvento('gano_partida', `${nombreJugador(miRival)} ganó Simón Dice a Dos`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('simon', miRival);
     }
 }
 

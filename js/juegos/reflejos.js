@@ -131,35 +131,33 @@ async function dispararFuegoSiCorresponde(estadoPrevio){
 
 async function tocarReflejos(tipo){
     vibrarJ(tipo === 'falso' ? [10, 30, 10] : [15, 30, 15]);
-    const snap = await new Promise(res => { const u = window.onSnapshot(refReflejos(), s => { u(); res(s); }); });
-    if (!snap.exists()) return;
-    const estado = snap.data();
-    if (estado.fase === 'terminado') return;
-
-    if (tipo === 'falso' && estado.fase === 'preparados') {
-        // Tiro en falso: pierde quien tocó antes de tiempo.
+    // Transacción (ver js/jugada-segura.js). Antes, si los dos tocaban
+    // casi juntos en 'fuego', los dos leían "todavía nadie ganó" y la
+    // ÚLTIMA escritura pisaba a la primera: ganaba el más lento.
+    // Ahora el primero que llega al servidor cierra la ronda y el
+    // segundo ve 'terminado' y no escribe nada.
+    const res = await window.jugadaSegura(refReflejos(), (estado) => {
+        if (!estado || estado.fase === 'terminado') return null;
         const nuevosPuntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
-        nuevosPuntajes[miRival] = (nuevosPuntajes[miRival] || 0) + 1;
-        await window.updateDoc(refReflejos(), {
-            fase: 'terminado', puntajes: nuevosPuntajes,
-            mensajeRonda: `${nombreJugador(miIdentidad)} tocó antes de tiempo 🙈 — punto para ${nombreJugador(miRival)}.`
-        });
-        return;
-    }
-
-    if (estado.fase === 'fuego') {
-        // Primero en llegar gana: se protege con un chequeo de fase
-        // fresco antes de escribir, para minimizar el margen de doble toque.
-        const snapFresco = await new Promise(res => { const u = window.onSnapshot(refReflejos(), s => { u(); res(s); }); });
-        const estadoFresco = snapFresco.data();
-        if (!estadoFresco || estadoFresco.fase !== 'fuego') return;
-        const nuevosPuntajes = { ...(estadoFresco.puntajes || { nico: 0, carito: 0 }) };
-        nuevosPuntajes[miIdentidad] = (nuevosPuntajes[miIdentidad] || 0) + 1;
-        await window.updateDoc(refReflejos(), {
-            fase: 'terminado', puntajes: nuevosPuntajes,
-            mensajeRonda: `🏆 ¡Ganó ${nombreJugador(miIdentidad)}!`
-        });
-    }
+        if (tipo === 'falso' && estado.fase === 'preparados') {
+            // Tiro en falso: pierde quien tocó antes de tiempo.
+            nuevosPuntajes[miRival] = (nuevosPuntajes[miRival] || 0) + 1;
+            return {
+                fase: 'terminado', puntajes: nuevosPuntajes,
+                mensajeRonda: `${nombreJugador(miIdentidad)} tocó antes de tiempo 🙈 — punto para ${nombreJugador(miRival)}.`
+            };
+        }
+        if (estado.fase === 'fuego') {
+            nuevosPuntajes[miIdentidad] = (nuevosPuntajes[miIdentidad] || 0) + 1;
+            return {
+                fase: 'terminado', puntajes: nuevosPuntajes,
+                mensajeRonda: `🏆 ¡Ganó ${nombreJugador(miIdentidad)}!`
+            };
+        }
+        return null;
+    });
+    // Cada ronda ganada suma al ranking general.
+    if (res && typeof registrarVictoria === 'function') registrarVictoria('reflejos', ganadorPorPuntos({ nico: (res.cambios.puntajes.nico || 0) - (res.estado.puntajes?.nico || 0), carito: (res.cambios.puntajes.carito || 0) - (res.estado.puntajes?.carito || 0) }));
 }
 
 async function revanchaReflejos(){

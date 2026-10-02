@@ -659,17 +659,48 @@
                 this.gravedad = -0.02; this.opacidad = 1;
             }
             dibujar() {
+                // Se dibuja una imagen ya preparada del emoji (ver
+                // spriteParticula) en vez de fillText en cada cuadro:
+                // dibujar emojis como texto es lentísimo en celulares y con
+                // 160 partículas a 60 fps hacía que todo el inicio anduviera
+                // trabado.
+                const sprite = spriteParticula(this.tipo, this.size);
                 ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotacion * Math.PI / 180);
-                ctx.globalAlpha = this.opacidad; ctx.font = `${this.size}px Arial`;
-                ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(this.tipo, 0, 0); ctx.restore();
+                ctx.globalAlpha = this.opacidad;
+                ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
+                ctx.restore();
             }
         }
 
+        // Cada emoji+tamaño se dibuja UNA vez en un canvas chiquito y
+        // después se reusa como imagen.
+        const _spritesParticulas = {};
+        function spriteParticula(tipo, size) {
+            const tam = Math.round(size);
+            const clave = tipo + '|' + tam;
+            let c = _spritesParticulas[clave];
+            if (!c) {
+                c = document.createElement('canvas');
+                c.width = c.height = Math.ceil(tam * 1.4);
+                const cx = c.getContext('2d');
+                cx.font = `${tam}px Arial`;
+                cx.textAlign = 'center'; cx.textBaseline = 'middle';
+                cx.fillText(tipo, c.width / 2, c.height / 2);
+                _spritesParticulas[clave] = c;
+            }
+            return c;
+        }
+
+        // Un solo bucle a la vez: antes, si la pestaña se ocultaba y volvía
+        // rápido (antes de que corriera el siguiente cuadro), quedaban DOS
+        // bucles animando en paralelo (doble trabajo, y cada vuelta sumaba).
+        let _rafParticulas = null;
         function animarParticulas() {
+            if (_rafParticulas) { cancelAnimationFrame(_rafParticulas); _rafParticulas = null; }
             if(!particulasActivas) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particulas.forEach(p => { p.actualizar(); p.dibujar(); });
-            requestAnimationFrame(animarParticulas);
+            _rafParticulas = requestAnimationFrame(animarParticulas);
         }
 
         // Techo de partículas simultáneas: las explosiones se reciclan en

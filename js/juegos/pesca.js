@@ -11,8 +11,7 @@ function refPesca(){ return window.doc(window.db, 'juegos', 'pesca'); }
 
 let _pescaFaseAnterior = null;
 function iniciarPesca(){
-    const cont = document.getElementById('contenido-pesca');
-    if (cont) delete cont.dataset.jugandoLocal;
+    redibujarTrasJuegoLocal('pesca', refPesca(), renderPesca);
     _pescaFaseAnterior = null;
     if (window._unsubPesca) window._unsubPesca();
     window._unsubPesca = window.onSnapshot(refPesca(), (snap) => {
@@ -222,8 +221,7 @@ async function finalizarRondaPesca(){
     } catch (e) {
         console.error('No se pudo finalizar la pesca:', e);
     }
-    const cont = document.getElementById('contenido-pesca');
-    if (cont) delete cont.dataset.jugandoLocal;
+    redibujarTrasJuegoLocal('pesca', refPesca(), renderPesca);
     _finalizandoPesca = false;
 }
 

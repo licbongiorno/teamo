@@ -20,6 +20,7 @@ let deseosIniciado = false;
                     renderizarDeseos();
                 }, (error) => {
                     console.error('Error escuchando los deseos:', error);
+                    deseosIniciado = false; // si la escucha se corta, al reabrir se vuelve a intentar (antes quedaba muerta hasta actualizar la página)
                     const lista = document.getElementById('lista-deseos');
                     if (lista) lista.innerHTML = `<p class="sin-mensajes">⚠️ No se pudo conectar (${error.code || 'error'}).</p>`;
                 });

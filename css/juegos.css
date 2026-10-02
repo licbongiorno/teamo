@@ -332,3 +332,101 @@
         animation: none !important;
     }
 }
+
+/* ============ REVERSI ============ */
+.casilla-reversi{ background:rgba(40,110,80,0.35); box-shadow:inset 0 0 0 1px rgba(0,0,0,0.25); }
+.casilla-ultima-reversi{ box-shadow:inset 0 0 0 2px rgba(245,217,160,0.8); }
+.ficha-reversi{
+    display:block; width:78%; height:78%; border-radius:50%;
+    box-shadow:inset 0 -2px 4px rgba(0,0,0,0.35), 0 3px 6px rgba(0,0,0,0.4);
+}
+.ficha-volteada{ animation: voltearReversi 0.35s ease; }
+@keyframes voltearReversi{ 0%{ transform:scaleX(1); } 50%{ transform:scaleX(0.1); } 100%{ transform:scaleX(1); } }
+.ficha-reversi-mini{ display:inline-block; width:14px; height:14px; border-radius:50%; vertical-align:middle; }
+
+/* ============ PUNTOS Y CAJITAS ============ */
+.grilla-cajitas{
+    display:grid; width:100%; max-width:360px; aspect-ratio:1/1; margin:0 auto;
+    user-select:none; touch-action:manipulation;
+}
+.punto-cajitas{ background:var(--texto, #fdf6f0); border-radius:50%; margin:2px; }
+.linea-cajitas{ position:relative; cursor:pointer; }
+/* Zona de toque más grande que la línea dibujada (mejor para el dedo). */
+.linea-cajitas::before{ content:''; position:absolute; border-radius:4px; background:rgba(255,255,255,0.08); transition:background 0.15s; }
+.linea-h::before{ left:2px; right:2px; top:50%; height:6px; transform:translateY(-50%); }
+.linea-v::before{ top:2px; bottom:2px; left:50%; width:6px; transform:translateX(-50%); }
+.linea-libre:hover::before{ background:rgba(255,255,255,0.3); }
+.linea-nico::before{ background:var(--celeste); }
+.linea-carito::before{ background:var(--rosa); }
+.linea-ultima::before{ box-shadow:0 0 8px rgba(245,217,160,0.9); }
+.caja-cajitas{ display:flex; align-items:center; justify-content:center; font-size:min(5vw,20px); border-radius:4px; }
+.caja-nico{ background:rgba(168,216,255,0.22); }
+.caja-carito{ background:rgba(255,179,198,0.22); }
+
+/* ============ GENERALA ============ */
+.fila-dados-generala{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; }
+.dado-generala{
+    font-size:2.6rem; line-height:1; width:56px; height:56px; border-radius:12px;
+    border:2px solid var(--borde); background:rgba(255,255,255,0.08); color:inherit; cursor:pointer;
+}
+.dado-generala:disabled{ cursor:default; }
+.dado-guardado{ border-color:var(--rosa); background:rgba(255,179,198,0.22); transform:translateY(-4px); }
+.planilla-generala{ width:100%; border-collapse:collapse; font-size:0.85rem; }
+.planilla-generala th, .planilla-generala td{ padding:5px 4px; border-bottom:1px solid rgba(255,255,255,0.08); text-align:center; }
+.planilla-generala td:first-child, .planilla-generala th:first-child{ text-align:left; }
+.fila-total-generala td{ font-weight:bold; border-top:1px solid var(--borde); }
+.btn-anotar-generala{
+    padding:3px 8px; border-radius:10px; border:1px solid var(--celeste); background:rgba(168,216,255,0.15);
+    color:inherit; font-size:0.8rem; cursor:pointer;
+}
+.anotar-tachar{ border-color:rgba(255,255,255,0.25); background:transparent; opacity:0.7; }
+
+/* ============ TUTTI FRUTTI ============ */
+.letra-tutti{ font-family:var(--fuente-titulo); font-size:3rem; line-height:1.1; margin:2px 0 4px; }
+.campo-tutti{ display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:0.85rem; }
+.campo-tutti span{ flex:0 0 38%; }
+.campo-tutti input{
+    flex:1; min-width:0; padding:8px 10px; border-radius:10px; border:1px solid var(--borde);
+    background:rgba(255,255,255,0.06); color:var(--texto); font-size:16px;
+}
+.tabla-tutti td{ word-break:break-word; }
+.resp-invalida-tutti{ text-decoration:line-through; opacity:0.5; }
+.btn-rechazo-tutti{
+    margin-left:4px; padding:1px 7px; border-radius:8px; border:1px solid var(--borde);
+    background:rgba(255,255,255,0.08); color:inherit; cursor:pointer;
+}
+
+/* ============ AJEDREZ (reglas completas) ============ */
+.casilla-jaque{ box-shadow:inset 0 0 0 3px #ff6b6b; background:rgba(255,107,107,0.35) !important; }
+.casilla-ultimo-mov{ background-image:linear-gradient(rgba(245,217,160,0.22), rgba(245,217,160,0.22)); }
+
+/* ============ RANKING GENERAL ============ */
+.marcador-ranking{ display:flex; justify-content:center; align-items:center; gap:22px; margin:6px 0 10px; }
+.numero-ranking{ font-family:var(--fuente-titulo); font-size:2.4rem; line-height:1; }
+.barra-ranking{ display:flex; height:12px; border-radius:8px; overflow:hidden; background:rgba(255,255,255,0.08); }
+.barra-ranking-chica{ height:6px; margin-top:4px; }
+.barra-ranking-nico{ background:var(--celeste); transition:width 0.4s ease; }
+.barra-ranking-carito{ background:var(--rosa); transition:width 0.4s ease; }
+.fila-ranking{ padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); cursor:pointer; display:grid; grid-template-columns:1fr auto; gap:2px 8px; }
+.fila-ranking .barra-ranking{ grid-column:1 / -1; }
+.fila-ranking-nombre{ font-size:0.88rem; }
+.fila-ranking-marcador{ font-size:0.85rem; white-space:nowrap; }
+
+/* ============ BATALLA DE PALABRAS ============ */
+.grilla-palabras{ display:grid; grid-template-columns:repeat(4,1fr); gap:6px; max-width:260px; margin:8px auto; }
+.ficha-palabras{
+    aspect-ratio:1/1; border-radius:10px; border:1px solid var(--borde); background:rgba(255,255,255,0.1);
+    color:var(--texto); font-family:var(--fuente-titulo); font-size:1.5rem; cursor:pointer; touch-action:manipulation;
+}
+.ficha-palabras:active{ background:rgba(255,179,198,0.3); }
+.ficha-palabras:disabled{ cursor:default; opacity:0.85; }
+.fila-input-palabras{ display:flex; gap:6px; margin:6px 0; }
+.fila-input-palabras input{
+    flex:1; min-width:0; padding:8px 10px; border-radius:10px; border:1px solid var(--borde);
+    background:rgba(255,255,255,0.06); color:var(--texto); font-size:16px; text-transform:uppercase;
+}
+.lista-palabras{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+.chip-palabra{ padding:3px 9px; border-radius:12px; background:rgba(168,216,255,0.15); font-size:0.85rem; }
+.chip-palabra small{ opacity:0.7; }
+.chip-rechazada{ text-decoration:line-through; opacity:0.5; }
+.chip-repetida{ background:rgba(255,255,255,0.06); opacity:0.7; }

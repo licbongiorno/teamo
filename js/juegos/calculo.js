@@ -143,7 +143,7 @@ async function responderCalculo(rondaEsperada, valor){
         vibrarJ(15);
         if (window.sfx) window.sfx.acierto();
         if (resultado.gano && typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Cálculo Mental Rayo`);
+            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Cálculo Mental Rayo`); if (typeof registrarVictoria === 'function') registrarVictoria('calculo', miIdentidad);
         }
     } else {
         vibrarJ([10, 30, 10]);

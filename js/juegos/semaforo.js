@@ -54,6 +54,7 @@ function renderSemaforo(estado){
     }
 
     if (estado.fase === 'jugando') {
+        if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
         const restante = (estado.horaInicio || Date.now()) - Date.now();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refSemaforo(), 'semaforo');
@@ -170,18 +171,25 @@ async function finalizarSemaforo(resultados){
     vibrarJ([15, 30, 15]);
     try {
         const campo = miIdentidad === 'nico' ? 'resultadosNico' : 'resultadosCarito';
-        await window.updateDoc(refSemaforo(), { [campo]: resultados });
-        const snap = await new Promise(res => { const u = window.onSnapshot(refSemaforo(), s => { u(); res(s); }); });
-        const data = snap.data();
-        if (data.resultadosNico && data.resultadosCarito) {
-            await window.updateDoc(refSemaforo(), { fase: 'terminado' });
-            if (typeof registrarEvento === 'function') registrarEvento('gano_partida', 'Jugaron El Semáforo');
-        }
+        // Transacción (mismo problema que el resto de los duelos en vivo:
+        // si los dos terminaban juntos, nadie cerraba la ronda).
+        const ref = refSemaforo();
+        let cerro = false;
+        await window.runTransaction(window.db, async (tx) => {
+            cerro = false;
+            const snap = await tx.get(ref);
+            const data = snap.exists() ? snap.data() : null;
+            if (!data || data.fase === 'terminado') return;
+            const cambios = { [campo]: resultados };
+            const d = { ...data, ...cambios };
+            if (d.resultadosNico && d.resultadosCarito) { cambios.fase = 'terminado'; cerro = true; }
+            tx.update(ref, cambios);
+        });
+        if (cerro && typeof registrarEvento === 'function') registrarEvento('gano_partida', 'Jugaron El Semáforo');
     } catch (e) {
         console.error('No se pudo finalizar el semáforo:', e);
     }
-    const cont = document.getElementById('contenido-semaforo');
-    if (cont) delete cont.dataset.jugandoLocal;
+    redibujarTrasJuegoLocal('semaforo', refSemaforo(), renderSemaforo);
 }
 
 function _calcularSincroniaSemaforo(resNico, resCarito){

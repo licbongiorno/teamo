@@ -62,6 +62,7 @@ function renderRitmo(estado){
     }
 
     if (estado.fase === 'jugando') {
+        if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
         const restante = (estado.horaInicio || Date.now()) - Date.now();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refRitmo(), 'ritmo');
@@ -161,25 +162,37 @@ async function terminarRitmo(){
     try {
         const campo = miIdentidad === 'nico' ? 'precisionNico' : 'precisionCarito';
         const campoListo = miIdentidad === 'nico' ? 'terminoNico' : 'terminoCarito';
-        await window.updateDoc(refRitmo(), { [campo]: promedio, [campoListo]: true });
-        const snap = await new Promise(res => { const u = window.onSnapshot(refRitmo(), s => { u(); res(s); }); });
-        const data = snap.data();
-        if (data.terminoNico && data.terminoCarito && data.fase !== 'terminado') {
-            let ganador = null;
-            if (data.precisionNico < data.precisionCarito) ganador = 'nico';
-            else if (data.precisionCarito < data.precisionNico) ganador = 'carito';
-            const victorias = { ...(data.victorias || { nico: 0, carito: 0 }) };
-            if (ganador) victorias[ganador] = (victorias[ganador] || 0) + 1;
-            await window.updateDoc(refRitmo(), { fase: 'terminado', ganador, victorias });
-            if (ganador && typeof registrarEvento === 'function') {
-                registrarEvento('gano_partida', `${nombreJugador(ganador)} ganó Ritmo a Dúo`);
+        // Transacción: antes se escribía "terminé" y después se leía
+        // aparte; si los dos terminaban juntos, ninguno veía al otro y
+        // la ronda quedaba trabada sin resultado hasta actualizar.
+        const ref = refRitmo();
+        let ganadorCerrado;
+        await window.runTransaction(window.db, async (tx) => {
+            ganadorCerrado = undefined;
+            const snap = await tx.get(ref);
+            const data = snap.exists() ? snap.data() : null;
+            if (!data || data.fase === 'terminado') return;
+            const d = { ...data, [campo]: promedio, [campoListo]: true };
+            const cambios = { [campo]: promedio, [campoListo]: true };
+            if (d.terminoNico && d.terminoCarito) {
+                let ganador = null;
+                if (d.precisionNico < d.precisionCarito) ganador = 'nico';
+                else if (d.precisionCarito < d.precisionNico) ganador = 'carito';
+                const victorias = { ...(d.victorias || { nico: 0, carito: 0 }) };
+                if (ganador) victorias[ganador] = (victorias[ganador] || 0) + 1;
+                Object.assign(cambios, { fase: 'terminado', ganador, victorias });
+                ganadorCerrado = ganador;
             }
+            tx.update(ref, cambios);
+        });
+        if (ganadorCerrado && typeof registrarEvento === 'function') {
+            registrarEvento('gano_partida', `${nombreJugador(ganadorCerrado)} ganó Ritmo a Dúo`);
+            if (typeof registrarVictoria === 'function') registrarVictoria('ritmo', ganadorCerrado);
         }
     } catch (e) {
         console.error('No se pudo terminar ritmo:', e);
     }
-    const cont = document.getElementById('contenido-ritmo');
-    if (cont) delete cont.dataset.jugandoLocal;
+    redibujarTrasJuegoLocal('ritmo', refRitmo(), renderRitmo);
 }
 
 async function revanchaRitmo(){

@@ -119,37 +119,43 @@ function ganadorTateti(tablero, jugador){
 }
 
 async function jugarTateti(idx){
+    // Lectura + chequeo de turno + escritura, todo adentro de la misma
+    // transacción (ver js/jugada-segura.js). Antes la lectura iba por
+    // afuera: dos toques rápidos veían los dos "es tu turno" y se
+    // escribían dos marcas seguidas — se podía ganar con trampa.
+    const res = await window.jugadaSegura(refTateti(), (estado) => {
+        if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad) return null;
+        if (!Array.isArray(estado.tablero) || estado.tablero[idx]) return null;
+
+        const tablero = [...estado.tablero];
+        const colas = { nico: [...(estado.colas?.nico || [])], carito: [...(estado.colas?.carito || [])] };
+        const miCola = colas[miIdentidad];
+        miCola.push(idx);
+        if (miCola.length > 3) {
+            const viejaIdx = miCola.shift();
+            tablero[viejaIdx] = null;
+        }
+        tablero[idx] = miIdentidad;
+
+        const updates = { tablero, colas };
+        const lineaGanadora = ganadorTateti(tablero, miIdentidad);
+        if (lineaGanadora) {
+            updates.fase = 'terminado';
+            updates.ganador = miIdentidad;
+            updates.lineaGanadora = lineaGanadora;
+            const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
+            puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
+            updates.puntajes = puntajes;
+        } else {
+            updates.turno = miIdentidad === 'nico' ? 'carito' : 'nico';
+        }
+        return updates;
+    });
+    if (!res) return;
     vibrarJ(12);
     if (window.sfx) window.sfx.toque();
-    const snap = await new Promise(res => { const u = window.onSnapshot(refTateti(), s => { u(); res(s); }); });
-    if (!snap.exists()) return;
-    const estado = snap.data();
-    if (estado.fase !== 'jugando' || estado.turno !== miIdentidad || estado.tablero[idx]) return;
-
-    const tablero = [...estado.tablero];
-    const colas = { nico: [...(estado.colas?.nico || [])], carito: [...(estado.colas?.carito || [])] };
-    const miCola = colas[miIdentidad];
-    miCola.push(idx);
-    if (miCola.length > 3) {
-        const viejaIdx = miCola.shift();
-        tablero[viejaIdx] = null;
-    }
-    tablero[idx] = miIdentidad;
-
-    let updates = { tablero, colas };
-    const lineaGanadora = ganadorTateti(tablero, miIdentidad);
-    if (lineaGanadora) {
-        updates.fase = 'terminado';
-        updates.ganador = miIdentidad;
-        updates.lineaGanadora = lineaGanadora;
-        const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
-        puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
-        updates.puntajes = puntajes;
-    } else {
-        updates.turno = miIdentidad === 'nico' ? 'carito' : 'nico';
-    }
-    await window.updateDoc(refTateti(), updates);
-    if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_partida', `${nombreJugador(updates.ganador)} ganó al Ta-Te-Ti Infinito`);
+    if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
+        registrarEvento('gano_partida', `${nombreJugador(res.cambios.ganador)} ganó al Ta-Te-Ti Infinito`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('tateti', res.cambios.ganador);
     }
 }

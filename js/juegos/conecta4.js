@@ -126,35 +126,38 @@ function lineaGanadoraC4(tablero, fila, col, jugador){
 }
 
 async function jugarConecta4(col){
-    vibrarJ(12);
-    const snap = await new Promise(res => { const u = window.onSnapshot(refConecta4(), s => { u(); res(s); }); });
-    if (!snap.exists()) return;
-    const estado = snap.data();
-    if (estado.fase !== 'jugando' || estado.turno !== miIdentidad) return;
-    const tablero = [...estado.tablero];
-    const fila = filaLibreC4(tablero, col);
-    if (fila === -1) return; // columna llena
+    // Todo adentro de una transacción (ver js/jugada-segura.js): antes
+    // dos toques rápidos podían soltar dos fichas en el mismo turno.
+    const res = await window.jugadaSegura(refConecta4(), (estado) => {
+        if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad) return null;
+        const tablero = [...estado.tablero];
+        const fila = filaLibreC4(tablero, col);
+        if (fila === -1) return null; // columna llena
 
-    tablero[fila * COLS_C4 + col] = miIdentidad;
+        tablero[fila * COLS_C4 + col] = miIdentidad;
+        const updates = { tablero };
+        const lineaGanadora = lineaGanadoraC4(tablero, fila, col, miIdentidad);
+        if (lineaGanadora) {
+            updates.fase = 'terminado';
+            updates.ganador = miIdentidad;
+            updates.lineaGanadora = lineaGanadora;
+            const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
+            puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
+            updates.puntajes = puntajes;
+        } else if (tablero.every(c => c)) {
+            updates.fase = 'terminado';
+            updates.ganador = 'empate';
+        } else {
+            updates.turno = miIdentidad === 'nico' ? 'carito' : 'nico';
+        }
+        return updates;
+    });
+    if (!res) return;
+    const updates = res.cambios;
+    vibrarJ(updates.lineaGanadora ? [15, 30, 15] : 12);
     if (window.sfx) window.sfx.rebote();
-    let updates = { tablero };
-    const lineaGanadora = lineaGanadoraC4(tablero, fila, col, miIdentidad);
-    if (lineaGanadora) {
-        updates.fase = 'terminado';
-        updates.ganador = miIdentidad;
-        updates.lineaGanadora = lineaGanadora;
-        const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
-        puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
-        updates.puntajes = puntajes;
-        vibrarJ([15, 30, 15]);
-    } else if (tablero.every(c => c)) {
-        updates.fase = 'terminado';
-        updates.ganador = 'empate';
-    } else {
-        updates.turno = miIdentidad === 'nico' ? 'carito' : 'nico';
-    }
-    await window.updateDoc(refConecta4(), updates);
     if (updates.fase === 'terminado' && updates.ganador !== 'empate' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(updates.ganador)} ganó al Conecta 4`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('conecta4', updates.ganador);
     }
 }

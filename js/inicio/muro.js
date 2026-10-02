@@ -39,6 +39,7 @@ function abrirMuroInterno() {
                     });
                 }, (error) => {
                     console.error('Error escuchando el muro:', error);
+                    muroIniciado = false; // si la escucha se corta, al reabrir se vuelve a intentar (antes quedaba muerta hasta actualizar la página)
                     const contenedor = document.getElementById('contenedor-tarjetas-muro');
                     if (contenedor) contenedor.innerHTML = `<p class="sin-notas">⚠️ No se pudo conectar (${error.code || 'error'}). Revisá las Reglas de Firestore.</p>`;
                 });

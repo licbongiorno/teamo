@@ -167,20 +167,24 @@ async function proponerPalabra(){
     if (boton) { boton.disabled = true; boton.innerText = 'Guardando…'; }
     const ref = window.doc(window.db, 'juegos', 'ahorcado');
     try {
-        const anterior = await new Promise((resolve) => {
-            const unsub = window.onSnapshot(ref, (s) => { unsub(); resolve(s.exists() ? s.data() : null); });
-        });
-        await window.setDoc(ref, {
-            palabra: palabra,
-            categoria: categoria,
-            proponente: miIdentidad,
-            adivinador: miRival,
-            letrasIntentadas: [],
-            erroresMax: 6,
-            errores: 0,
-            fase: 'jugando',
-            puntajes: anterior?.puntajes || { nico: 0, carito: 0 },
-            actualizadoEn: window.serverTimestamp()
+        // Transacción: si el otro ya arrancó una partida (o propusieron
+        // los dos a la vez), no se pisa la que está en juego.
+        await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(ref);
+            const anterior = snap.exists() ? snap.data() : null;
+            if (anterior && anterior.fase === 'jugando') return;
+            tx.set(ref, {
+                palabra: palabra,
+                categoria: categoria,
+                proponente: miIdentidad,
+                adivinador: miRival,
+                letrasIntentadas: [],
+                erroresMax: 6,
+                errores: 0,
+                fase: 'jugando',
+                puntajes: anterior?.puntajes || { nico: 0, carito: 0 },
+                actualizadoEn: window.serverTimestamp()
+            });
         });
         _formularioAhorcadoAbierto = false;
         // El propio onSnapshot va a redibujar la pantalla con la partida
@@ -193,44 +197,34 @@ async function proponerPalabra(){
 }
 
 async function intentarLetra(letra){
-    const ref = window.doc(window.db, 'juegos', 'ahorcado');
-    const cont = document.getElementById('contenido-ahorcado');
-    if (cont.dataset.bloqueado === '1') return;
-    cont.dataset.bloqueado = '1';
-    try {
-        const snap = await new Promise((resolve) => {
-            const unsub = window.onSnapshot(ref, (s) => { unsub(); resolve(s); });
-        });
-        const estado = snap.data();
-        if (!estado || estado.fase !== 'jugando' || estado.letrasIntentadas.includes(letra)) return;
-        const nuevasLetras = [...estado.letrasIntentadas, letra];
+    // Lectura, validación y escritura en una sola transacción: un doble
+    // toque o dos letras muy seguidas no pueden pisarse entre sí ni
+    // contar dos veces la victoria.
+    const res = await window.jugadaSegura(window.doc(window.db, 'juegos', 'ahorcado'), (estado) => {
+        if (!estado || estado.fase !== 'jugando' || estado.adivinador !== miIdentidad) return null;
+        if ((estado.letrasIntentadas || []).includes(letra)) return null;
+        const nuevasLetras = [...(estado.letrasIntentadas || []), letra];
         const letrasPalabra = estado.palabra.split("").map(normalizarLetra);
         const acierto = letrasPalabra.includes(letra);
         const nuevosErrores = acierto ? estado.errores : estado.errores + 1;
-        vibrarJ(acierto ? 15 : [10,30,10]);
 
-        // Decidimos acá mismo, en la misma escritura, si esta letra termina
-        // la partida (ganada o perdida) — así los dos lados quedan con
-        // exactamente el mismo resultado guardado, sin que cada pantalla
-        // tenga que recalcularlo por su cuenta.
+        // Se decide en la misma escritura si esta letra termina la
+        // partida, así los dos lados ven exactamente el mismo resultado.
         const erroresMax = estado.erroresMax || 6;
         const todasAdivinadas = letrasPalabra.every(l => l === ' ' || nuevasLetras.includes(l));
-        let nuevaFase = 'jugando';
-        const updates = { letrasIntentadas: nuevasLetras, errores: nuevosErrores };
+        const updates = { letrasIntentadas: nuevasLetras, errores: nuevosErrores, fase: 'jugando' };
         if (todasAdivinadas) {
-            nuevaFase = 'ganado';
+            updates.fase = 'ganado';
             const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
             puntajes[estado.adivinador] = (puntajes[estado.adivinador] || 0) + 1;
             updates.puntajes = puntajes;
-        } else if (nuevosErrores >= erroresMax) nuevaFase = 'perdido';
-        updates.fase = nuevaFase;
-
-        await window.updateDoc(ref, updates);
-        if (nuevaFase === 'ganado' && typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `Adivinaron la palabra en el Ahorcado`);
-        }
-        if (nuevaFase === 'ganado') { if (typeof registrarVictoria === 'function') registrarVictoria('ahorcado', estado.adivinador); }
-    } finally {
-        cont.dataset.bloqueado = '0';
+        } else if (nuevosErrores >= erroresMax) updates.fase = 'perdido';
+        return updates;
+    });
+    if (!res) return;
+    vibrarJ(res.cambios.errores === res.estado.errores ? 15 : [10,30,10]);
+    if (res.cambios.fase === 'ganado') {
+        if (typeof registrarEvento === 'function') registrarEvento('gano_partida', `Adivinaron la palabra en el Ahorcado`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('ahorcado', res.estado.adivinador);
     }
 }

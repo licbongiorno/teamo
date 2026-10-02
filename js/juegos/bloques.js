@@ -250,24 +250,28 @@ async function gameOverBloques(){
     } catch (e) { console.error('No se pudo registrar el game over de bloques:', e); }
 }
 
+// Cuando uno pierde, los dos celulares intentan cerrar la partida casi
+// a la vez. Con la transacción sólo uno la cierra (el otro ya la ve
+// "terminado" al releer), así la victoria se cuenta una sola vez en el
+// marcador y en el ranking general.
 async function intentarCerrarPartidaBloques(){
-    const snap = await new Promise(res => { const u = window.onSnapshot(refBloques(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (!data || data.fase === 'terminado') return;
-    let ganador = null;
-    if (data.perdioNico && !data.perdioCarito) ganador = 'carito';
-    else if (data.perdioCarito && !data.perdioNico) ganador = 'nico';
-    else if (data.perdioNico && data.perdioCarito) {
-        // Perdieron los dos casi a la vez: gana quien tenía más puntos.
-        ganador = (data.puntajeNico || 0) >= (data.puntajeCarito || 0) ? 'nico' : 'carito';
-    } else return; // todavía no perdió nadie
-    const victorias = { ...(data.victorias || { nico: 0, carito: 0 }) };
-    victorias[ganador] = (victorias[ganador] || 0) + 1;
-    await window.updateDoc(refBloques(), { fase: 'terminado', ganador, victorias });
-    if (typeof registrarEvento === 'function') {
-        registrarEvento('gano_partida', `${nombreJugador(ganador)} ganó Batalla de Bloques`);
-        if (typeof registrarVictoria === 'function') registrarVictoria('bloques', ganador);
-    }
+    const res = await window.jugadaSegura(refBloques(), (data) => {
+        if (!data || data.fase === 'terminado') return null;
+        let ganador = null;
+        if (data.perdioNico && !data.perdioCarito) ganador = 'carito';
+        else if (data.perdioCarito && !data.perdioNico) ganador = 'nico';
+        else if (data.perdioNico && data.perdioCarito) {
+            // Perdieron los dos casi a la vez: gana quien tenía más puntos.
+            ganador = (data.puntajeNico || 0) >= (data.puntajeCarito || 0) ? 'nico' : 'carito';
+        } else return null; // todavía no perdió nadie
+        const victorias = { ...(data.victorias || { nico: 0, carito: 0 }) };
+        victorias[ganador] = (victorias[ganador] || 0) + 1;
+        return { fase: 'terminado', ganador, victorias };
+    });
+    if (!res) return;
+    const ganador = res.cambios.ganador;
+    if (typeof registrarEvento === 'function') registrarEvento('gano_partida', `${nombreJugador(ganador)} ganó Batalla de Bloques`);
+    if (typeof registrarVictoria === 'function') registrarVictoria('bloques', ganador);
 }
 
 // Escucha permanente (vía iniciarBloques): aplica basura entrante y

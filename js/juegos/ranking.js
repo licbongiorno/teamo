@@ -39,7 +39,7 @@ async function migrarHistoricoRanking(){
             });
             const total = { nico: 0, carito: 0 };
             Object.values(porJuego).forEach(v => { total.nico += v.nico || 0; total.carito += v.carito || 0; });
-            tx.set(ref, { porJuego, total, migrado: true, ultima: actual.ultima || null });
+            tx.set(ref, { porJuego, total, migrado: true, ultima: actual.ultima || null }, { merge: true });
         });
     } catch (e) {
         console.warn('No se pudo incorporar el historial al ranking:', e);
@@ -58,6 +58,49 @@ function iniciarRanking(){
         console.error('Error de Firestore en ranking:', err);
         if (cont) cont.innerHTML = `<div class="panel texto-centro texto-tenue">⚠️ No se pudo conectar (${err.code || 'error'}).</div>`;
     });
+}
+
+// Racha actual, mejor racha, semana y mes, y en qué juego es fuerte
+// cada uno. Los datos de semana/mes y racha se empiezan a juntar desde
+// que existe esta sección (no hay historial previo de fechas).
+function htmlDetalleRanking(datos){
+    const ahora = new Date();
+    const mes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+    const semana = typeof _semanaISO === 'function' ? _semanaISO(ahora) : null;
+    const s = (semana && datos.porSemana && datos.porSemana[semana]) || {};
+    const m = (datos.porMes && datos.porMes[mes]) || {};
+    const nombreMes = ahora.toLocaleDateString('es-AR', { month: 'long' });
+    const celda = (titulo, v) => {
+        const n = v.nico || 0, c = v.carito || 0;
+        const quien = n === c ? '' : (n > c ? ' 💙' : ' 💖');
+        return `<div class="celda-periodo-ranking"><div class="texto-tenue">${titulo}</div><div class="marcador-periodo-ranking">${n} – ${c}${quien}</div></div>`;
+    };
+    let html = `<div class="panel">
+        <div class="periodos-ranking">${celda('Esta semana', s)}${celda(`En ${nombreMes}`, m)}</div>`;
+
+    const r = datos.racha, rm = datos.rachaMax;
+    if ((r && r.n >= 2) || (rm && rm.n >= 2)) {
+        html += `<div class="rachas-ranking">`;
+        if (r && r.n >= 2) html += `<div>🔥 ${nombreJugador(r.quien)} lleva <b>${r.n}</b> seguidas</div>`;
+        if (rm && rm.n >= 2) html += `<div class="texto-tenue">🏅 Mejor racha: ${nombreJugador(rm.quien)}, ${rm.n} seguidas</div>`;
+        html += `</div>`;
+    }
+
+    // "Su fuerte": el juego donde cada uno le saca más ventaja al otro.
+    const filas = Object.entries(datos.porJuego || {}).map(([id, v]) => ({ id, n: v.nico || 0, c: v.carito || 0 }));
+    const fuerte = (yo) => filas
+        .map(f => ({ ...f, dif: yo === 'nico' ? f.n - f.c : f.c - f.n }))
+        .filter(f => f.dif > 0)
+        .sort((a, b) => b.dif - a.dif)[0];
+    const lineas = ['nico', 'carito'].map(x => {
+        const f = fuerte(x);
+        if (!f) return '';
+        const j = (window.JUEGOS || []).find(y => y.id === f.id);
+        return `<div>${x === 'nico' ? '💙' : '💖'} ${nombreJugador(x)} domina en ${j ? `${j.icono} ${j.nombre}` : f.id} <span class="texto-tenue">(${x === 'nico' ? `${f.n}–${f.c}` : `${f.c}–${f.n}`})</span></div>`;
+    }).filter(Boolean);
+    if (lineas.length) html += `<div class="fuertes-ranking">${lineas.join('')}</div>`;
+    html += `</div>`;
+    return html;
 }
 
 function renderRanking(datos){
@@ -81,6 +124,8 @@ function renderRanking(datos){
         </div>
         <div class="texto-tenue" style="font-size:0.75rem; margin-top:6px;">Partidas ganadas en todos los juegos de competencia.</div>
     </div>`;
+
+    html += htmlDetalleRanking(datos);
 
     if (datos.ultima && datos.ultima.ganador) {
         const j = (window.JUEGOS || []).find(x => x.id === datos.ultima.juego);

@@ -81,16 +81,40 @@ function escucharUltimosEventos(limite, callback){
 // uno, en total y por juego. Lo suma el dispositivo que cierra cada
 // partida (una sola vez por partida) con increment(), así no se pisan
 // aunque terminen dos juegos a la vez. Lo muestra "Ranking" en el menú.
+//
+// Además lleva la racha (cuántas seguidas ganó el último en ganar), la
+// mejor racha histórica y los totales de la semana y del mes. Eso
+// necesita leer el estado anterior, así que va en una transacción; si
+// falla (por ejemplo, sin conexión) se suma igual el total y el juego
+// con increment(), que Firestore guarda y manda cuando vuelve la red.
 async function registrarVictoria(juegoId, ganador){
     if (!window.db || (ganador !== 'nico' && ganador !== 'carito')) return;
+    const ref = window.doc(window.db, 'juegos', 'ranking');
+    const ahora = new Date();
+    const mes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
+    const semana = typeof _semanaISO === 'function' ? _semanaISO(ahora) : null;
+    const base = {
+        total: { [ganador]: window.increment(1) },
+        porJuego: { [juegoId]: { [ganador]: window.increment(1) } },
+        porMes: { [mes]: { [ganador]: window.increment(1) } },
+        ...(semana ? { porSemana: { [semana]: { [ganador]: window.increment(1) } } } : {}),
+        ultima: { juego: juegoId, ganador, fecha: Date.now() }
+    };
     try {
-        await window.setDoc(window.doc(window.db, 'juegos', 'ranking'), {
-            total: { [ganador]: window.increment(1) },
-            porJuego: { [juegoId]: { [ganador]: window.increment(1) } },
-            ultima: { juego: juegoId, ganador, fecha: Date.now() }
-        }, { merge: true });
+        await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(ref);
+            const d = snap.exists() ? snap.data() : {};
+            const previa = d.racha && d.racha.quien === ganador ? d.racha.n || 0 : 0;
+            const racha = { quien: ganador, n: previa + 1 };
+            const max = d.rachaMax && (d.rachaMax.n || 0) >= racha.n ? d.rachaMax : racha;
+            tx.set(ref, { ...base, racha, rachaMax: max }, { merge: true });
+        });
     } catch (e) {
-        console.warn('No se pudo sumar la victoria al ranking:', e);
+        try {
+            await window.setDoc(ref, base, { merge: true });
+        } catch (e2) {
+            console.warn('No se pudo sumar la victoria al ranking:', e2);
+        }
     }
 }
 function ganadorPorPuntos(p){

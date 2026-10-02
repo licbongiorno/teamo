@@ -449,3 +449,7 @@
 }
 .cerrar-te-toca{ background:none; border:none; color:var(--texto); opacity:0.45; font-size:0.9rem; padding:8px 4px; cursor:pointer; }
 .btn-avisos-te-toca{ width:100%; margin-top:10px; font-size:0.85rem; }
+.periodos-ranking{ display:grid; grid-template-columns:1fr 1fr; gap:8px; text-align:center; }
+.celda-periodo-ranking{ background:rgba(255,255,255,0.05); border-radius:12px; padding:8px 4px; font-size:0.8rem; }
+.marcador-periodo-ranking{ font-size:1.15rem; margin-top:2px; }
+.rachas-ranking, .fuertes-ranking{ margin-top:10px; font-size:0.88rem; display:flex; flex-direction:column; gap:4px; }

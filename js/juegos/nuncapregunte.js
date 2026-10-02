@@ -4,6 +4,7 @@
 window.CONFIG_REFLEXION = window.CONFIG_REFLEXION || {};
 window.CONFIG_REFLEXION['nuncapregunte'] = {
     "tipo": "texto",
+    "permitePropia": true,
     "instrucciones": "Preguntas inesperadas para conversaciones profundas. Cada uno responde a solas.",
     "banco": [
         "¿Qué de tu infancia todavía te influye más de lo que te gustaría?",

@@ -117,6 +117,12 @@ window.JUEGOS = [
     { id:'trivia',           nombre:'Trivia Relámpago',       icono:'🧠', iconoSvg:'icono-rayo-pregunta', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: la misma pregunta para los dos, el primero en acertar suma el punto.' },
     { id:'simon',            nombre:'Simón Dice a Dos',       icono:'🔴', iconoSvg:'icono-cuatro-colores', categoria:'competencia', disponible:true, descripcion:'Miren la secuencia de colores y repitanla cada uno en su pantalla. Crece un color por nivel.' },
     { id:'memoriarelampago', nombre:'Memoria Relámpago',      icono:'🍓', iconoSvg:'icono-cartas-rayo', categoria:'competencia', disponible:true, descripcion:'Un mismo mazo para los dos: el que arma una pareja se la lleva. Gana quien junte más.' },
+    // ---- JUEGOS DE PREGUNTAS (fase 2) ----
+    { id:'queprefieres', nombre:'¿Qué Preferís?', icono:'🤔', iconoSvg:'icono-balanza', categoria:'conexion', disponible:true, descripcion:'Dos opciones, cada uno elige a solas. Lleva la cuenta de cuántas veces coinciden.' },
+    { id:'masprobable', nombre:'¿Quién es más probable que…?', icono:'👉', iconoSvg:'icono-pregunta', categoria:'conexion', disponible:true, descripcion:'Voten a solas quién de los dos haría cada cosa. ¿Piensan lo mismo?' },
+    { id:'completafrase', nombre:'Completá la Frase', icono:'✏️', iconoSvg:'icono-pluma', categoria:'conexion', disponible:true, descripcion:'Una frase empezada que cada uno completa a su manera. Se revelan juntas.' },
+    { id:'preguntadia', nombre:'La Pregunta del Día', icono:'☀️', iconoSvg:'icono-sol', categoria:'conexion', disponible:true, descripcion:'Una pregunta nueva cada día, la misma para los dos. Se puede mandar por WhatsApp.' },
+    { id:'tepreguntoyo', nombre:'Te Pregunto Yo', icono:'✍️', iconoSvg:'icono-chat', categoria:'conexion', disponible:true, descripcion:'Escribí tu propia pregunta, mandásela por WhatsApp y revelen las respuestas juntos.' },
 ];
 
 window.obtenerJuegosDeCategoria = function(categoriaId){

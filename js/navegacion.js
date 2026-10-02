@@ -45,7 +45,7 @@ async function abrirJuego(juego){
     // Los juegos de "responder y revelar" comparten un mismo motor
     // genérico (js/motor-reflexion.js): todos arrancan igual, sólo
     // cambia su configuración (banco de preguntas y textos).
-    const JUEGOS_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones'];
+    const JUEGOS_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones', 'queprefieres', 'masprobable', 'completafrase', 'preguntadia', 'tepreguntoyo'];
     if (JUEGOS_MOTOR_REFLEXION.includes(juego)) iniciarReflexionGenerico(juego);
 
     if (juego === 'mentegemela') iniciarMenteGemela();

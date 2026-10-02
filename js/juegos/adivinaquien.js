@@ -212,7 +212,7 @@ async function arriesgarAdivinaQuien(emoji){
     _modoArriesgoAQ = false;
     // Transacción (ver js/jugada-segura.js): si los dos arriesgaban casi
     // juntos, la segunda escritura pisaba el resultado de la primera.
-    await window.jugadaSegura(refAdivinaQuien(), (data) => {
+    const res = await window.jugadaSegura(refAdivinaQuien(), (data) => {
         if (!data || data.fase !== 'jugando') return null;
         const secretoRival = data[`secreto${miIdentidad === 'nico' ? 'Carito' : 'Nico'}`];
         const acerte = emoji === secretoRival;
@@ -221,4 +221,5 @@ async function arriesgarAdivinaQuien(emoji){
         puntajes[ganador] = (puntajes[ganador] || 0) + 1;
         return { fase: 'terminado', ganador, puntajes };
     });
+    if (res && typeof registrarVictoria === 'function') registrarVictoria('adivinaquien', res.cambios.ganador);
 }

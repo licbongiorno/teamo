@@ -231,6 +231,7 @@ async function cerrarRondaArcade(refDoc, juegoId, puntajeObtenido, renderFn, tex
         if (puntajes && textoEvento && typeof registrarEvento === 'function') {
             registrarEvento('gano_partida', `${textoEvento} (${puntajes.nico} - ${puntajes.carito})`);
         }
+        if (puntajes && typeof registrarVictoria === 'function') registrarVictoria(juegoId, ganadorPorPuntos(puntajes));
         if (!puntajes) {
             setTimeout(() => { cerrar(true).catch(() => {}); }, 15000);
         }

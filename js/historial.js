@@ -76,6 +76,30 @@ function escucharUltimosEventos(limite, callback){
         (e) => console.warn('No se pudo escuchar el historial:', e));
 }
 
+// ==================== RANKING GENERAL ====================
+// Un solo documento ('juegos/ranking') con las partidas ganadas por cada
+// uno, en total y por juego. Lo suma el dispositivo que cierra cada
+// partida (una sola vez por partida) con increment(), así no se pisan
+// aunque terminen dos juegos a la vez. Lo muestra "Ranking" en el menú.
+async function registrarVictoria(juegoId, ganador){
+    if (!window.db || (ganador !== 'nico' && ganador !== 'carito')) return;
+    try {
+        await window.setDoc(window.doc(window.db, 'juegos', 'ranking'), {
+            total: { [ganador]: window.increment(1) },
+            porJuego: { [juegoId]: { [ganador]: window.increment(1) } },
+            ultima: { juego: juegoId, ganador, fecha: Date.now() }
+        }, { merge: true });
+    } catch (e) {
+        console.warn('No se pudo sumar la victoria al ranking:', e);
+    }
+}
+function ganadorPorPuntos(p){
+    if (!p || (p.nico || 0) === (p.carito || 0)) return null;
+    return (p.nico || 0) > (p.carito || 0) ? 'nico' : 'carito';
+}
+window.registrarVictoria = registrarVictoria;
+window.ganadorPorPuntos = ganadorPorPuntos;
+
 window.registrarEvento = registrarEvento;
 window.leerUltimosEventos = leerUltimosEventos;
 window.escucharUltimosEventos = escucharUltimosEventos;

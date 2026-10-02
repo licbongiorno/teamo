@@ -145,7 +145,7 @@ async function responderStroop(rondaEsperada, colorId){
         vibrarJ(15);
         if (window.sfx) window.sfx.acierto();
         if (resultado.gano && typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Stroop a Dos`);
+            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Stroop a Dos`); if (typeof registrarVictoria === 'function') registrarVictoria('stroop', miIdentidad);
         }
     } else {
         vibrarJ([10, 30, 10]);

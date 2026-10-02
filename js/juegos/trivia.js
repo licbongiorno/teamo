@@ -363,7 +363,7 @@ async function responderTrivia(rondaEsperada, textoElegido){
         vibrarJ(15);
         if (window.sfx) window.sfx.acierto();
         if (resultado.gano && typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Trivia Relámpago`);
+            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Trivia Relámpago`); if (typeof registrarVictoria === 'function') registrarVictoria('trivia', miIdentidad);
         }
     } else if (!resultado.yaFallo) {
         vibrarJ([10, 30, 10]);

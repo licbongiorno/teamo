@@ -129,7 +129,9 @@ async function marcarListoPPT(){
 async function elegirPPT(rondaEsperada, opcionId){
     vibrarJ(10);
     const ref = refPPT();
+    let partidaGanada = null;
     await window.runTransaction(window.db, async (tx) => {
+        partidaGanada = null; // la transacción se puede reintentar
         const snap = await tx.get(ref);
         const data = snap.data();
         if (!data || data.fase !== 'jugando' || (data.ronda || 1) !== rondaEsperada) return;
@@ -148,6 +150,7 @@ async function elegirPPT(rondaEsperada, opcionId){
             updates.puntajes = puntajes;
             if (ganadorRonda && puntajes[ganadorRonda] >= META_PPT) {
                 updates.fase = 'terminado'; updates.ganador = ganadorRonda;
+                partidaGanada = ganadorRonda;
                 const victorias = { ...(data.victorias || { nico: 0, carito: 0 }) };
                 victorias[ganadorRonda] = (victorias[ganadorRonda] || 0) + 1;
                 updates.victorias = victorias;
@@ -155,6 +158,12 @@ async function elegirPPT(rondaEsperada, opcionId){
         }
         tx.update(ref, updates);
     });
+    // Antes se registraba una "partida" con cada ronda; ahora sólo
+    // cuando alguien llega a la meta.
+    if (partidaGanada) {
+        if (typeof registrarEvento === 'function') registrarEvento('gano_partida', `${nombreJugador(partidaGanada)} ganó Piedra, Papel o Tijera`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('ppt', partidaGanada);
+    }
 }
 
 async function siguienteRondaPPT(rondaAnterior){
@@ -166,9 +175,6 @@ async function siguienteRondaPPT(rondaAnterior){
         if (!data || data.fase !== 'jugando' || (data.ronda || 1) !== rondaAnterior) return;
         tx.update(ref, { ronda: rondaAnterior + 1, elecciones: {}, resultadoRonda: null });
     });
-    if (typeof registrarEvento === 'function') {
-        registrarEvento('gano_partida', `Jugaron Piedra, Papel o Tijera`);
-    }
 }
 
 async function revanchaPPT(){

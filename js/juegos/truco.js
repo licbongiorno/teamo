@@ -234,7 +234,7 @@ async function jugarCartaTruco(cartaId){
         updates.jugadorEnTurno = miRival;
         await window.updateDoc(refTruco(), updates);
         if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
         }
         return;
     }
@@ -255,7 +255,7 @@ async function jugarCartaTruco(cartaId){
         updates.jugadorEnTurno = siguienteLider;
         await window.updateDoc(refTruco(), updates);
         if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
         }
     }
 }
@@ -278,7 +278,7 @@ async function finalizarManoTruco(estado, updatesParciales, ganadorHand){
     }
     await window.updateDoc(refTruco(), updates);
     if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
     }
 }
 
@@ -315,7 +315,7 @@ async function cantarFlorTruco(){
     }
     await window.updateDoc(refTruco(), updates);
     if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
     }
 }
 
@@ -400,7 +400,7 @@ async function responderQuieroTruco(){
     }
     await window.updateDoc(refTruco(), updates);
     if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
     }
 }
 async function responderNoQuieroTruco(){
@@ -419,7 +419,7 @@ async function responderNoQuieroTruco(){
         if (nuevosPuntajes[canto.de] >= estado.puntosParaGanar) { updates.fase = 'terminado'; updates.ganadorPartida = canto.de; }
         await window.updateDoc(refTruco(), updates);
         if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
         }
     } else {
         const puntos = canto.nivel;
@@ -435,7 +435,7 @@ async function responderNoQuieroTruco(){
         }
         await window.updateDoc(refTruco(), updates);
         if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+            registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
         }
     }
 }
@@ -458,7 +458,7 @@ async function irseAlMazoTruco(){
     }
     await window.updateDoc(refTruco(), updates);
     if (updates.fase === 'terminado' && typeof registrarEvento === 'function') {
-        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`);
+        registrarEvento('gano_truco', `${nombreJugador(updates.ganadorPartida)} ganó la partida de Truco`); if (typeof registrarVictoria === 'function') registrarVictoria('truco', updates.ganadorPartida);
     }
 }
 async function reiniciarTruco(){

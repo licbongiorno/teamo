@@ -266,6 +266,7 @@ async function levantarEscoba(){
     if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `Terminaron una partida de Escoba de 15`);
     }
+    if (res.cambios.fase === 'terminado') { if (typeof registrarVictoria === 'function') registrarVictoria('escoba', ganadorPorPuntos(res.cambios.puntajes)); }
 }
 
 async function tirarEscoba(){
@@ -302,4 +303,5 @@ async function tirarEscoba(){
     if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `Terminaron una partida de Escoba de 15`);
     }
+    if (res.cambios.fase === 'terminado') { if (typeof registrarVictoria === 'function') registrarVictoria('escoba', ganadorPorPuntos(res.cambios.puntajes)); }
 }

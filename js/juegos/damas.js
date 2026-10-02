@@ -207,6 +207,7 @@ async function seleccionarCasillaDamas(idx){
     if (window.sfx) window.sfx[captura ? 'golpe' : 'rebote']();
     if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_damas', `${nombreJugador(miIdentidad)} le ganó a ${nombreJugador(miRival)} en Damas`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('damas', miIdentidad);
     }
 }
 

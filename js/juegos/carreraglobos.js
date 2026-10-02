@@ -184,6 +184,7 @@ async function terminarCarreraGlobos(ganadorForzado){
             renderCarreraGlobos(escribiYo.data);
         } else if (escribiYo.ganador && typeof registrarEvento === 'function') {
             registrarEvento('gano_partida', `${nombreJugador(escribiYo.ganador)} ganó la Carrera de Globos`);
+            if (typeof registrarVictoria === 'function') registrarVictoria('carreraglobos', escribiYo.ganador);
         }
     } catch (e) {
         console.error('No se pudo terminar la carrera de globos:', e);

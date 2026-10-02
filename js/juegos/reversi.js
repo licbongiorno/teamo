@@ -188,5 +188,6 @@ async function jugarReversi(idx){
     if (window.sfx) window.sfx.rebote();
     if (res.cambios.fase === 'terminado' && res.cambios.ganador !== 'empate' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(res.cambios.ganador)} ganó al Reversi`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('reversi', res.cambios.ganador);
     }
 }

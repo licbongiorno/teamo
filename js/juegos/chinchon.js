@@ -336,4 +336,5 @@ async function cerrarChinchon(){
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `Jugaron una ronda de Chinchón`);
     }
+    if (typeof registrarVictoria === 'function') registrarVictoria('chinchon', res.cambios.resultado?.ganador);
 }

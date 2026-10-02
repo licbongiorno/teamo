@@ -156,5 +156,6 @@ async function jugarTateti(idx){
     if (window.sfx) window.sfx.toque();
     if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(res.cambios.ganador)} ganó al Ta-Te-Ti Infinito`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('tateti', res.cambios.ganador);
     }
 }

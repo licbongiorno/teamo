@@ -136,7 +136,7 @@ async function tocarReflejos(tipo){
     // ÚLTIMA escritura pisaba a la primera: ganaba el más lento.
     // Ahora el primero que llega al servidor cierra la ronda y el
     // segundo ve 'terminado' y no escribe nada.
-    await window.jugadaSegura(refReflejos(), (estado) => {
+    const res = await window.jugadaSegura(refReflejos(), (estado) => {
         if (!estado || estado.fase === 'terminado') return null;
         const nuevosPuntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
         if (tipo === 'falso' && estado.fase === 'preparados') {
@@ -156,6 +156,8 @@ async function tocarReflejos(tipo){
         }
         return null;
     });
+    // Cada ronda ganada suma al ranking general.
+    if (res && typeof registrarVictoria === 'function') registrarVictoria('reflejos', ganadorPorPuntos({ nico: (res.cambios.puntajes.nico || 0) - (res.estado.puntajes?.nico || 0), carito: (res.cambios.puntajes.carito || 0) - (res.estado.puntajes?.carito || 0) }));
 }
 
 async function revanchaReflejos(){

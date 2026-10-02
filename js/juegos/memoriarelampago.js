@@ -167,7 +167,7 @@ async function voltearCartaMemoria(indice){
                 updates.victorias = victorias;
             }
             tx.update(ref, updates);
-            return { valido: true, resuelto: true, pareja: true };
+            return { valido: true, resuelto: true, pareja: true, termino: updates.fase === 'terminado', ganador: ganadorPorPuntos(puntajes) };
         }
         tx.update(ref, { volteadas: nuevasVolteadas });
         return { valido: true, resuelto: true, pareja: false };
@@ -179,8 +179,10 @@ async function voltearCartaMemoria(indice){
         if (resultado.pareja) {
             vibrarJ([15, 30, 15]);
             if (window.sfx) window.sfx.acierto();
-            if (typeof registrarEvento === 'function') {
-                registrarEvento('gano_partida', `Jugaron Memoria Relámpago Compartida`);
+            // Antes esto se registraba con CADA pareja; ahora al terminar.
+            if (resultado.termino) {
+                if (typeof registrarEvento === 'function') registrarEvento('gano_partida', `Jugaron Memoria Relámpago Compartida`);
+                if (typeof registrarVictoria === 'function') registrarVictoria('memoriarelampago', resultado.ganador);
             }
         } else {
             if (window.sfx) window.sfx.error();

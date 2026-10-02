@@ -169,5 +169,6 @@ async function jugarCajitas(id){
     if (window.sfx) window.sfx[cerradas ? 'acierto' : 'toque']();
     if (res.cambios.fase === 'terminado' && res.cambios.ganador !== 'empate' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(res.cambios.ganador)} ganó a Puntos y Cajitas`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('cajitas', res.cambios.ganador);
     }
 }

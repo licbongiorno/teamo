@@ -203,5 +203,6 @@ async function atacarBN(i){
     if (window.sfx) window.sfx[tocado ? 'golpe' : 'swoosh']();
     if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(res.cambios.ganador)} ganó a Batalla Naval`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('batallanaval', res.cambios.ganador);
     }
 }

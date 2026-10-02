@@ -174,6 +174,7 @@ async function adivinarVeinte(){
         updates.puntajes = puntajes;
     }
     await window.updateDoc(refVeinte(), updates);
+    if (acierto && typeof registrarVictoria === 'function') registrarVictoria('veinte', miIdentidad);
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', acierto ? `Adivinaron en 20 Preguntas` : `Jugaron una ronda de 20 Preguntas`);
     }

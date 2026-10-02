@@ -266,6 +266,7 @@ async function intentarCerrarPartidaBloques(){
     await window.updateDoc(refBloques(), { fase: 'terminado', ganador, victorias });
     if (typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(ganador)} ganó Batalla de Bloques`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('bloques', ganador);
     }
 }
 

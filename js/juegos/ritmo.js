@@ -187,6 +187,7 @@ async function terminarRitmo(){
         });
         if (ganadorCerrado && typeof registrarEvento === 'function') {
             registrarEvento('gano_partida', `${nombreJugador(ganadorCerrado)} ganó Ritmo a Dúo`);
+            if (typeof registrarVictoria === 'function') registrarVictoria('ritmo', ganadorCerrado);
         }
     } catch (e) {
         console.error('No se pudo terminar ritmo:', e);

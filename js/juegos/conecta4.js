@@ -158,5 +158,6 @@ async function jugarConecta4(col){
     if (window.sfx) window.sfx.rebote();
     if (updates.fase === 'terminado' && updates.ganador !== 'empate' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(updates.ganador)} ganó al Conecta 4`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('conecta4', updates.ganador);
     }
 }

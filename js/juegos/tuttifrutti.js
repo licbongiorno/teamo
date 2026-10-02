@@ -289,4 +289,5 @@ async function confirmarRevisionTuttiFrutti(){
     if (cerro && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `Jugaron una ronda de Tutti Frutti`);
     }
+    if (cerro && typeof registrarVictoria === 'function') registrarVictoria('tuttifrutti', ganadorPorPuntos({ nico: cerro.nico.reduce((t, v) => t + v, 0), carito: cerro.carito.reduce((t, v) => t + v, 0) }));
 }

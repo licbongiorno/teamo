@@ -225,5 +225,6 @@ async function anotarGenerala(cat){
     if (pts >= 50 && window.fx) window.fx.confeti();
     if (res.cambios.fase === 'terminado' && res.cambios.ganador !== 'empate' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(res.cambios.ganador)} ganó a la Generala`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('generala', res.cambios.ganador);
     }
 }

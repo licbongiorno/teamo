@@ -175,7 +175,10 @@ async function sincronizarTiraAfloja(){
         _toquesLocalesTA += toques; // se reintentan en la próxima sincronización
         return;
     }
-    if (updates?.fase === 'terminado') vibrarJ([20, 40, 20, 40, 80]);
+    if (updates?.fase === 'terminado') {
+        vibrarJ([20, 40, 20, 40, 80]);
+        if (typeof registrarVictoria === 'function') registrarVictoria('tiraafloja', updates.ganador);
+    }
 }
 
 async function revanchaTiraAfloja(){

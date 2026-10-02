@@ -291,6 +291,7 @@ async function confirmarJugadaUno(estadoVisto, indice, colorNuevo){
     if (window.sfx) window.sfx[sonido]();
     if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó al UNO`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('uno', miIdentidad);
     }
 }
 

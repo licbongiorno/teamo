@@ -143,7 +143,7 @@ async function revelarCeldaBuscaminas(indice){
             rondasGanadas[miRival] = (rondasGanadas[miRival] || 0) + 1;
             updates.fase = 'terminado'; updates.ganadorRonda = miRival; updates.pisoMina = true; updates.rondasGanadas = rondasGanadas;
             tx.update(ref, updates);
-            return { valido: true, mina: true };
+            return { valido: true, mina: true, ganadorRonda: miRival };
         }
         const reveladasPor = { ...(data.reveladasPor || { nico: 0, carito: 0 }) };
         reveladasPor[miIdentidad] = (reveladasPor[miIdentidad] || 0) + 1;
@@ -157,7 +157,7 @@ async function revelarCeldaBuscaminas(indice){
             updates.fase = 'terminado'; updates.ganadorRonda = ganadorRonda; updates.pisoMina = false; updates.rondasGanadas = rondasGanadas;
         }
         tx.update(ref, updates);
-        return { valido: true, mina: false };
+        return { valido: true, mina: false, ganadorRonda: updates.ganadorRonda || null };
     });
     if (!resultado.valido) return;
     if (resultado.mina) {
@@ -167,9 +167,13 @@ async function revelarCeldaBuscaminas(indice){
     } else {
         vibrarJ(8);
         if (window.sfx) window.sfx.toque();
-        if (typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `Jugaron Buscaminas Relámpago`);
-        }
+    }
+    // Antes se registraba una "partida ganada" con CADA casilla segura
+    // destapada (inflaba Nuestra Historia y los logros). Ahora una vez,
+    // cuando termina la ronda.
+    if (resultado.ganadorRonda) {
+        if (typeof registrarEvento === 'function') registrarEvento('gano_partida', `Jugaron Buscaminas Relámpago`);
+        if (typeof registrarVictoria === 'function') registrarVictoria('buscaminas', resultado.ganadorRonda);
     }
 }
 

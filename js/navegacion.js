@@ -70,6 +70,7 @@ async function abrirJuego(juego){
     if (juego === 'termometro') iniciarTermometro();
     if (juego === 'veinte') iniciarVeinte();
     if (juego === 'estadisticas') iniciarEstadisticas();
+    if (juego === 'ranking') iniciarRanking();
     if (juego === 'sudoku') iniciarSudoku();
     if (juego === 'uno') iniciarUno();
     if (juego === 'chinchon') iniciarChinchon();

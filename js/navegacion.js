@@ -39,6 +39,7 @@ async function abrirJuego(juego){
     if (juego === 'cajitas') iniciarCajitas();
     if (juego === 'generala') iniciarGenerala();
     if (juego === 'tuttifrutti') iniciarTuttiFrutti();
+    if (juego === 'palabras') iniciarPalabras();
     if (juego === 'reflejos') iniciarReflejos();
     if (juego === 'mascota') iniciarMascota();
     if (juego === 'escoba') iniciarEscoba();

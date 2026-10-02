@@ -127,6 +127,7 @@ window.JUEGOS = [
     { id:'reversi', nombre:'Reversi', icono:'⚪', iconoSvg:'icono-ficha-dama', categoria:'clasicos', disponible:true, descripcion:'Encerrá las fichas del otro para darlas vuelta. Gana quien tenga más al final.' },
     { id:'cajitas', nombre:'Puntos y Cajitas', icono:'✏️', iconoSvg:'icono-grilla-equis', categoria:'clasicos', disponible:true, descripcion:'Trazá líneas por turno: el que cierra una cajita se la queda y vuelve a jugar.' },
     { id:'generala', nombre:'Generala', icono:'🎲', iconoSvg:'icono-dado', categoria:'competencia', disponible:true, descripcion:'Los dados de siempre: escalera, full, póker y generala, con planilla para los dos.' },
+    { id:'palabras', nombre:'Batalla de Palabras', icono:'🔠', iconoSvg:'icono-letras-caoticas', categoria:'competencia', disponible:true, descripcion:'Misma grilla de letras, 90 segundos para armar palabras. Después se revisan entre ustedes.' },
     { id:'tuttifrutti', nombre:'Tutti Frutti en vivo', icono:'🔤', iconoSvg:'icono-letras-caoticas', categoria:'competencia', disponible:true, descripcion:'Misma letra, mismas categorías. El primero que completa canta ¡BASTA! y se corrigen entre ustedes.' },
 ];
 

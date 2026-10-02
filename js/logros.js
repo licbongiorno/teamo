@@ -31,14 +31,15 @@ async function sumarContadorYVerificarLogros(tipo){
     if (!window.db) return;
     try {
         const ref = _refContadores();
-        const snap = await new Promise((res) => { const u = window.onSnapshot(ref, s => { u(); res(s); }); });
-        const datos = snap.exists() ? snap.data() : {};
-        const nuevoValorTipo = (datos[tipo] || 0) + 1;
-        const nuevoValorTotal = tipo === 'cualquier_evento' ? nuevoValorTipo : (datos['cualquier_evento'] || 0) + 1;
-        const cambios = { [tipo]: nuevoValorTipo };
-        if (tipo !== 'cualquier_evento') cambios['cualquier_evento'] = nuevoValorTotal;
+        // increment(): suma del lado del servidor. Antes se leía el
+        // contador y se escribía "leído + 1": si los dos sumaban a la vez
+        // (pasa seguido, cada jugada de los dos registra un evento), se
+        // perdía una de las sumas y las estadísticas quedaban cortas.
+        const cambios = { [tipo]: window.increment(1) };
+        if (tipo !== 'cualquier_evento') cambios['cualquier_evento'] = window.increment(1);
         await window.setDoc(ref, cambios, { merge: true });
-        await _verificarDesbloqueos({ ...datos, ...cambios });
+        const snap = await new Promise((res) => { const u = window.onSnapshot(ref, s => { u(); res(s); }); });
+        await _verificarDesbloqueos(snap.exists() ? snap.data() : {});
     } catch (e) {
         console.warn('No se pudo actualizar el contador de logros:', e);
     }
@@ -56,13 +57,19 @@ async function _verificarDesbloqueos(contadores){
     const candidatos = window.CATALOGO_LOGROS.filter(l => (contadores[l.tipo] || 0) >= l.umbral);
     if (!candidatos.length) return;
     const ref = _refLogros();
-    const snap = await new Promise((res) => { const u = window.onSnapshot(ref, s => { u(); res(s); }); });
-    const yaDesbloqueados = snap.exists() ? (snap.data().desbloqueados || {}) : {};
-    const nuevos = candidatos.filter(l => !yaDesbloqueados[l.id]);
-    if (!nuevos.length) return;
-    const cambios = { ...yaDesbloqueados };
-    nuevos.forEach(l => { cambios[l.id] = { fecha: Date.now(), por: miIdentidad || null }; });
-    await window.setDoc(ref, { desbloqueados: cambios }, { merge: true });
+    // Transacción: si los dos desbloqueaban algo a la vez, el mapa
+    // "desbloqueados" de uno pisaba al del otro y un logro se perdía.
+    let nuevos = [];
+    await window.runTransaction(window.db, async (tx) => {
+        nuevos = [];
+        const snap = await tx.get(ref);
+        const yaDesbloqueados = snap.exists() ? (snap.data().desbloqueados || {}) : {};
+        nuevos = candidatos.filter(l => !yaDesbloqueados[l.id]);
+        if (!nuevos.length) return;
+        const cambios = {};
+        nuevos.forEach(l => { cambios[l.id] = { fecha: Date.now(), por: miIdentidad || null }; });
+        tx.set(ref, { desbloqueados: cambios }, { merge: true });
+    });
     nuevos.forEach(l => mostrarToastLogro(l));
 }
 

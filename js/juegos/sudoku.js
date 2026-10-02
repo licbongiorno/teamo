@@ -160,14 +160,30 @@ async function elegirNumeroSudoku(n){
     }
     vibrarJ(10);
     if (window.sfx) window.sfx.pop();
-    const celdas = [...estado.celdas];
-    const autorCelda = [...(estado.autorCelda || new Array(81).fill(null))];
-    celdas[i] = n;
-    autorCelda[i] = miIdentidad;
-    const completo = celdas.every(v => v !== 0);
-    const updates = { celdas, autorCelda };
-    if (completo) updates.fase = 'terminado';
-    await window.updateDoc(refSudoku(), updates);
+    // Transacción: los dos completan celdas a la vez, y antes cada uno
+    // reescribía la grilla ENTERA con la copia que había leído. Si el
+    // otro había puesto un número en el medio, ese número desaparecía.
+    const ref = refSudoku();
+    let completo = false;
+    try {
+        await window.runTransaction(window.db, async (tx) => {
+            completo = false;
+            const snapTx = await tx.get(ref);
+            const actual = snapTx.exists() ? snapTx.data() : null;
+            if (!actual || actual.fase !== 'jugando' || actual.dados[i]) return;
+            const celdas = [...actual.celdas];
+            const autorCelda = [...(actual.autorCelda || new Array(81).fill(null))];
+            celdas[i] = n;
+            autorCelda[i] = miIdentidad;
+            completo = celdas.every(v => v !== 0);
+            const updates = { celdas, autorCelda };
+            if (completo) updates.fase = 'terminado';
+            tx.update(ref, updates);
+        });
+    } catch (e) {
+        console.error('No se pudo guardar el número del sudoku:', e);
+        return;
+    }
     if (completo && typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `Completaron un Sudoku de a Dos`);
     }

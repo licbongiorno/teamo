@@ -152,13 +152,15 @@ async function agregarFragmento(){
     vibrarJ(12);
     if (window.sfx) window.sfx.click();
     const id = window._escrituraActualId;
-    const snap = await new Promise(res => { const u = window.onSnapshot(refEscritura(id), s => { u(); res(s); }); });
-    if (!snap.exists()) return;
-    const e = snap.data();
-    if (e.turno !== miIdentidad || e.estado !== 'activa') return;
-    const nuevosFragmentos = [...(e.fragmentos || []), { autor: miIdentidad, texto, ts: Date.now() }];
+    // jugadaSegura (ver js/jugada-segura.js): un doble toque en "enviar"
+    // ya no agrega el mismo fragmento dos veces ni saltea el turno.
     const siguienteTurno = miIdentidad === 'nico' ? 'carito' : 'nico';
-    await window.updateDoc(refEscritura(id), { fragmentos: nuevosFragmentos, turno: siguienteTurno });
+    const res = await window.jugadaSegura(refEscritura(id), (e) => {
+        if (!e || e.turno !== miIdentidad || e.estado !== 'activa') return null;
+        return { fragmentos: [...(e.fragmentos || []), { autor: miIdentidad, texto, ts: Date.now() }], turno: siguienteTurno };
+    });
+    if (!res) return;
+    input.value = '';
     if (typeof registrarEvento === 'function') {
         registrarEvento('letra_agregada', `${nombreJugador(miIdentidad)} escribió un fragmento nuevo`);
     }

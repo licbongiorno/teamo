@@ -11,8 +11,13 @@ async function iniciarPuntoEncuentro(){
     if (window._unsubPuntosEncuentro) window._unsubPuntosEncuentro();
     window._unsubPuntosEncuentro = window.escucharPuntos((p) => { window._puntosEncuentro = p; renderPuntoEncuentro(); });
 
-    window._eventosEncuentro = await leerUltimosEventos(30);
-    renderPuntoEncuentro();
+    // En vivo (antes se leía una sola vez: lo que hacía el otro con la
+    // pantalla abierta no aparecía hasta salir y volver a entrar).
+    if (window._unsubEventosEncuentro) window._unsubEventosEncuentro();
+    window._unsubEventosEncuentro = window.escucharUltimosEventos(30, (eventos) => {
+        window._eventosEncuentro = eventos;
+        renderPuntoEncuentro();
+    });
 }
 
 function renderPuntoEncuentro(){

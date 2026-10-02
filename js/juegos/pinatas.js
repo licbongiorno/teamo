@@ -62,6 +62,7 @@ function renderPinatas(estado){
     }
 
     if (estado.fase === 'jugando') {
+        if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
         const restante = (estado.horaInicio || Date.now()) - Date.now();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refPinatas(), 'pinatas');
@@ -190,24 +191,10 @@ function arrancarPinatas(horaFin){
 
 async function finalizarRondaPinatas(puntajeObtenido){
     vibrarJ([15, 30, 15]);
-    try {
-        const campo = miIdentidad === 'nico' ? 'terminoNico' : 'terminoCarito';
-        const campoPtos = miIdentidad === 'nico' ? 'ptsFinalesNico' : 'ptsFinalesCarito';
-        await window.updateDoc(refPinatas(), { [campo]: true, [campoPtos]: puntajeObtenido });
-        const snap = await new Promise(res => { const u = window.onSnapshot(refPinatas(), s => { u(); res(s); }); });
-        const data = snap.data();
-        if (data.terminoNico && data.terminoCarito) {
-            const puntajes = { nico: data.ptsFinalesNico || 0, carito: data.ptsFinalesCarito || 0 };
-            await window.updateDoc(refPinatas(), { fase: 'terminado', puntajes });
-            if (typeof registrarEvento === 'function') {
-                registrarEvento('gano_partida', `Jugaron Derribá Piñatas (${puntajes.nico} - ${puntajes.carito})`);
-            }
-        }
-    } catch (e) {
-        console.error('No se pudo finalizar la ronda de piñatas:', e);
-    }
-    const cont = document.getElementById('contenido-pinatas');
-    delete cont.dataset.jugandoLocal;
+    // Cierre en transacción + redibujo final (ver cerrarRondaArcade en
+    // js/arcade-comun.js): antes la ronda podía quedar trabada sin
+    // mostrar el marcador hasta actualizar la página.
+    await cerrarRondaArcade(refPinatas(), 'pinatas', puntajeObtenido, renderPinatas, 'Jugaron Derribá Piñatas');
 }
 
 async function revanchaPinatas(){

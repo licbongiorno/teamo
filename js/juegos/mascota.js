@@ -232,7 +232,14 @@ function renderMascota(estado){
 // techo 100), suma XP de forma atómica y deja constancia en el
 // historial. `efectos` es un objeto parcial, ej. {hambre:35}.
 async function _aplicarCuidadoMascota(efectos, detalle, xpGanada){
-    const estado = await new Promise(res => { const u = window.onSnapshot(refMascota(), s => { u(); res(s.exists() ? s.data() : {}); }); });
+    // Transacción: antes se leía el estado y después se escribía; si los
+    // dos la cuidaban casi a la vez, la acción de uno pisaba la del otro
+    // (se perdía la comida/juego y su línea del historial).
+    const ref = refMascota();
+    let estado = {};
+    await window.runTransaction(window.db, async (tx) => {
+    const snap = await tx.get(ref);
+    estado = snap.exists() ? snap.data() : {};
     const ahora = Date.now();
     const actualizaciones = { xp: window.increment(xpGanada) };
     const decays = { hambre: DECAY_HAMBRE, diversion: DECAY_DIVERSION, carino: DECAY_CARINO, higiene: DECAY_HIGIENE };
@@ -246,7 +253,8 @@ async function _aplicarCuidadoMascota(efectos, detalle, xpGanada){
     }
     const historial = [...(estado.historial || []), { detalle, autor: miIdentidad, timestamp: ahora }].slice(-15);
     actualizaciones.historial = historial;
-    await window.setDoc(refMascota(), actualizaciones, { merge: true });
+    tx.set(ref, actualizaciones, { merge: true });
+    });
 
     const nivelAntes = Math.floor((estado.xp || 0) / 50) + 1;
     const nivelDespues = Math.floor(((estado.xp || 0) + xpGanada) / 50) + 1;
@@ -309,10 +317,13 @@ async function hacerFiestaMascota(){
     if (!pagado) { vibrarJ([10, 30, 10]); if (window.sfx) window.sfx.error(); if (window.fx) window.fx.sacudirJuego(); return; }
     if (window.sfx) window.sfx.logro();
     if (window.fx) window.fx.confeti();
-    const estado = await new Promise(res => { const u = window.onSnapshot(refMascota(), s => { u(); res(s.exists() ? s.data() : {}); }); });
+    const ref = refMascota();
+    await window.runTransaction(window.db, async (tx) => {
+    const snap = await tx.get(ref);
+    const estado = snap.exists() ? snap.data() : {};
     const ahora = Date.now();
     const historial = [...(estado.historial || []), { detalle: 'organizó una fiesta para Chokurei 🎉', autor: miIdentidad, timestamp: ahora }].slice(-15);
-    await window.setDoc(refMascota(), {
+    tx.set(ref, {
         hambre: 100, hambreActualizada: ahora,
         diversion: 100, diversionActualizada: ahora,
         carino: 100, carinoActualizada: ahora,
@@ -321,6 +332,7 @@ async function hacerFiestaMascota(){
         xp: window.increment(10),
         historial
     }, { merge: true });
+    });
     if (typeof registrarEvento === 'function') registrarEvento('cuidado_compartido', 'Organizaron una fiesta para Chokurei');
 }
 
@@ -329,10 +341,21 @@ async function festejarCumpleMascota(){
     if (window.sfx) window.sfx.logro();
     if (window.fx) window.fx.confeti();
     const hoy = fechaISO(new Date());
-    const estado = await new Promise(res => { const u = window.onSnapshot(refMascota(), s => { u(); res(s.exists() ? s.data() : {}); }); });
-    const ahora = Date.now();
-    const historial = [...(estado.historial || []), { detalle: '¡festejó el cumpleaños de Chokurei! 🎂', autor: miIdentidad, timestamp: ahora }].slice(-15);
-    await window.setDoc(refMascota(), { ultimoCumpleFestejado: hoy, xp: window.increment(15), historial }, { merge: true });
+    // Transacción: si los dos tocaban "festejar" a la vez, se festejaba
+    // (y se regalaban los puntos) dos veces.
+    const ref = refMascota();
+    let festejo = false;
+    await window.runTransaction(window.db, async (tx) => {
+        festejo = false;
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : {};
+        if (estado.ultimoCumpleFestejado === hoy) return;
+        const ahora = Date.now();
+        const historial = [...(estado.historial || []), { detalle: '¡festejó el cumpleaños de Chokurei! 🎂', autor: miIdentidad, timestamp: ahora }].slice(-15);
+        tx.set(ref, { ultimoCumpleFestejado: hoy, xp: window.increment(15), historial }, { merge: true });
+        festejo = true;
+    });
+    if (!festejo) return;
     if (window.sumarPuntos) { window.sumarPuntos('nico', 10); window.sumarPuntos('carito', 10); }
     if (typeof registrarEvento === 'function') registrarEvento('cuidado_compartido', 'Festejaron el cumpleaños de Chokurei');
 }

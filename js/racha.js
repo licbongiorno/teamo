@@ -26,47 +26,59 @@ async function registrarActividadRacha(){
     if (!miIdentidad) return;
     try {
         const ref = _refRacha();
-        const snap = await new Promise((res) => { const u = window.onSnapshot(ref, s => { u(); res(s); }); });
-        const datos = snap.exists() ? snap.data() : {};
-        const hoy = _fechaHoyLocal();
-        const ultimoDia = { ...(datos.ultimoDia || {}) };
+        // Transacción: antes se leía el documento y después se escribía
+        // el mapa "ultimoDia" ENTERO. Si los dos entraban casi a la vez,
+        // cada uno escribía su día con el día viejo del otro: la marca
+        // del primero se borraba y la racha de ese día no avanzaba.
+        let resultado = null;
+        await window.runTransaction(window.db, async (tx) => {
+            resultado = null;
+            const snap = await tx.get(ref);
+            const datos = snap.exists() ? snap.data() : {};
+            const hoy = _fechaHoyLocal();
+            const ultimoDia = { ...(datos.ultimoDia || {}) };
+            if (ultimoDia[miIdentidad] === hoy) return; // ya marcamos hoy
+            ultimoDia[miIdentidad] = hoy;
 
-        if (ultimoDia[miIdentidad] === hoy) {
-            // Ya marcamos hoy: sólo mostramos el estado actual.
-            renderChipRacha(datos.rachaActual || 0);
-            return;
-        }
-        ultimoDia[miIdentidad] = hoy;
+            let rachaActual = datos.rachaActual || 0;
+            let mejorRacha = datos.mejorRacha || 0;
+            let ultimaFechaAmbos = datos.ultimaFechaAmbos || null;
+            // Historial de días en que jugaron los dos: alimenta el
+            // calendario de "Nuestra Historia". Nunca se resetea, sólo se
+            // recorta a los últimos 90 días.
+            const diasAmbos = [...(datos.diasAmbos || [])];
 
-        let rachaActual = datos.rachaActual || 0;
-        let mejorRacha = datos.mejorRacha || 0;
-        let ultimaFechaAmbos = datos.ultimaFechaAmbos || null;
-
-        // Historial de días en que jugaron los dos: alimenta el calendario
-        // de actividad en "Nuestra Historia". Se guarda aparte de la racha
-        // consecutiva (que se corta si saltean un día) — este historial
-        // nunca se resetea, sólo se recorta a los últimos 90 días.
-        const diasAmbos = [...(datos.diasAmbos || [])];
-
-        const ambosHoy = ultimoDia.nico === hoy && ultimoDia.carito === hoy;
-        if (ambosHoy && ultimaFechaAmbos !== hoy) {
-            const diff = ultimaFechaAmbos ? _diasEntre(ultimaFechaAmbos, hoy) : null;
-            if (diff === 1) rachaActual += 1;
-            else rachaActual = 1;
-            ultimaFechaAmbos = hoy;
-            mejorRacha = Math.max(mejorRacha, rachaActual);
-            if (!diasAmbos.includes(hoy)) diasAmbos.push(hoy);
-        }
-        while (diasAmbos.length > 90) diasAmbos.shift();
-
-        await window.setDoc(ref, { ultimoDia, rachaActual, mejorRacha, ultimaFechaAmbos, diasAmbos }, { merge: true });
-        renderChipRacha(rachaActual);
-        if (typeof window.verificarLogroDeValor === 'function') {
-            window.verificarLogroDeValor('racha_dias', rachaActual);
+            const ambosHoy = ultimoDia.nico === hoy && ultimoDia.carito === hoy;
+            if (ambosHoy && ultimaFechaAmbos !== hoy) {
+                const diff = ultimaFechaAmbos ? _diasEntre(ultimaFechaAmbos, hoy) : null;
+                if (diff === 1) rachaActual += 1;
+                else rachaActual = 1;
+                ultimaFechaAmbos = hoy;
+                mejorRacha = Math.max(mejorRacha, rachaActual);
+                if (!diasAmbos.includes(hoy)) diasAmbos.push(hoy);
+            }
+            while (diasAmbos.length > 90) diasAmbos.shift();
+            tx.set(ref, { ultimoDia, rachaActual, mejorRacha, ultimaFechaAmbos, diasAmbos }, { merge: true });
+            resultado = rachaActual;
+        });
+        if (resultado !== null && typeof window.verificarLogroDeValor === 'function') {
+            window.verificarLogroDeValor('racha_dias', resultado);
         }
     } catch (e) {
         console.warn('No se pudo actualizar la racha:', e);
     }
+    escucharChipRacha();
+}
+
+// El chip de racha del menú, en vivo: antes se dibujaba una sola vez al
+// entrar, así que cuando el otro entraba después y la racha subía, el
+// chip seguía mostrando el número viejo hasta actualizar la página.
+let _escuchaChipRacha = null;
+function escucharChipRacha(){
+    if (_escuchaChipRacha) return;
+    _escuchaChipRacha = window.onSnapshot(_refRacha(), (snap) => {
+        renderChipRacha(snap.exists() ? (snap.data().rachaActual || 0) : 0);
+    }, (e) => { _escuchaChipRacha = null; console.warn('No se pudo escuchar la racha:', e); });
 }
 
 function renderChipRacha(racha){

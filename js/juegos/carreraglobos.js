@@ -9,8 +9,7 @@ function refCarreraGlobos(){ return window.doc(window.db, 'juegos', 'carreraglob
 
 let _carreraGlobosFaseAnterior = null;
 function iniciarCarreraGlobos(){
-    const cont = document.getElementById('contenido-carreraglobos');
-    if (cont) delete cont.dataset.jugandoLocal;
+    redibujarTrasJuegoLocal('carreraglobos', refCarreraGlobos(), renderCarreraGlobos);
     _carreraGlobosFaseAnterior = null;
     if (window._unsubCarreraGlobos) window._unsubCarreraGlobos();
     window._unsubCarreraGlobos = window.onSnapshot(refCarreraGlobos(), (snap) => {
@@ -189,8 +188,7 @@ async function terminarCarreraGlobos(ganadorForzado){
     } catch (e) {
         console.error('No se pudo terminar la carrera de globos:', e);
     }
-    const cont = document.getElementById('contenido-carreraglobos');
-    if (cont) delete cont.dataset.jugandoLocal;
+    redibujarTrasJuegoLocal('carreraglobos', refCarreraGlobos(), renderCarreraGlobos);
 }
 
 async function revanchaCarreraGlobos(){

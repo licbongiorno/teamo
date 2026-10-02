@@ -196,12 +196,12 @@ function limpiarFilasBloques(){
 }
 
 async function enviarGarbageBloques(cantidad){
+    // increment(): suma del lado del servidor. Antes se leía el valor y
+    // se escribía "leído + cantidad"; si el otro descontaba la basura al
+    // mismo tiempo, una de las dos escrituras se perdía.
     try {
-        const snap = await new Promise(res => { const u = window.onSnapshot(refBloques(), s => { u(); res(s); }); });
-        const data = snap.data();
-        if (!data) return;
         const campo = miRival === 'nico' ? 'garbageParaNico' : 'garbageParaCarito';
-        await window.updateDoc(refBloques(), { [campo]: (data[campo] || 0) + cantidad });
+        await window.updateDoc(refBloques(), { [campo]: window.increment(cantidad) });
     } catch (e) { /* silencioso */ }
 }
 
@@ -278,7 +278,7 @@ function manejarSnapshotBloques(data){
         const pendiente = data[campoGarbage] || 0;
         if (pendiente > 0) {
             aplicarGarbageLocalBloques(pendiente);
-            window.updateDoc(refBloques(), { [campoGarbage]: 0 }).catch(() => {});
+            window.updateDoc(refBloques(), { [campoGarbage]: window.increment(-pendiente) }).catch(() => {}); // descuenta sólo lo aplicado
         }
         const elRival = document.getElementById('puntaje-rival-bloques');
         if (elRival) elRival.innerText = data[miRival === 'nico' ? 'puntajeNico' : 'puntajeCarito'] || 0;

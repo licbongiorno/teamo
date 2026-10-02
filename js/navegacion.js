@@ -125,7 +125,22 @@ function cerrarJuego(){
     const query = params.toString();
     history.replaceState(null, '', query ? '?' + query : window.location.pathname);
 }
+// Escuchas que pertenecen al menú (no a un juego) y tienen que seguir
+// vivas aunque se cierre el juego.
+const _ESCUCHAS_PERMANENTES = ['_unsubDesafioSemanal'];
 function detenerListenersActivos(){
+    // Antes acá se cortaban sólo 5 escuchas; las de los otros ~70 juegos
+    // quedaban abiertas para siempre después de cerrarlos (bajando datos
+    // y redibujando pantallas ocultas en cada cambio). Con varios juegos
+    // abiertos en una misma visita, la app se ponía cada vez más lenta.
+    // Ahora se corta toda escucha de juego (window._unsub*). Cada juego
+    // vuelve a abrir la suya en su iniciar*() al reabrirlo.
+    Object.keys(window).forEach((clave) => {
+        if (!clave.startsWith('_unsub') || _ESCUCHAS_PERMANENTES.includes(clave)) return;
+        const fn = window[clave];
+        if (typeof fn === 'function') { try { fn(); } catch (e) { /* ya estaba cortada */ } }
+        window[clave] = null;
+    });
     if (window._unsubAhorcado) { window._unsubAhorcado(); window._unsubAhorcado = null; }
     if (window._unsubFrutas) { window._unsubFrutas(); window._unsubFrutas = null; }
     if (window._unsubTruco) { window._unsubTruco(); window._unsubTruco = null; }

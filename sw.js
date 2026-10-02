@@ -70,3 +70,18 @@ self.addEventListener('fetch', (event) => {
         }).catch(() => caches.match(request)) // sin conexión: lo último que se haya guardado
     );
 });
+
+// Tocar una notificación de "¡Te toca!" (js/te-toca.js) abre ese juego:
+// si la app ya está abierta en alguna pestaña, la trae al frente ahí;
+// si no, abre una nueva.
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const destino = new URL((event.notification.data && event.notification.data.url) || './juegos.html', self.location.href).href;
+    event.waitUntil(
+        self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((ventanas) => {
+            const abierta = ventanas.find((v) => v.url.startsWith(self.location.origin));
+            if (abierta) return abierta.navigate(destino).then((v) => (v || abierta).focus()).catch(() => abierta.focus());
+            return self.clients.openWindow(destino);
+        })
+    );
+});

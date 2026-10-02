@@ -245,7 +245,7 @@ function renderCartaReflexion(juegoId, c){
 
 // Números para los botones de WhatsApp de todos los juegos de este
 // motor (los mismos que usan js/inicio/preguntas.js y el ticket).
-var NUMEROS_WHATSAPP_PAREJA = { nico: '5493516575261', carito: '5491170131229' };
+// NUMEROS_WHATSAPP_PAREJA vive en js/te-toca.js (cargado en las dos páginas).
 
 function mandarPreguntaWhatsApp(juegoId){
     vibrarJ(10);

@@ -1353,6 +1353,12 @@
         .planeta-ticket { --pz: 22px; background: radial-gradient(circle at 32% 28%, rgba(245,217,168,0.78), rgba(217,162,115,0.54) 70%); box-shadow: 0 0 16px rgba(240,217,160,0.25); }
         .planeta-sanacion { --pz: 12px; background: radial-gradient(circle at 32% 28%, rgba(184,232,201,0.78), rgba(148,131,224,0.52) 70%); box-shadow: 0 0 16px rgba(184,232,201,0.25); }
         .planeta-juegos { --pz: 28px; background: radial-gradient(circle at 32% 28%, rgba(178,212,255,0.78), rgba(255,179,198,0.52) 70%); box-shadow: 0 0 16px rgba(178,212,255,0.25); }
+        /* "¡Te toca!" (js/te-toca.js): partidas donde te toca jugar */
+        .globo-te-toca {
+            position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
+            border-radius: 9px; background: #ff5c8a; color: #fff; font: 700 0.7rem/18px 'Montserrat', sans-serif;
+            box-shadow: 0 0 0 2px rgba(24,15,30,0.8);
+        }
         /* Widget fijo abajo a la izquierda, en el mismo nivel que el chat (abajo a la derecha) */
         .sorpresa-flotante {
             position: fixed;

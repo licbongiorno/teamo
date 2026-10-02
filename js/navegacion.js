@@ -323,6 +323,9 @@ function iniciarJuegos(){
     if (typeof registrarActividadRacha === 'function') registrarActividadRacha();
     if (typeof iniciarDesafioSemanal === 'function') iniciarDesafioSemanal();
     if (typeof iniciarEscuchaPresencia === 'function') iniciarEscuchaPresencia();
+    if (typeof iniciarTeToca === 'function') {
+        iniciarTeToca(miIdentidad, (p) => { renderTarjetaTeToca(p); actualizarTituloTeToca(p); });
+    }
     _verificarNostalgiaNueva();
     // El indicador de "mensaje nuevo" en la burbuja de chat empieza a
     // escuchar apenas sabemos quiénes somos, no recién cuando se abre

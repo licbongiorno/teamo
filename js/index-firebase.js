@@ -1,5 +1,5 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, enableIndexedDbPersistence, runTransaction, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache, enableNetwork, disableNetwork, collection, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, runTransaction, increment, arrayUnion, arrayRemove, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -13,14 +13,24 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
         // Persistencia offline: si la señal en la clínica es débil o nula, la app sigue
         // mostrando la última fecha/mensaje que se sincronizó, sin pantalla en blanco.
-        enableIndexedDbPersistence(db).catch((err) => {
-            console.warn('No se pudo activar la persistencia offline de Firestore:', err.code);
-        });
+        // Antes se usaba enableIndexedDbPersistence (obsoleto): con la página abierta
+        // en dos pestañas, la segunda quedaba sin caché y a veces sin sincronizar.
+        // persistentMultipleTabManager comparte la caché entre pestañas.
+        // experimentalAutoDetectLongPolling: en redes móviles que "retienen" la
+        // conexión, los cambios del otro llegaban tarde o recién al actualizar.
+        let db;
+        try {
+            db = initializeFirestore(app, {
+                experimentalAutoDetectLongPolling: true,
+                localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+            });
+        } catch (err) {
+            console.warn('No se pudo activar la persistencia offline de Firestore:', err);
+            db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true, localCache: memoryLocalCache() });
+        }
+        const auth = getAuth(app);
 
         window.db = db;
         window.auth = auth;
@@ -40,6 +50,7 @@
         window.increment = increment;
         window.arrayUnion = arrayUnion;
         window.arrayRemove = arrayRemove;
+        window.deleteField = deleteField;
 
         // Paso 1 de seguridad: login anónimo automático (ver misma explicación
         // en js/firebase.js, el que usa juegos.html). Acá el script clásico de
@@ -57,3 +68,25 @@
         signInAnonymously(auth).catch((err) => {
             console.error('No se pudo iniciar la sesión anónima:', err);
         });
+
+        // ==================== RECONEXIÓN AL VOLVER A LA APP ====================
+        // Igual que en js/firebase.js (juegos.html): al bloquear la pantalla o dejar
+        // la app en segundo plano, el navegador corta la conexión y al volver
+        // Firestore puede tardar decenas de segundos en reconectar. Mientras tanto
+        // no llegaban los mensajes del otro y parecía que había que actualizar.
+        let _ultimaReconexion = 0;
+        async function reconectarFirestore(){
+            const ahora = Date.now();
+            if (ahora - _ultimaReconexion < 3000) return;
+            _ultimaReconexion = ahora;
+            try { await disableNetwork(db); await enableNetwork(db); }
+            catch (e) { console.warn('No se pudo reconectar Firestore:', e); }
+        }
+        let _ocultaDesde = 0;
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') { _ocultaDesde = Date.now(); return; }
+            if (_ocultaDesde && Date.now() - _ocultaDesde > 5000) reconectarFirestore();
+        });
+        window.addEventListener('online', reconectarFirestore);
+        window.addEventListener('pageshow', (e) => { if (e.persisted) reconectarFirestore(); });
+        window.reconectarFirestore = reconectarFirestore;

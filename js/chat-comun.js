@@ -79,18 +79,46 @@ function iniciarEscuchaChatVisto(){
     if (_unsubChatVisto || !miIdentidad) return;
     _unsubChatVisto = window.onSnapshot(_refChatVisto(), (snap) => {
         const datos = snap.exists() ? snap.data() : {};
-        window._miUltimoVistoChat = datos[miIdentidad] || 0;
-        window._vistoRivalChat = datos[miRival] || 0;
+        // Mientras la escritura propia está pendiente, el serverTimestamp
+        // todavía no tiene valor: se conserva la hora local optimista.
+        const mio = _msVistoChat(datos[miIdentidad]);
+        if (mio) window._miUltimoVistoChat = Math.max(window._miUltimoVistoChat, mio);
+        window._vistoRivalChat = _msVistoChat(datos[miRival]);
         if (typeof window.actualizarChecksVistoChat === 'function') window.actualizarChecksVistoChat();
     }, (err) => console.error('Error escuchando visto del chat:', err));
 }
 
+// El "visto" se guarda con la hora del SERVIDOR (serverTimestamp), la
+// misma que tienen los mensajes. Antes se guardaba Date.now() del
+// celular: si uno de los dos tenía la hora un poco corrida, el "Visto
+// ✓✓" no aparecía nunca, o el aviso de mensaje nuevo no se iba (o no
+// aparecía). Acepta también el formato viejo (número).
+function _msVistoChat(v){
+    if (!v) return 0;
+    if (typeof v === 'number') return v;
+    if (typeof v.toMillis === 'function') return v.toMillis();
+    return 0;
+}
+let _ultimaMarcaVistoChat = 0;
+let _timerVistoChat = null;
 async function marcarChatComoVisto(){
     if (!miIdentidad) return;
     marcarChatComoNoLeido(false);
-    window._miUltimoVistoChat = Date.now();
+    // Optimista mientras llega la hora real del servidor: lo más nuevo
+    // entre la hora local y el último mensaje que ya vimos.
+    window._miUltimoVistoChat = Math.max(window._miUltimoVistoChat, Date.now(), window._ultimoMensajeChatMs || 0);
+    // Como mucho una escritura cada 2 s (se llama con cada mensaje que
+    // llega mientras el chat está abierto).
+    const ahora = Date.now();
+    const espera = 2000 - (ahora - _ultimaMarcaVistoChat);
+    if (espera > 0) {
+        // No se pierde: se guarda apenas pasa el intervalo.
+        if (!_timerVistoChat) _timerVistoChat = setTimeout(() => { _timerVistoChat = null; marcarChatComoVisto(); }, espera);
+        return;
+    }
+    _ultimaMarcaVistoChat = ahora;
     try {
-        await window.setDoc(_refChatVisto(), { [miIdentidad]: window._miUltimoVistoChat }, { merge: true });
+        await window.setDoc(_refChatVisto(), { [miIdentidad]: window.serverTimestamp() }, { merge: true });
     } catch (e) { console.warn('No se pudo guardar el visto del chat:', e); }
 }
 window.marcarChatComoVisto = marcarChatComoVisto;
@@ -120,8 +148,9 @@ function iniciarEscuchaChatNoLeidos(){
     window.onSnapshot(q, (snapshot) => {
         if (snapshot.empty) return;
         const msg = snapshot.docs[0].data();
-        if (msg.autor === miIdentidad) return; // mensaje propio, no cuenta como no leído
         const fecha = msg.timestamp && msg.timestamp.toMillis ? msg.timestamp.toMillis() : Date.now();
+        window._ultimoMensajeChatMs = Math.max(window._ultimoMensajeChatMs || 0, fecha);
+        if (msg.autor === miIdentidad) return; // mensaje propio, no cuenta como no leído
         const chatFlotante = document.getElementById('chat-flotante');
         const abierto = chatFlotante && chatFlotante.classList.contains('abierto');
         if (fecha > window._miUltimoVistoChat && !abierto) marcarChatComoNoLeido(true);
@@ -129,24 +158,40 @@ function iniciarEscuchaChatNoLeidos(){
 }
 window.iniciarEscuchaChatNoLeidos = iniciarEscuchaChatNoLeidos;
 
+// ==================== SEÑALES EN VIVO (zumbido / pensé en vos) ====================
+// Antes se comparaba la hora del celular que MANDA (enviadoEn) con la
+// hora del celular que RECIBE: si el reloj del que manda estaba un poco
+// atrasado, la señal se descartaba y al otro nunca le llegaba. Ahora:
+// cada envío tiene un id único; lo que ya estaba guardado al conectar
+// (o llegó mientras no estábamos) se toma como punto de partida y no
+// dispara nada, y de ahí en más cualquier id nuevo del otro dispara.
+function _escucharSenalChat(ref, nombre, alRecibir){
+    let sincronizado = false;
+    let ultimoId = null;
+    return window.onSnapshot(ref, { includeMetadataChanges: true }, (snap) => {
+        const datos = snap.exists() ? snap.data() : null;
+        const id = datos ? (datos.id || String(datos.enviadoEn || '')) : null;
+        if (!sincronizado) {
+            ultimoId = id;
+            if (!snap.metadata.fromCache) sincronizado = true;
+            return;
+        }
+        if (!datos || id === ultimoId) return;
+        ultimoId = id;
+        if (datos.de === miIdentidad) return;
+        alRecibir();
+    }, (err) => console.error(`Error escuchando ${nombre}:`, err));
+}
+function _idSenalChat(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
 // ==================== ZUMBIDO (estilo MSN) ====================
 const COOLDOWN_ZUMBIDO_MS = 12000;
 let _ultimoZumbidoEnviado = 0;
-// Arranca en "ahora": así un zumbido viejo que ya estaba guardado no
-// dispara el efecto de nuevo apenas se conecta el listener.
-let _ultimoZumbidoVisto = Date.now();
 let _unsubZumbido = null;
 
 function iniciarEscuchaZumbido(){
     if (_unsubZumbido || !miIdentidad) return;
-    _unsubZumbido = window.onSnapshot(_refZumbido(), (snap) => {
-        if (!snap.exists()) return;
-        const datos = snap.data();
-        if (datos.de === miIdentidad || !datos.enviadoEn) return;
-        if (datos.enviadoEn <= _ultimoZumbidoVisto) return;
-        _ultimoZumbidoVisto = datos.enviadoEn;
-        dispararEfectoZumbido();
-    }, (err) => console.error('Error escuchando zumbido:', err));
+    _unsubZumbido = _escucharSenalChat(_refZumbido(), 'zumbido', dispararEfectoZumbido);
 }
 
 function dispararEfectoZumbido(){
@@ -166,7 +211,7 @@ async function enviarZumbido(){
     _vibrarChat([20, 40, 20]);
     _actualizarBotonZumbido();
     try {
-        await window.setDoc(_refZumbido(), { de: miIdentidad, enviadoEn: ahora });
+        await window.setDoc(_refZumbido(), { de: miIdentidad, enviadoEn: ahora, id: _idSenalChat() });
     } catch (e) {
         console.warn('No se pudo enviar el zumbido:', e);
         _ultimoZumbidoEnviado = 0;
@@ -192,19 +237,11 @@ function _actualizarBotonZumbido(){
 // otro lado.
 const COOLDOWN_PENSE_MS = 8000;
 let _ultimoPenseEnviado = 0;
-let _ultimoPenseVisto = Date.now();
 let _unsubPenseEnVos = null;
 
 function iniciarEscuchaPenseEnVos(){
     if (_unsubPenseEnVos || !miIdentidad) return;
-    _unsubPenseEnVos = window.onSnapshot(_refPenseEnVos(), (snap) => {
-        if (!snap.exists()) return;
-        const datos = snap.data();
-        if (datos.de === miIdentidad || !datos.enviadoEn) return;
-        if (datos.enviadoEn <= _ultimoPenseVisto) return;
-        _ultimoPenseVisto = datos.enviadoEn;
-        dispararEfectoPenseEnVos();
-    }, (err) => console.error('Error escuchando "pensé en vos":', err));
+    _unsubPenseEnVos = _escucharSenalChat(_refPenseEnVos(), '"pensé en vos"', dispararEfectoPenseEnVos);
 }
 
 function dispararEfectoPenseEnVos(){
@@ -228,7 +265,7 @@ async function enviarPenseEnVos(){
     // lo manda, como confirmación de que salió.
     dispararEfectoPenseEnVos();
     try {
-        await window.setDoc(_refPenseEnVos(), { de: miIdentidad, enviadoEn: ahora });
+        await window.setDoc(_refPenseEnVos(), { de: miIdentidad, enviadoEn: ahora, id: _idSenalChat() });
     } catch (e) {
         console.warn('No se pudo enviar "pensé en vos":', e);
         _ultimoPenseEnviado = 0;
@@ -246,3 +283,72 @@ function _actualizarBotonPenseEnVos(){
     btn.innerText = Math.ceil(restante / 1000) + 's';
     setTimeout(_actualizarBotonPenseEnVos, 250);
 }
+
+// ==================== MENSAJES DEL CHAT (común a los dos chats) ====================
+// Antes cada chat pedía TODO el historial (orderBy asc, sin límite) cada
+// vez que se abría, y lo volvía a dibujar entero con cada mensaje nuevo:
+// cuanto más largo el chat, más lento abría y más tardaba en aparecer un
+// mensaje. Ahora se piden sólo los últimos CHAT_TAM_PAGINA (los más
+// nuevos, del lado del servidor) y "Ver mensajes anteriores" pide más.
+const CHAT_TAM_PAGINA = 80;
+let _limiteMensajesChat = CHAT_TAM_PAGINA;
+let _unsubMensajesChat = null;
+let _callbacksMensajesChat = null;
+
+// onMensajes(mensajes, hayMas): mensajes = [{id, ...datos}] del más
+// viejo al más nuevo.
+function escucharMensajesChat(onMensajes, onError){
+    _callbacksMensajesChat = { onMensajes, onError };
+    if (_unsubMensajesChat) _unsubMensajesChat();
+    const pedidos = _limiteMensajesChat;
+    const q = window.query(
+        window.collection(window.db, 'chat'),
+        window.orderBy('timestamp', 'desc'),
+        window.limit(pedidos)
+    );
+    _unsubMensajesChat = window.onSnapshot(q, (snapshot) => {
+        const mensajes = [];
+        snapshot.forEach(d => mensajes.push({ id: d.id, ...d.data() }));
+        mensajes.reverse();
+        onMensajes(mensajes, snapshot.size >= pedidos);
+    }, (err) => {
+        _unsubMensajesChat = null;
+        if (onError) onError(err);
+    });
+}
+window.escucharMensajesChat = escucharMensajesChat;
+
+function cargarMensajesAnterioresChat(){
+    if (!_callbacksMensajesChat) return;
+    _limiteMensajesChat += CHAT_TAM_PAGINA;
+    window._chatMantenerScroll = true;
+    escucharMensajesChat(_callbacksMensajesChat.onMensajes, _callbacksMensajesChat.onError);
+}
+window.cargarMensajesAnterioresChat = cargarMensajesAnterioresChat;
+
+// Botón "Ver mensajes anteriores" (va arriba de la lista si hay más).
+function crearBotonAnterioresChat(){
+    const b = document.createElement('button');
+    b.className = 'btn-anteriores-chat';
+    b.type = 'button';
+    b.innerText = '⬆️ Ver mensajes anteriores';
+    b.style.cssText = 'display:block; margin:6px auto 10px; padding:6px 14px; border-radius:14px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); color:inherit; font-size:0.8rem; cursor:pointer;';
+    b.onclick = (e) => { e.stopPropagation(); b.disabled = true; b.innerText = 'Cargando…'; cargarMensajesAnterioresChat(); };
+    return b;
+}
+window.crearBotonAnterioresChat = crearBotonAnterioresChat;
+
+// Scroll después de redibujar: antes se iba SIEMPRE al final, aunque
+// estuvieras leyendo mensajes viejos. Ahora baja sólo si ya estabas
+// cerca del final (o si el mensaje nuevo es tuyo); al cargar anteriores
+// conserva la posición.
+function ajustarScrollChat(contenedor, alturaAntes, scrollAntes, estabaAbajo, ultimoEsPropio){
+    if (window._chatMantenerScroll) {
+        window._chatMantenerScroll = false;
+        contenedor.scrollTop = scrollAntes + (contenedor.scrollHeight - alturaAntes);
+        return;
+    }
+    if (estabaAbajo || ultimoEsPropio) contenedor.scrollTop = contenedor.scrollHeight;
+    else contenedor.scrollTop = scrollAntes;
+}
+window.ajustarScrollChat = ajustarScrollChat;

@@ -144,22 +144,38 @@ async function sincronizarTiraAfloja(){
     if (_toquesLocalesTA === 0) return;
     const toques = _toquesLocalesTA;
     _toquesLocalesTA = 0;
-    const snap = await new Promise(res => { const u = window.onSnapshot(refTiraAfloja(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (!data || data.fase !== 'jugando') return;
-    const direccion = miIdentidad === 'nico' ? -1 : 1;
-    let nuevaPos = (data.posicion ?? 50) + direccion * toques * 1.5;
-    nuevaPos = Math.max(0, Math.min(100, nuevaPos));
-
-    let updates = { posicion: nuevaPos };
-    if (nuevaPos <= 0 || nuevaPos >= 100) {
-        const ganador = nuevaPos <= 0 ? 'nico' : 'carito';
-        const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
-        puntajes[ganador] = (puntajes[ganador] || 0) + 1;
-        updates.fase = 'terminado'; updates.ganador = ganador; updates.puntajes = puntajes;
-        vibrarJ([20, 40, 20, 40, 80]);
+    // Transacción: antes se leía la posición, se le sumaban mis toques
+    // y se escribía el resultado. Si el otro sincronizaba en el medio,
+    // una de las dos escrituras pisaba a la otra y se perdían los toques
+    // de alguien (la soga no reflejaba lo que pasaba de verdad).
+    // runTransaction (sin el candado de jugadaSegura, para no descartar
+    // toques) reintenta con la posición actualizada si hubo choque.
+    const ref = refTiraAfloja();
+    let updates = null;
+    try {
+        await window.runTransaction(window.db, async (tx) => {
+            updates = null;
+            const snap = await tx.get(ref);
+            const data = snap.exists() ? snap.data() : null;
+            if (!data || data.fase !== 'jugando') return;
+            const direccion = miIdentidad === 'nico' ? -1 : 1;
+            let nuevaPos = (data.posicion ?? 50) + direccion * toques * 1.5;
+            nuevaPos = Math.max(0, Math.min(100, nuevaPos));
+            updates = { posicion: nuevaPos };
+            if (nuevaPos <= 0 || nuevaPos >= 100) {
+                const ganador = nuevaPos <= 0 ? 'nico' : 'carito';
+                const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
+                puntajes[ganador] = (puntajes[ganador] || 0) + 1;
+                updates.fase = 'terminado'; updates.ganador = ganador; updates.puntajes = puntajes;
+            }
+            tx.update(ref, updates);
+        });
+    } catch (e) {
+        console.error('Tira y Afloja: no se pudo sincronizar', e);
+        _toquesLocalesTA += toques; // se reintentan en la próxima sincronización
+        return;
     }
-    await window.updateDoc(refTiraAfloja(), updates);
+    if (updates?.fase === 'terminado') vibrarJ([20, 40, 20, 40, 80]);
 }
 
 async function revanchaTiraAfloja(){

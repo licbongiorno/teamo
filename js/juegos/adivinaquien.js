@@ -210,13 +210,15 @@ async function nuevaPartidaAdivinaQuien(){
 async function arriesgarAdivinaQuien(emoji){
     vibrarJ([20, 40, 20]);
     _modoArriesgoAQ = false;
-    const snap = await new Promise(res => { const u = window.onSnapshot(refAdivinaQuien(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (data.fase !== 'jugando') return;
-    const secretoRival = data[`secreto${miIdentidad === 'nico' ? 'Carito' : 'Nico'}`];
-    const acerte = emoji === secretoRival;
-    const ganador = acerte ? miIdentidad : miRival;
-    const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
-    puntajes[ganador] = (puntajes[ganador] || 0) + 1;
-    await window.updateDoc(refAdivinaQuien(), { fase: 'terminado', ganador, puntajes });
+    // Transacción (ver js/jugada-segura.js): si los dos arriesgaban casi
+    // juntos, la segunda escritura pisaba el resultado de la primera.
+    await window.jugadaSegura(refAdivinaQuien(), (data) => {
+        if (!data || data.fase !== 'jugando') return null;
+        const secretoRival = data[`secreto${miIdentidad === 'nico' ? 'Carito' : 'Nico'}`];
+        const acerte = emoji === secretoRival;
+        const ganador = acerte ? miIdentidad : miRival;
+        const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
+        puntajes[ganador] = (puntajes[ganador] || 0) + 1;
+        return { fase: 'terminado', ganador, puntajes };
+    });
 }

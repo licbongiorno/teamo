@@ -25,7 +25,7 @@ window.JUEGOS = [
     { id:'ahorcado',   nombre:'Ahorcado',            icono:'🔤', iconoSvg:'icono-horca', categoria:'clasicos',    disponible:true,  descripcion:'Uno propone una palabra secreta, el otro la adivina letra por letra.' },
     { id:'truco',      nombre:'Truco Argentino',     icono:'🃏', iconoSvg:'icono-cartas', categoria:'clasicos',    disponible:true,  descripcion:'El clásico de a dos, con envido y truco, reglas reales.' },
     { id:'damas',      nombre:'Damas',                icono:'⚫', iconoSvg:'icono-ficha-dama', categoria:'clasicos',    disponible:true,  descripcion:'El tablero de siempre, con damas voladoras al coronar.' },
-    { id:'ajedrez',    nombre:'Ajedrez',              icono:'♟️', iconoSvg:'icono-peon', categoria:'clasicos',    disponible:true,  descripcion:'Partida completa: enroque, al paso, jaque y jaque mate.' },
+    { id:'ajedrez',    nombre:'Ajedrez',              icono:'♟️', iconoSvg:'icono-peon', categoria:'clasicos',    disponible:true,  descripcion:'Ajedrez simplificado: sin enroque ni al paso; gana quien captura al rey.' },
     { id:'tateti',     nombre:'Ta-Te-Ti Infinito',   icono:'❌', iconoSvg:'icono-grilla-equis', categoria:'clasicos',    disponible:true, descripcion:'Tres en línea, pero cada jugador sólo tiene 3 marcas activas.' },
     { id:'conecta4',   nombre:'Conecta 4',            icono:'🔴', iconoSvg:'icono-cuatro-en-linea', categoria:'clasicos',    disponible:true, descripcion:'El clásico de las fichas que caen, a 4 en línea.' },
     { id:'escoba',     nombre:'Escoba de 15',        icono:'🧹', iconoSvg:'icono-escoba', categoria:'clasicos',    disponible:true, descripcion:'Cartas españolas: sumá 15 y levantá la mesa.' },

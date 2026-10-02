@@ -93,6 +93,7 @@ function abrirCartaReflexion(juegoId, id){
 
 function renderCartaReflexion(juegoId, c){
     const cfg = window.CONFIG_REFLEXION[juegoId];
+    window['_reflexionCartaActual_' + juegoId] = c;
     const cont = document.getElementById('contenido-' + juegoId);
     const preguntaTexto = typeof c.pregunta === 'string' ? c.pregunta : c.pregunta.texto;
     let html = `<button class="btn-secundario" style="margin-bottom:12px;" onclick="mostrarListaReflexion('${juegoId}')">⬅️ Todas las rondas</button>
@@ -112,6 +113,16 @@ function renderCartaReflexion(juegoId, c){
             }
         } else {
             html += `<div class="panel texto-centro texto-tenue destello">Ya respondiste. Esperando a ${nombreJugador(miRival)}…</div>`;
+        }
+        // Mientras el otro no respondió, se le puede mandar la pregunta
+        // por WhatsApp (por si no está mirando la app en este momento).
+        if (!c.respuestas[miRival] && NUMEROS_WHATSAPP_PAREJA[miRival]) {
+            html += `<div class="panel texto-centro">
+                <button class="btn-secundario" style="display:flex; align-items:center; justify-content:center; gap:8px;" onclick="mandarPreguntaWhatsApp('${juegoId}')">
+                    <svg class="icono-svg" style="color:#25D366;"><use href="#icono-whatsapp"></use></svg>
+                    Mandarle la pregunta a ${nombreJugador(miRival)}
+                </button>
+            </div>`;
         }
     } else if (c.fase === 'revelado') {
         html += `<div class="panel reflexion-reveal">
@@ -141,6 +152,23 @@ function renderCartaReflexion(juegoId, c){
         }
     }
     cont.innerHTML = html;
+}
+
+// Números para los botones de WhatsApp de todos los juegos de este
+// motor (los mismos que usan js/inicio/preguntas.js y el ticket).
+var NUMEROS_WHATSAPP_PAREJA = { nico: '5493516575261', carito: '5491170131229' };
+
+function mandarPreguntaWhatsApp(juegoId){
+    vibrarJ(10);
+    const c = window['_reflexionCartaActual_' + juegoId];
+    const numero = NUMEROS_WHATSAPP_PAREJA[miRival];
+    if (!c || !numero) return;
+    const pregunta = typeof c.pregunta === 'string' ? c.pregunta : (c.pregunta?.texto || '');
+    const opciones = Array.isArray(c.pregunta?.opciones) ? '\n' + c.pregunta.opciones.map(o => `• ${o}`).join('\n') : '';
+    const juego = (window.JUEGOS || []).find(j => j.id === juegoId);
+    const enlace = location.href.split('#')[0];
+    const texto = `💌 ${nombreJugador(miIdentidad)} te mandó una pregunta${juego ? ` de "${juego.nombre}"` : ''}:\n\n${pregunta}${opciones}\n\nRespondela en la app y revelamos juntos: ${enlace}`;
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank');
 }
 
 function compartirReflexionWhatsApp(juegoId, destinatario){

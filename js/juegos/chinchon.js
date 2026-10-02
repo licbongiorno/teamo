@@ -245,81 +245,94 @@ function robarUnaCartaChinchon(mazo, descarte){
 }
 
 async function robarChinchon(origen){
-    const estado = await leerChinchonActual();
-    if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad || estado.yaRobo) return;
+    // Transacción (ver js/jugada-segura.js): antes un doble toque podía
+    // robar dos cartas en el mismo turno.
+    const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
+    const res = await window.jugadaSegura(refChinchon(), (estado) => {
+        if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad || estado.yaRobo) return null;
+        let carta, mazo = [...estado.mazo], descarte = [...estado.descarte];
+        if (origen === 'descarte') {
+            if (!descarte.length) return null;
+            carta = descarte.pop();
+        } else {
+            const r = robarUnaCartaChinchon(mazo, descarte);
+            carta = r.carta; mazo = r.mazo; descarte = r.descarte;
+        }
+        const mano = [...estado[campoMano], carta];
+        return {
+            [campoMano]: mano, mazo, descarte, yaRobo: true,
+            historial: pushLogChinchon(estado, `${nombreJugador(miIdentidad)} robó ${origen === 'descarte' ? 'de la mesa' : 'del mazo'}.`)
+        };
+    });
+    if (!res) return;
     vibrarJ(10);
     if (window.sfx) window.sfx.cartaFlip();
-    const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
-    let carta, mazo = [...estado.mazo], descarte = [...estado.descarte];
-    if (origen === 'descarte') {
-        if (!descarte.length) return;
-        carta = descarte.pop();
-    } else {
-        const r = robarUnaCartaChinchon(mazo, descarte);
-        carta = r.carta; mazo = r.mazo; descarte = r.descarte;
-    }
-    const mano = [...estado[campoMano], carta];
-    await window.updateDoc(refChinchon(), {
-        [campoMano]: mano, mazo, descarte, yaRobo: true,
-        historial: pushLogChinchon(estado, `${nombreJugador(miIdentidad)} robó ${origen === 'descarte' ? 'de la mesa' : 'del mazo'}.`)
-    });
 }
 
 async function descartarChinchon(){
     if (_seleccionManoChinchon == null) return;
-    const estado = await leerChinchonActual();
-    if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad || !estado.yaRobo) return;
+    const indice = _seleccionManoChinchon;
     const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
-    const mano = [...estado[campoMano]];
-    const carta = mano.splice(_seleccionManoChinchon, 1)[0];
+    const cartaVista = (await leerChinchonActual())?.[campoMano]?.[indice];
+    const res = await window.jugadaSegura(refChinchon(), (estado) => {
+        if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad || !estado.yaRobo) return null;
+        const mano = [...estado[campoMano]];
+        if (!cartaVista || mano[indice] !== cartaVista) return null;
+        const carta = mano.splice(indice, 1)[0];
+        return {
+            [campoMano]: mano, descarte: [...estado.descarte, carta],
+            turno: miRival, yaRobo: false,
+            historial: pushLogChinchon(estado, `${nombreJugador(miIdentidad)} descartó.`)
+        };
+    });
+    if (!res) return;
     _seleccionManoChinchon = null;
     vibrarJ(12);
     if (window.sfx) window.sfx.swoosh();
-    await window.updateDoc(refChinchon(), {
-        [campoMano]: mano, descarte: [...estado.descarte, carta],
-        turno: miRival, yaRobo: false,
-        historial: pushLogChinchon(estado, `${nombreJugador(miIdentidad)} descartó.`)
-    });
 }
 
 async function cerrarChinchon(){
     if (_seleccionManoChinchon == null) return;
-    const estado = await leerChinchonActual();
-    if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad || !estado.yaRobo) return;
+    const indice = _seleccionManoChinchon;
     const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
-    const mano = [...estado[campoMano]];
-    const descartada = mano[_seleccionManoChinchon];
-    const restantes = mano.filter((_, i) => i !== _seleccionManoChinchon);
-    const mejorMia = mejorParticion(restantes);
-    if (mejorMia.sueltas.length > 1) return; // no cumple la condición de cierre
-
     const campoManoRival = miIdentidad === 'nico' ? 'manoCarito' : 'manoNico';
-    const mejorRival = mejorParticion(estado[campoManoRival]);
-    const deadwoodMio = mejorMia.deadwood;
-    const deadwoodRival = mejorRival.deadwood;
-    const chinchonPerfecto = mejorMia.sueltas.length === 0;
-    const gano = deadwoodMio <= deadwoodRival;
-    const empate = deadwoodMio === deadwoodRival && !chinchonPerfecto;
+    const cartaVista = (await leerChinchonActual())?.[campoMano]?.[indice];
+    const res = await window.jugadaSegura(refChinchon(), (estado) => {
+        if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad || !estado.yaRobo) return null;
+        const mano = [...estado[campoMano]];
+        if (!cartaVista || mano[indice] !== cartaVista) return null;
+        const descartada = mano[indice];
+        const restantes = mano.filter((_, i) => i !== indice);
+        const mejorMia = mejorParticion(restantes);
+        if (mejorMia.sueltas.length > 1) return null; // no cumple la condición de cierre
 
-    const puntajes = { ...estado.puntajes };
-    if (!empate) puntajes[gano ? miIdentidad : miRival] = (puntajes[gano ? miIdentidad : miRival] || 0) + (chinchonPerfecto ? 3 : 1);
+        const mejorRival = mejorParticion(estado[campoManoRival]);
+        const deadwoodMio = mejorMia.deadwood;
+        const deadwoodRival = mejorRival.deadwood;
+        const chinchonPerfecto = mejorMia.sueltas.length === 0;
+        const gano = deadwoodMio <= deadwoodRival;
+        const empate = deadwoodMio === deadwoodRival && !chinchonPerfecto;
 
+        const puntajes = { ...estado.puntajes };
+        if (!empate) puntajes[gano ? miIdentidad : miRival] = (puntajes[gano ? miIdentidad : miRival] || 0) + (chinchonPerfecto ? 3 : 1);
+
+        const deadwoodNico = miIdentidad === 'nico' ? deadwoodMio : deadwoodRival;
+        const deadwoodCarito = miIdentidad === 'carito' ? deadwoodMio : deadwoodRival;
+
+        return {
+            [campoMano]: restantes, descarte: [...estado.descarte, descartada],
+            fase: 'revelado', puntajes,
+            resultado: {
+                ganador: empate ? null : (gano ? miIdentidad : miRival),
+                chinchonPerfecto, deadwoodNico, deadwoodCarito
+            },
+            historial: pushLogChinchon(estado, `${nombreJugador(miIdentidad)} cerró la ronda.`)
+        };
+    });
+    if (!res) return;
+    _seleccionManoChinchon = null;
     vibrarJ([15, 30, 15]);
     if (window.sfx) window.sfx.acierto();
-
-    const deadwoodNico = miIdentidad === 'nico' ? deadwoodMio : deadwoodRival;
-    const deadwoodCarito = miIdentidad === 'carito' ? deadwoodMio : deadwoodRival;
-
-    await window.updateDoc(refChinchon(), {
-        [campoMano]: restantes, descarte: [...estado.descarte, descartada],
-        fase: 'revelado', puntajes,
-        resultado: {
-            ganador: empate ? null : (gano ? miIdentidad : miRival),
-            chinchonPerfecto, deadwoodNico, deadwoodCarito
-        },
-        historial: pushLogChinchon(estado, `${nombreJugador(miIdentidad)} cerró la ronda.`)
-    });
-    _seleccionManoChinchon = null;
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `Jugaron una ronda de Chinchón`);
     }

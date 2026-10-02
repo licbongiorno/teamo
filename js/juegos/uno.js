@@ -188,18 +188,22 @@ function robarUnaCartaUno(estado){
 }
 
 async function robarCartaUno(){
-    const estado = await leerUnoActual();
-    if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad) return;
+    // Transacción (ver js/jugada-segura.js): un doble toque ya no roba
+    // dos veces ni le saltea el turno al otro.
+    const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
+    const res = await window.jugadaSegura(refUno(), (estado) => {
+        if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad) return null;
+        const { carta, mazo, descarte } = robarUnaCartaUno(estado);
+        const mano = [...estado[campoMano], carta];
+        return {
+            [campoMano]: mano, mazo, descarte,
+            turno: miRival,
+            historial: pushLogUno(estado, `${nombreJugador(miIdentidad)} robó una carta.`)
+        };
+    });
+    if (!res) return;
     vibrarJ(10);
     if (window.sfx) window.sfx.cartaFlip();
-    const { carta, mazo, descarte } = robarUnaCartaUno(estado);
-    const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
-    const mano = [...estado[campoMano], carta];
-    await window.updateDoc(refUno(), {
-        [campoMano]: mano, mazo, descarte,
-        turno: miRival,
-        historial: pushLogUno(estado, `${nombreJugador(miIdentidad)} robó una carta.`)
-    });
 }
 
 async function jugarCartaUno(indice){
@@ -231,47 +235,61 @@ async function elegirColorUno(color){
     await confirmarJugadaUno(estado, indice, color);
 }
 
-async function confirmarJugadaUno(estado, indice, colorNuevo){
+async function confirmarJugadaUno(estadoVisto, indice, colorNuevo){
     const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
-    const mano = [...estado[campoMano]];
-    const carta = mano.splice(indice, 1)[0];
-    const v = valorUno(carta);
-    let mazo = [...estado.mazo];
-    let descarteFinal = [...estado.descarte, carta];
-    let turnoSiguiente = miRival;
-    let mensaje = `${nombreJugador(miIdentidad)} jugó ${nombreCartaUno(carta)}.`;
-    let sonido = 'cartaFlip';
+    const campoManoRival = miIdentidad === 'nico' ? 'manoCarito' : 'manoNico';
+    const cartaVista = estadoVisto?.[campoMano]?.[indice];
+    // Todo en una sola transacción (ver js/jugada-segura.js). Antes la
+    // jugada se escribía en dos pasos (primero las cartas del +2/+4 al
+    // rival, después el resto) y con la lectura afuera, así que un doble
+    // toque podía tirar dos cartas en el mismo turno.
+    const res = await window.jugadaSegura(refUno(), (estado) => {
+        if (!estado || estado.fase !== 'jugando' || estado.turno !== miIdentidad) return null;
+        const mano = [...estado[campoMano]];
+        if (!cartaVista || mano[indice] !== cartaVista) return null;
+        const carta = mano.splice(indice, 1)[0];
+        const top = estado.descarte[estado.descarte.length - 1];
+        const puedeJugar = esComodinUno(carta) || colorUno(carta) === estado.colorActual || valorUno(carta) === valorUno(top);
+        if (!puedeJugar) return null;
 
-    if (v === 'salto' || v === 'reversa') {
-        turnoSiguiente = miIdentidad; // con 2 jugadores, ambos efectos vuelven el turno a quien jugó
-        mensaje += v === 'salto' ? ' Turno salteado.' : ' Reversa.';
-        sonido = 'swoosh';
-    } else if (v === '+2' || carta === 'comodin+4') {
-        const cuantas = v === '+2' ? 2 : 4;
-        const campoManoRival = miIdentidad === 'nico' ? 'manoCarito' : 'manoNico';
-        let manoRival = [...estado[campoManoRival]];
-        for (let i = 0; i < cuantas; i++) {
-            const r = robarUnaCartaUno({ mazo, descarte: descarteFinal });
-            manoRival.push(r.carta); mazo = r.mazo; descarteFinal = r.descarte;
+        const v = valorUno(carta);
+        let mazo = [...estado.mazo];
+        let descarteFinal = [...estado.descarte, carta];
+        let turnoSiguiente = miRival;
+        let mensaje = `${nombreJugador(miIdentidad)} jugó ${nombreCartaUno(carta)}.`;
+        const updates = {};
+
+        if (v === 'salto' || v === 'reversa') {
+            turnoSiguiente = miIdentidad; // con 2 jugadores, ambos efectos vuelven el turno a quien jugó
+            mensaje += v === 'salto' ? ' Turno salteado.' : ' Reversa.';
+        } else if (v === '+2' || carta === 'comodin+4') {
+            const cuantas = v === '+2' ? 2 : 4;
+            const manoRival = [...estado[campoManoRival]];
+            for (let i = 0; i < cuantas; i++) {
+                const r = robarUnaCartaUno({ mazo, descarte: descarteFinal });
+                manoRival.push(r.carta); mazo = r.mazo; descarteFinal = r.descarte;
+            }
+            turnoSiguiente = miIdentidad;
+            mensaje += ` ${nombreJugador(miRival)} roba ${cuantas}.`;
+            updates[campoManoRival] = manoRival;
         }
-        turnoSiguiente = miIdentidad;
-        mensaje += ` ${nombreJugador(miRival)} roba ${cuantas}.`;
-        sonido = 'explosion';
-        await window.updateDoc(refUno(), { [campoManoRival]: manoRival });
-    }
 
+        const gano = mano.length === 0;
+        Object.assign(updates, {
+            [campoMano]: mano, mazo, descarte: descarteFinal,
+            colorActual: colorNuevo, turno: gano ? estado.turno : turnoSiguiente,
+            historial: pushLogUno(estado, mensaje)
+        });
+        if (gano) { updates.fase = 'terminado'; updates.ganador = miIdentidad; }
+        return updates;
+    });
+    if (!res) { renderUno(await leerUnoActual()); return; }
+
+    const v = valorUno(cartaVista);
+    const sonido = (v === 'salto' || v === 'reversa') ? 'swoosh' : ((v === '+2' || cartaVista === 'comodin+4') ? 'explosion' : 'cartaFlip');
     vibrarJ(12);
     if (window.sfx) window.sfx[sonido]();
-
-    const gano = mano.length === 0;
-    const updates = {
-        [campoMano]: mano, mazo, descarte: descarteFinal,
-        colorActual: colorNuevo, turno: gano ? estado.turno : turnoSiguiente,
-        historial: pushLogUno(estado, mensaje)
-    };
-    if (gano) { updates.fase = 'terminado'; updates.ganador = miIdentidad; }
-    await window.updateDoc(refUno(), updates);
-    if (gano && typeof registrarEvento === 'function') {
+    if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó al UNO`);
     }
 }

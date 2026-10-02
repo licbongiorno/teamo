@@ -169,38 +169,50 @@ async function seleccionarCasillaAjedrez(idx){
     }
     if (!_ajedrezDestinos.includes(idx)) return;
 
-    const nuevoTablero = [...tablero];
-    const pieza = nuevoTablero[_ajedrezSeleccion];
-    const objetivo = nuevoTablero[idx];
-    nuevoTablero[_ajedrezSeleccion] = null;
-
-    let mensaje = `${nombreJugador(miIdentidad)} movió ${NOMBRES_PIEZAS_AJEDREZ[tipoPiezaAjedrez(pieza)]}.`;
-    let terminoPartida = false;
-    if (objetivo) {
-        mensaje = `${nombreJugador(miIdentidad)} capturó ${NOMBRES_PIEZAS_AJEDREZ[tipoPiezaAjedrez(objetivo)]} con su ${NOMBRES_PIEZAS_AJEDREZ[tipoPiezaAjedrez(pieza)]}.`;
-        if (tipoPiezaAjedrez(objetivo) === 'K') terminoPartida = true;
-    }
-
-    let piezaFinal = pieza;
-    const filaDestino = Math.floor(idx/8);
-    if (tipoPiezaAjedrez(pieza) === 'P' && (filaDestino === 0 || filaDestino === 7)) {
-        piezaFinal = colorPropio + 'Q';
-        mensaje += ' ¡Corona reina! 👑';
-    }
-    nuevoTablero[idx] = piezaFinal;
-
-    vibrarJ(objetivo ? [10,20,10] : 10);
-    if (window.sfx) window.sfx[objetivo ? 'golpe' : 'rebote']();
+    const origen = _ajedrezSeleccion;
     _ajedrezSeleccion = null; _ajedrezDestinos = [];
 
-    const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(estado, mensaje) };
-    if (terminoPartida) {
-        updates.fase = 'terminado';
-        updates.ganador = miIdentidad;
-        updates.historial = pushLog(estado, `${mensaje} 🏆 ¡${nombreJugador(miIdentidad)} ganó la partida!`);
-    }
-    await window.updateDoc(refAjedrez(), updates);
-    if (terminoPartida && typeof registrarEvento === 'function') {
+    // Igual que en Damas: se escribe en una transacción que confirma
+    // que el tablero y el turno no cambiaron (ver js/jugada-segura.js),
+    // así un doble toque no puede mover dos piezas en el mismo turno.
+    const tableroVisto = JSON.stringify(tablero);
+    const res = await window.jugadaSegura(refAjedrez(), (actual) => {
+        if (!actual || actual.fase !== 'jugando' || actual.turno !== miIdentidad) return null;
+        if (JSON.stringify(actual.tablero) !== tableroVisto) return null;
+        const nuevoTablero = [...actual.tablero];
+        const pieza = nuevoTablero[origen];
+        const objetivo = nuevoTablero[idx];
+        nuevoTablero[origen] = null;
+
+        let mensaje = `${nombreJugador(miIdentidad)} movió ${NOMBRES_PIEZAS_AJEDREZ[tipoPiezaAjedrez(pieza)]}.`;
+        let terminoPartida = false;
+        if (objetivo) {
+            mensaje = `${nombreJugador(miIdentidad)} capturó ${NOMBRES_PIEZAS_AJEDREZ[tipoPiezaAjedrez(objetivo)]} con su ${NOMBRES_PIEZAS_AJEDREZ[tipoPiezaAjedrez(pieza)]}.`;
+            if (tipoPiezaAjedrez(objetivo) === 'K') terminoPartida = true;
+        }
+
+        let piezaFinal = pieza;
+        const filaDestino = Math.floor(idx/8);
+        if (tipoPiezaAjedrez(pieza) === 'P' && (filaDestino === 0 || filaDestino === 7)) {
+            piezaFinal = colorPropio + 'Q';
+            mensaje += ' ¡Corona reina! 👑';
+        }
+        nuevoTablero[idx] = piezaFinal;
+
+        const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(actual, mensaje) };
+        if (terminoPartida) {
+            updates.fase = 'terminado';
+            updates.ganador = miIdentidad;
+            updates.historial = pushLog(actual, `${mensaje} 🏆 ¡${nombreJugador(miIdentidad)} ganó la partida!`);
+        }
+        return updates;
+    });
+    if (!res) { renderAjedrez(await leerAjedrezActual()); return; }
+
+    const capturo = !!tablero[idx];
+    vibrarJ(capturo ? [10,20,10] : 10);
+    if (window.sfx) window.sfx[capturo ? 'golpe' : 'rebote']();
+    if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_ajedrez', `${nombreJugador(miIdentidad)} le ganó a ${nombreJugador(miRival)} en Ajedrez`);
     }
 }

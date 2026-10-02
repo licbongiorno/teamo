@@ -217,22 +217,24 @@ async function finalizarSiCorrespondeEscoba(estado, manoNico, manoCarito, mazo, 
 
 async function levantarEscoba(){
     if (!_cartaManoEscoba || !_seleccionMesaEscoba.length) return;
-    vibrarJ([15, 30, 15]);
-    if (window.sfx) window.sfx.acierto();
-    const snap = await new Promise(res => { const u = window.onSnapshot(refEscoba(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (data.fase !== 'jugando' || data.turno !== miIdentidad) return;
+    const cartaMano = _cartaManoEscoba;
+    const seleccionMesa = [..._seleccionMesaEscoba];
+    // Transacción (ver js/jugada-segura.js): antes la lectura iba por
+    // afuera y un doble toque podía jugar dos veces en el mismo turno.
+    const res = await window.jugadaSegura(refEscoba(), async (data) => {
+    if (!data || data.fase !== 'jugando' || data.turno !== miIdentidad) return null;
     const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
     const campoBaza = miIdentidad === 'nico' ? 'bazasNico' : 'bazasCarito';
-    if (!data[campoMano].includes(_cartaManoEscoba)) return;
-    const suma = valorEscoba(_cartaManoEscoba) + _seleccionMesaEscoba.reduce((t, c) => t + valorEscoba(c), 0);
-    if (suma !== 15) return;
+    if (!data[campoMano].includes(cartaMano)) return null;
+    if (!seleccionMesa.every(c => data.mesa.includes(c))) return null;
+    const suma = valorEscoba(cartaMano) + seleccionMesa.reduce((t, c) => t + valorEscoba(c), 0);
+    if (suma !== 15) return null;
 
-    const mano = data[campoMano].filter(c => c !== _cartaManoEscoba);
-    const mesaRestante = data.mesa.filter(c => !_seleccionMesaEscoba.includes(c));
-    const bazas = [...data[campoBaza], _cartaManoEscoba, ..._seleccionMesaEscoba];
+    const mano = data[campoMano].filter(c => c !== cartaMano);
+    const mesaRestante = data.mesa.filter(c => !seleccionMesa.includes(c));
+    const bazas = [...data[campoBaza], cartaMano, ...seleccionMesa];
     let escobas = { escobasNico: data.escobasNico || 0, escobasCarito: data.escobasCarito || 0 };
-    let mensaje = `${nombreJugador(miIdentidad)} levantó ${nombreCartaEscoba(_cartaManoEscoba)} + mesa (=15).`;
+    let mensaje = `${nombreJugador(miIdentidad)} levantó ${nombreCartaEscoba(cartaMano)} + mesa (=15).`;
     if (mesaRestante.length === 0) {
         escobas[miIdentidad === 'nico' ? 'escobasNico' : 'escobasCarito']++;
         mensaje += ' ¡Escoba! 🧹';
@@ -249,29 +251,31 @@ async function levantarEscoba(){
 
     const fin = await finalizarSiCorrespondeEscoba({ ...data, ultimoQueLevanto: miIdentidad, escobasNico: escobas.escobasNico, escobasCarito: escobas.escobasCarito }, manoNico, manoCarito, mazo, mesaRestante, bazasNico, bazasCarito);
 
-    _cartaManoEscoba = null; _seleccionMesaEscoba = [];
-    await window.updateDoc(refEscoba(), {
+    return {
         manoNico, manoCarito, mazo, mesa: fin.mesa, bazasNico: fin.bazasNico, bazasCarito: fin.bazasCarito,
         ...escobas, ultimoQueLevanto: miIdentidad,
         turno: miIdentidad === 'nico' ? 'carito' : 'nico',
         historial: pushLogEscoba(data, mensaje),
         ...(fin.terminado ? { fase: 'terminado', puntajes: fin.puntajes } : {})
+    };
     });
-    if (fin.terminado && typeof registrarEvento === 'function') {
+    if (!res) { refrescarVistaEscoba(); return; }
+    _cartaManoEscoba = null; _seleccionMesaEscoba = [];
+    vibrarJ([15, 30, 15]);
+    if (window.sfx) window.sfx.acierto();
+    if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `Terminaron una partida de Escoba de 15`);
     }
 }
 
 async function tirarEscoba(){
     if (!_cartaManoEscoba) return;
-    vibrarJ(12);
-    if (window.sfx) window.sfx.cartaFlip();
-    const snap = await new Promise(res => { const u = window.onSnapshot(refEscoba(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (data.fase !== 'jugando' || data.turno !== miIdentidad) return;
-    const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
-    if (!data[campoMano].includes(_cartaManoEscoba)) return;
     const cartaTirada = _cartaManoEscoba;
+    // Transacción (ver js/jugada-segura.js), igual que levantarEscoba.
+    const res = await window.jugadaSegura(refEscoba(), async (data) => {
+    if (!data || data.fase !== 'jugando' || data.turno !== miIdentidad) return null;
+    const campoMano = miIdentidad === 'nico' ? 'manoNico' : 'manoCarito';
+    if (!data[campoMano].includes(cartaTirada)) return null;
 
     const mano = data[campoMano].filter(c => c !== cartaTirada);
     const mesa = [...data.mesa, cartaTirada];
@@ -284,14 +288,18 @@ async function tirarEscoba(){
 
     const fin = await finalizarSiCorrespondeEscoba(data, manoNico, manoCarito, mazo, mesa, [...data.bazasNico], [...data.bazasCarito]);
 
-    _cartaManoEscoba = null;
-    await window.updateDoc(refEscoba(), {
+    return {
         manoNico, manoCarito, mazo, mesa: fin.mesa, bazasNico: fin.bazasNico, bazasCarito: fin.bazasCarito,
         turno: miIdentidad === 'nico' ? 'carito' : 'nico',
         historial: pushLogEscoba(data, `${nombreJugador(miIdentidad)} tiró ${nombreCartaEscoba(cartaTirada)}.`),
         ...(fin.terminado ? { fase: 'terminado', puntajes: fin.puntajes } : {})
+    };
     });
-    if (fin.terminado && typeof registrarEvento === 'function') {
+    if (!res) { refrescarVistaEscoba(); return; }
+    _cartaManoEscoba = null;
+    vibrarJ(12);
+    if (window.sfx) window.sfx.cartaFlip();
+    if (res.cambios.fase === 'terminado' && typeof registrarEvento === 'function') {
         registrarEvento('gano_partida', `Terminaron una partida de Escoba de 15`);
     }
 }

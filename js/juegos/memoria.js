@@ -12,6 +12,7 @@ function iniciarMemoria(){
         const datos = snap.exists() ? snap.data() : null;
         if (datos && datos.fase === 'revelado' && _memoriaFaseAnterior === 'jugando' && window.sfx) window.sfx.revelar();
         _memoriaFaseAnterior = datos ? datos.fase : null;
+        _estadoMemoria = datos;
         renderMemoria(datos);
     }, (err) => {
         console.error('Error de Firestore en memoria:', err);
@@ -30,6 +31,9 @@ function actualizarChipRecordMemoria(){
 
 let _intentoLocalMemoria = [];
 let _mostrandoSecuenciaMemoria = false;
+// Último estado que mandó el listener: los toques redibujan con esto
+// en vez de abrir una consulta nueva a Firestore por cada emoji.
+let _estadoMemoria = null;
 
 function renderMemoria(estado){
     const cont = document.getElementById('contenido-memoria');
@@ -105,15 +109,15 @@ function mostrarSecuenciaMemoria(){
 }
 
 function tocarEmojiMemoria(e){
+    if (_estadoMemoria && _intentoLocalMemoria.length >= _estadoMemoria.dificultad) return;
     vibrarJ(8);
     if (window.sfx) window.sfx.toque();
     _intentoLocalMemoria.push(e);
     refrescarVistaMemoria();
 }
 function reiniciarIntentoMemoria(){ _intentoLocalMemoria = []; vibrarJ(8); refrescarVistaMemoria(); }
-async function refrescarVistaMemoria(){
-    const snap = await new Promise(res => { const u = window.onSnapshot(refMemoria(), s => { u(); res(s); }); });
-    if (snap.exists()) renderMemoria(snap.data());
+function refrescarVistaMemoria(){
+    if (_estadoMemoria) renderMemoria(_estadoMemoria);
 }
 
 function generarSecuenciaMemoria(n){
@@ -122,12 +126,22 @@ function generarSecuenciaMemoria(n){
     return seq;
 }
 
+// Las dos arrancan ronda con una transacción: si los dos tocan casi a
+// la vez, el segundo ve que ya hay una ronda en juego y no la pisa con
+// otra secuencia (antes uno podía estar memorizando una secuencia que
+// el otro reemplazaba un segundo después).
 async function nuevaRondaMemoria(){
     vibrarJ(12);
     _intentoLocalMemoria = []; _mostrandoSecuenciaMemoria = false;
-    await window.setDoc(refMemoria(), {
-        fase: 'jugando', dificultad: NIVELES_MEMORIA[0], secuencia: generarSecuenciaMemoria(NIVELES_MEMORIA[0]),
-        vistaNico: false, vistaCarito: false, intentoNico: null, intentoCarito: null
+    const ref = refMemoria();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : null;
+        if (data && data.fase && data.fase !== 'sin_ronda') return;
+        tx.set(ref, {
+            fase: 'jugando', dificultad: NIVELES_MEMORIA[0], secuencia: generarSecuenciaMemoria(NIVELES_MEMORIA[0]),
+            vistaNico: false, vistaCarito: false, intentoNico: null, intentoCarito: null
+        });
     });
 }
 
@@ -136,11 +150,18 @@ async function siguienteRondaMemoria(dificultadActual){
     _intentoLocalMemoria = []; _mostrandoSecuenciaMemoria = false;
     const idx = NIVELES_MEMORIA.indexOf(dificultadActual);
     const siguiente = NIVELES_MEMORIA[Math.min(idx + 1, NIVELES_MEMORIA.length - 1)];
-    await window.setDoc(refMemoria(), {
-        fase: 'jugando', dificultad: siguiente, secuencia: generarSecuenciaMemoria(siguiente),
-        vistaNico: false, vistaCarito: false, intentoNico: null, intentoCarito: null
+    const ref = refMemoria();
+    const avanzo = await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : null;
+        if (!data || data.fase !== 'revelado' || data.dificultad !== dificultadActual) return false;
+        tx.set(ref, {
+            fase: 'jugando', dificultad: siguiente, secuencia: generarSecuenciaMemoria(siguiente),
+            vistaNico: false, vistaCarito: false, intentoNico: null, intentoCarito: null
+        });
+        return true;
     });
-    if (typeof actualizarRecordSiSupera === 'function') {
+    if (avanzo && typeof actualizarRecordSiSupera === 'function') {
         actualizarRecordSiSupera('memoria', dificultadActual);
     }
 }
@@ -156,6 +177,7 @@ async function enviarIntentoMemoria(){
     await window.runTransaction(window.db, async (tx) => {
         const snap = await tx.get(ref);
         const data = snap.data();
+        if (!data || data.fase !== 'jugando' || data[campo]) return;
         const otro = miIdentidad === 'nico' ? data.intentoCarito : data.intentoNico;
         tx.update(ref, { [campo]: [..._intentoLocalMemoria], ...(otro ? { fase: 'revelado' } : {}) });
     });

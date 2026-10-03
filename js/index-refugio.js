@@ -1271,6 +1271,7 @@
             miIdentidad = e.detail.usuario;
             miRival = miIdentidad === 'nico' ? 'carito' : 'nico';
             iniciarEscuchaChatNoLeidos(); // ya tiene su propio guard, no se duplica si ya había arrancado
+            _arrancarTeToca();
             iniciarEscuchaClima();
             iniciarEscuchaConstelacion();
         });
@@ -1297,6 +1298,7 @@
                 miRival = miIdentidad === 'nico' ? 'carito' : 'nico';
                 localStorage.setItem("identidadRefugio", miIdentidad);
                 iniciarEscuchaChatNoLeidos();
+                _arrancarTeToca();
                 iniciarEscuchaClima();
                 iniciarEscuchaConstelacion();
                 document.getElementById('modal-acceso').classList.add('oculto');
@@ -1389,6 +1391,13 @@
         // (ver el módulo de Firebase más arriba), si es que no terminó ya.
         function _arrancarEscuchaChatSiCorresponde() {
             if (miIdentidad) iniciarEscuchaChatNoLeidos();
+            _arrancarTeToca();
+        }
+        // Globito "te toca" sobre el planeta Juegos (js/te-toca.js).
+        function _arrancarTeToca() {
+            if (miIdentidad && typeof iniciarTeToca === 'function') {
+                iniciarTeToca(miIdentidad, (p) => { renderGloboTeToca(p); actualizarTituloTeToca(p); });
+            }
         }
         if (window._firebaseListoIndex) _arrancarEscuchaChatSiCorresponde();
         else document.addEventListener('firebase-listo-index', _arrancarEscuchaChatSiCorresponde, { once: true });

@@ -209,14 +209,14 @@ async function finalizarRondaPesca(){
     _finalizandoPesca = true;
     vibrarJ([15, 30, 15]);
     try {
-        const snap = await new Promise(res => { const u = window.onSnapshot(refPesca(), s => { u(); res(s); }); });
-        const data = snap.data();
-        if (data.fase !== 'terminado') {
-            const mejorConjunto = Math.max(data.mejorConjunto || 0, data.contador || 0);
-            await window.updateDoc(refPesca(), { fase: 'terminado', mejorConjunto });
-            if ((data.contador || 0) >= META_PESCA && typeof registrarEvento === 'function') {
-                registrarEvento('cuidado_compartido', `Lograron la meta juntos en Pesca Cooperativa`);
-            }
+        // Transacción: los dos celulares terminan la ronda casi a la vez;
+        // sólo uno la cierra, así el logro se anota una sola vez.
+        const res = await window.jugadaSegura(refPesca(), (data) => {
+            if (!data || data.fase !== 'jugando') return null;
+            return { fase: 'terminado', mejorConjunto: Math.max(data.mejorConjunto || 0, data.contador || 0) };
+        });
+        if (res && (res.estado.contador || 0) >= META_PESCA && typeof registrarEvento === 'function') {
+            registrarEvento('cuidado_compartido', `Lograron la meta juntos en Pesca Cooperativa`);
         }
     } catch (e) {
         console.error('No se pudo finalizar la pesca:', e);
@@ -227,6 +227,12 @@ async function finalizarRondaPesca(){
 
 async function revanchaPesca(){
     vibrarJ(10);
-    const mejorConjunto = await leerMejorPesca();
-    await window.setDoc(refPesca(), { fase: 'esperando', listos: {}, mejorConjunto });
+    // Sólo si la ronda ya terminó: si el otro tocó Revancha primero y ya
+    // marcó "listo", no se le borra.
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(refPesca());
+        const data = snap.exists() ? snap.data() : null;
+        if (data && data.fase !== 'terminado') return;
+        tx.set(refPesca(), { fase: 'esperando', listos: {}, mejorConjunto: data?.mejorConjunto || 0 });
+    });
 }

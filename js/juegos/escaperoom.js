@@ -47,6 +47,12 @@ function iniciarEscapeRoom(){
 
 function renderEscapeRoom(estado){
     const cont = document.getElementById('contenido-escaperoom');
+    // Si llega un cambio del otro (por ejemplo, un intento fallido) en la
+    // misma etapa, no se borra lo que uno estaba escribiendo.
+    const inputPrevio = document.getElementById('input-respuesta-escaperoom');
+    const textoPrevio = inputPrevio && cont.dataset.etapa === String(estado?.etapaActual) ? inputPrevio.value : '';
+    const teniaFoco = inputPrevio && document.activeElement === inputPrevio;
+    cont.dataset.etapa = String(estado?.etapaActual);
 
     if (!estado) {
         cont.innerHTML = `<div class="panel texto-centro">
@@ -83,52 +89,71 @@ function renderEscapeRoom(estado){
     </div>`;
 
     cont.innerHTML = html;
+    const input = document.getElementById('input-respuesta-escaperoom');
+    if (input && textoPrevio) input.value = textoPrevio;
+    if (input && teniaFoco) input.focus();
 }
 
+// Sólo arranca (o reinicia) si no hay partida o si ya escaparon: así
+// nadie le borra al otro una partida a medias.
 async function empezarEscapeRoom(){
     vibrarJ(12);
-    await window.setDoc(refEscapeRoom(), { etapaActual: 0, intentosFallidos: 0, respuestaEtapa2: null });
+    const ref = refEscapeRoom();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : null;
+        if (data && data.etapaActual < ETAPAS_ESCAPEROOM.length) return;
+        tx.set(ref, { etapaActual: 0, intentosFallidos: 0, respuestaEtapa2: null });
+    });
 }
 
+// El intento se valida contra el estado recién leído, en una
+// transacción: antes, si los dos acertaban casi a la vez, cada uno
+// sumaba una etapa y se salteaban la siguiente sin verla.
 async function intentarEscapeRoom(){
     const input = document.getElementById('input-respuesta-escaperoom');
     const intento = input.value.trim().toLowerCase().replace(/\s+/g, '');
     if (!intento) return;
-    const snap = await new Promise(res => { const u = window.onSnapshot(refEscapeRoom(), s => { u(); res(s); }); });
-    const data = snap.data();
-    if (!data) return;
-    const etapa = ETAPAS_ESCAPEROOM[data.etapaActual];
-
-    let correcta = false;
-    if (etapa.libre) {
-        // La última etapa se "resuelve" con cualquier respuesta no vacía:
-        // lo importante es que se hayan puesto de acuerdo en escribirla.
-        correcta = intento.length > 0;
-    } else if (etapa.personalizable) {
-        // La primera vez que alguien responde esta etapa, esa respuesta
-        // queda guardada como la "correcta" (el mes que decidan entre
-        // los dos), y de ahí en más hay que repetirla.
-        if (!data.respuestaEtapa2) {
-            await window.updateDoc(refEscapeRoom(), { respuestaEtapa2: intento });
+    const res = await window.jugadaSegura(refEscapeRoom(), (data) => {
+        if (!data || data.etapaActual >= ETAPAS_ESCAPEROOM.length) return null;
+        const etapa = ETAPAS_ESCAPEROOM[data.etapaActual];
+        const cambios = {};
+        let correcta = false;
+        if (etapa.libre) {
+            // La última etapa se "resuelve" con cualquier respuesta no vacía:
+            // lo importante es que se hayan puesto de acuerdo en escribirla.
             correcta = true;
+        } else if (etapa.personalizable) {
+            // La primera vez que alguien responde esta etapa, esa respuesta
+            // queda guardada como la "correcta" (el mes que decidan entre
+            // los dos), y de ahí en más hay que repetirla.
+            if (!data.respuestaEtapa2) {
+                cambios.respuestaEtapa2 = intento;
+                correcta = true;
+            } else {
+                correcta = intento === data.respuestaEtapa2;
+            }
         } else {
-            correcta = intento === data.respuestaEtapa2;
+            correcta = intento === etapa.respuesta;
         }
-    } else {
-        correcta = intento === etapa.respuesta;
-    }
-
+        if (correcta) {
+            cambios.etapaActual = data.etapaActual + 1;
+            cambios.intentosFallidos = 0;
+        } else {
+            cambios.intentosFallidos = (data.intentosFallidos || 0) + 1;
+        }
+        return cambios;
+    });
+    if (!res) return;
     input.value = '';
-    if (correcta) {
+    if (res.cambios.etapaActual !== undefined) {
         vibrarJ([15, 30, 15]);
-        await window.updateDoc(refEscapeRoom(), { etapaActual: data.etapaActual + 1, intentosFallidos: 0 });
-        if (data.etapaActual + 1 >= ETAPAS_ESCAPEROOM.length && typeof registrarEvento === 'function') {
+        if (res.cambios.etapaActual >= ETAPAS_ESCAPEROOM.length && typeof registrarEvento === 'function') {
             registrarEvento('cuidado_compartido', `Escaparon juntos del Escape Room Virtual`);
         }
     } else {
         vibrarJ([10, 30, 10]);
         if (window.sfx) window.sfx.error();
         if (window.fx) window.fx.sacudirJuego();
-        await window.updateDoc(refEscapeRoom(), { intentosFallidos: (data.intentosFallidos || 0) + 1 });
     }
 }

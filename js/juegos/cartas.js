@@ -95,28 +95,30 @@ function elegirPlazoCarta(dias){
 }
 
 async function enviarCartaTiempo(){
-    const texto = document.getElementById('texto-carta-tiempo').value.trim();
-    if (!texto) return;
-    const fechaInput = document.getElementById('fecha-personalizada-carta').value;
-    let fechaApertura;
-    if (fechaInput) {
-        fechaApertura = new Date(fechaInput + 'T09:00:00').getTime();
-    } else if (_plazoSeleccionadoCarta) {
-        fechaApertura = Date.now() + _plazoSeleccionadoCarta * 86400000;
-    } else {
-        fechaApertura = Date.now() + 86400000; // por defecto, mañana
-    }
-    vibrarJ([15, 30, 15]);
-    if (window.sfx) window.sfx.swoosh();
-    await window.addDoc(window.collection(window.db, 'juegos'), {
-        tipo: 'carta-tiempo', autor: miIdentidad, destinatario: miRival, texto,
-        creadaEn: Date.now(), fechaApertura, abierta: false, fechaAbierta: null
+    return window.conCandado('enviar-carta', async () => {
+        const texto = document.getElementById('texto-carta-tiempo').value.trim();
+        if (!texto) return;
+        const fechaInput = document.getElementById('fecha-personalizada-carta').value;
+        let fechaApertura;
+        if (fechaInput) {
+            fechaApertura = new Date(fechaInput + 'T09:00:00').getTime();
+        } else if (_plazoSeleccionadoCarta) {
+            fechaApertura = Date.now() + _plazoSeleccionadoCarta * 86400000;
+        } else {
+            fechaApertura = Date.now() + 86400000; // por defecto, mañana
+        }
+        vibrarJ([15, 30, 15]);
+        if (window.sfx) window.sfx.swoosh();
+        await window.addDoc(window.collection(window.db, 'juegos'), {
+            tipo: 'carta-tiempo', autor: miIdentidad, destinatario: miRival, texto,
+            creadaEn: Date.now(), fechaApertura, abierta: false, fechaAbierta: null
+        });
+        if (typeof registrarEvento === 'function') {
+            registrarEvento('carta_tiempo_enviada', `${nombreJugador(miIdentidad)} mandó una carta para abrir después`);
+        }
+        _plazoSeleccionadoCarta = null;
+        mostrarListaCartas('enviadas');
     });
-    if (typeof registrarEvento === 'function') {
-        registrarEvento('carta_tiempo_enviada', `${nombreJugador(miIdentidad)} mandó una carta para abrir después`);
-    }
-    _plazoSeleccionadoCarta = null;
-    mostrarListaCartas('enviadas');
 }
 
 function abrirCartaTiempo(id){
@@ -143,6 +145,6 @@ async function renderCartaTiempoAbierta(c){
     cont.innerHTML = `<button class="btn-secundario" style="margin-bottom:12px;" onclick="mostrarListaCartas()">⬅️ Todas las cartas</button>
         <div class="panel flip-carta">
             <div class="texto-tenue" style="margin-bottom:10px;">De ${nombreJugador(c.autor)} para ${nombreJugador(c.destinatario)}</div>
-            <p style="line-height:1.6; white-space:pre-wrap;">${c.texto}</p>
+            <p style="line-height:1.6; white-space:pre-wrap;">${escaparHtml(c.texto || "")}</p>
         </div>`;
 }

@@ -68,27 +68,30 @@ function renderTermometro(registros){
 }
 
 async function marcarTermometro(valor){
-    vibrarJ(10);
-    if (window.sfx) window.sfx.toque();
-    const hoy = _hoyTermometro();
-    // ID fijo por día+autor en vez de buscar con una query y decidir si
-    // hace falta addDoc o updateDoc: ese "buscar y después crear" podía
-    // crear dos documentos para el mismo día si se tocaba dos veces
-    // rápido (la segunda búsqueda todavía no veía el addDoc de la
-    // primera). Con un ID determinístico, setDoc con merge es siempre
-    // la misma operación, así se llame una vez o diez.
-    const idDeHoy = `termometro-${hoy}-${miIdentidad}`;
-    try {
-        const snapExistente = await new Promise((res) => { const u = window.onSnapshot(refTermometro(idDeHoy), s => { u(); res(s); }); });
-        const yaExistia = snapExistente.exists();
-        await window.setDoc(refTermometro(idDeHoy), {
-            tipo: 'termometro-dia', fecha: hoy, autor: miIdentidad, valor,
-            creadoEn: yaExistia ? snapExistente.data().creadoEn : Date.now()
-        }, { merge: true });
-        if (!yaExistia && typeof registrarEvento === 'function') {
-            registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} marcó cómo está hoy`);
+    // Candado: un doble toque no registra dos veces el evento del día.
+    return window.conCandado('termometro', async () => {
+        vibrarJ(10);
+        if (window.sfx) window.sfx.toque();
+        const hoy = _hoyTermometro();
+        // ID fijo por día+autor en vez de buscar con una query y decidir si
+        // hace falta addDoc o updateDoc: ese "buscar y después crear" podía
+        // crear dos documentos para el mismo día si se tocaba dos veces
+        // rápido (la segunda búsqueda todavía no veía el addDoc de la
+        // primera). Con un ID determinístico, setDoc con merge es siempre
+        // la misma operación, así se llame una vez o diez.
+        const idDeHoy = `termometro-${hoy}-${miIdentidad}`;
+        try {
+            const snapExistente = await new Promise((res) => { const u = window.onSnapshot(refTermometro(idDeHoy), s => { u(); res(s); }); });
+            const yaExistia = snapExistente.exists();
+            await window.setDoc(refTermometro(idDeHoy), {
+                tipo: 'termometro-dia', fecha: hoy, autor: miIdentidad, valor,
+                creadoEn: yaExistia ? snapExistente.data().creadoEn : Date.now()
+            }, { merge: true });
+            if (!yaExistia && typeof registrarEvento === 'function') {
+                registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} marcó cómo está hoy`);
+            }
+        } catch (e) {
+            console.error('No se pudo guardar el termómetro:', e);
         }
-    } catch (e) {
-        console.error('No se pudo guardar el termómetro:', e);
-    }
+    });
 }

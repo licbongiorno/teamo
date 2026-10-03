@@ -96,28 +96,32 @@ function mostrarFormularioDebeUna(direccion){
 }
 
 async function crearDebeUna(direccion){
-    const input = document.getElementById('input-motivo-debeuna');
-    if (!input || !miIdentidad) return;
-    const motivo = input.value.trim();
-    if (!motivo) return;
-    vibrarJ(12);
-    const de = direccion === 'yo' ? miIdentidad : miRival;
-    const para = direccion === 'yo' ? miRival : miIdentidad;
-    try {
-        await window.addDoc(window.collection(window.db, 'juegos'), {
-            tipo: 'debeuna', de, para, motivo, estado: 'pendiente',
-            creadoEn: Date.now(),
-        });
-        const form = document.getElementById('form-nuevo-debeuna');
-        if (form) form.innerHTML = '';
-        if (typeof registrarEvento === 'function') registrarEvento('nueva_deuda', `${nombreJugador(miIdentidad)} anotó un "te debo una"`);
-    } catch (e) { console.error('No se pudo anotar la deuda:', e); }
+    return window.conCandado('crear-debeuna', async () => {
+        const input = document.getElementById('input-motivo-debeuna');
+        if (!input || !miIdentidad) return;
+        const motivo = input.value.trim();
+        if (!motivo) return;
+        vibrarJ(12);
+        const de = direccion === 'yo' ? miIdentidad : miRival;
+        const para = direccion === 'yo' ? miRival : miIdentidad;
+        try {
+            await window.addDoc(window.collection(window.db, 'juegos'), {
+                tipo: 'debeuna', de, para, motivo, estado: 'pendiente',
+                creadoEn: Date.now(),
+            });
+            const form = document.getElementById('form-nuevo-debeuna');
+            if (form) form.innerHTML = '';
+            if (typeof registrarEvento === 'function') registrarEvento('nueva_deuda', `${nombreJugador(miIdentidad)} anotó un "te debo una"`);
+        } catch (e) { console.error('No se pudo anotar la deuda:', e); }
+    });
 }
 
 async function cobrarDebeUna(id){
-    vibrarJ([15, 30, 15]);
-    if (window.sfx) window.sfx.moneda();
-    try {
-        await window.updateDoc(refDebeUna(id), { estado: 'cobrado', cobradoEn: Date.now() });
-    } catch (e) { console.error('No se pudo cobrar la deuda:', e); }
+    return window.conCandado('cobrar-debeuna-' + id, async () => {
+        vibrarJ([15, 30, 15]);
+        if (window.sfx) window.sfx.moneda();
+        try {
+            await window.updateDoc(refDebeUna(id), { estado: 'cobrado', cobradoEn: Date.now() });
+        } catch (e) { console.error('No se pudo cobrar la deuda:', e); }
+    });
 }

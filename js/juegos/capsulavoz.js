@@ -71,33 +71,35 @@ function renderCapsulaVoz(estado){
 }
 
 async function reproducirCapsulaVoz(){
-    const snap = await new Promise(res => { const u = window.onSnapshot(refCapsulaVoz(), s => { u(); res(s); }); });
-    const datos = snap.exists() ? snap.data() : {};
-    const capsula = datos[_campoCapsula(miRival)];
-    if (!capsula || !capsula.audio) return;
-    vibrarJ(15);
-    // Reproducimos PRIMERO y sólo borramos si arrancó a sonar de
-    // verdad — si el formato no es compatible con este navegador (algo
-    // más común en iOS con grabaciones viejas), avisamos en vez de
-    // perder la cápsula para siempre sin que nadie la haya escuchado.
-    try {
-        const audio = new Audio(capsula.audio);
-        await audio.play();
-    } catch (e) {
-        console.error('No se pudo reproducir la cápsula:', e);
-        const cont = document.getElementById('contenido-capsulavoz');
-        if (cont) {
-            const aviso = document.createElement('p');
-            aviso.className = 'texto-tenue';
-            aviso.style.margin = '8px 0';
-            aviso.innerText = '⚠️ No se pudo reproducir en este navegador. Probá desde otro dispositivo.';
-            cont.prepend(aviso);
+    return window.conCandado('reproducir-capsula', async () => {
+        const snap = await new Promise(res => { const u = window.onSnapshot(refCapsulaVoz(), s => { u(); res(s); }); });
+        const datos = snap.exists() ? snap.data() : {};
+        const capsula = datos[_campoCapsula(miRival)];
+        if (!capsula || !capsula.audio) return;
+        vibrarJ(15);
+        // Reproducimos PRIMERO y sólo borramos si arrancó a sonar de
+        // verdad — si el formato no es compatible con este navegador (algo
+        // más común en iOS con grabaciones viejas), avisamos en vez de
+        // perder la cápsula para siempre sin que nadie la haya escuchado.
+        try {
+            const audio = new Audio(capsula.audio);
+            await audio.play();
+        } catch (e) {
+            console.error('No se pudo reproducir la cápsula:', e);
+            const cont = document.getElementById('contenido-capsulavoz');
+            if (cont) {
+                const aviso = document.createElement('p');
+                aviso.className = 'texto-tenue';
+                aviso.style.margin = '8px 0';
+                aviso.innerText = '⚠️ No se pudo reproducir en este navegador. Probá desde otro dispositivo.';
+                cont.prepend(aviso);
+            }
+            return;
         }
-        return;
-    }
-    try {
-        await window.setDoc(refCapsulaVoz(), { [_campoCapsula(miRival)]: null }, { merge: true });
-    } catch (e) { console.error('No se pudo borrar la cápsula tras escucharla:', e); }
+        try {
+            await window.setDoc(refCapsulaVoz(), { [_campoCapsula(miRival)]: null }, { merge: true });
+        } catch (e) { console.error('No se pudo borrar la cápsula tras escucharla:', e); }
+    });
 }
 
 // ---- Grabación (mismo patrón que Serenata a Ciegas) ----
@@ -181,18 +183,20 @@ function mostrarPreviaCapsulaVoz(){
 }
 
 async function guardarCapsulaVoz(){
-    if (!_grabadorCapsulaAudioUri || !miIdentidad) return;
-    vibrarJ([15, 30, 15]);
-    try {
-        // setDoc con merge (no updateDoc): la primera vez que alguien
-        // manda una cápsula, el documento todavía no existe.
-        await window.setDoc(refCapsulaVoz(), {
-            [_campoCapsula(miIdentidad)]: { audio: _grabadorCapsulaAudioUri, enviadoEn: Date.now() },
-            [_campoFechaEnvio(miIdentidad)]: _fechaHoyCapsula(),
-        }, { merge: true });
-        _grabadorCapsulaAudioUri = null;
-        const cont = document.getElementById('grabador-capsula-voz');
-        if (cont) cont.innerHTML = '';
-        if (typeof registrarEvento === 'function') registrarEvento('capsula_voz_enviada', `${nombreJugador(miIdentidad)} mandó la cápsula de voz de hoy`);
-    } catch (e) { console.error('No se pudo guardar la cápsula de voz:', e); }
+    return window.conCandado('guardar-capsula', async () => {
+        if (!_grabadorCapsulaAudioUri || !miIdentidad) return;
+        vibrarJ([15, 30, 15]);
+        try {
+            // setDoc con merge (no updateDoc): la primera vez que alguien
+            // manda una cápsula, el documento todavía no existe.
+            await window.setDoc(refCapsulaVoz(), {
+                [_campoCapsula(miIdentidad)]: { audio: _grabadorCapsulaAudioUri, enviadoEn: Date.now() },
+                [_campoFechaEnvio(miIdentidad)]: _fechaHoyCapsula(),
+            }, { merge: true });
+            _grabadorCapsulaAudioUri = null;
+            const cont = document.getElementById('grabador-capsula-voz');
+            if (cont) cont.innerHTML = '';
+            if (typeof registrarEvento === 'function') registrarEvento('capsula_voz_enviada', `${nombreJugador(miIdentidad)} mandó la cápsula de voz de hoy`);
+        } catch (e) { console.error('No se pudo guardar la cápsula de voz:', e); }
+    });
 }

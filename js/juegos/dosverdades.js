@@ -130,9 +130,17 @@ async function guardarFrasesDosVerdades(){
             const snap = await tx.get(ref);
             const estado = snap.exists() ? snap.data() : null;
             if (estado && estado.fase === 'adivinando') return; // el otro ya arrancó una ronda
+            let puntajes = estado?.puntajes;
+            if (!puntajes) {
+                // Primera ronda: se arranca con el marcador del juego viejo
+                // "Mentira o Verdad", que se unificó con este (allá cada
+                // acierto valía 2; acá vale 1).
+                const viejo = await tx.get(window.doc(window.db, 'juegos', 'mentiraverdad'));
+                const pv = viejo.exists() ? (viejo.data().puntajes || {}) : {};
+                puntajes = { nico: Math.round((pv.nico || 0) / 2), carito: Math.round((pv.carito || 0) / 2) };
+            }
             tx.set(ref, {
-                fase: 'adivinando', autor: miIdentidad, frases: mezcladas, mentira, eleccion: null,
-                puntajes: estado?.puntajes || { nico: 0, carito: 0 }
+                fase: 'adivinando', autor: miIdentidad, frases: mezcladas, mentira, eleccion: null, puntajes
             });
         });
         _formularioDosVerdadesAbierto = false;

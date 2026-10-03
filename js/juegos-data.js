@@ -48,7 +48,6 @@ window.JUEGOS = [
     { id:'conoceme',   nombre:'¿Cuánto me conocés?',  icono:'🧩', iconoSvg:'icono-rompecabezas', categoria:'conexion',    disponible:true, descripcion:'Elegí qué haría el otro y comparen qué tanto se conocen.' },
     { id:'mentegemela', nombre:'Mente Gemela',        icono:'👯', iconoSvg:'icono-gemelos', categoria:'conexion',    disponible:true, descripcion:'5 preguntas de opción múltiple: ¿qué % de coincidencia tienen?' },
     { id:'adn',        nombre:'ADN de la Pareja',      icono:'🧬', iconoSvg:'icono-adn', categoria:'conexion',    disponible:true, descripcion:'20 preguntas que arman un perfil visual de la relación.' },
-    { id:'mentiraverdad', nombre:'Mentira o Verdad',  icono:'🎭', iconoSvg:'icono-mascara', categoria:'conexion',    disponible:true, descripcion:'Tres afirmaciones, una es mentira. ¿La descubrís?' },
     { id:'detective',  nombre:'Detective de Nosotros', icono:'🔍', iconoSvg:'icono-lupa', categoria:'conexion',    disponible:true, descripcion:'Pistas sobre momentos que vivieron juntos, a adivinar entre los dos.' },
     { id:'nuncapregunte', nombre:'Lo que nunca te pregunté', icono:'💭', iconoSvg:'icono-globo-pensamiento', categoria:'conexion', disponible:true, descripcion:'Preguntas inesperadas para conversaciones profundas.' },
     { id:'serenata',   nombre:'Serenata a Ciegas',      icono:'🎤', iconoSvg:'icono-microfono', categoria:'conexion', disponible:true, descripcion:'Grabá tarareando una canción sin decir cuál es. El otro la escucha a ciegas y arriesga qué tema es.' },

@@ -118,20 +118,22 @@ function mostrarFormularioMeme(){
 }
 
 async function crearMeme(){
-    const input = document.getElementById('input-texto-meme');
-    if (!input || !miIdentidad) return;
-    const texto = input.value.trim();
-    if (!texto) return;
-    vibrarJ(12);
-    try {
-        await window.addDoc(window.collection(window.db, 'juegos'), {
-            tipo: 'meme', autor: miIdentidad, texto, estado: 'esperando', risa: null,
-            creadoEn: Date.now(),
-        });
-        const form = document.getElementById('form-nuevo-meme');
-        if (form) form.innerHTML = '';
-        if (typeof registrarEvento === 'function') registrarEvento('nuevo_meme', `${nombreJugador(miIdentidad)} mandó un meme nuevo`);
-    } catch (e) { console.error('No se pudo mandar el meme:', e); }
+    return window.conCandado('crear-meme', async () => {
+        const input = document.getElementById('input-texto-meme');
+        if (!input || !miIdentidad) return;
+        const texto = input.value.trim();
+        if (!texto) return;
+        vibrarJ(12);
+        try {
+            await window.addDoc(window.collection(window.db, 'juegos'), {
+                tipo: 'meme', autor: miIdentidad, texto, estado: 'esperando', risa: null,
+                creadoEn: Date.now(),
+            });
+            const form = document.getElementById('form-nuevo-meme');
+            if (form) form.innerHTML = '';
+            if (typeof registrarEvento === 'function') registrarEvento('nuevo_meme', `${nombreJugador(miIdentidad)} mandó un meme nuevo`);
+        } catch (e) { console.error('No se pudo mandar el meme:', e); }
+    });
 }
 
 async function calificarMeme(id, valor){

@@ -78,28 +78,32 @@ function mostrarFormularioTemaRazon(){
 }
 
 async function crearTemaRazon(){
-    const input = document.getElementById('input-tema-razon');
-    if (!input) return;
-    const pregunta = input.value.trim();
-    if (!pregunta || !miIdentidad) return;
-    vibrarJ(12);
-    try {
-        await window.addDoc(window.collection(window.db, 'juegos'), {
-            tipo: 'debate', pregunta, creadoPor: miIdentidad,
-            victoriasNico: 0, victoriasCarito: 0,
-            creadoEn: Date.now(), actualizadoEn: Date.now()
-        });
-        const form = document.getElementById('form-nuevo-tema-razon');
-        if (form) form.innerHTML = '';
-        if (typeof registrarEvento === 'function') registrarEvento('nuevo_tema_razon', `${nombreJugador(miIdentidad)} archivó una discusión nueva`);
-    } catch (e) { console.error('No se pudo archivar el tema:', e); }
+    return window.conCandado('crear-tema-razon', async () => {
+        const input = document.getElementById('input-tema-razon');
+        if (!input) return;
+        const pregunta = input.value.trim();
+        if (!pregunta || !miIdentidad) return;
+        vibrarJ(12);
+        try {
+            await window.addDoc(window.collection(window.db, 'juegos'), {
+                tipo: 'debate', pregunta, creadoPor: miIdentidad,
+                victoriasNico: 0, victoriasCarito: 0,
+                creadoEn: Date.now(), actualizadoEn: Date.now()
+            });
+            const form = document.getElementById('form-nuevo-tema-razon');
+            if (form) form.innerHTML = '';
+            if (typeof registrarEvento === 'function') registrarEvento('nuevo_tema_razon', `${nombreJugador(miIdentidad)} archivó una discusión nueva`);
+        } catch (e) { console.error('No se pudo archivar el tema:', e); }
+    });
 }
 
 async function votarTemaRazon(id, jugador){
-    vibrarJ(15);
-    if (window.sfx) window.sfx.click();
-    const campo = jugador === 'nico' ? 'victoriasNico' : 'victoriasCarito';
-    try {
-        await window.updateDoc(refTemaRazon(id), { [campo]: window.increment(1), actualizadoEn: Date.now() });
-    } catch (e) { console.error('No se pudo sumar el voto:', e); }
+    return window.conCandado('votar-razon-' + id, async () => {
+        vibrarJ(15);
+        if (window.sfx) window.sfx.click();
+        const campo = jugador === 'nico' ? 'victoriasNico' : 'victoriasCarito';
+        try {
+            await window.updateDoc(refTemaRazon(id), { [campo]: window.increment(1), actualizadoEn: Date.now() });
+        } catch (e) { console.error('No se pudo sumar el voto:', e); }
+    });
 }

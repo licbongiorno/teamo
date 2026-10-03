@@ -116,15 +116,17 @@ function _htmlTarjetaSerenata(s){
 }
 
 async function adivinarSerenata(id){
-    const input = document.getElementById('input-adivinanza-' + id);
-    if (!input) return;
-    const adivinanza = input.value.trim();
-    if (!adivinanza) return;
-    vibrarJ(12);
-    try {
-        await window.updateDoc(refSerenata(id), { adivinanza, estado: 'revelado' });
-        if (typeof registrarEvento === 'function') registrarEvento('serenata_adivinada', `${nombreJugador(miIdentidad)} arriesgó una serenata`);
-    } catch (e) { console.error('No se pudo mandar la adivinanza:', e); }
+    return window.conCandado('adivinar-serenata-' + id, async () => {
+        const input = document.getElementById('input-adivinanza-' + id);
+        if (!input) return;
+        const adivinanza = input.value.trim();
+        if (!adivinanza) return;
+        vibrarJ(12);
+        try {
+            await window.updateDoc(refSerenata(id), { adivinanza, estado: 'revelado' });
+            if (typeof registrarEvento === 'function') registrarEvento('serenata_adivinada', `${nombreJugador(miIdentidad)} arriesgó una serenata`);
+        } catch (e) { console.error('No se pudo mandar la adivinanza:', e); }
+    });
 }
 
 async function marcarAciertoSerenata(id, acerte){
@@ -221,22 +223,24 @@ function mostrarPreviaGrabacionSerenata(){
 }
 
 async function guardarSerenata(){
-    const input = document.getElementById('input-titulo-serenata');
-    if (!input || !_grabadorSerenataAudioUri) return;
-    const tituloReal = input.value.trim();
-    if (!tituloReal || !miIdentidad) return;
-    vibrarJ([15, 30, 15]);
-    try {
-        await window.addDoc(window.collection(window.db, 'juegos'), {
-            tipo: 'serenata', autor: miIdentidad, audio: _grabadorSerenataAudioUri,
-            tituloReal, estado: 'esperando', adivinanza: null, acertada: null,
-            creadoEn: Date.now(),
-        });
-        _grabadorSerenataAudioUri = null;
-        const cont = document.getElementById('grabador-serenata');
-        if (cont) cont.innerHTML = '';
-        if (typeof registrarEvento === 'function') registrarEvento('nueva_serenata', `${nombreJugador(miIdentidad)} grabó una serenata a ciegas`);
-    } catch (e) {
-        console.error('No se pudo guardar la serenata:', e);
-    }
+    return window.conCandado('guardar-serenata', async () => {
+        const input = document.getElementById('input-titulo-serenata');
+        if (!input || !_grabadorSerenataAudioUri) return;
+        const tituloReal = input.value.trim();
+        if (!tituloReal || !miIdentidad) return;
+        vibrarJ([15, 30, 15]);
+        try {
+            await window.addDoc(window.collection(window.db, 'juegos'), {
+                tipo: 'serenata', autor: miIdentidad, audio: _grabadorSerenataAudioUri,
+                tituloReal, estado: 'esperando', adivinanza: null, acertada: null,
+                creadoEn: Date.now(),
+            });
+            _grabadorSerenataAudioUri = null;
+            const cont = document.getElementById('grabador-serenata');
+            if (cont) cont.innerHTML = '';
+            if (typeof registrarEvento === 'function') registrarEvento('nueva_serenata', `${nombreJugador(miIdentidad)} grabó una serenata a ciegas`);
+        } catch (e) {
+            console.error('No se pudo guardar la serenata:', e);
+        }
+    });
 }

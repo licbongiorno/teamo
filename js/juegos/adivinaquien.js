@@ -124,6 +124,7 @@ function iniciarAdivinaQuien(){
             if (window.fx && (datos.ganador === miIdentidad)) window.fx.confeti();
         }
         _adivinaQuienFaseAnterior = datos ? datos.fase : null;
+        _estadoAQ = datos;
         renderAdivinaQuien(datos);
     }, (err) => {
         console.error('Error de Firestore en adivinaquien:', err);
@@ -132,6 +133,9 @@ function iniciarAdivinaQuien(){
 }
 
 let _descartadosAQ = new Set();
+// Último estado del listener: tachar emojis redibuja con esto, sin
+// abrir una consulta nueva a Firestore por cada toque.
+let _estadoAQ = null;
 let _modoArriesgoAQ = false;
 
 function renderAdivinaQuien(estado){
@@ -191,9 +195,8 @@ function tocarEmojiAQ(e){
     if (_descartadosAQ.has(e)) _descartadosAQ.delete(e); else _descartadosAQ.add(e);
     refrescarVistaAQ();
 }
-async function refrescarVistaAQ(){
-    const snap = await new Promise(res => { const u = window.onSnapshot(refAdivinaQuien(), s => { u(); res(s); }); });
-    if (snap.exists()) renderAdivinaQuien(snap.data());
+function refrescarVistaAQ(){
+    if (_estadoAQ) renderAdivinaQuien(_estadoAQ);
 }
 
 async function nuevaPartidaAdivinaQuien(){

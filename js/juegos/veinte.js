@@ -114,12 +114,19 @@ function renderVeinte(estado){
     cont.innerHTML = html;
 }
 
+// Sólo arranca una ronda nueva si no hay ninguna en juego: si los dos
+// tocan "Empezar" a la vez, el segundo no le pisa la ronda al primero.
 async function empezarVeinte(){
     vibrarJ(12);
-    const anterior = await new Promise(res => { const u = window.onSnapshot(refVeinte(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refVeinte(), {
-        fase: 'pensando', pensador: miIdentidad, palabra: null, preguntas: [],
-        puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
+    const ref = refVeinte();
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const anterior = snap.exists() ? snap.data() : null;
+        if (anterior && anterior.fase && anterior.fase !== 'terminado') return;
+        tx.set(ref, {
+            fase: 'pensando', pensador: miIdentidad, palabra: null, preguntas: [],
+            puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
+        });
     });
 }
 
@@ -128,7 +135,10 @@ async function confirmarPalabraVeinte(){
     const texto = input.value.trim();
     if (!texto) return;
     vibrarJ(12);
-    await window.updateDoc(refVeinte(), { fase: 'jugando', palabra: texto });
+    await window.jugadaSegura(refVeinte(), (data) => {
+        if (!data || data.fase !== 'pensando' || data.pensador !== miIdentidad) return null;
+        return { fase: 'jugando', palabra: texto };
+    });
 }
 
 async function preguntarVeinte(){
@@ -140,7 +150,7 @@ async function preguntarVeinte(){
     // jugadaSegura (ver js/jugada-segura.js): un doble toque ya no
     // manda la misma pregunta dos veces (y gasta dos de las 20).
     const res = await window.jugadaSegura(refVeinte(), (data) => {
-        if (!data || data.fase !== 'jugando') return null;
+        if (!data || data.fase !== 'jugando' || data.pensador === miIdentidad) return null;
         return { preguntas: [...(data.preguntas || []), { pregunta: texto, respuesta: null }] };
     });
     if (res) input.value = '';
@@ -149,31 +159,36 @@ async function preguntarVeinte(){
 async function responderVeinte(respuesta){
     vibrarJ(10);
     await window.jugadaSegura(refVeinte(), (data) => {
-        const preguntas = [...(data?.preguntas || [])];
+        if (!data || data.fase !== 'jugando' || data.pensador !== miIdentidad) return null;
+        const preguntas = [...(data.preguntas || [])];
         if (!preguntas.length) return null;
         preguntas[preguntas.length - 1] = { ...preguntas[preguntas.length - 1], respuesta };
         return { preguntas };
     });
 }
 
+// En transacción: un doble toque ya no cuenta dos veces la victoria.
 async function adivinarVeinte(){
     const input = document.getElementById('input-adivinanza-veinte');
     const intento = input.value.trim();
     if (!intento) return;
+    const res = await window.jugadaSegura(refVeinte(), (data) => {
+        if (!data || data.fase !== 'jugando' || data.pensador === miIdentidad) return null;
+        const acierto = intento.toLowerCase() === (data.palabra || '').toLowerCase();
+        const updates = {
+            fase: 'terminado',
+            preguntas: [...(data.preguntas || []), { pregunta: `¿Es "${intento}"?`, respuesta: acierto ? '🎉 ¡Sí, correcto!' : 'No 😅' }]
+        };
+        if (acierto) {
+            const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
+            puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
+            updates.puntajes = puntajes;
+        }
+        return updates;
+    });
+    if (!res) return;
     vibrarJ([15, 30, 15]);
-    const snap = await new Promise(res => { const u = window.onSnapshot(refVeinte(), s => { u(); res(s); }); });
-    const data = snap.data();
-    const acierto = intento.toLowerCase() === (data.palabra || '').toLowerCase();
-    const updates = {
-        fase: 'terminado',
-        preguntas: [...(data.preguntas || []), { pregunta: `¿Es "${intento}"?`, respuesta: acierto ? '🎉 ¡Sí, correcto!' : 'No 😅' }]
-    };
-    if (acierto) {
-        const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
-        puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
-        updates.puntajes = puntajes;
-    }
-    await window.updateDoc(refVeinte(), updates);
+    const acierto = !!res.cambios.puntajes;
     if (acierto && typeof registrarVictoria === 'function') registrarVictoria('veinte', miIdentidad);
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', acierto ? `Adivinaron en 20 Preguntas` : `Jugaron una ronda de 20 Preguntas`);
@@ -182,5 +197,5 @@ async function adivinarVeinte(){
 
 async function rendirseVeinte(){
     vibrarJ(10);
-    await window.updateDoc(refVeinte(), { fase: 'terminado' });
+    await window.jugadaSegura(refVeinte(), (data) => data && data.fase === 'jugando' ? { fase: 'terminado' } : null);
 }

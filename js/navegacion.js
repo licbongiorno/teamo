@@ -1,5 +1,10 @@
 // ==================== NAVEGACIÓN ENTRE JUEGOS ====================
+// Juegos que se unificaron con otro: los links viejos (favoritos,
+// mensajes de WhatsApp, ?juego=...) abren el que quedó.
+const JUEGOS_RENOMBRADOS = { mentiraverdad: 'dosverdades' };
+
 async function abrirJuego(juego){
+    juego = JUEGOS_RENOMBRADOS[juego] || juego;
     vibrarJ(12);
     if (window.sfx) window.sfx.abrirJuego();
     const pantalla = document.getElementById('pantalla-' + juego);
@@ -47,7 +52,6 @@ async function abrirJuego(juego){
     if (juego === 'escoba') iniciarEscoba();
     if (juego === 'batallanaval') iniciarBatallaNaval();
     if (juego === 'espejo') iniciarEspejo();
-    if (juego === 'mentiraverdad') iniciarMentiraVerdad();
 
     // Los juegos de "responder y revelar" comparten un mismo motor
     // genérico (js/motor-reflexion.js): todos arrancan igual, sólo
@@ -172,7 +176,6 @@ function detenerListenersActivos(){
     if (window._unsubBatallaNaval) { window._unsubBatallaNaval(); window._unsubBatallaNaval = null; }
     if (window._unsubEspejoLista) { window._unsubEspejoLista(); window._unsubEspejoLista = null; }
     if (window._unsubEspejoActual) { window._unsubEspejoActual(); window._unsubEspejoActual = null; }
-    if (window._unsubMentiraVerdad) { window._unsubMentiraVerdad(); window._unsubMentiraVerdad = null; }
 
     // Listeners del motor de reflexión: usan claves dinámicas por
     // juego (_unsubReflexionLista_<id> / _unsubReflexionActual_<id>),
@@ -336,7 +339,7 @@ function iniciarJuegos(){
     // Si venimos de una página de categoría con ?juego=id, entramos
     // directo a ese juego en vez de mostrar el menú principal.
     const params = new URLSearchParams(window.location.search);
-    const juegoPedido = params.get('juego');
+    const juegoPedido = JUEGOS_RENOMBRADOS[params.get('juego')] || params.get('juego');
     if (juegoPedido && document.getElementById('pantalla-' + juegoPedido)) {
         abrirJuego(juegoPedido);
     }

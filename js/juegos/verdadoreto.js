@@ -270,7 +270,7 @@ function renderVerdadOReto(estado){
             }
         } else if (estado.fase === 'revelado') {
             html += `<div class="panel"><span class="texto-tenue" style="font-size:0.75rem;">Respondió ${nombreJugador(estado.turno)}:</span>
-                <p style="margin-top:6px; line-height:1.5;">${estado.respuesta}</p></div>
+                <p style="margin-top:6px; line-height:1.5;">${escaparHtml(estado.respuesta || '')}</p></div>
                 <button class="btn-principal" onclick="siguienteTurnoVerdadOReto()">Siguiente turno ▶️</button>`;
         }
     } else if (estado.tipo === 'reto') {
@@ -292,77 +292,80 @@ function renderVerdadOReto(estado){
     cont.innerHTML = html;
 }
 
-async function leerVorActual(){
-    return await new Promise(res => { const u = window.onSnapshot(refVerdadOReto(), s => { u(); res(s.exists() ? s.data() : null); }); });
-}
 function pushLogVor(estado, mensaje){ return [...(estado?.historial || []), mensaje].slice(-6); }
 
+// Todas las acciones van en transacción y chequean la fase recién
+// leída: antes un doble toque en "Validar reto" sumaba dos puntos y le
+// devolvía el turno al mismo, y si los dos tocaban "Siguiente turno" el
+// turno cambiaba dos veces.
 async function elegirVerdadOReto(tipo){
     vibrarJ(12);
     if (window.sfx) window.sfx.cartaFlip();
-    const estado = await leerVorActual();
-    if (estado && estado.turno && estado.turno !== miIdentidad) return;
-    let contenido, fase;
-    if (tipo === 'verdad') {
-        contenido = VERDADES_JUEGO[Math.floor(Math.random() * VERDADES_JUEGO.length)];
-        fase = 'esperando_respuesta';
-    } else {
-        contenido = RETOS_JUEGO[Math.floor(Math.random() * RETOS_JUEGO.length)];
-        fase = 'reto_activo';
-    }
-    await window.setDoc(refVerdadOReto(), {
-        turno: miIdentidad, tipo, contenido, fase,
-        respuesta: null,
-        puntajes: estado?.puntajes || { nico: 0, carito: 0 },
-        historial: pushLogVor(estado, `${nombreJugador(miIdentidad)} eligió ${tipo === 'verdad' ? 'Verdad' : 'Reto'}.`)
-    }, { merge: true });
+    const ref = refVerdadOReto();
+    await window.conCandado(ref.path, () => window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const estado = snap.exists() ? snap.data() : null;
+        if (estado && estado.turno && estado.turno !== miIdentidad) return;
+        if (estado && estado.fase && estado.fase !== 'eligiendo') return;
+        const contenido = tipo === 'verdad'
+            ? VERDADES_JUEGO[Math.floor(Math.random() * VERDADES_JUEGO.length)]
+            : RETOS_JUEGO[Math.floor(Math.random() * RETOS_JUEGO.length)];
+        tx.set(ref, {
+            turno: miIdentidad, tipo, contenido,
+            fase: tipo === 'verdad' ? 'esperando_respuesta' : 'reto_activo',
+            respuesta: null,
+            puntajes: estado?.puntajes || { nico: 0, carito: 0 },
+            historial: pushLogVor(estado, `${nombreJugador(miIdentidad)} eligió ${tipo === 'verdad' ? 'Verdad' : 'Reto'}.`)
+        }, { merge: true });
+    }));
 }
 
 async function responderVerdad(){
     const texto = document.getElementById('input-respuesta-vor').value.trim();
     if (!texto) return;
     vibrarJ(12);
-    const estado = await leerVorActual();
-    if (!estado || estado.turno !== miIdentidad) return;
-    await window.updateDoc(refVerdadOReto(), { respuesta: texto, fase: 'bloqueado' });
+    await window.jugadaSegura(refVerdadOReto(), (estado) => {
+        if (!estado || estado.turno !== miIdentidad || estado.fase !== 'esperando_respuesta') return null;
+        return { respuesta: texto, fase: 'bloqueado' };
+    });
 }
 
 async function leerRespuestaVerdad(){
     vibrarJ(10);
     if (window.sfx) window.sfx.revelar();
-    const estado = await leerVorActual();
-    if (!estado) return;
-    const nuevosPuntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
-    nuevosPuntajes[estado.turno] = (nuevosPuntajes[estado.turno] || 0) + 1;
-    await window.updateDoc(refVerdadOReto(), {
-        fase: 'revelado', puntajes: nuevosPuntajes,
-        historial: pushLogVor(estado, `Se reveló la verdad de ${nombreJugador(estado.turno)} (+1).`)
+    await window.jugadaSegura(refVerdadOReto(), (estado) => {
+        if (!estado || estado.fase !== 'bloqueado' || estado.turno === miIdentidad) return null;
+        const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
+        puntajes[estado.turno] = (puntajes[estado.turno] || 0) + 1;
+        return {
+            fase: 'revelado', puntajes,
+            historial: pushLogVor(estado, `Se reveló la verdad de ${nombreJugador(estado.turno)} (+1).`)
+        };
     });
 }
 
 async function validarRetoVerdadOReto(){
+    const res = await window.jugadaSegura(refVerdadOReto(), (estado) => {
+        if (!estado || estado.fase !== 'reto_activo' || estado.turno === miIdentidad) return null;
+        const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
+        puntajes[estado.turno] = (puntajes[estado.turno] || 0) + 1;
+        return {
+            turno: estado.turno === 'nico' ? 'carito' : 'nico', fase: 'eligiendo', tipo: null, contenido: null, respuesta: null,
+            puntajes,
+            historial: pushLogVor(estado, `Reto de ${nombreJugador(estado.turno)} validado (+1).`)
+        };
+    });
+    if (!res) return;
     vibrarJ([15, 30, 15]);
     if (window.sfx) window.sfx.acierto();
-    const estado = await leerVorActual();
-    if (!estado) return;
-    const nuevosPuntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
-    nuevosPuntajes[estado.turno] = (nuevosPuntajes[estado.turno] || 0) + 1;
-    const siguienteTurno = estado.turno === 'nico' ? 'carito' : 'nico';
-    await window.setDoc(refVerdadOReto(), {
-        turno: siguienteTurno, fase: 'eligiendo', tipo: null, contenido: null, respuesta: null,
-        puntajes: nuevosPuntajes,
-        historial: pushLogVor(estado, `Reto de ${nombreJugador(estado.turno)} validado (+1).`)
-    }, { merge: true });
 }
 
 async function siguienteTurnoVerdadOReto(){
     vibrarJ(10);
-    const estado = await leerVorActual();
-    if (!estado) return;
-    const siguienteTurno = estado.turno === 'nico' ? 'carito' : 'nico';
-    await window.setDoc(refVerdadOReto(), {
-        turno: siguienteTurno, fase: 'eligiendo', tipo: null, contenido: null, respuesta: null,
-        puntajes: estado.puntajes || { nico: 0, carito: 0 },
-        historial: estado.historial || []
-    }, { merge: true });
+    await window.jugadaSegura(refVerdadOReto(), (estado) => {
+        if (!estado || estado.fase !== 'revelado') return null;
+        return {
+            turno: estado.turno === 'nico' ? 'carito' : 'nico', fase: 'eligiendo', tipo: null, contenido: null, respuesta: null
+        };
+    });
 }

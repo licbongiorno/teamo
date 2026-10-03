@@ -159,18 +159,20 @@ function renderListaIndagacion(cartas){
 }
 
 async function crearCartaIndagacion(){
-    vibrarJ(12);
-    const pregunta = PREGUNTAS_INDAGACION[Math.floor(Math.random() * PREGUNTAS_INDAGACION.length)];
-    const docRef = await window.addDoc(window.collection(window.db, 'juegos'), {
-        tipo: 'carta-indagacion',
-        pregunta,
-        creadaPor: miIdentidad,
-        creadaEn: Date.now(),
-        fase: 'necesita_respuesta',
-        respuesta: null,
-        adivinanza: null
+    return window.conCandado('crear-indagacion', async () => {
+        vibrarJ(12);
+        const pregunta = PREGUNTAS_INDAGACION[Math.floor(Math.random() * PREGUNTAS_INDAGACION.length)];
+        const docRef = await window.addDoc(window.collection(window.db, 'juegos'), {
+            tipo: 'carta-indagacion',
+            pregunta,
+            creadaPor: miIdentidad,
+            creadaEn: Date.now(),
+            fase: 'necesita_respuesta',
+            respuesta: null,
+            adivinanza: null
+        });
+        abrirCartaIndagacion(docRef.id);
     });
-    abrirCartaIndagacion(docRef.id);
 }
 
 function abrirCartaIndagacion(id){
@@ -218,32 +220,38 @@ function renderCartaIndagacion(c){
     } else if (c.fase === 'revelado') {
         html += `<div class="panel">
             <span class="texto-tenue" style="font-size:0.75rem;">Respuesta real de ${nombreJugador(c.creadaPor)}:</span>
-            <p style="margin:6px 0 14px; line-height:1.5;">${c.respuesta}</p>
+            <p style="margin:6px 0 14px; line-height:1.5;">${escaparHtml(c.respuesta || '')}</p>
             <span class="texto-tenue" style="font-size:0.75rem;">Lo que adivinó ${nombreJugador(c.creadaPor === 'nico' ? 'carito' : 'nico')}:</span>
-            <p style="margin:6px 0 0; line-height:1.5;">${c.adivinanza}</p>
+            <p style="margin:6px 0 0; line-height:1.5;">${escaparHtml(c.adivinanza || '')}</p>
         </div>`;
     }
 
     cont.innerHTML = html;
 }
 
+// Responder y adivinar validan fase y quién juega con el estado recién
+// leído (jugadaSegura): un doble toque no pisa nada ni registra dos veces.
 async function responderIndagacion(){
     const texto = document.getElementById('input-respuesta-indagacion').value.trim();
     if (!texto || !window._cartaIndagacionActualId) return;
+    const res = await window.jugadaSegura(refCartaIndagacion(window._cartaIndagacionActualId), (c) => {
+        if (!c || c.fase !== 'necesita_respuesta' || c.creadaPor !== miIdentidad) return null;
+        return { respuesta: texto, fase: 'necesita_adivinanza' };
+    });
+    if (!res) return;
     vibrarJ(12);
     if (window.sfx) window.sfx.click();
-    await window.updateDoc(refCartaIndagacion(window._cartaIndagacionActualId), {
-        respuesta: texto, fase: 'necesita_adivinanza'
-    });
 }
 
 async function adivinarIndagacion(){
     const texto = document.getElementById('input-adivinanza-indagacion').value.trim();
     if (!texto || !window._cartaIndagacionActualId) return;
-    vibrarJ([15, 30, 15]);
-    await window.updateDoc(refCartaIndagacion(window._cartaIndagacionActualId), {
-        adivinanza: texto, fase: 'revelado'
+    const res = await window.jugadaSegura(refCartaIndagacion(window._cartaIndagacionActualId), (c) => {
+        if (!c || c.fase !== 'necesita_adivinanza' || c.creadaPor === miIdentidad) return null;
+        return { adivinanza: texto, fase: 'revelado' };
     });
+    if (!res) return;
+    vibrarJ([15, 30, 15]);
     if (typeof registrarEvento === 'function') {
         registrarEvento('carta_indagacion', `Completaron una carta de indagación`);
     }

@@ -32,6 +32,13 @@ function _faltaListo(d){
     if (l.carito && !l.nico) return [{ quien: 'nico', que: 'listo' }];
     return [];
 }
+function _otroTeToca(x){ return x === 'nico' ? 'carito' : 'nico'; }
+// Juegos de revisión cruzada: a cada uno le falta confirmar su revisión.
+function _faltaRevisar(fase){
+    return (d) => d.fase === fase
+        ? ['nico', 'carito'].filter(x => !d['confirmado' + (x === 'nico' ? 'Nico' : 'Carito')]).map(x => ({ quien: x, que: 'revisar' }))
+        : _faltaListo(d);
+}
 function _porTurno(fase){
     return (d) => d.fase === fase && (d.turno === 'nico' || d.turno === 'carito')
         ? [{ quien: d.turno, que: 'turno' }]
@@ -66,6 +73,46 @@ const DETECTORES_TE_TOCA = {
     mentiroso: _porTurno('jugando'),
     dosverdades: (d) => d.fase === 'adivinando' && d.autor ? [{ quien: d.autor === 'nico' ? 'carito' : 'nico', que: 'adivinar' }] : [],
     ahorcado: (d) => d.fase === 'jugando' && d.adivinador ? [{ quien: d.adivinador, que: 'turno' }] : [],
+    veinte: (d) => {
+        if (d.fase === 'pensando' && d.pensador) return [{ quien: d.pensador, que: 'pensar' }];
+        if (d.fase !== 'jugando' || !d.pensador) return [];
+        const ultima = (d.preguntas || [])[(d.preguntas || []).length - 1];
+        return ultima && ultima.respuesta == null
+            ? [{ quien: d.pensador, que: 'contestar' }]
+            : [{ quien: _otroTeToca(d.pensador), que: 'preguntar' }];
+    },
+    verdadoreto: (d) => {
+        if (!d.turno) return [];
+        if (d.fase === 'eligiendo' || d.fase === 'esperando_respuesta') return [{ quien: d.turno, que: d.fase === 'eligiendo' ? 'elegir' : 'contestar' }];
+        if (d.fase === 'bloqueado') return [{ quien: _otroTeToca(d.turno), que: 'leer' }];
+        if (d.fase === 'reto_activo') return [{ quien: _otroTeToca(d.turno), que: 'validar' }];
+        return [];
+    },
+    palabras: _faltaRevisar('revisando'),
+    tuttifrutti: _faltaRevisar('corrigiendo'),
+};
+
+// Juegos que guardan cada partida como un documento aparte dentro de
+// 'juegos' (con un campo tipo): se escuchan con una consulta por tipo
+// y cada documento pendiente es un aviso propio.
+const COLECCIONES_TE_TOCA = {
+    letras: {
+        tipo: 'escritura', etiqueta: (d) => d.titulo,
+        detectar: (d) => d.estado === 'activa' && d.turno ? [{ quien: d.turno, que: 'escribir' }] : [],
+    },
+    indagacion: {
+        tipo: 'carta-indagacion',
+        detectar: (d) => d.fase === 'necesita_respuesta' ? [{ quien: d.creadaPor, que: 'contestar' }]
+            : d.fase === 'necesita_adivinanza' ? [{ quien: _otroTeToca(d.creadaPor), que: 'adivinar_respuesta' }] : [],
+    },
+    serenata: {
+        tipo: 'serenata',
+        detectar: (d) => d.estado === 'esperando' && d.autor ? [{ quien: _otroTeToca(d.autor), que: 'adivinar_cancion' }] : [],
+    },
+    duelomemes: {
+        tipo: 'meme',
+        detectar: (d) => d.estado === 'esperando' && d.autor ? [{ quien: _otroTeToca(d.autor), que: 'calificar' }] : [],
+    },
 };
 
 const TEXTO_QUE_TE_TOCA = {
@@ -74,10 +121,21 @@ const TEXTO_QUE_TE_TOCA = {
     colocar: 'ubicá tu flota',
     responder: 'te cantaron, respondé',
     adivinar: '¿cuál es la mentira?',
+    pensar: 'pensá algo para que adivine',
+    contestar: 'te toca contestar',
+    preguntar: 'te toca preguntar',
+    elegir: '¿verdad o reto?',
+    leer: 'tenés una respuesta para leer',
+    validar: 'validá el reto',
+    revisar: 'falta tu revisión',
+    escribir: 'te toca escribir',
+    adivinar_respuesta: '¿qué habrá respondido?',
+    adivinar_cancion: '¿qué canción es?',
+    calificar: 'calificá el meme',
 };
 
 let _teTocaYo = null;
-let _teTocaEstados = {};      // juegoId -> { pendientes, firma }
+let _teTocaEstados = {};      // clave -> { juego, etiqueta, pendientes, firma } (clave = juego, o juego:docId)
 let _teTocaUnsubs = [];       // a propósito no empieza con _unsub: navegacion.js no la corta
 let _teTocaAlCambiar = null;
 let _teTocaPrimeraVez = {};   // para no notificar lo que ya estaba al abrir
@@ -98,15 +156,25 @@ function _firmaTeToca(d){
     return String(h);
 }
 
-// Lista actual: [{ juego, quien, que }], sin las ocultas.
+// Lista actual: [{ clave, juego, etiqueta, quien, que }], sin las ocultas.
 function pendientesTeToca(){
     const ocultos = _leerOcultosTeToca();
     const res = [];
-    Object.entries(_teTocaEstados).forEach(([juego, e]) => {
-        if (ocultos[juego] && ocultos[juego] === e.firma) return;
-        e.pendientes.forEach(p => res.push({ juego, ...p }));
+    Object.entries(_teTocaEstados).forEach(([clave, e]) => {
+        if (ocultos[clave] && ocultos[clave] === e.firma) return;
+        e.pendientes.forEach(p => res.push({ clave, juego: e.juego, etiqueta: e.etiqueta, ...p }));
     });
     return res;
+}
+
+// Guarda el estado de un aviso y notifica si ahora me toca y antes no.
+function _actualizarClaveTeToca(clave, juego, d, pendientes, etiqueta){
+    const yo = _teTocaYo;
+    const antes = _teTocaEstados[clave];
+    _teTocaEstados[clave] = { juego, etiqueta: etiqueta || null, pendientes, firma: d ? _firmaTeToca(d) : '' };
+    const meTocabaAntes = !!antes && antes.pendientes.some(p => p.quien === yo);
+    const meToca = pendientes.find(p => p.quien === yo);
+    if (_teTocaPrimeraVez[juego] && meToca && !meTocabaAntes) _notificarTeToca(juego, meToca);
 }
 
 function iniciarTeToca(yo, alCambiar){
@@ -128,12 +196,29 @@ function iniciarTeToca(yo, alCambiar){
     Object.keys(DETECTORES_TE_TOCA).forEach((juego) => {
         const unsub = window.onSnapshot(window.doc(window.db, 'juegos', juego), (snap) => {
             const d = snap.exists() ? snap.data() : null;
-            const pendientes = d ? DETECTORES_TE_TOCA[juego](d) : [];
-            const antes = _teTocaEstados[juego];
-            _teTocaEstados[juego] = { pendientes, firma: d ? _firmaTeToca(d) : '' };
-            const meTocabaAntes = !!antes && antes.pendientes.some(p => p.quien === yo);
-            const meTocaAhora = pendientes.some(p => p.quien === yo);
-            if (_teTocaPrimeraVez[juego] && meTocaAhora && !meTocabaAntes) _notificarTeToca(juego, pendientes.find(p => p.quien === yo));
+            _actualizarClaveTeToca(juego, juego, d, d ? DETECTORES_TE_TOCA[juego](d) : []);
+            _teTocaPrimeraVez[juego] = true;
+            if (_teTocaAlCambiar) _teTocaAlCambiar(pendientesTeToca());
+        }, (err) => console.warn('te-toca: no se pudo escuchar', juego, err));
+        _teTocaUnsubs.push(unsub);
+    });
+    if (!window.query || !window.where || !window.collection) return;
+    Object.entries(COLECCIONES_TE_TOCA).forEach(([juego, cfg]) => {
+        const q = window.query(window.collection(window.db, 'juegos'), window.where('tipo', '==', cfg.tipo));
+        const unsub = window.onSnapshot(q, (snap) => {
+            const vistos = new Set();
+            snap.forEach((docSnap) => {
+                const d = docSnap.data();
+                const pendientes = cfg.detectar(d);
+                const clave = `${juego}:${docSnap.id}`;
+                if (!pendientes.length && !_teTocaEstados[clave]) return; // nada que avisar ni que limpiar
+                vistos.add(clave);
+                _actualizarClaveTeToca(clave, juego, d, pendientes, cfg.etiqueta ? cfg.etiqueta(d) : null);
+            });
+            // Documentos borrados: se sacan de la lista.
+            Object.keys(_teTocaEstados).forEach((clave) => {
+                if (clave.startsWith(juego + ':') && !vistos.has(clave)) delete _teTocaEstados[clave];
+            });
             _teTocaPrimeraVez[juego] = true;
             if (_teTocaAlCambiar) _teTocaAlCambiar(pendientesTeToca());
         }, (err) => console.warn('te-toca: no se pudo escuchar', juego, err));
@@ -141,11 +226,11 @@ function iniciarTeToca(yo, alCambiar){
     });
 }
 
-function ocultarTeToca(juego){
-    const e = _teTocaEstados[juego];
+function ocultarTeToca(clave){
+    const e = _teTocaEstados[clave];
     if (!e) return;
     const o = _leerOcultosTeToca();
-    o[juego] = e.firma;
+    o[clave] = e.firma;
     _guardarOcultosTeToca(o);
     if (_teTocaAlCambiar) _teTocaAlCambiar(pendientesTeToca());
 }
@@ -186,17 +271,19 @@ async function activarAvisosTeToca(){
 }
 
 // ==================== WHATSAPP ====================
-function avisarPorWhatsAppTeToca(juego){
+function avisarPorWhatsAppTeToca(clave){
     if (typeof vibrarJ === 'function') vibrarJ(10);
     const otro = _teTocaYo === 'nico' ? 'carito' : 'nico';
     const numero = NUMEROS_WHATSAPP_PAREJA[otro];
-    if (!numero) return;
+    const e = _teTocaEstados[clave];
+    if (!numero || !e) return;
+    const juego = e.juego;
     const j = _nombreJuegoTeToca(juego);
-    const p = (_teTocaEstados[juego]?.pendientes || []).find(x => x.quien === otro);
+    const p = (e.pendientes || []).find(x => x.quien === otro);
     const base = location.origin + location.pathname.replace(/[^/]*$/, '');
     const enlace = `${base}juegos.html?juego=${encodeURIComponent(juego)}`;
     const frase = p && p.que === 'listo' ? 'te estoy esperando para jugar' : p && p.que === 'responder' ? 'te canté, ¡respondé!' : 'te toca jugar';
-    const texto = `${j.icono} ${frase} en ${j.nombre} 😏\n${enlace}`;
+    const texto = `${j.icono} ${frase} en ${j.nombre}${e.etiqueta ? ` ("${e.etiqueta}")` : ''} 😏\n${enlace}`;
     window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank');
 }
 
@@ -206,7 +293,9 @@ function renderTarjetaTeToca(pendientes){
     if (!cont) return;
     const yo = _teTocaYo;
     const mios = pendientes.filter(p => p.quien === yo);
-    const delOtro = pendientes.filter(p => p.quien !== yo && !mios.some(m => m.juego === p.juego));
+    const delOtro = pendientes.filter(p => p.quien !== yo && !mios.some(m => m.clave === p.clave));
+    const esc = (t) => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const nombreFila = (p, j) => `${j.icono} ${j.nombre}${p.etiqueta ? ` · <i>${esc(p.etiqueta)}</i>` : ''}`;
     if (!mios.length && !delOtro.length) { cont.innerHTML = ''; return; }
     const otro = _nombrePersonaTeToca(yo === 'nico' ? 'carito' : 'nico');
     let html = `<div class="panel tarjeta-te-toca">`;
@@ -216,8 +305,8 @@ function renderTarjetaTeToca(pendientes){
             const j = _nombreJuegoTeToca(p.juego);
             const texto = p.que === 'listo' ? `${otro} ${TEXTO_QUE_TE_TOCA.listo}` : TEXTO_QUE_TE_TOCA[p.que];
             return `<div class="fila-te-toca mia">
-                <button class="abrir-te-toca" onclick="abrirJuego('${p.juego}')"><span>${j.icono} ${j.nombre}</span><small>${texto}</small></button>
-                <button class="cerrar-te-toca" aria-label="Ocultar" onclick="ocultarTeToca('${p.juego}')">✕</button>
+                <button class="abrir-te-toca" onclick="abrirJuego('${p.juego}')"><span>${nombreFila(p, j)}</span><small>${texto}</small></button>
+                <button class="cerrar-te-toca" aria-label="Ocultar" onclick="ocultarTeToca('${p.clave}')">✕</button>
             </div>`;
         }).join('');
     }
@@ -226,9 +315,9 @@ function renderTarjetaTeToca(pendientes){
         html += delOtro.map(p => {
             const j = _nombreJuegoTeToca(p.juego);
             return `<div class="fila-te-toca">
-                <button class="abrir-te-toca" onclick="abrirJuego('${p.juego}')"><span>${j.icono} ${j.nombre}</span></button>
-                <button class="btn-whatsapp-te-toca" onclick="avisarPorWhatsAppTeToca('${p.juego}')">📲 Avisale</button>
-                <button class="cerrar-te-toca" aria-label="Ocultar" onclick="ocultarTeToca('${p.juego}')">✕</button>
+                <button class="abrir-te-toca" onclick="abrirJuego('${p.juego}')"><span>${nombreFila(p, j)}</span></button>
+                <button class="btn-whatsapp-te-toca" onclick="avisarPorWhatsAppTeToca('${p.clave}')">📲 Avisale</button>
+                <button class="cerrar-te-toca" aria-label="Ocultar" onclick="ocultarTeToca('${p.clave}')">✕</button>
             </div>`;
         }).join('');
     }

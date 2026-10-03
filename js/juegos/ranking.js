@@ -122,8 +122,9 @@ function renderRanking(datos){
         <div class="barra-ranking" role="img" aria-label="Nico ${tN} partidas, Carito ${tC} partidas">
             <div class="barra-ranking-nico" style="width:${pctN}%"></div><div class="barra-ranking-carito" style="width:${100 - pctN}%"></div>
         </div>
-        <div class="texto-tenue" style="font-size:0.75rem; margin-top:6px;">Partidas ganadas en todos los juegos de competencia.</div>
+        <div class="texto-tenue" style="font-size:0.75rem; margin-top:6px;">Partidas ganadas en todos los juegos de competencia${typeof juegoDeLaSemana === 'function' ? ' (las del juego de la semana valen doble)' : ''}.</div>
     </div>`;
+    if (typeof htmlJuegoDeLaSemana === 'function') html += htmlJuegoDeLaSemana();
 
     html += htmlDetalleRanking(datos);
 

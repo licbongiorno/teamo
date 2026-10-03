@@ -93,11 +93,14 @@ async function registrarVictoria(juegoId, ganador){
     const ahora = new Date();
     const mes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}`;
     const semana = typeof _semanaISO === 'function' ? _semanaISO(ahora) : null;
+    // El "juego de la semana" (desafio-semanal.js) vale doble en el total,
+    // la semana y el mes; el contador del juego suma las partidas reales.
+    const valor = typeof juegoDeLaSemana === 'function' && juegoDeLaSemana(semana) === juegoId ? 2 : 1;
     const base = {
-        total: { [ganador]: window.increment(1) },
+        total: { [ganador]: window.increment(valor) },
         porJuego: { [juegoId]: { [ganador]: window.increment(1) } },
-        porMes: { [mes]: { [ganador]: window.increment(1) } },
-        ...(semana ? { porSemana: { [semana]: { [ganador]: window.increment(1) } } } : {}),
+        porMes: { [mes]: { [ganador]: window.increment(valor) } },
+        ...(semana ? { porSemana: { [semana]: { [ganador]: window.increment(valor) } } } : {}),
         ultima: { juego: juegoId, ganador, fecha: Date.now() }
     };
     try {

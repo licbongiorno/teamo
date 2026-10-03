@@ -35,6 +35,29 @@ function _desafioDeLaSemana(semana){
     return CATALOGO_DESAFIOS_SEMANALES[hash % CATALOGO_DESAFIOS_SEMANALES.length];
 }
 
+// ==================== JUEGO DE LA SEMANA ====================
+// Cada semana uno de los juegos de competencia vale doble en el ranking
+// general (registrarVictoria en historial.js suma 2 al total, a la
+// semana y al mes; el contador de ese juego suma 1 como siempre).
+// Se elige igual que el desafío, por la semana, así los dos ven el mismo
+// sin coordinarse.
+const JUEGOS_DE_LA_SEMANA = ['tateti', 'conecta4', 'damas', 'ajedrez', 'reversi', 'cajitas', 'generala', 'mentiroso', 'truco', 'uno', 'escoba', 'chinchon', 'batallanaval', 'palabras', 'tuttifrutti'];
+function juegoDeLaSemana(semana){
+    const clave = 'juego:' + (semana || _semanaActual());
+    let hash = 0;
+    for (let i = 0; i < clave.length; i++) hash = (hash * 31 + clave.charCodeAt(i)) >>> 0;
+    return JUEGOS_DE_LA_SEMANA[hash % JUEGOS_DE_LA_SEMANA.length];
+}
+function htmlJuegoDeLaSemana(){
+    const id = juegoDeLaSemana();
+    const j = (window.JUEGOS || []).find(x => x.id === id);
+    if (!j) return '';
+    return `<button class="juego-semana" onclick="abrirJuego('${id}')">
+        <span class="texto-tenue">⭐ Juego de la semana</span>
+        <span>${j.icono} ${j.nombre} <small class="texto-tenue">— cada victoria vale doble en el ranking</small></span>
+    </button>`;
+}
+
 function _refDesafioSemanal(){ return window.doc(window.db, 'juegos', 'desafio-semanal'); }
 
 // Enganchado desde registrarEvento (historial.js): si el tipo de
@@ -48,11 +71,15 @@ async function registrarProgresoDesafioSemanal(tipo){
     if (!desafio.tipos.includes(tipo)) return;
     try {
         const ref = _refDesafioSemanal();
-        const snap = await new Promise((res) => { const u = window.onSnapshot(ref, s => { u(); res(s); }); });
-        const datos = snap.exists() ? snap.data() : {};
-        const progresoPrevio = datos.semana === semana ? (datos.progreso || 0) : 0;
-        const progreso = progresoPrevio + 1;
-        await window.setDoc(ref, { semana, progreso });
+        // Transacción: dos eventos casi juntos (o de los dos celulares) no
+        // se pisan y no se pierde ningún paso del progreso.
+        const progreso = await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(ref);
+            const datos = snap.exists() ? snap.data() : {};
+            const n = (datos.semana === semana ? (datos.progreso || 0) : 0) + 1;
+            tx.set(ref, { semana, progreso: n });
+            return n;
+        });
         if (progreso === desafio.meta) {
             if (window.sfx) window.sfx.logro();
             if (window.fx) window.fx.confeti();
@@ -85,8 +112,10 @@ function renderDesafioSemanal(desafio, progreso){
         <div style="font-size:0.95rem; margin-bottom:8px;">${desafio.icono} ${desafio.texto}</div>
         <div class="barra-progreso-jardin"><div class="relleno-progreso-jardin barra-crecer" style="width:${pct}%;"></div></div>
         <div class="texto-tenue" style="margin-top:6px; font-size:0.75rem;">${completo ? '¡Completado! 🎉 La semana que viene arranca uno nuevo.' : `${progreso} de ${desafio.meta} — sin apuro, no se pierde nada si no llegan.`}</div>
-    </div>`;
+    </div>${htmlJuegoDeLaSemana()}`;
 }
 
 window.registrarProgresoDesafioSemanal = registrarProgresoDesafioSemanal;
 window.iniciarDesafioSemanal = iniciarDesafioSemanal;
+window.juegoDeLaSemana = juegoDeLaSemana;
+window.htmlJuegoDeLaSemana = htmlJuegoDeLaSemana;

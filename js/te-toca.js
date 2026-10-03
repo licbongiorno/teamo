@@ -63,6 +63,8 @@ const DETECTORES_TE_TOCA = {
         }
         return _faltaListo(d);
     },
+    mentiroso: _porTurno('jugando'),
+    dosverdades: (d) => d.fase === 'adivinando' && d.autor ? [{ quien: d.autor === 'nico' ? 'carito' : 'nico', que: 'adivinar' }] : [],
     ahorcado: (d) => d.fase === 'jugando' && d.adivinador ? [{ quien: d.adivinador, que: 'turno' }] : [],
 };
 
@@ -71,6 +73,7 @@ const TEXTO_QUE_TE_TOCA = {
     listo: 'te está esperando para empezar',
     colocar: 'ubicá tu flota',
     responder: 'te cantaron, respondé',
+    adivinar: '¿cuál es la mentira?',
 };
 
 let _teTocaYo = null;

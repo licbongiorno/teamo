@@ -17,7 +17,7 @@ const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carrerag
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 46;
+const VERSION_CACHE = 47;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)
@@ -33,7 +33,8 @@ function scriptsNecesariosPara(juegoId) {
     // El Ping Pong tiene su banco de preguntas en un archivo aparte.
     // Chokurei: el personaje animado va en un archivo aparte.
     if (juegoId === 'mascota') {
-        return [`js/juegos/chokurei-rig.js?v=${VERSION_CACHE}`, propio];
+        return [`js/juegos/chokurei-rig.js?v=${VERSION_CACHE}`, propio,
+            `js/juegos/chokurei-tienda.js?v=${VERSION_CACHE}`, `js/juegos/chokurei-juegos.js?v=${VERSION_CACHE}`, `js/juegos/chokurei-mundo.js?v=${VERSION_CACHE}`];
     }
     if (juegoId === 'pingpong') {
         return [`js/juegos/pingpong-banco.js?v=${VERSION_CACHE}`, propio];

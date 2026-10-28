@@ -101,6 +101,26 @@ function _firmaTeToca(d){
     return String(h);
 }
 
+// Desde cuándo está la partida así: la primera vez que este celular vio
+// el estado actual (si nadie jugó, la firma no cambia). Con más de un
+// día quieta, la tarjeta lo dice y el botón de WhatsApp pasa a "Recordale".
+const DIA_TE_TOCA = 24 * 60 * 60 * 1000;
+function _desdeTeToca(juego, firma){
+    let m = {};
+    try { m = JSON.parse(localStorage.getItem('teTocaDesde') || '{}'); } catch (e) { m = {}; }
+    if (!m[juego] || m[juego].firma !== firma) {
+        m[juego] = { firma, ts: Date.now() };
+        try { localStorage.setItem('teTocaDesde', JSON.stringify(m)); } catch (e) { /* sin almacenamiento */ }
+    }
+    return m[juego].ts;
+}
+function diasQuietaTeToca(juego){
+    const e = _teTocaEstados[juego];
+    if (!e || !e.desde) return 0;
+    return Math.floor((Date.now() - e.desde) / DIA_TE_TOCA);
+}
+function _textoDiasTeToca(n){ return n === 1 ? 'hace 1 día' : `hace ${n} días`; }
+
 // Lista actual: [{ juego, quien, que }], sin las ocultas.
 function pendientesTeToca(){
     const ocultos = _leerOcultosTeToca();
@@ -133,7 +153,8 @@ function iniciarTeToca(yo, alCambiar){
             const d = snap.exists() ? snap.data() : null;
             const pendientes = d ? DETECTORES_TE_TOCA[juego](d) : [];
             const antes = _teTocaEstados[juego];
-            _teTocaEstados[juego] = { pendientes, firma: d ? _firmaTeToca(d) : '' };
+            const firma = d ? _firmaTeToca(d) : '';
+            _teTocaEstados[juego] = { pendientes, firma, desde: pendientes.length ? _desdeTeToca(juego, firma) : null };
             const meTocabaAntes = !!antes && antes.pendientes.some(p => p.quien === yo);
             const meTocaAhora = pendientes.some(p => p.quien === yo);
             if (_teTocaPrimeraVez[juego] && meTocaAhora && !meTocabaAntes) _notificarTeToca(juego, pendientes.find(p => p.quien === yo));
@@ -198,7 +219,8 @@ function avisarPorWhatsAppTeToca(juego){
     const p = (_teTocaEstados[juego]?.pendientes || []).find(x => x.quien === otro);
     const base = location.origin + location.pathname.replace(/[^/]*$/, '');
     const enlace = `${base}juegos.html?juego=${encodeURIComponent(juego)}`;
-    const frase = p && p.que === 'listo' ? 'te estoy esperando para jugar' : p && p.que === 'responder' ? 'te canté, ¡respondé!' : p && p.que === 'pregunta' ? 'te mandé una pregunta' : p && p.que === 'preguntar' ? 'te toca preguntarme algo' : 'te toca jugar';
+    const dias = diasQuietaTeToca(juego);
+    const frase = dias >= 1 ? `hace ${dias === 1 ? 'un día' : dias + ' días'} que te espero 🥺, te toca jugar` : p && p.que === 'listo' ? 'te estoy esperando para jugar' : p && p.que === 'responder' ? 'te canté, ¡respondé!' : p && p.que === 'pregunta' ? 'te mandé una pregunta' : p && p.que === 'preguntar' ? 'te toca preguntarme algo' : 'te toca jugar';
     const texto = `${j.icono} ${frase} en ${j.nombre} 😏\n${enlace}`;
     window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank');
 }
@@ -217,7 +239,8 @@ function renderTarjetaTeToca(pendientes){
         html += `<div class="titulo-te-toca">🎯 ¡Te toca!</div>`;
         html += mios.map(p => {
             const j = _nombreJuegoTeToca(p.juego);
-            const texto = p.que === 'listo' ? `${otro} ${TEXTO_QUE_TE_TOCA.listo}` : TEXTO_QUE_TE_TOCA[p.que];
+            const dias = diasQuietaTeToca(p.juego);
+            const texto = (p.que === 'listo' ? `${otro} ${TEXTO_QUE_TE_TOCA.listo}` : TEXTO_QUE_TE_TOCA[p.que]) + (dias >= 1 ? ` · 😴 ${_textoDiasTeToca(dias)}` : '');
             return `<div class="fila-te-toca mia">
                 <button class="abrir-te-toca" onclick="abrirJuego('${p.juego}')"><span>${j.icono} ${j.nombre}</span><small>${texto}</small></button>
                 <button class="cerrar-te-toca" aria-label="Ocultar" onclick="ocultarTeToca('${p.juego}')">✕</button>
@@ -228,9 +251,10 @@ function renderTarjetaTeToca(pendientes){
         html += `<div class="subtitulo-te-toca">⏳ Esperando a ${otro}</div>`;
         html += delOtro.map(p => {
             const j = _nombreJuegoTeToca(p.juego);
-            return `<div class="fila-te-toca">
-                <button class="abrir-te-toca" onclick="abrirJuego('${p.juego}')"><span>${j.icono} ${j.nombre}</span></button>
-                <button class="btn-whatsapp-te-toca" onclick="avisarPorWhatsAppTeToca('${p.juego}')">📲 Avisale</button>
+            const dias = diasQuietaTeToca(p.juego);
+            return `<div class="fila-te-toca${dias >= 1 ? ' dormida' : ''}">
+                <button class="abrir-te-toca" onclick="abrirJuego('${p.juego}')"><span>${j.icono} ${j.nombre}</span>${dias >= 1 ? `<small>😴 sin jugar ${_textoDiasTeToca(dias)}</small>` : ''}</button>
+                <button class="btn-whatsapp-te-toca" onclick="avisarPorWhatsAppTeToca('${p.juego}')">📲 ${dias >= 1 ? 'Recordale' : 'Avisale'}</button>
                 <button class="cerrar-te-toca" aria-label="Ocultar" onclick="ocultarTeToca('${p.juego}')">✕</button>
             </div>`;
         }).join('');

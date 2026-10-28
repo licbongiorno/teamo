@@ -1080,3 +1080,17 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
 }
 .naipe-chinchon.en-grupo.seleccionada{ box-shadow:0 0 0 2px var(--rosa), 0 8px 18px rgba(255,179,198,0.55); }
 .ayuda-deshacer{ margin-top:10px; }
+
+/* ============ PARTIDAS A DISTANCIA: dormidas y repeticiones ============ */
+.fila-te-toca.dormida .abrir-te-toca small{ color:#f5d9a0; }
+.fila-te-toca.dormida .btn-whatsapp-te-toca{ animation:ajLatirReglas 1.6s ease-in-out infinite; }
+.resumen-mano-truco{ margin:8px auto 0; max-width:320px; }
+.resumen-ronda-truco{ display:grid; grid-template-columns:26px auto auto auto 1fr; align-items:center; gap:8px; padding:3px 0; }
+.resumen-ronda-truco .naipe-chinchon{ transform:scale(0.72); margin:-10px -6px; cursor:default; }
+.resumen-ganador-truco{ font-size:0.78rem; text-align:left; }
+.repeticion-hoja{ max-height:92vh; overflow-y:auto; }
+.repeticion-tablero{ margin:8px auto; max-width:340px; }
+.repeticion-texto{ min-height:1.4em; font-size:0.85rem; margin:4px 0 8px; }
+.repeticion-barra{ width:100%; accent-color:var(--rosa); }
+.repeticion-controles button{ width:auto; padding:8px 12px; }
+@media (prefers-reduced-motion: reduce){ .fila-te-toca.dormida .btn-whatsapp-te-toca{ animation:none; } }

@@ -194,7 +194,8 @@ async function seleccionarCasillaDamas(idx){
 
         const quedanRival = nuevoTablero.some(p => esRivalFichaDamas(p, miIdentidad));
         const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(actual, mensaje),
-            ...(window.deshacer ? window.deshacer.guardarAntes('damas', actual, miIdentidad) : {}) };
+            ...(window.deshacer ? window.deshacer.guardarAntes('damas', actual, miIdentidad) : {}),
+            jugadas: [...(actual.jugadas || []), { d: origen, a: idx, x: captura ? captura.capturada : null, p: piezaFinal }] };
         if (!quedanRival) {
             updates.fase = 'terminado';
             updates.ganador = miIdentidad;
@@ -236,6 +237,7 @@ function renderDamas(estado){
             <div class="panel texto-centro">
                 <div style="font-size:1.3rem; margin-bottom:10px;">🏆 ¡Ganó ${nombreJugador(estado.ganador)}!</div>
                 <button class="btn-principal" onclick="reiniciarDamas()">🔁 Jugar de nuevo</button>
+                ${(estado.jugadas || []).length && window.abrirRepeticion ? `<button class="btn-secundario" style="margin-top:8px;" onclick="abrirRepeticion('damas')">🎬 Ver la partida de nuevo</button>` : ''}
             </div>`;
         return;
     }

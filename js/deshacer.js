@@ -9,8 +9,8 @@
 // ============================================================
 (function () {
     const CAMPOS = {
-        ajedrez: ['tablero', 'enroques', 'alPaso', 'medioMov', 'turno', 'jaque', 'ultimoMov'],
-        damas: ['tablero', 'turno'],
+        ajedrez: ['tablero', 'enroques', 'alPaso', 'medioMov', 'turno', 'jaque', 'ultimoMov', 'jugadas'],
+        damas: ['tablero', 'turno', 'jugadas'],
     };
     const ref = (juego) => window.doc(window.db, 'juegos', juego);
     const log = (e, msg) => [...(e.historial || []), msg].slice(-6);

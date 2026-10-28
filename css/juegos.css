@@ -1069,3 +1069,14 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
 .reglas-mini{ display:inline-block; width:22px; height:32px; border-radius:3px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.5); }
 .reglas-mini svg{ display:block; width:100%; height:100%; }
 @media (prefers-reduced-motion: reduce){ .btn-reglas.nuevo{ animation:none; } }
+
+/* ============ AYUDAS EN LA PARTIDA ============ */
+.ayuda-juego{ color:var(--celeste); }
+.ayuda-flor{ color:var(--rosa); font-weight:700; }
+.naipe-chinchon.en-grupo{ box-shadow:0 0 0 2px var(--color-grupo, #b8e8c9), 0 4px 10px rgba(0,0,0,0.4); }
+.naipe-chinchon.en-grupo::after{
+    content:''; position:absolute; top:3px; right:3px; width:9px; height:9px; border-radius:50%; z-index:1;
+    background:var(--color-grupo, #b8e8c9); box-shadow:0 0 0 2px #211a2b;
+}
+.naipe-chinchon.en-grupo.seleccionada{ box-shadow:0 0 0 2px var(--rosa), 0 8px 18px rgba(255,179,198,0.55); }
+.ayuda-deshacer{ margin-top:10px; }

@@ -361,6 +361,7 @@ async function confirmarMovimientoAjedrez(origen, destino, coronarEn, tableroVis
         const updates = {
             tablero: nuevo.tablero, enroques: nuevo.enroques, alPaso: nuevo.alPaso, medioMov: nuevo.medioMov,
             turno: miRival, jaque: enJaque ? miRival : null, ultimoMov: { desde: origen, a: destino },
+            ...(window.deshacer ? window.deshacer.guardarAntes('ajedrez', actual, miIdentidad) : {}),
         };
         if (!puedeMover && enJaque) {
             const victorias = { ...(actual.victorias || { nico: 0, carito: 0 }) };
@@ -460,6 +461,7 @@ function renderAjedrez(estado){
         }
     }
     html += `</div>`;
+    if (window.deshacer) html += window.deshacer.html('ajedrez', estado);
     if (estado.historial && estado.historial.length) {
         html += `<div class="panel texto-tenue" style="font-size:0.72rem; line-height:1.6; margin-top:12px;">${estado.historial.slice(-4).map(h => '• ' + h).join('<br>')}</div>`;
     }

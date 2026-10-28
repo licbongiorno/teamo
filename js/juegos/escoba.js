@@ -155,6 +155,7 @@ function renderEscoba(estado){
         </div>
         <div class="btn-fila" style="margin-top:10px;">
             <button class="btn-principal" ${puedeLevantar ? '' : 'style="opacity:0.4;" disabled'} onclick="levantarEscoba()">Levantar 🧹</button>
+            ${esMiTurno ? `<button class="btn-secundario" style="width:auto;" onclick="pistaEscoba()" title="Pista">💡</button>` : ''}
             <button class="btn-secundario" ${esMiTurno && _cartaManoEscoba ? '' : 'style="opacity:0.4;" disabled'} onclick="tirarEscoba()">Tirar carta</button>
         </div>
     </div>`;
@@ -180,6 +181,41 @@ function elegirManoEscoba(c){
 async function refrescarVistaEscoba(){
     const snap = await new Promise(res => { const u = window.onSnapshot(refEscoba(), s => { u(); res(s); }); });
     if (snap.exists()) renderEscoba(snap.data());
+}
+
+// Pista: busca la mejor levantada posible (escoba, 7 de oro, oros,
+// más cartas) y la deja preseleccionada. Si no hay ninguna, sugiere
+// qué tirar.
+async function pistaEscoba(){
+    vibrarJ(8);
+    const snap = await new Promise(res => { const u = window.onSnapshot(refEscoba(), s => { u(); res(s); }); });
+    const e = snap.exists() ? snap.data() : null;
+    if (!e || e.turno !== miIdentidad) return;
+    const mano = e[miIdentidad === 'nico' ? 'manoNico' : 'manoCarito'] || [];
+    const mesa = e.mesa || [];
+    let mejor = null;
+    mano.forEach(c => {
+        for (let m = 1; m < (1 << mesa.length); m++) {
+            const sel = mesa.filter((_, i) => m & (1 << i));
+            if (valorEscoba(c) + sel.reduce((t, x) => t + valorEscoba(x), 0) !== 15) continue;
+            const todas = [c, ...sel];
+            const pts = (sel.length === mesa.length ? 10 : 0) + (todas.includes('oro_7') ? 5 : 0)
+                + todas.filter(x => paloEscoba(x) === 'oro').length + todas.length * 0.5;
+            if (!mejor || pts > mejor.pts) mejor = { c, sel, pts };
+        }
+    });
+    if (mejor) {
+        _cartaManoEscoba = mejor.c; _seleccionMesaEscoba = mejor.sel;
+        if (window.sfx) window.sfx.acierto();
+        renderEscoba(e);
+        return;
+    }
+    // Sin 15 posibles: la carta menos valiosa para regalarle al otro.
+    const tirar = [...mano].sort((a, b) => (a === 'oro_7' ? 99 : 0) + (paloEscoba(a) === 'oro' ? 5 : 0) + valorEscoba(a) * 0.1
+        - ((b === 'oro_7' ? 99 : 0) + (paloEscoba(b) === 'oro' ? 5 : 0) + valorEscoba(b) * 0.1))[0];
+    _cartaManoEscoba = tirar; _seleccionMesaEscoba = [];
+    renderEscoba(e);
+    if (window.animJuegos) window.animJuegos.cartel('No hay 15 💭', { sub: 'Te marqué una para tirar', color: '#a8d8ff', dur: 1400, sonido: 'toque' });
 }
 
 function pushLogEscoba(estado, msg){ return [...(estado?.historial || []), msg].slice(-6); }

@@ -177,6 +177,11 @@ function renderChinchon(estado){
     const debeRobar = esMiTurno && !estado.yaRobo;
     const debeDescartar = esMiTurno && estado.yaRobo;
 
+    // Ayuda: las cartas que ya forman juego se marcan con un color por grupo/escalera.
+    const COLORES_GRUPO_CHINCHON = ['#7fd6a0', '#a8d8ff', '#c9b6ff'];
+    const armado = mejorParticion(miMano);
+    const grupoDeCarta = {};
+    armado.melds.forEach((m, g) => m.forEach(c => { grupoDeCarta[c] = g; }));
     let puedeCerrar = false, previewDeadwood = null;
     if (debeDescartar && _seleccionManoChinchon != null) {
         const restantes = miMano.filter((_, i) => i !== _seleccionManoChinchon);
@@ -205,9 +210,9 @@ function renderChinchon(estado){
     </div>`;
 
     html += `<div class="panel">
-        <div class="texto-tenue" style="margin-bottom:8px;">Tu mano ${previewDeadwood != null ? `(sueltas si descartás esta: ${previewDeadwood} pts)` : ''}</div>
+        <div class="texto-tenue" style="margin-bottom:8px;">Tu mano ${previewDeadwood != null ? `(sueltas si descartás esta: ${previewDeadwood} pts)` : `· <span class="ayuda-juego">${armado.melds.length ? `${armado.melds.length} juego${armado.melds.length === 1 ? '' : 's'} armado${armado.melds.length === 1 ? '' : 's'}` : 'ningún juego armado'} · sueltas: ${armado.deadwood} pts</span>`}</div>
         <div class="fila-cartas-chinchon" data-aj-mia>
-            ${miMano.map((c, i) => `<div class="naipe-chinchon ${_seleccionManoChinchon === i ? 'seleccionada' : ''}" onclick="seleccionarCartaChinchon(${i})">
+            ${miMano.map((c, i) => `<div class="naipe-chinchon ${_seleccionManoChinchon === i ? 'seleccionada' : ''} ${grupoDeCarta[c] != null ? 'en-grupo' : ''}" ${grupoDeCarta[c] != null ? `style="--color-grupo:${COLORES_GRUPO_CHINCHON[grupoDeCarta[c] % 3]}"` : ''} onclick="seleccionarCartaChinchon(${i})">
                 <span class="nc-palo">${EMOJI_PALO_CHINCHON[paloChinchon(c)]}</span>${nombreNumChinchon(numChinchon(c))}
             </div>`).join('')}
         </div>

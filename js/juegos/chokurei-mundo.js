@@ -12,11 +12,11 @@
 // ============================================================
 
 // Ciudades para el clima de la ventana. Cada uno elige la suya en la
-// Ficha; hasta que elijan, se usa la de la característica de su celular
-// (351 = Córdoba, 11 = Buenos Aires).
+// Ficha; hasta que elijan, Nico = Córdoba y Carito = Berazategui.
 const CIUDADES_CHOKUREI = {
     cordoba:     { nombre: 'Córdoba',       lat: -31.42, lon: -64.18 },
     buenosaires: { nombre: 'Buenos Aires',  lat: -34.60, lon: -58.38 },
+    berazategui: { nombre: 'Berazategui',   lat: -34.76, lon: -58.21 },
     rosario:     { nombre: 'Rosario',       lat: -32.95, lon: -60.66 },
     laplata:     { nombre: 'La Plata',      lat: -34.92, lon: -57.95 },
     mardelplata: { nombre: 'Mar del Plata', lat: -38.00, lon: -57.56 },
@@ -28,7 +28,7 @@ const CIUDADES_CHOKUREI = {
     santafe:     { nombre: 'Santa Fe',      lat: -31.63, lon: -60.70 },
     montevideo:  { nombre: 'Montevideo',    lat: -34.90, lon: -56.16 },
 };
-const CIUDAD_POR_DEFECTO_CHOKUREI = { nico: 'cordoba', carito: 'buenosaires' };
+const CIUDAD_POR_DEFECTO_CHOKUREI = { nico: 'cordoba', carito: 'berazategui' };
 
 (window.CHOKUREI_MODULOS = window.CHOKUREI_MODULOS || []).push(function (Chokurei) {
     const otro = () => (miIdentidad === 'nico' ? 'carito' : 'nico');

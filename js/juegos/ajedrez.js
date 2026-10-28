@@ -362,6 +362,8 @@ async function confirmarMovimientoAjedrez(origen, destino, coronarEn, tableroVis
             tablero: nuevo.tablero, enroques: nuevo.enroques, alPaso: nuevo.alPaso, medioMov: nuevo.medioMov,
             turno: miRival, jaque: enJaque ? miRival : null, ultimoMov: { desde: origen, a: destino },
             ...(window.deshacer ? window.deshacer.guardarAntes('ajedrez', actual, miIdentidad) : {}),
+            // Para "Ver la partida de nuevo" al terminar.
+            jugadas: [...(actual.jugadas || []), { d: origen, a: destino, c: coronarEn || null }],
         };
         if (!puedeMover && enJaque) {
             const victorias = { ...(actual.victorias || { nico: 0, carito: 0 }) };
@@ -424,6 +426,7 @@ function renderAjedrez(estado){
             <div style="font-size:1.3rem; margin-bottom:4px;">${titulo}</div>
             ${estado.motivoFin ? `<div class="texto-tenue" style="margin-bottom:10px;">Por ${estado.motivoFin}.</div>` : ''}
             <button class="btn-principal" onclick="reiniciarAjedrez()">🔁 Jugar de nuevo</button>
+            ${(estado.jugadas || []).length && window.abrirRepeticion ? `<button class="btn-secundario" style="margin-top:8px;" onclick="abrirRepeticion('ajedrez')">🎬 Ver la partida de nuevo</button>` : ''}
         </div>`;
     } else {
         const jaqueAMi = estado.jaque === miIdentidad;

@@ -473,6 +473,31 @@ async function ajustarPuntajeTruco(jugador, delta){
     await window.updateDoc(refTruco(), { puntajes: nuevosPuntajes });
 }
 
+// Repetición de la mano que terminó: qué se tiró en cada ronda y quién
+// la ganó, más el envido si se jugó.
+function resumenManoTruco(estado){
+    const jugadas = estado.cartasJugadas || [];
+    if (!jugadas.length && !estado.envidoGanador) return '';
+    const gr = estado.ganadoresRonda || [];
+    let h = '<div class="resumen-mano-truco"><div class="texto-tenue" style="font-size:0.78rem; margin-bottom:4px;">🎬 Así fue la mano</div>';
+    for (let r = 1; r <= 3; r++) {
+        const mia = jugadas.find(c => c.ronda === r && c.jugador === miIdentidad);
+        const suya = jugadas.find(c => c.ronda === r && c.jugador === miRival);
+        if (!mia && !suya) continue;
+        const g = gr[r - 1];
+        const quien = g === 'parda' ? '🤝 parda' : g ? (g === miIdentidad ? '✅ la ganaste' : `❌ ${nombreJugador(g)}`) : '';
+        h += `<div class="resumen-ronda-truco">
+            <span class="texto-tenue">R${r}</span>
+            ${suya ? naipeTruco(suya.carta, '', 'resumen') : '<div class="aj-hueco-naipe"></div>'}
+            <span style="font-size:0.75rem;">vs</span>
+            ${mia ? naipeTruco(mia.carta, '', 'resumen') : '<div class="aj-hueco-naipe"></div>'}
+            <span class="resumen-ganador-truco">${quien}</span>
+        </div>`;
+    }
+    if (estado.envidoGanador) h += `<div class="texto-tenue" style="font-size:0.78rem; margin-top:4px;">Envido: ganó ${nombreJugador(estado.envidoGanador)}</div>`;
+    return h + '</div>';
+}
+
 // Tanteador: el número y, abajo, los tantos en fosforitos como en la mesa.
 function tanteadorTruco(estado){
     const p = estado.puntajes || { nico: 0, carito: 0 };
@@ -531,6 +556,7 @@ function renderTruco(estado){
             <div class="panel texto-centro">
                 <div style="font-size:1.15rem; margin-bottom:8px;">${estado.manoGanadorTexto}</div>
                 ${tanteadorTruco(estado)}
+                ${resumenManoTruco(estado)}
                 <button class="btn-principal" style="margin-top:10px;" onclick="siguienteManoTruco()">Repartir siguiente mano ▶️</button>
             </div>`;
         return;

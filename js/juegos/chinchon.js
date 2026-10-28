@@ -137,6 +137,7 @@ let _seleccionManoChinchon = null;
 function renderChinchon(estado){
     const cont = document.getElementById('contenido-chinchon');
     if (!cont) return;
+    if (window.animJuegos) window.animJuegos.historial('chinchon', estado?.historial);
 
     if (!estado || estado.fase === 'esperando') {
         const listoYo = estado?.listos?.[miIdentidad];
@@ -189,22 +190,23 @@ function renderChinchon(estado){
             <span>${nombreJugador(miRival)}: ${manoRival.length} cartas</span>
             <span>Mazo: ${(estado.mazo || []).length}</span>
         </div>
+        <div class="aj-mano-rival" data-aj-rival>${'<div class="naipe-chinchon dorso"></div>'.repeat(manoRival.length)}</div>
         <div class="info-turno-tablero">${!esMiTurno ? `Turno de ${nombreJugador(estado.turno)}…` : debeRobar ? '🎯 Tu turno: robá una carta' : '🎯 Elegí una carta para descartar (o cerrar)'}</div>
     </div>`;
 
     html += `<div class="panel texto-centro">
         <div class="texto-tenue" style="margin-bottom:6px;">Mesa</div>
         <div style="display:flex; gap:14px; justify-content:center; align-items:center;">
-            <div class="naipe-chinchon dorso" style="${debeRobar ? 'cursor:pointer;' : 'opacity:0.55;'}" ${debeRobar ? `onclick="robarChinchon('mazo')"` : ''}>🂠</div>
-            <div class="naipe-chinchon ${debeRobar ? '' : 'deshabilitada'}" style="${debeRobar ? 'cursor:pointer;' : 'opacity:0.55;'}" ${debeRobar ? `onclick="robarChinchon('descarte')"` : ''}>
+            <div class="naipe-chinchon dorso" data-aj-mazo style="${debeRobar ? 'cursor:pointer;' : 'opacity:0.55;'}" ${debeRobar ? `onclick="robarChinchon('mazo')"` : ''}>🂠</div>
+            <div data-aj-pila>${top ? `<div class="naipe-chinchon ${debeRobar ? '' : 'deshabilitada'}" style="${debeRobar ? 'cursor:pointer;' : 'opacity:0.55;'}" ${debeRobar ? `onclick="robarChinchon('descarte')"` : ''}>
                 <span class="nc-palo">${EMOJI_PALO_CHINCHON[paloChinchon(top)]}</span>${nombreNumChinchon(numChinchon(top))}
-            </div>
+            </div>` : '<div class="aj-hueco-naipe"></div>'}</div>
         </div>
     </div>`;
 
     html += `<div class="panel">
         <div class="texto-tenue" style="margin-bottom:8px;">Tu mano ${previewDeadwood != null ? `(sueltas si descartás esta: ${previewDeadwood} pts)` : ''}</div>
-        <div class="fila-cartas-chinchon">
+        <div class="fila-cartas-chinchon" data-aj-mia>
             ${miMano.map((c, i) => `<div class="naipe-chinchon ${_seleccionManoChinchon === i ? 'seleccionada' : ''}" onclick="seleccionarCartaChinchon(${i})">
                 <span class="nc-palo">${EMOJI_PALO_CHINCHON[paloChinchon(c)]}</span>${nombreNumChinchon(numChinchon(c))}
             </div>`).join('')}

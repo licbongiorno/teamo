@@ -94,6 +94,7 @@ let _comodinPendienteUno = null;
 function renderUno(estado){
     const cont = document.getElementById('contenido-uno');
     if (!cont) return;
+    if (window.animJuegos) window.animJuegos.historial('uno', estado?.historial);
 
     if (!estado || estado.fase === 'esperando') {
         const listoYo = estado?.listos?.[miIdentidad];
@@ -130,12 +131,20 @@ function renderUno(estado){
             <span>Mazo: ${(estado.mazo || []).length}</span>
         </div>
         <div class="info-turno-tablero">${esMiTurno ? '🎯 Tu turno' : `Turno de ${nombreJugador(estado.turno)}…`}</div>
+        <div class="aj-mano-rival" data-aj-rival>${'<div class="naipe-uno dorso-uno"></div>'.repeat(Math.min(manoRival.length, 10))}${manoRival.length > 10 ? `<span class="aj-mas">+${manoRival.length - 10}</span>` : ''}</div>
     </div>`;
+
+    // "¡UNO!" grande cuando a alguien le queda una sola carta.
+    if (window.animJuegos) {
+        window.animJuegos.siCambia('uno-' + miIdentidad, miMano.length, (n) => { if (n === 1) window.animJuegos.cartel('¡UNO!', { color: window.animJuegos.colorDe(nombreJugador(miIdentidad)), sonido: 'pop' }); });
+        window.animJuegos.siCambia('uno-' + miRival, manoRival.length, (n) => { if (n === 1) window.animJuegos.cartel('¡UNO!', { sub: nombreJugador(miRival), color: window.animJuegos.colorDe(nombreJugador(miRival)), sonido: 'pop', vibrar: [20, 30, 20] }); });
+    }
 
     html += `<div class="panel texto-centro">
         <div class="texto-tenue" style="margin-bottom:8px;">Última carta</div>
-        <div style="display:flex; justify-content:center;">
-            <div class="naipe-uno ${colorUno(top) || estado.colorActual}">${nombreCartaUno(top)}</div>
+        <div class="aj-mesa-uno">
+            <div class="naipe-uno dorso-uno" data-aj-mazo ${esMiTurno && !_comodinPendienteUno ? 'onclick="robarCartaUno()"' : ''} title="Mazo"></div>
+            <div data-aj-pila><div class="naipe-uno ${colorUno(top) || estado.colorActual}">${nombreCartaUno(top)}</div></div>
         </div>
         <div class="texto-tenue" style="margin-top:8px;">Color actual: <b style="color:${HEX_UNO[estado.colorActual]};">${estado.colorActual}</b></div>
     </div>`;
@@ -147,17 +156,19 @@ function renderUno(estado){
                 ${COLORES_UNO.map(c => `<button class="naipe-uno ${c}" style="width:44px; height:60px; cursor:pointer;" onclick="elegirColorUno('${c}')"></button>`).join('')}
             </div>
         </div>`;
-    } else {
-        html += `<div class="panel">
-            <div class="texto-tenue" style="margin-bottom:8px;">Tu mano:</div>
-            <div class="fila-cartas-uno">
-                ${miMano.map((c, i) => `<div class="naipe-uno ${colorUno(c) || 'comodin'} ${esMiTurno ? '' : 'deshabilitada'}" onclick="jugarCartaUno(${i})">${nombreCartaUno(c)}</div>`).join('')}
-            </div>
-            <div class="btn-fila" style="margin-top:12px;">
-                <button class="btn-secundario" ${esMiTurno ? '' : 'style="opacity:0.4;" disabled'} onclick="robarCartaUno()">Robar carta 🂠</button>
-            </div>
-        </div>`;
     }
+    // La mano queda a la vista también mientras se elige color, así la
+    // carta jugada sale volando desde ahí.
+    const manoActiva = esMiTurno && !_comodinPendienteUno;
+    html += `<div class="panel">
+            <div class="texto-tenue" style="margin-bottom:8px;">Tu mano:</div>
+            <div class="fila-cartas-uno" data-aj-mia>
+                ${miMano.map((c, i) => `<div class="naipe-uno ${colorUno(c) || 'comodin'} ${manoActiva ? '' : 'deshabilitada'}" ${manoActiva ? `onclick="jugarCartaUno(${i})"` : ''}>${nombreCartaUno(c)}</div>`).join('')}
+            </div>
+            ${_comodinPendienteUno && esMiTurno ? '' : `<div class="btn-fila" style="margin-top:12px;">
+                <button class="btn-secundario" ${esMiTurno ? '' : 'style="opacity:0.4;" disabled'} onclick="robarCartaUno()">Robar carta 🂠</button>
+            </div>`}
+        </div>`;
 
     if (miMano.length === 2 && esMiTurno) {
         html += `<div class="panel texto-centro"><button class="btn-secundario" onclick="decirUnoGrito()">📣 ¡UNO!</button></div>`;

@@ -123,6 +123,7 @@ window.JUEGOS = [
     { id:'completafrase', nombre:'Completá la Frase', icono:'✏️', iconoSvg:'icono-pluma', categoria:'conexion', disponible:true, descripcion:'Una frase empezada que cada uno completa a su manera. Se revelan juntas.' },
     { id:'preguntadia', nombre:'La Pregunta del Día', icono:'☀️', iconoSvg:'icono-sol', categoria:'conexion', disponible:true, descripcion:'Una pregunta nueva cada día, la misma para los dos. Se puede mandar por WhatsApp.' },
     { id:'dosverdades', nombre:'Dos Verdades y una Mentira', icono:'🤥', iconoSvg:'icono-pregunta', categoria:'conexion', disponible:true, descripcion:'Escribí tres cosas sobre vos, una inventada. ¿El otro descubre cuál es? Se puede mandar por WhatsApp.' },
+    { id:'pingpong', nombre:'Ping Pong de Preguntas', icono:'🏓', iconoSvg:'icono-chat', categoria:'conexion', disponible:true, descripcion:'Más de 1600 preguntas reflexivas que nunca se repiten. Uno pregunta, el otro responde y la devuelve, todo por WhatsApp.' },
     { id:'tepreguntoyo', nombre:'Te Pregunto Yo', icono:'✍️', iconoSvg:'icono-chat', categoria:'conexion', disponible:true, descripcion:'Escribí tu propia pregunta, mandásela por WhatsApp y revelen las respuestas juntos.' },
     // ---- COMPETENCIA (fase 3) ----
     { id:'reversi', nombre:'Reversi', icono:'⚪', iconoSvg:'icono-ficha-dama', categoria:'clasicos', disponible:true, descripcion:'Encerrá las fichas del otro para darlas vuelta. Gana quien tenga más al final.' },

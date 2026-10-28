@@ -1929,6 +1929,12 @@
         }
         #contenido-preguntasindex .texto-centro { text-align: center; }
         #contenido-preguntasindex .texto-tenue { opacity: 0.65; font-size: 0.85rem; }
+        .link-pingpong-inicio {
+            display: block; margin-bottom: 12px; padding: 12px 14px; border-radius: 14px; text-decoration: none;
+            background: rgba(201,182,255,0.16); border: 1px solid rgba(201,182,255,0.5); color: #fdf6f0;
+            font-family: var(--fuente-texto); font-size: 0.92rem; font-weight: 600; text-align: center;
+        }
+        .link-pingpong-inicio small { display: block; font-weight: 400; opacity: 0.7; font-size: 0.75rem; margin-top: 2px; }
         #contenido-preguntasindex .btn-principal, #contenido-preguntasindex .btn-secundario {
             font-family: var(--fuente-texto); border-radius: 14px; padding: 12px 18px; font-size: 0.92rem;
             cursor: pointer; touch-action: manipulation; border: none; width: 100%; box-sizing: border-box;

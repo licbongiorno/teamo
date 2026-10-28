@@ -193,7 +193,8 @@ async function seleccionarCasillaDamas(idx){
         nuevoTablero[idx] = piezaFinal;
 
         const quedanRival = nuevoTablero.some(p => esRivalFichaDamas(p, miIdentidad));
-        const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(actual, mensaje) };
+        const updates = { tablero: nuevoTablero, turno: miRival, historial: pushLog(actual, mensaje),
+            ...(window.deshacer ? window.deshacer.guardarAntes('damas', actual, miIdentidad) : {}) };
         if (!quedanRival) {
             updates.fase = 'terminado';
             updates.ganador = miIdentidad;
@@ -259,6 +260,7 @@ function renderDamas(estado){
         }
     }
     html += `</div>`;
+    if (window.deshacer) html += window.deshacer.html('damas', estado);
     if (estado.historial && estado.historial.length) {
         html += `<div class="panel texto-tenue" style="font-size:0.72rem; line-height:1.6; margin-top:12px;">${estado.historial.slice(-4).map(h => '• ' + h).join('<br>')}</div>`;
     }

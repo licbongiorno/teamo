@@ -167,6 +167,8 @@
             if (e.listos && e.listos[yo] && !e.listos[bot]) return () => window[cerebro.listo]();
             return null;
         }
+        // La compu siempre acepta deshacer: es para practicar.
+        if (e.pedidoDeshacer && e.pedidoDeshacer.de === yo && typeof window.responderDeshacer === 'function') return () => window.responderDeshacer(modo.juego, true);
         try { return cerebro.paso(e, bot, yo, nivel); } catch (err) { console.warn('compu: error pensando', err); return null; }
     }
 

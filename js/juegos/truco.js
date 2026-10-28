@@ -558,7 +558,7 @@ function renderTruco(estado){
     const manoRivalHtml = `<div class="aj-mano-rival" data-aj-rival>${'<div class="naipe-chinchon dorso"></div>'.repeat(quedanRival)}</div>`;
     const esMiTurnoMano = estado.jugadorEnTurno === miIdentidad && !canto;
     let manoHtml = `<div class="panel">
-            <div class="texto-tenue" style="margin-bottom:8px;">Tu mano:</div>
+            <div class="texto-tenue" style="margin-bottom:8px;">Tu mano · <span class="ayuda-juego">envido: <b>${calcularEnvido(misCartas)}</b></span>${estado.conFlor && tieneFlorTruco(misCartas) ? ' · <span class="ayuda-juego ayuda-flor">🌺 ¡tenés flor!</span>' : ''}</div>
             <div class="fila-cartas-chinchon" data-aj-mia>`;
     misDisponibles.forEach(c => {
         manoHtml += naipeTruco(c, esMiTurnoMano ? `jugarCartaTruco('${c}')` : '', esMiTurnoMano ? '' : 'deshabilitada');

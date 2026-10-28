@@ -29,6 +29,15 @@ window.JUEGOS = [
     { id:'tateti',     nombre:'Ta-Te-Ti Infinito',   icono:'❌', iconoSvg:'icono-grilla-equis', categoria:'clasicos',    disponible:true, descripcion:'Tres en línea, pero cada jugador sólo tiene 3 marcas activas.' },
     { id:'conecta4',   nombre:'Conecta 4',            icono:'🔴', iconoSvg:'icono-cuatro-en-linea', categoria:'clasicos',    disponible:true, descripcion:'El clásico de las fichas que caen, a 4 en línea.' },
     { id:'escoba',     nombre:'Escoba de 15',        icono:'🧹', iconoSvg:'icono-escoba', categoria:'clasicos',    disponible:true, descripcion:'Cartas españolas: sumá 15 y levantá la mesa.' },
+    { id:'gomoku', nombre:'Gomoku', icono:'⚫', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Cinco en línea en un tablero grande: armá 5 seguidas antes que el otro.' },
+    { id:'mancala', nombre:'Mancala', icono:'🌰', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Sembrá semillas de pozo en pozo y llená tu granero.' },
+    { id:'serpientes', nombre:'Serpientes y Escaleras', icono:'🐍', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Tirá el dado: las escaleras te suben, las serpientes te bajan. ¡A llegar al 100!' },
+    { id:'parchis', nombre:'Parchís', icono:'🎲', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Sacá con 6, comé las fichas del otro y llevá las 4 a la meta.' },
+    { id:'domino', nombre:'Dominó', icono:'🁫', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Doble seis de a dos: poné fichas que coincidan y quedate sin ninguna.' },
+    { id:'backgammon', nombre:'Backgammon', icono:'⚪', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Dados y estrategia: llevá tus 15 fichas a casa y sacalas primero.' },
+    { id:'guerra', nombre:"La Guerra", icono:'⚔️', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'El más simple: den vuelta a la vez, la más alta se lleva las dos. ¡Y si empatan, guerra!' },
+    { id:'blackjack', nombre:"Blackjack", icono:'🂡', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Los dos contra la casa: acercate a 21 sin pasarte y terminá con más fichas.' },
+    { id:'poker', nombre:"Póker Texas Hold'em", icono:'♠️', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Ciegas, apuestas y faroles de a dos: dejá al otro sin fichas.' },
     { id:'batallanaval', nombre:'Batalla Naval',      icono:'🚢', iconoSvg:'icono-barco', categoria:'clasicos',    disponible:true, descripcion:'Ubicá tu flota y hundí la del otro por turnos.' },
 
     // ---- COMPETENCIA ----
@@ -132,6 +141,13 @@ window.JUEGOS = [
     { id:'generala', nombre:'Generala', icono:'🎲', iconoSvg:'icono-dado', categoria:'competencia', disponible:true, descripcion:'Los dados de siempre: escalera, full, póker y generala, con planilla para los dos.' },
     { id:'palabras', nombre:'Batalla de Palabras', icono:'🔠', iconoSvg:'icono-letras-caoticas', categoria:'competencia', disponible:true, descripcion:'Misma grilla de letras, 90 segundos para armar palabras. Después se revisan entre ustedes.' },
     { id:'tuttifrutti', nombre:'Tutti Frutti en vivo', icono:'🔤', iconoSvg:'icono-letras-caoticas', categoria:'competencia', disponible:true, descripcion:'Misma letra, mismas categorías. El primero que completa canta ¡BASTA! y se corrigen entre ustedes.' },
+    // ---- NUEVOS: PAREJA Y PALABRAS ----
+    { id:'onda', nombre:'La Onda', icono:'📡', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Uno da una pista, el otro mueve el dial: ¿qué tan en sintonía están?' },
+    { id:'codigo', nombre:'Código Secreto en Pareja', icono:'🕵️', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Pistas de una palabra para encontrar juntos a los 15 agentes sin tocar a los asesinos.' },
+    { id:'mente', nombre:'Mente Sincronizada', icono:'🧠', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Tiren los números de menor a mayor sin hablar, sólo sintiendo el momento.' },
+    { id:'palabradia', nombre:'Palabra del Día', icono:'🟩', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La misma palabra de 5 letras para los dos: ¿quién la saca en menos intentos?' },
+    { id:'rosco', nombre:'El Rosco', icono:'🅰️', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Una palabra por cada letra del abecedario, contra reloj. ¡Pasapalabra!' },
+    { id:'sopa', nombre:'Sopa de Letras en Duelo', icono:'🔎', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La misma sopa para los dos: el primero en encontrar las 8 palabras gana.' },
 ];
 
 window.obtenerJuegosDeCategoria = function(categoriaId){

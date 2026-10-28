@@ -1167,3 +1167,228 @@ html[data-mesa="noche"] .aj-mesa-truco{
 }
 html[data-mesa="noche"]{ --aj-dorso:#23305e; --aj-dorso-linea:#c9b6ff; }
 html[data-mesa="pano"]{ --aj-dorso:#7a2944; --aj-dorso-linea:#e8c27a; }
+
+/* ======================= JUEGOS NUEVOS: TANDA 1 ======================= */
+.f-nico{ --c-ficha:#a8d8ff; --c-ficha2:#4f8fd6; }
+.f-carito{ --c-ficha:#ffb3c6; --c-ficha2:#d9668a; }
+
+/* Gomoku: intersecciones sobre madera */
+.tablero-gomoku{ max-width:380px; margin:0 auto; background:#d9a96b; border:none; border-radius:10px; }
+.tablero-gomoku .casilla-gomoku{ background:none !important; position:relative; }
+.tablero-gomoku .casilla-gomoku::before{ content:''; position:absolute; left:0; right:0; top:50%; height:1px; background:rgba(60,35,15,0.55); }
+.tablero-gomoku .casilla-gomoku::after{ content:''; position:absolute; top:0; bottom:0; left:50%; width:1px; background:rgba(60,35,15,0.55); }
+.piedra-gomoku{ position:relative; z-index:1; width:82%; height:82%; border-radius:50%; pointer-events:none; }
+.piedra-gomoku.p-nico{ background:radial-gradient(circle at 35% 30%, #fff, #cfe6ff 45%, #6f9fd6); box-shadow:0 2px 3px rgba(0,0,0,0.45); }
+.piedra-gomoku.p-carito{ background:radial-gradient(circle at 35% 30%, #ffe3ec, #ff9db8 50%, #b8486b); box-shadow:0 2px 3px rgba(0,0,0,0.45); }
+.piedra-gomoku.ultima{ box-shadow:0 0 0 2px #f5d9a0, 0 2px 3px rgba(0,0,0,0.45); }
+html[data-mesa="noche"] .tablero-gomoku{ background:#2a2850; }
+html[data-mesa="noche"] .tablero-gomoku .casilla-gomoku::before, html[data-mesa="noche"] .tablero-gomoku .casilla-gomoku::after{ background:rgba(201,182,255,0.35); }
+
+/* Mancala */
+.tablero-mancala{ display:flex; align-items:stretch; gap:6px; padding:10px; border-radius:40px; background:linear-gradient(160deg,#a5703f,#7a4c25); box-shadow:inset 0 0 0 3px #5a3520, 0 8px 18px rgba(0,0,0,0.45); }
+.filas-mancala{ flex:1; display:flex; flex-direction:column; gap:8px; }
+.fila-mancala{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+.pozo-mancala{ position:relative; aspect-ratio:1/1; border-radius:50%; background:radial-gradient(circle at 50% 40%, #5a3520, #3d2414); box-shadow:inset 0 4px 8px rgba(0,0,0,0.6); }
+.pozo-mancala.granero{ aspect-ratio:auto; width:16%; border-radius:30px; }
+.pozo-mancala.jugable{ cursor:pointer; box-shadow:inset 0 4px 8px rgba(0,0,0,0.6), 0 0 0 2px #f5d9a0; }
+.pozo-mancala .semillas i{ position:absolute; width:7px; height:7px; margin:-3.5px 0 0 -3.5px; border-radius:50%; background:hsl(var(--h),70%,70%); box-shadow:inset -1px -1px 1px rgba(0,0,0,0.3); }
+.pozo-mancala.granero .semillas i{ top:auto; }
+.pozo-mancala .cuenta{ position:absolute; bottom:-2px; right:2px; font-size:0.68rem; color:#fdf6f0; text-shadow:0 1px 2px #000; }
+.pozo-mancala.granero .cuenta{ bottom:auto; top:50%; right:50%; transform:translate(50%,-50%); font-size:1.1rem; }
+
+/* Serpientes y escaleras */
+.tablero-sye{ position:relative; max-width:380px; margin:0 auto; aspect-ratio:1/1; border-radius:10px; overflow:hidden; }
+.grilla-sye{ position:absolute; inset:0; display:grid; grid-template-columns:repeat(10,1fr); }
+.casilla-sye{ position:relative; display:flex; align-items:center; justify-content:center; gap:1px; background:#f7e3c4; }
+.casilla-sye.par{ background:#fbd9a5; }
+.casilla-sye small{ position:absolute; top:1px; left:2px; font-size:0.48rem; color:#7a4c25; opacity:0.7; }
+.caminos-sye{ position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+.escalera-lado{ stroke:#8a5a36; stroke-width:0.8; stroke-linecap:round; }
+.escalera-peldano{ stroke:#a8743f; stroke-width:0.6; }
+.serpiente-cuerpo{ fill:none; stroke:#4caf6a; stroke-width:2; stroke-linecap:round; opacity:0.9; }
+.serpiente-cabeza{ fill:#2f8a4c; }
+.ficha-sye{ position:relative; z-index:2; width:42%; aspect-ratio:1/1; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, var(--c-ficha) 50%, var(--c-ficha2)); box-shadow:0 2px 3px rgba(0,0,0,0.5); }
+.salida-sye{ min-height:22px; text-align:center; margin:6px 0; font-size:0.8rem; }
+.salida-sye .ficha-sye{ display:inline-block; width:18px; vertical-align:middle; margin:0 3px; }
+
+/* Parchís */
+.tablero-parchis{ display:grid; grid-template-columns:repeat(15,1fr); max-width:390px; margin:0 auto; aspect-ratio:1/1; border-radius:10px; overflow:hidden; background:#f5ecdf; }
+.celda-parchis{ position:relative; display:flex; align-items:center; justify-content:center; }
+.celda-parchis.camino{ background:#fdf9f2; box-shadow:inset 0 0 0 0.5px rgba(0,0,0,0.15); }
+.celda-parchis.seguro .estrella{ color:#c9a24a; font-size:0.6rem; font-style:normal; position:absolute; }
+.celda-parchis.salida-nico, .celda-parchis.pasillo-nico{ background:#a8d8ff; }
+.celda-parchis.salida-carito, .celda-parchis.pasillo-carito{ background:#ffb3c6; }
+.celda-parchis.casa-nico{ background:#cfe8ff; }
+.celda-parchis.casa-carito{ background:#ffd6e1; }
+.celda-parchis.casa-vacia{ background:#e9e0d3; }
+.celda-parchis.centro{ background:linear-gradient(135deg,#a8d8ff 50%,#ffb3c6 50%); }
+.ficha-parchis{ position:relative; z-index:2; width:78%; aspect-ratio:1/1; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, var(--c-ficha) 50%, var(--c-ficha2)); box-shadow:0 2px 3px rgba(0,0,0,0.5), inset 0 0 0 1.5px rgba(255,255,255,0.6); }
+.ficha-parchis.apilada{ position:absolute; width:58%; left:calc(8% + var(--n) * 14%); top:calc(8% + var(--n) * 10%); }
+.ficha-parchis.movible{ cursor:pointer; animation:ajLatirReglas 1s ease-in-out infinite; box-shadow:0 0 0 2px #f5d9a0, 0 0 10px #f5d9a0; }
+
+/* Dominó */
+.ficha-domino{
+    display:inline-flex; align-items:center; gap:2px; padding:3px; border-radius:6px; background:linear-gradient(160deg,#fffdf7,#ebe3d3);
+    box-shadow:0 2px 4px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(0,0,0,0.1); flex-shrink:0;
+}
+.ficha-domino.dorso{ width:16px; height:30px; background:linear-gradient(160deg,#3a2f45,#1d1724); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.15); margin:0 -3px; }
+.mitad-domino{ display:grid; grid-template:repeat(3,1fr)/repeat(3,1fr); width:20px; height:20px; gap:1px; }
+.mitad-domino i{ border-radius:50%; }
+.mitad-domino i.on{ background:#2a2133; }
+.raya-domino{ width:1px; height:18px; background:rgba(0,0,0,0.25); }
+.mesa-domino{ display:flex; flex-wrap:wrap; gap:3px; justify-content:center; align-items:center; min-height:60px; padding:10px; margin:8px 0; border-radius:14px;
+    background:radial-gradient(ellipse at center, #2f6b47 0%, #1f4a32 80%); box-shadow:inset 0 0 0 3px #6b4a2a; }
+.mesa-domino .ficha-domino.en-mesa{ transform:scale(0.85); margin:-2px; }
+.mano-domino{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+.ficha-domino.jugable{ cursor:pointer; box-shadow:0 0 0 2px #f5d9a0, 0 2px 4px rgba(0,0,0,0.45); }
+.ficha-domino.apagada{ opacity:0.55; }
+.ficha-domino.elegida{ transform:translateY(-6px); box-shadow:0 0 0 2px var(--rosa), 0 6px 12px rgba(0,0,0,0.5); }
+.punta-domino{ padding:6px 8px; border-radius:10px; border:1px dashed #f5d9a0; background:rgba(245,217,160,0.15); color:#fdf6f0; font-size:0.75rem; cursor:pointer; animation:ajLatirReglas 1.2s infinite; }
+
+/* Backgammon */
+.tablero-bg{ display:flex; flex-direction:column; gap:10px; padding:8px; border-radius:12px; background:#7a4c25; box-shadow:inset 0 0 0 4px #5a3520, 0 8px 18px rgba(0,0,0,0.45); }
+.fila-bg{ display:grid; grid-template-columns:repeat(6,1fr) 0.8fr repeat(6,1fr); gap:2px; height:150px; }
+.punto-bg{ position:relative; display:flex; flex-direction:column; align-items:center; gap:1px; padding-top:2px; }
+.punto-bg::before{ content:''; position:absolute; inset:0; z-index:0; clip-path:polygon(0 0, 100% 0, 50% 100%); }
+.punto-bg.abajo{ flex-direction:column-reverse; padding:0 0 2px; }
+.punto-bg.abajo::before{ clip-path:polygon(50% 0, 100% 100%, 0 100%); }
+.punto-bg.p-a::before{ background:#e8c48a; }
+.punto-bg.p-b::before{ background:#3d2414; }
+.punto-bg.jugable::before{ filter:brightness(1.25); }
+.punto-bg.jugable{ cursor:pointer; }
+.punto-bg.origen::before{ background:#f5d9a0; }
+.punto-bg.destino{ cursor:pointer; }
+.punto-bg.destino::before{ background:rgba(168,216,255,0.75); animation:destelloSuave 1s infinite; }
+.punto-bg.ultimo::after{ content:''; position:absolute; left:50%; transform:translateX(-50%); bottom:-6px; width:6px; height:6px; border-radius:50%; background:#f5d9a0; }
+.punto-bg.abajo.ultimo::after{ bottom:auto; top:-6px; }
+.ficha-bg{ position:relative; z-index:1; width:88%; aspect-ratio:1/1; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, var(--c-ficha) 50%, var(--c-ficha2)); box-shadow:0 1px 2px rgba(0,0,0,0.6);
+    display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:#2a2133; }
+.barra-bg{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; background:#5a3520; border-radius:6px; }
+.barra-bg .ficha-bg{ width:80%; }
+.barra-bg.jugable{ cursor:pointer; box-shadow:0 0 0 2px #f5d9a0; }
+.barra-bg.origen{ background:#f5d9a0; }
+.pie-bg{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin:8px 2px; font-size:0.78rem; }
+
+/* ======================= JUEGOS NUEVOS: TANDA 2 (cartas francesas) ======================= */
+.naipe-frances{
+    position:relative; width:50px; height:72px; border-radius:7px; flex-shrink:0;
+    background:linear-gradient(160deg,#fffdf8,#f0e8da); color:#1d1724; box-shadow:0 3px 8px rgba(0,0,0,0.45);
+    font-family:Georgia,serif; font-weight:800;
+}
+.naipe-frances.roja{ color:#c9302c; }
+.naipe-frances.chica{ width:34px; height:48px; }
+.naipe-frances .fr-esq{ position:absolute; top:3px; left:4px; font-size:0.68rem; line-height:0.9; text-align:center; }
+.naipe-frances .fr-esq.abajo{ top:auto; left:auto; bottom:3px; right:4px; transform:rotate(180deg); }
+.naipe-frances .fr-centro{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.5rem; }
+.naipe-frances .fr-as{ font-size:2rem; }
+.naipe-frances.dorso{ background:repeating-linear-gradient(45deg, var(--aj-dorso,#7a2944) 0 6px, color-mix(in srgb, var(--aj-dorso,#7a2944) 80%, #000) 6px 12px); box-shadow:inset 0 0 0 3px #fdf6f0, 0 3px 8px rgba(0,0,0,0.45); }
+.naipe-frances.apagada{ opacity:0.45; }
+.aj-hueco-naipe.fr{ width:50px; height:72px; }
+.cartas-bj{ display:flex; gap:4px; justify-content:center; flex-wrap:wrap; min-height:72px; }
+
+.mesa-guerra{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; padding:14px; border-radius:16px; margin:8px 0;
+    background:radial-gradient(ellipse at center, #2f6b47 0%, #1f4a32 80%); box-shadow:inset 0 0 0 3px #6b4a2a; }
+.lado-guerra{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+.pila-guerra{ min-height:72px; }
+.pila-guerra .naipe-frances.dorso{ box-shadow:inset 0 0 0 3px #fdf6f0, 3px 3px 0 #1d1724, 5px 5px 0 #0b0810; }
+.centro-guerra{ display:flex; flex-direction:column; align-items:center; gap:6px; min-width:80px; text-align:center; }
+.cartel-guerra{ font-weight:900; color:#ff9b6b; font-size:1.1rem; animation:latirEmoji 0.8s infinite; }
+.pozo-guerra{ display:flex; flex-wrap:wrap; justify-content:center; gap:1px; max-width:90px; }
+.pozo-guerra .naipe-frances{ margin:-6px; transform:scale(0.75); }
+.pozo-guerra small{ width:100%; font-size:0.7rem; opacity:0.8; margin-top:4px; }
+
+.mesa-bj, .mesa-poker{ position:relative; display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:18px; margin:8px 0;
+    background:radial-gradient(ellipse at center, #2f6b47 0%, #1f4a32 80%); box-shadow:inset 0 0 0 3px #6b4a2a; text-align:center; }
+html[data-mesa="madera"] .mesa-bj, html[data-mesa="madera"] .mesa-poker, html[data-mesa="madera"] .mesa-guerra, html[data-mesa="madera"] .mesa-domino{ background:repeating-linear-gradient(95deg, #9a6640 0 14px, #8a5a36 14px 22px, #a46e46 22px 34px); }
+html[data-mesa="noche"] .mesa-bj, html[data-mesa="noche"] .mesa-poker, html[data-mesa="noche"] .mesa-guerra, html[data-mesa="noche"] .mesa-domino{ background:radial-gradient(ellipse at center, #2e2c5e 0%, #1a1838 75%); box-shadow:inset 0 0 0 3px #6b64b8; }
+.lugar-bj{ padding:6px; border-radius:12px; }
+.lugar-bj.turno{ box-shadow:0 0 0 2px #f5d9a0; }
+.lugar-bj .texto-tenue, .lugar-poker .texto-tenue{ color:#e9f5ec; opacity:0.85; font-size:0.78rem; margin-bottom:4px; }
+.resultado-bj{ margin-top:4px; font-size:0.82rem; font-weight:700; }
+.resultado-bj.gano{ color:#9ff0b8; }
+.resultado-bj.perdio{ color:#ffb3a8; }
+.mazo-bj{ position:absolute; top:8px; right:10px; }
+.ficha-apuesta{ width:auto; }
+.comunitarias-poker{ display:flex; justify-content:center; gap:4px; }
+.comunitarias-poker .naipe-frances{ width:44px; height:64px; }
+.pozo-poker{ font-weight:800; color:#f5d9a0; }
+.fichas-poker{ font-size:0.8rem; color:#e9f5ec; margin:4px 0; }
+.acciones-poker{ flex-wrap:wrap; }
+.acciones-poker button{ width:auto; flex:1 1 40%; }
+
+/* ======================= JUEGOS NUEVOS: TANDA 3 ======================= */
+.input-texto{ width:100%; padding:12px; border-radius:12px; border:1px solid var(--borde); background:rgba(255,255,255,0.06); color:var(--texto); text-align:center; font-size:1rem; }
+
+/* La Onda */
+.pista-onda{ font-size:1.05rem; font-weight:700; margin-bottom:10px; text-align:center; }
+.dial-onda{ margin:6px 0 10px; }
+.escala-onda{ display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:6px; }
+.barra-onda{ position:relative; height:34px; border-radius:17px; overflow:hidden;
+    background:linear-gradient(90deg, #a8d8ff, #c9b6ff 50%, #ffb3c6); box-shadow:inset 0 2px 6px rgba(0,0,0,0.35); }
+.zona-onda{ position:absolute; top:0; bottom:0; }
+.zona-onda.z2{ background:rgba(245,217,160,0.35); }
+.zona-onda.z3{ background:rgba(245,217,160,0.6); }
+.zona-onda.z4{ background:#f5d9a0; box-shadow:0 0 10px #f5d9a0; }
+.aguja-onda{ position:absolute; top:-4px; bottom:-4px; width:4px; margin-left:-2px; background:#1d1724; border-radius:2px; box-shadow:0 0 0 2px #fdf6f0; }
+.slider-onda{ width:100%; accent-color:var(--rosa); }
+.resultado-onda{ font-size:1.1rem; font-weight:800; margin-top:4px; }
+
+/* Código secreto */
+.grilla-codigo{ display:grid; grid-template-columns:repeat(5,1fr); gap:5px; margin:8px 0; }
+.carta-codigo{ position:relative; min-height:52px; padding:4px 2px; border-radius:10px; border:2px solid rgba(255,255,255,0.15); background:#f5ecdf; color:#2a2133;
+    font-size:0.68rem; font-weight:700; text-transform:uppercase; word-break:break-word; cursor:pointer; }
+.carta-codigo:disabled{ cursor:default; }
+.carta-codigo.mi-agente{ border-color:#4caf6a; }
+.carta-codigo.mi-asesino{ border-color:#e05050; border-style:dashed; }
+.carta-codigo.agente{ background:#4caf6a; color:#fff; border-color:#2f8a4c; }
+.carta-codigo.asesino{ background:#1d1724; color:#ff8a80; }
+.carta-codigo.neutra{ background:#cfc5b6; }
+.carta-codigo small{ display:block; font-size:0.5rem; font-weight:400; text-transform:none; opacity:0.75; margin-top:2px; }
+
+/* Mente sincronizada */
+.mesa-mente{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:14px; border-radius:18px; margin:8px 0;
+    background:radial-gradient(ellipse at center, #3a2f5e 0%, #1d1838 80%); box-shadow:inset 0 0 0 3px #6b64b8; text-align:center; }
+.centro-mente{ min-height:90px; display:flex; align-items:center; }
+.carta-mente{ width:60px; height:84px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:900;
+    background:linear-gradient(160deg,#fffdf8,#e9e1f5); color:#3a2f5e; box-shadow:0 4px 10px rgba(0,0,0,0.45); }
+.centro-mente .carta-mente{ width:72px; height:100px; font-size:2rem; }
+.carta-mente.vacia{ background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.4); box-shadow:inset 0 0 0 2px rgba(255,255,255,0.15); }
+.mano-mente{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+.boton-mente{ font-size:1.1rem; }
+
+/* Palabra del día */
+.grilla-dia{ display:flex; flex-direction:column; gap:5px; align-items:center; margin:10px 0; perspective:500px; }
+.fila-dia{ display:flex; gap:5px; }
+.letra-dia{ width:52px; height:52px; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:1.5rem; font-weight:900;
+    border:2px solid rgba(255,255,255,0.2); text-transform:uppercase; }
+.letra-dia.llena{ border-color:rgba(255,255,255,0.55); animation:rebotarLogro 0.15s ease; }
+.letra-dia.c-v, .tecla-dia.c-v{ background:#4caf6a; border-color:#4caf6a; color:#fff; }
+.letra-dia.c-a, .tecla-dia.c-a{ background:#d9ad3a; border-color:#d9ad3a; color:#fff; }
+.letra-dia.c--, .tecla-dia.c--{ background:#4a4352; border-color:#4a4352; color:#d8d0e0; }
+.teclado-dia{ display:flex; flex-direction:column; gap:5px; align-items:center; margin:6px 0 10px; }
+.teclado-dia > div{ display:flex; gap:4px; }
+.tecla-dia{ min-width:30px; height:44px; padding:0 4px; border-radius:7px; border:none; background:rgba(255,255,255,0.18); color:inherit; font-weight:800; font-size:0.9rem; cursor:pointer; }
+.tecla-dia.ancha{ min-width:46px; }
+.mini-dia{ font-size:0.9rem; line-height:1.3; }
+.mini-dia small{ font-size:0.7rem; opacity:0.75; margin-left:4px; }
+
+/* Rosco */
+.rosco{ position:relative; width:min(320px, 88vw); aspect-ratio:1/1; margin:8px auto; }
+.letra-rosco{ position:absolute; width:11%; aspect-ratio:1/1; transform:translate(-50%,-50%); border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:#3f7fe6; color:#fff; font-weight:900; font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.4); transition:background 0.3s; }
+.letra-rosco.bien{ background:#4caf6a; }
+.letra-rosco.mal{ background:#e05050; }
+.letra-rosco.actual{ box-shadow:0 0 0 3px #f5d9a0, 0 0 14px #f5d9a0; transform:translate(-50%,-50%) scale(1.15); }
+.centro-rosco{ position:absolute; inset:25%; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(255,255,255,0.06); }
+.centro-rosco b{ font-size:2rem; }
+.letra-grande-rosco{ font-size:1.3rem; color:var(--celeste); }
+
+/* Sopa de letras */
+.grilla-sopa{ display:grid; grid-template-columns:repeat(10,1fr); gap:2px; max-width:360px; margin:8px auto; }
+.letra-sopa{ aspect-ratio:1/1; border:none; border-radius:5px; background:#f5ecdf; color:#2a2133; font-weight:800; font-size:0.9rem; cursor:pointer; }
+.letra-sopa.encontrada{ background:#a8d8ff; }
+.letra-sopa.primera{ background:#f5d9a0; box-shadow:0 0 0 2px var(--rosa); }
+.lista-sopa{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:6px 0; font-size:0.78rem; font-weight:700; }
+.lista-sopa span{ padding:3px 8px; border-radius:999px; background:rgba(255,255,255,0.08); }
+.lista-sopa span.tachada{ text-decoration:line-through; opacity:0.55; }
+.lista-sopa span.del-otro::after{ content:' •'; color:var(--rosa); }

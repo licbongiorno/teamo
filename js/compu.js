@@ -164,7 +164,7 @@
         const { yo, bot, nivel } = modo;
         if (!e) return null;
         if (e.fase === 'esperando' || e.fase === 'sin_partida' || !e.fase) {
-            if (e.listos && e.listos[yo] && !e.listos[bot]) return () => window[cerebro.listo]();
+            if (e.listos && e.listos[yo] && !e.listos[bot]) return () => (typeof cerebro.listo === 'function' ? cerebro.listo() : window[cerebro.listo]());
             return null;
         }
         // La compu siempre acepta deshacer: es para practicar.
@@ -200,7 +200,7 @@
 
     // ==================== INTERFAZ ====================
     function ponerBotones() {
-        Object.keys(CEREBROS).forEach(juego => {
+        [...new Set([...Object.keys(CEREBROS), ...CON_CEREBRO_DIFERIDO])].forEach(juego => {
             const fila = document.querySelector(`#pantalla-${juego} .fila-superior-juego`);
             if (!fila || fila.querySelector('.btn-compu')) return;
             const b = document.createElement('button');
@@ -812,6 +812,10 @@
     };
 
     const CEREBROS = { truco, escoba, chinchon, uno, ajedrez, damas, conecta4, tateti, reversi, generala, mentiroso };
+    // Juegos nuevos: el botón aparece de entrada y el cerebro llega con el
+    // archivo del juego (base-turnos.js llama a registrarCerebroCompu).
+    const CON_CEREBRO_DIFERIDO = ['gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker'];
+    window.registrarCerebroCompu = (id, cerebro) => { CEREBROS[id] = cerebro; ponerBotones(); if (modo && modo.juego === id) programar(); };
 
     window.jugarContraCompu = jugarContraCompu;
     window.volverAJugarConPareja = volverAJugarConPareja;

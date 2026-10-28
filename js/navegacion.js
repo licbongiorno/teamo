@@ -108,6 +108,8 @@ async function abrirJuego(juego){
     if (juego === 'nostalgia') iniciarNostalgia();
     if (juego === 'simon') iniciarSimon();
     if (juego === 'memoriarelampago') iniciarMemoriaRelampago();
+    // Los juegos nuevos se registran solos (js/juegos/base-turnos.js).
+    if (window.INICIAR_JUEGO && window.INICIAR_JUEGO[juego]) window.INICIAR_JUEGO[juego]();
 
     // Presencia: mientras estamos en un juego (no en el menú), avisamos
     // cada tanto que estamos acá, para que el otro vea "está jugando

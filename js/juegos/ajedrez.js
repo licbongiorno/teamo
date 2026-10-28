@@ -397,6 +397,7 @@ async function confirmarMovimientoAjedrez(origen, destino, coronarEn, tableroVis
 }
 
 function renderAjedrez(estado){
+    if (window.temporadas) window.temporadas.observar('ajedrez', estado);
     const cont = document.getElementById('contenido-ajedrez');
     if (!cont) return;
     const victorias = estado?.victorias || { nico: 0, carito: 0 };

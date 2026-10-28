@@ -99,6 +99,7 @@ async function reiniciarEscoba(){
 }
 
 function renderEscoba(estado){
+    if (window.temporadas) window.temporadas.observar('escoba', estado);
     const cont = document.getElementById('contenido-escoba');
     if (window.animJuegos) window.animJuegos.historial('escoba', estado?.historial);
     if (!estado || estado.fase === 'sin_partida' || estado.fase === 'esperando') {

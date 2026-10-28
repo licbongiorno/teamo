@@ -27,6 +27,7 @@ function iniciarConecta4(){
 function tableroVacioC4(){ return new Array(FILAS_C4 * COLS_C4).fill(null); }
 
 function renderConecta4(estado){
+    if (window.temporadas) window.temporadas.observar('conecta4', estado);
     const cont = document.getElementById('contenido-conecta4');
     if (!estado || estado.fase === 'sin_partida' || estado.fase === 'esperando') {
         const listoYo = estado?.listos?.[miIdentidad];

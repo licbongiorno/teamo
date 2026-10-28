@@ -511,6 +511,7 @@ function tanteadorTruco(estado){
 }
 
 function renderTruco(estado){
+    if (window.temporadas) window.temporadas.observar('truco', estado);
     const cont = document.getElementById('contenido-truco');
     if (window.animJuegos) window.animJuegos.historial('truco', estado?.historial);
 

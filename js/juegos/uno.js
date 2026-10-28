@@ -92,6 +92,7 @@ function pushLogUno(estado, mensaje){ return [...(estado?.historial || []), mens
 let _comodinPendienteUno = null;
 
 function renderUno(estado){
+    if (window.temporadas) window.temporadas.observar('uno', estado);
     const cont = document.getElementById('contenido-uno');
     if (!cont) return;
     if (window.animJuegos) window.animJuegos.historial('uno', estado?.historial);

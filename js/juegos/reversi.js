@@ -71,6 +71,7 @@ function iniciarReversi(){
 }
 
 function renderReversi(estado){
+    if (window.temporadas) window.temporadas.observar('reversi', estado);
     const cont = document.getElementById('contenido-reversi');
     if (!cont) return;
     if (!estado || estado.fase === 'esperando') {

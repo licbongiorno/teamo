@@ -135,6 +135,7 @@ function pushLogChinchon(estado, mensaje){ return [...(estado?.historial || []),
 let _seleccionManoChinchon = null;
 
 function renderChinchon(estado){
+    if (window.temporadas) window.temporadas.observar('chinchon', estado);
     const cont = document.getElementById('contenido-chinchon');
     if (!cont) return;
     if (window.animJuegos) window.animJuegos.historial('chinchon', estado?.historial);

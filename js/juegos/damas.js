@@ -214,6 +214,7 @@ async function seleccionarCasillaDamas(idx){
 }
 
 function renderDamas(estado){
+    if (window.temporadas) window.temporadas.observar('damas', estado);
     const cont = document.getElementById('contenido-damas');
     if (!cont) return;
 

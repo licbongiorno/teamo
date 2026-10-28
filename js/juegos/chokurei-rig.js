@@ -91,16 +91,21 @@ function svgChokurei(){
     return `<svg class="ck-svg" viewBox="0 0 120 124" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <ellipse class="ck-sombra" cx="60" cy="114" rx="27" ry="4.5"/>
     <g class="ck-cuerpo-g">
+        <g class="ck-ropa ck-ropa-capa"><path d="M41 76 Q 30 96 24 114 L 96 114 Q 90 96 79 76 Z" fill="#8e6cf0" stroke="#5f43b8" stroke-width="1"/><path d="M41 76 Q 60 84 79 76" fill="none" stroke="#ffd34d" stroke-width="2.5"/></g>
         <g class="ck-cola"><path class="ck-cola-trazo" d="M80 102 C 100 100, 104 82, 98 66"/><path class="ck-cola-punta" d="M99.5 71 C 100.5 68, 99.5 65, 98 63"/></g>
         <ellipse class="ck-pelo ck-cuerpo" cx="60" cy="93" rx="24" ry="20"/>
         <ellipse class="ck-panza" cx="60" cy="98" rx="13.5" ry="13"/>
         <g class="ck-pata ck-pata-i"><ellipse class="ck-puntas" cx="50" cy="110" rx="7.5" ry="5"/><path class="ck-dedos" d="M47.5 109 v3 M51 109.3 v3"/></g>
         <g class="ck-pata ck-pata-d"><ellipse class="ck-puntas" cx="70" cy="110" rx="7.5" ry="5"/><path class="ck-dedos" d="M69 109.3 v3 M72.5 109 v3"/></g>
+        <g class="ck-ropa ck-ropa-calabaza"><ellipse cx="60" cy="95" rx="26.5" ry="20.5" fill="#ff9a3c" stroke="#d96d14" stroke-width="1.2"/><path d="M48 77 Q 44 95 48 114 M60 75 V 115 M72 77 Q 76 95 72 114" fill="none" stroke="#d96d14" stroke-width="1"/><path d="M52 92 l3 -4 l3 4 Z M62 92 l3 -4 l3 4 Z M53 100 q7 5 14 0" fill="#5a2a00"/></g>
+        <g class="ck-ropa ck-ropa-bufanda"><path d="M37 74 Q 60 87 83 74 L 83 81 Q 60 94 37 81 Z" fill="#ff6b81" stroke="#d94a63" stroke-width="0.9"/><path d="M45 79 L 45 85 M53 81 L 53 88 M61 82 L 61 89 M69 81 L 69 87 M77 79 L 77 84" stroke="#fff" stroke-width="1.6" opacity="0.8"/><path d="M71 83 L 79 101 L 71 102 L 66 85 Z" fill="#ff6b81" stroke="#d94a63" stroke-width="0.9"/></g>
         <g class="ck-cabeza">
             <g class="ck-oreja ck-oreja-i"><path class="ck-puntas" d="M33 50 L 37 18 L 58 37 Z"/><path class="ck-oreja-int" d="M38.5 45 L 40.5 26 L 52 37.5 Z"/></g>
             <g class="ck-oreja ck-oreja-d"><path class="ck-puntas" d="M87 50 L 83 18 L 62 37 Z"/><path class="ck-oreja-int" d="M81.5 45 L 79.5 26 L 68 37.5 Z"/></g>
             <ellipse class="ck-pelo ck-cara" cx="60" cy="56" rx="31" ry="26"/>
+            <g class="ck-rasgos">
             <ellipse class="ck-mascara" cx="60" cy="63" rx="15" ry="11"/>
+            <g class="ck-cejas"><path d="M39 43 L 53 47"/><path d="M81 43 L 67 47"/></g>
             <g class="ck-ojo ck-ojo-i" transform="translate(47 54)">
                 <g class="ck-ojo-abierto"><ellipse class="ck-iris" rx="6" ry="7.2"/><ellipse class="ck-pupila" rx="3" ry="5.4"/><circle class="ck-brillo" cx="-1.8" cy="-2.8" r="1.9"/><circle class="ck-brillo" cx="1.6" cy="1.8" r="0.9"/><path class="ck-parpado-triste" d="M-7 -5 L 7 -8 L 7 -10 L -7 -10 Z"/></g>
                 <path class="ck-ojo-feliz" d="M-5.5 1.5 Q 0 -5 5.5 1.5"/>
@@ -119,12 +124,17 @@ function svgChokurei(){
             <path class="ck-boca ck-boca-normal" d="M54.5 64.2 Q 57.2 67.5 60 64.2 Q 62.8 67.5 65.5 64.2"/>
             <path class="ck-boca ck-boca-triste" d="M55 67.5 Q 60 63.5 65 67.5"/>
             <g class="ck-boca ck-boca-abierta"><path d="M55 64 Q 60 75 65 64 Z" class="ck-boca-int"/><path d="M57 68.5 Q 60 71.5 63 68.5" class="ck-lengua"/></g>
+            <ellipse class="ck-boca ck-boca-o" cx="60" cy="66.5" rx="2.4" ry="3"/>
             <g class="ck-bigotes"><path d="M44 62 L 28 59 M44 65 L 28 66 M76 62 L 92 59 M76 65 L 92 66"/></g>
             <g class="ck-termometro"><rect x="63" y="64" width="16" height="3" rx="1.5" fill="#fff" stroke="#c9c9c9" stroke-width="0.6"/><circle cx="78.5" cy="65.5" r="2.2" fill="#ff5c6c"/></g>
             <!-- Accesorios: se ven según el nivel (ver mascota.js) -->
             <g class="ck-acc ck-acc-mono"><path d="M78 30 l-7 -5 v10 z M78 30 l7 -5 v10 z" fill="#ff7aa2" stroke="#d94f7c" stroke-width="0.8"/><circle cx="78" cy="30" r="2.2" fill="#ff9dbb"/></g>
             <g class="ck-acc ck-acc-corona"><path d="M48 29 L 50 18 L 55 24 L 60 15 L 65 24 L 70 18 L 72 29 Z" fill="#ffd34d" stroke="#d1a21c" stroke-width="0.9"/><circle cx="60" cy="22" r="1.6" fill="#ff6f91"/></g>
+            </g>
             <g class="ck-acc ck-acc-anteojos"><circle cx="47" cy="54" r="8" fill="rgba(30,30,40,0.55)" stroke="#222" stroke-width="1.4"/><circle cx="73" cy="54" r="8" fill="rgba(30,30,40,0.55)" stroke="#222" stroke-width="1.4"/><path d="M55 54 h10" stroke="#222" stroke-width="1.4"/></g>
+            <g class="ck-ropa ck-ropa-gorrolana"><path d="M33 38 Q 60 2 87 38 Z" fill="#7ec8ff" stroke="#4aa6dd" stroke-width="1"/><path d="M33 38 Q 60 30 87 38 L 87 44 Q 60 36 33 44 Z" fill="#ffd34d" stroke="#d1a21c" stroke-width="0.8"/><circle cx="60" cy="9" r="5" fill="#fff" stroke="#ddd" stroke-width="0.6"/></g>
+            <g class="ck-ropa ck-ropa-navidad"><path d="M36 36 Q 52 2 86 12 Q 70 20 82 36 Z" fill="#e8384f" stroke="#b5243a" stroke-width="1"/><path d="M33 36 Q 60 28 86 36 L 86 42 Q 60 34 33 42 Z" fill="#fff"/><circle cx="88" cy="13" r="4.5" fill="#fff"/></g>
+            <g class="ck-ropa ck-ropa-hoja"><path d="M58 32 q2 -8 7 -10 q-1 7 -7 10 Z" fill="#5fbf6b"/><path d="M58 33 v-5" stroke="#5a3a1a" stroke-width="2"/></g>
             <g class="ck-acc ck-acc-gorro"><path d="M44 31 L 56 4 L 66 33 Z" fill="#8fd3ff" stroke="#4aa6dd" stroke-width="0.9"/><path d="M48 23 L 61 19 M51 15 L 59 12" stroke="#ff7aa2" stroke-width="2"/><circle cx="56" cy="4" r="3" fill="#ffd34d"/></g>
         </g>
         <g class="ck-mugre"><circle cx="46" cy="88" r="3"/><circle cx="73" cy="95" r="2.4"/><circle cx="64" cy="82" r="1.8"/><circle cx="52" cy="104" r="2"/></g>
@@ -262,6 +272,20 @@ function crearChokurei(contenedor){
             actor.dataset.etapa = etapa || 'bebe';
             ['mono', 'corona', 'anteojos', 'gorro'].forEach(a => svg.classList.toggle('con-' + a, !!(accesorios || []).includes(a)));
         },
+        // Ropa puesta (una a la vez): 'bufanda', 'gorrolana', 'capa', 'calabaza', 'navidad' o null.
+        vestir(ropaId){
+            ['bufanda', 'gorrolana', 'capa', 'calabaza', 'navidad'].forEach(r => svg.classList.toggle('ropa-' + r, r === ropaId));
+            svg.classList.toggle('ropa-hoja', ropaId === 'calabaza');
+        },
+        // Cara pasajera: 'sorprendido', 'enojado' o 'guino'.
+        expresion(id, ms){
+            ['sorprendido', 'enojado', 'guino'].forEach(c => svg.classList.remove(c));
+            if (id === 'enojado') clases(['orejas-bajas'], ['ojos-felices', 'ojos-cerrados']);
+            svg.classList.add(id);
+            despues(ms || 1600, () => { svg.classList.remove(id); if (id === 'enojado') clases([], ['orejas-bajas']); });
+        },
+        // Lo que sueña mientras duerme (burbujita cada tanto).
+        suenos: ['🐟', '💕', '🦋', '🧶', '👫', '🌙', '🍣'],
         // Estado de fondo según el ánimo (no es una acción de una vez).
         animo(id, opts){
             const o = opts || {};
@@ -374,6 +398,68 @@ function crearChokurei(contenedor){
                 cara([]);
             });
         },
+        // ---------- Momentos raros ----------
+        perseguirCola(){
+            return accion(async () => {
+                cara(['ojos-felices']);
+                svg.classList.add('caminando', 'corriendo');
+                await anim(volteo, [{ transform: 'rotate(0)' }, { transform: 'rotate(360deg)' }], { duration: 650, iterations: 3, easing: 'linear' }).finished;
+                svg.classList.remove('caminando', 'corriendo');
+                ck.expresion('sorprendido', 900);
+                decir('¿Eh? ¿De quién es esta cola?', 1800);
+                cara([]);
+            });
+        },
+        mirarLaNada(){
+            return accion(async () => {
+                mirarAlFrente();
+                ck.expresion('sorprendido', 2600);
+                qa('.ck-pupila').forEach(p => { p.style.transform = 'translate(1.5px,-2px) scale(0.7)'; });
+                await esperar(2500);
+                mirarAlFrente();
+                decir('…👀', 1200);
+            });
+        },
+        biscochitos(){
+            return accion(async () => {
+                cara(['ojos-felices']);
+                sonidosChokurei.ronroneo(2.2);
+                const pi = q('.ck-pata-i'), pd = q('.ck-pata-d');
+                for (let i = 0; i < 4; i++) {
+                    await anim(i % 2 ? pd : pi, [{ transform: 'translateY(0)' }, { transform: 'translateY(-5px)' }, { transform: 'translateY(0)' }], { duration: 380 }).finished;
+                }
+                particula('💜', { dur: 1200 });
+                cara([]);
+            });
+        },
+        zoomies(){
+            return accion(async () => {
+                ck.expresion('sorprendido', 3500);
+                decir('¡ZOOM! 💨', 1500);
+                for (const destino of [84, 16, 80, 50]) await caminarA(destino, true);
+                cara(['ojos-felices']); await esperar(400); cara([]);
+            });
+        },
+        // Manotazo hacia un costado (para tirar la planta, jugar con la pelota).
+        manotazo(){
+            return accion(async () => {
+                ck.expresion('guino', 900);
+                await anim(q('.ck-pata-d'), [{ transform: 'translate(0,0)' }, { transform: 'translate(10px,-16px)', offset: 0.4 }, { transform: 'translate(18px,-6px)', offset: 0.6 }, { transform: 'translate(0,0)' }], { duration: 520 }).finished;
+            });
+        },
+        rascar(){
+            return accion(async () => {
+                cara(['ojos-felices']);
+                const pi = q('.ck-pata-i'), pd = q('.ck-pata-d');
+                for (let i = 0; i < 6; i++) await anim(i % 2 ? pd : pi, [{ transform: 'translateY(0)' }, { transform: 'translateY(-30px)' }, { transform: 'translateY(-14px)' }], { duration: 230 }).finished;
+                particula('✨', { dx: 20, dur: 900 });
+                cara([]);
+            });
+        },
+        // Se mete en algo (caja/cama): se agacha hasta que sólo asoma la cabeza.
+        meterse(adentro){
+            svg.classList.toggle('adentro', !!adentro);
+        },
         tiritar(){
             return accion(async () => {
                 await anim(volteo, [{ transform: 'translateX(0)' }, { transform: 'translateX(-2px)' }, { transform: 'translateX(2px)' }, { transform: 'translateX(0)' }], { duration: 160, iterations: 8 }).finished;
@@ -416,7 +502,14 @@ function crearChokurei(contenedor){
                 clases(['ojos-cerrados', 'dormido'], CARAS.filter(c => c !== 'ojos-cerrados'));
                 svg.classList.add('dormido');
             });
-            (function zzz(){ despues(1300, () => { if (!dormido) return; particula('z', { dx: 25, dy: -50, dur: 1800, tam: 0.9 + Math.random() * 0.4 }); zzz(); }); })();
+            let n = 0;
+            (function zzz(){ despues(1300, () => {
+                if (!dormido) return;
+                n++;
+                if (n % 5 === 0) particula('💭' + ck.suenos[Math.floor(Math.random() * ck.suenos.length)], { dx: -10, dy: -60, dur: 2600, tam: 1.3 });
+                else particula('z', { dx: 25, dy: -50, dur: 1800, tam: 0.9 + Math.random() * 0.4 });
+                zzz();
+            }); })();
         },
         async despertar(){
             if (!dormido) return;

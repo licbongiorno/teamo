@@ -108,6 +108,15 @@ function haceCuanto(ms){
     return `hace ${dias} día${dias === 1 ? '' : 's'}`;
 }
 
+// Semana ISO ("2026-W44"), para el desafío semanal.
+function _semanaMascota(fecha){
+    const d = new Date(Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()));
+    const dia = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dia);
+    const inicio = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return `${d.getUTCFullYear()}-W${String(Math.ceil(((d - inicio) / 86400000 + 1) / 7)).padStart(2, '0')}`;
+}
+
 function fechaISO(d){ return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
 
 function etapaDeNivel(nivel){
@@ -222,14 +231,20 @@ function _armarEscenaMascota(){
         </div>
         <div class="ck-acciones">
             <button class="ck-boton" onclick="darComidaMascota('pescado')"><b>🐟</b>Comer</button>
-            <button class="ck-boton" onclick="empezarLaserMascota()"><b>🔴</b>Láser</button>
+            <button class="ck-boton" onclick="abrirPanelChokurei('juegos')"><b>🎮</b>Jugar</button>
             <button class="ck-boton" onclick="mimarMascota()"><b>🖐️</b>Mimos</button>
             <button class="ck-boton" onclick="empezarBanioMascota()"><b>🧼</b>Baño</button>
             <button class="ck-boton" id="ck-boton-dormir" onclick="alternarSuenoMascota()"><b>💤</b>Dormir</button>
             <button class="ck-boton" id="ck-boton-medicina" onclick="darMedicinaMascota()" style="display:none;"><b>💊</b>Medicina</button>
+            <button class="ck-boton" onclick="abrirPanelChokurei('tienda')"><b>🛍️</b>Tienda</button>
+            <button class="ck-boton" onclick="sacarFotoChokurei()"><b>📸</b>Foto</button>
+            <button class="ck-boton" onclick="abrirPanelChokurei('album')"><b>📒</b>Álbum</button>
+            <button class="ck-boton" onclick="abrirPanelChokurei('ficha')"><b>📜</b>Ficha</button>
             <button class="ck-boton" id="ck-boton-pelaje" onclick="alternarPelajesMascota()"><b>🎨</b>Pelaje</button>
+            <button class="ck-boton" onclick="escribirDeParteDeChokurei()"><b>📲</b>Que le escriba</button>
         </div>
         <div id="ck-pelajes"></div>
+        <div id="ck-panel-extra"></div>
         <div class="panel">
             <div style="display:flex; align-items:center; gap:10px;">
                 <div style="flex:1; font-size:0.85rem;">🎉 Hacerle una fiesta<div class="texto-tenue">Llena todo al 100% por 2 horas · tenés <b id="ck-puntos">0</b> ⭐</div></div>
@@ -240,6 +255,7 @@ function _armarEscenaMascota(){
             <div style="display:flex; justify-content:space-between; font-size:0.85rem;"><b>📋 Rutina de hoy</b><span id="ck-racha-texto"></span></div>
             <div class="ck-rutina" id="ck-rutina"></div>
             <div class="texto-tenue" style="margin-top:6px; font-size:0.72rem;">Hagan las 4 entre los dos y suman racha + 5 puntos cada uno.</div>
+            <div style="margin-top:8px; font-size:0.8rem;" id="ck-desafio"></div>
         </div>
         <div class="panel historial-kaizen" id="ck-historial"></div>`;
 
@@ -249,7 +265,53 @@ function _armarEscenaMascota(){
     _prepararInteraccionesMascota(hab);
     _cicloVidaMascota();
     _actualizarPuntosMascota();
+    Chokurei.emitir('armar', { hab, cont });
 }
+
+// ==================== MÓDULOS ====================
+// La tienda, los mini-juegos y "el mundo" (clima, fechas, álbum,
+// personalidad) viven en archivos aparte (chokurei-*.js) y se enganchan
+// acá con eventos: 'armar', 'actualizar', 'comer', 'acariciando',
+// 'tocar', 'cuidado'. Un módulo puede además proponer qué hace
+// Chokurei solo (comportamientos) y abrir su panel debajo de los botones.
+const Chokurei = window.Chokurei = {
+    get ck(){ return _ck; },
+    get estado(){ return _estadoMascota; },
+    get d(){ return _derivadoMascota; },
+    get modo(){ return _modoMascota; },
+    set modo(m){ _modoMascota = m; },
+    hab: () => document.getElementById('ck-habitacion'),
+    ref: refMascota,
+    aplicarCuidado: (...a) => _aplicarCuidadoMascota(...a),
+    gastarPuntos: (c) => _gastarPuntosMascota(c),
+    fechaISO,
+    paneles: {},          // id -> función que devuelve el HTML del panel
+    comportamientos: [],  // funciones (d) => true si Chokurei hizo algo
+    _oyentes: {},
+    on(ev, fn){ (this._oyentes[ev] = this._oyentes[ev] || []).push(fn); },
+    emitir(ev, datos){ (this._oyentes[ev] || []).forEach(fn => { try { fn(datos); } catch (e) { console.warn('Chokurei ' + ev + ':', e); } }); },
+};
+// Los módulos se cargan en paralelo con este archivo y pueden ejecutarse
+// antes: se anotan en CHOKUREI_MODULOS y se enganchan acá.
+(window.CHOKUREI_MODULOS || []).forEach(m => m(Chokurei));
+window.CHOKUREI_MODULOS = { push: (m) => m(Chokurei) };
+let _panelChokurei = null;
+function abrirPanelChokurei(id){
+    vibrarJ(8);
+    const cont = document.getElementById('ck-panel-extra');
+    if (!cont) return;
+    if (_panelChokurei === id) { _panelChokurei = null; cont.innerHTML = ''; return; }
+    _panelChokurei = id;
+    refrescarPanelChokurei();
+    cont.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function refrescarPanelChokurei(){
+    const cont = document.getElementById('ck-panel-extra');
+    if (!cont || !_panelChokurei || !Chokurei.paneles[_panelChokurei]) return;
+    cont.innerHTML = `<div class="panel ck-panel">${Chokurei.paneles[_panelChokurei]()}</div>`;
+}
+window.abrirPanelChokurei = abrirPanelChokurei;
+window.refrescarPanelChokurei = refrescarPanelChokurei;
 
 function _desarmarEscenaMascota(){
     clearTimeout(window._timerVidaMascota);
@@ -280,6 +342,9 @@ function _actualizarEscenaMascota(d, estado){
     // Rutina del día
     set('ck-rutina', RUTINA_CHOKUREI.map(r => `<span class="${d.rutinaHoy.hechos?.[r.id] ? 'hecho' : ''}">${d.rutinaHoy.hechos?.[r.id] ? '✅' : r.emoji} ${r.nombre}</span>`).join(''));
     set('ck-racha-texto', d.racha.n ? `🔥 racha de ${d.racha.n} día${d.racha.n === 1 ? '' : 's'}` : '');
+    const des = estado.desafioSemana && estado.desafioSemana.semana === _semanaMascota(new Date()) ? estado.desafioSemana : { dias: 0 };
+    set('ck-desafio', des.premiado ? '🏅 Desafío semanal cumplido. ¡Son los mejores cuidadores!'
+        : `🏅 Desafío semanal: ${'🟣'.repeat(Math.min(5, des.dias || 0))}${'⚪'.repeat(5 - Math.min(5, des.dias || 0))} · 5 días de rutina completa = +30 ⭐ cada uno`);
     // Cumpleaños / regalo
     let banner = '';
     if (d.esCumple && !d.yaFestejadoHoy) {
@@ -298,6 +363,8 @@ function _actualizarEscenaMascota(d, estado){
     set('ck-historial', historial.length ? historial.map(h => `${nombreJugador(h.autor)} ${h.detalle} ${haceCuanto(h.timestamp)}`).join('<br>') : 'Todavía nadie cuidó a Chokurei hoy.');
     const dormir = document.getElementById('ck-boton-dormir');
     if (dormir) dormir.innerHTML = _ck.dormido ? '<b>☀️</b>Despertar' : '<b>💤</b>Dormir';
+    Chokurei.emitir('actualizar', { d, estado });
+    refrescarPanelChokurei();
 }
 
 function _actualizarPuntosMascota(){
@@ -350,6 +417,11 @@ function _cicloVidaMascota(){
 function _comportamientoMascota(d){
     const ck = _ck;
     const r = Math.random();
+    // A veces, algo de los módulos (jugar con un juguete, meterse en la caja…).
+    if (d.mood.id !== 'enferma' && Math.random() < 0.35) {
+        const opciones = Chokurei.comportamientos.slice().sort(() => Math.random() - 0.5);
+        for (const f of opciones) { try { if (f(d)) return; } catch (e) {} }
+    }
     if (d.mood.id === 'enferma') { if (r < 0.5) ck.tiritar(); else ck.decir('No me siento bien… 🤒', 2200); return; }
     if (d.mood.id === 'fiesta' && r < 0.5) { ck.bailar(); return; }
     // Necesidades: avisa lo que le falta.
@@ -358,6 +430,10 @@ function _comportamientoMascota(d){
     if (d.carino < 35 && r < 0.4) { ck.decir(['Te extrañé… 🥺', '¿Mimos? 🖐️', 'Prrr…?'][Math.floor(Math.random() * 3)], 2200); return; }
     if (d.diversion < 35 && r < 0.4) { ck.decir('¡Estoy aburrido! 🔴', 2000); return; }
     if (d.mood.id === 'triste' || d.mood.id === 'deprimido') { if (r < 0.5) ck.caminarA(20 + Math.random() * 20); return; }
+    // Con la diversión a full le agarran los "zoomies".
+    if (d.diversion >= 95 && r < 0.12) { ck.zoomies(); return; }
+    // Momentos raros de gato, de vez en cuando.
+    if (r > 0.94) { [() => ck.perseguirCola(), () => ck.mirarLaNada(), () => ck.biscochitos(), () => _tirarPlantaMascota()][Math.floor(Math.random() * 4)](); return; }
     // Contento: un poco de todo.
     if (r < 0.32) ck.caminarA(15 + Math.random() * 70);
     else if (r < 0.46) ck.lavarse();
@@ -366,6 +442,20 @@ function _comportamientoMascota(d){
     else if (r < 0.74) _mariposaMascota();
     else if (r < 0.82) ck.maullar();
     else if (d.mood.id === 'feliz' && r < 0.92) ck.alegrarse();
+}
+
+// Va hasta la planta, le da un manotazo, la planta se cae… y se hace el distraído.
+async function _tirarPlantaMascota(){
+    const planta = document.querySelector('#ck-habitacion .ck-planta');
+    if (!planta || !_ck) return;
+    await _ck.caminarA(86);
+    _ck.mirarA('derecha');
+    await _ck.manotazo();
+    planta.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(80deg) translate(10px, 50px)' }], { duration: 500, easing: 'ease-in', fill: 'forwards' });
+    sonidosChokurei.salto();
+    _ck.expresion('sorprendido', 1200);
+    _ck.decir('…yo no fui 😼', 2200);
+    setTimeout(() => { planta.getAnimations().forEach(a => a.cancel()); }, 6000);
 }
 
 // Una mariposa cruza la habitación y Chokurei la persigue.
@@ -405,6 +495,7 @@ function _prepararInteraccionesMascota(hab){
         const dd = Math.hypot(e.clientX - ultimo.x, e.clientY - ultimo.y);
         ultimo = { x: e.clientX, y: e.clientY };
         recorrido += dd; corazonCada += dd;
+        Chokurei.emitir('acariciando');
         if (recorrido > 60 && !ronroneando && !_ck.dormido) { ronroneando = true; _ck.ronronear(2.2).then(() => { ronroneando = false; }); }
         if (corazonCada > 45) {
             corazonCada = 0;
@@ -427,8 +518,9 @@ function _prepararInteraccionesMascota(hab){
             ultimaTocada = ahora;
             vibrarJ(8);
             if (_ck.dormido) { _despiertoHastaMascota = Date.now() + 10 * 60000; _ck.despertar().then(() => _ck.maullar('😾 ¡Estaba durmiendo!')); _actualizarEscenaMascota(_derivadoMascota, _estadoMascota); }
-            else if (tocadasSeguidas >= 7) { tocadasSeguidas = 0; _ck.animo('triste'); _ck.maullar('¡Basta! 😾'); setTimeout(() => _ck && _ck.animo(_derivadoMascota.mood.id, { higiene: _derivadoMascota.higiene }), 2500); }
-            else { const r = Math.random(); if (r < 0.4) _ck.maullar(); else if (r < 0.7) _ck.alegrarse(); else _ck.saltar(); }
+            else if (tocadasSeguidas >= 7) { tocadasSeguidas = 0; _ck.expresion('enojado', 2500); _ck.maullar('¡Basta! 😾'); setTimeout(() => _ck && _ck.animo(_derivadoMascota.mood.id, { higiene: _derivadoMascota.higiene }), 2500); }
+            else { const r = Math.random(); if (r < 0.35) _ck.maullar(); else if (r < 0.6) _ck.alegrarse(); else if (r < 0.75) { _ck.expresion('guino', 1200); _ck.decir('😉', 1200); } else _ck.saltar(); }
+            Chokurei.emitir('tocar');
         }
     };
     actor.addEventListener('pointerup', soltar);
@@ -489,6 +581,7 @@ function empezarLaserMascota(){
         const r = hab.getBoundingClientRect();
         objetivo = { x: Math.max(4, Math.min(96, (ev.clientX - r.left) / r.width * 100)), y: Math.max(8, Math.min(96, (ev.clientY - r.top) / r.height * 100)) };
         punto.style.left = objetivo.x + '%'; punto.style.top = objetivo.y + '%';
+        Chokurei.emitir('laser', objetivo); // el otro ve mi puntito (chokurei-juegos.js)
     };
     capa.onpointerdown = (ev) => { tocando = true; mover(ev); };
     capa.onpointermove = mover;
@@ -499,10 +592,17 @@ function empezarLaserMascota(){
         objetivo = { x: 12 + Math.random() * 76, y: 62 + Math.random() * 30 };
         punto.style.left = objetivo.x + '%'; punto.style.top = objetivo.y + '%';
     }, 1300);
-    const parar = _ck.seguir(() => objetivo.x);
+    // De a dos: corre hacia el puntito (mío o del otro) que tenga más cerca.
+    const masCerca = () => {
+        const otro = Chokurei.laserDelOtro ? Chokurei.laserDelOtro() : null;
+        if (!otro || !_ck) return objetivo;
+        return Math.abs(otro.x - _ck.x) < Math.abs(objetivo.x - _ck.x) ? otro : objetivo;
+    };
+    const parar = _ck.seguir(() => masCerca().x);
     const chequeo = setInterval(() => {
         if (!_ck) return;
-        if (Math.abs(_ck.x - objetivo.x) < 5 && objetivo.y > 55 && Date.now() - ultimaAtrapada > 900) {
+        const blanco = masCerca();
+        if (Math.abs(_ck.x - blanco.x) < 5 && blanco.y > 55 && Date.now() - ultimaAtrapada > 900) {
             ultimaAtrapada = Date.now();
             atrapadas++;
             const n = document.getElementById('ck-laser-n'); if (n) n.textContent = atrapadas;
@@ -521,7 +621,8 @@ function empezarLaserMascota(){
         if (!_ck) return;
         _ck.decir(atrapadas ? `¡Lo atrapé ${atrapadas} ${atrapadas === 1 ? 'vez' : 'veces'}! 😹` : '¡Casi! 😼', 2500);
         _ck.alegrarse();
-        jugarConMascota(Math.min(60, 25 + atrapadas * 6), atrapadas);
+        // Récord, medalla, diversión y rutina: chokurei-juegos.js
+        Chokurei.emitir('juego-terminado', { juego: 'laser', puntos: atrapadas });
     }
     window._pararModoMascota = () => { clearInterval(auto); clearInterval(chequeo); clearTimeout(fin); parar(); _modoMascota = null; };
 }
@@ -531,6 +632,7 @@ function empezarBanioMascota(){
     if (_modoMascota || !_ck) return;
     vibrarJ(12);
     _modoMascota = 'banio';
+    Chokurei.emitir('banio-empieza');
     const hab = document.getElementById('ck-habitacion');
     const capa = document.getElementById('ck-capa');
     _ck.despertar();
@@ -554,9 +656,24 @@ function empezarBanioMascota(){
         if (ev.clientX < ra.left || ev.clientX > ra.right || ev.clientY < ra.top + ra.height * 0.15 || ev.clientY > ra.bottom) return;
         espumas.push(_ck.espuma(ev.clientX, ev.clientY));
         sonidosChokurei.burbuja();
+        // El otro ve esta espuma en su Chokurei (posición relativa al gato).
+        Chokurei.emitir('espuma', { x: Math.round((ev.clientX - ra.left) / ra.width * 100), y: Math.round((ev.clientY - ra.top) / ra.height * 100), n: espumas.length });
+        sumarEspuma();
+    }
+    function sumarEspuma(){
         barra.style.width = Math.min(100, espumas.length / META * 100) + '%';
         if (espumas.length === META) enjuagar();
     }
+    // Espuma que hace el otro desde su celular: también cuenta.
+    Chokurei.agregarEspumaExterna = (rx, ry) => {
+        if (!_ck || _modoMascota !== 'banio' || espumas.length >= META) return;
+        const ra = _ck.actor.getBoundingClientRect();
+        const b = _ck.espuma(ra.left + ra.width * rx / 100, ra.top + ra.height * ry / 100);
+        b.classList.add('del-otro');
+        espumas.push(b);
+        sonidosChokurei.burbuja();
+        sumarEspuma();
+    };
     async function enjuagar(){
         capa.onpointerdown = capa.onpointermove = capa.onpointerup = null;
         capa.querySelector('.ck-modo-texto').textContent = '🚿 ¡A enjuagar!';
@@ -572,6 +689,7 @@ function empezarBanioMascota(){
         capa.classList.remove('activa'); capa.innerHTML = '';
         window._pararModoMascota = null;
         _modoMascota = null;
+        Chokurei.agregarEspumaExterna = null;
         banarMascota();
         if (!_ck) return;
         await _ck.sacudirse();
@@ -622,9 +740,9 @@ async function _aplicarCuidadoMascota(efectos, detalle, xpGanada, rutinaId){
     // pisaba la del otro.
     const ref = refMascota();
     const hoy = fechaISO(new Date());
-    let completoRutina = false, subioNivel = null;
+    let completoRutina = false, subioNivel = null, ganoDesafio = false;
     await window.runTransaction(window.db, async (tx) => {
-        completoRutina = false; subioNivel = null;
+        completoRutina = false; subioNivel = null; ganoDesafio = false;
         const snap = await tx.get(ref);
         const estado = snap.exists() ? snap.data() : {};
         const ahora = ahoraSync();
@@ -652,9 +770,17 @@ async function _aplicarCuidadoMascota(efectos, detalle, xpGanada, rutinaId){
                 actualizaciones.rachaDias = { n, ultima: hoy, mejor: Math.max(n, previa.mejor || 0) };
                 xp += 20;
                 historial.push({ detalle: `completó la rutina del día con Chokurei 📋 (racha de ${n})`, autor: miIdentidad, timestamp: ahora + 1 });
+                // Desafío semanal: 5 días de rutina completa en la misma semana.
+                const semana = _semanaMascota(new Date());
+                const des = estado.desafioSemana && estado.desafioSemana.semana === semana ? { ...estado.desafioSemana } : { semana, dias: 0, premiado: false };
+                des.dias = (des.dias || 0) + 1;
+                if (des.dias >= 5 && !des.premiado) { des.premiado = true; ganoDesafio = true; historial.push({ detalle: '¡ganó el desafío semanal de Chokurei! 🏅', autor: miIdentidad, timestamp: ahora + 3 }); }
+                actualizaciones.desafioSemana = des;
             }
             actualizaciones.rutina = rutina;
         }
+        // Memoria: cuántas veces lo cuidó cada uno (para saber quién es "su humano favorito").
+        actualizaciones.cuidados = { ...(estado.cuidados || {}), [miIdentidad]: ((estado.cuidados || {})[miIdentidad] || 0) + 1 };
         actualizaciones.xp = (estado.xp || 0) + xp;
         const nivelAntes = Math.floor((estado.xp || 0) / 50) + 1, nivelDespues = Math.floor(actualizaciones.xp / 50) + 1;
         if (nivelDespues > nivelAntes) {
@@ -670,6 +796,10 @@ async function _aplicarCuidadoMascota(efectos, detalle, xpGanada, rutinaId){
         if (window.sfx) window.sfx.logro();
         if (window.fx) window.fx.confeti();
         if (typeof registrarEvento === 'function') registrarEvento('cuidado_compartido', subioNivel);
+    }
+    if (ganoDesafio) {
+        if (window.sumarPuntos) { window.sumarPuntos('nico', 30); window.sumarPuntos('carito', 30); }
+        if (typeof mostrarCartelEnVivo === 'function') setTimeout(() => mostrarCartelEnVivo({ titulo: '🏅 ¡Desafío semanal cumplido!', sub: '5 días de rutina completa: +30 puntos para cada uno', duracion: 5000 }), 4200);
     }
     if (completoRutina) {
         if (window.sumarPuntos) { window.sumarPuntos('nico', 5); window.sumarPuntos('carito', 5); }
@@ -694,7 +824,7 @@ async function darComidaMascota(comidaId){
     }
     if (window.sfx) window.sfx.moneda();
     _llenarPlato(item.emoji);
-    if (_ck) _ck.comer(item.emoji).then(_vaciarPlato);
+    if (_ck) _ck.comer(item.emoji).then(() => { _vaciarPlato(); Chokurei.emitir('comer', item); });
     await _aplicarCuidadoMascota(item.efectos, `le dio ${item.nombre.toLowerCase()} a Chokurei`, 5, 'comer');
 }
 

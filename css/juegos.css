@@ -681,3 +681,91 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
     background:rgba(255,255,255,0.08); border:1px solid var(--borde); color:var(--texto); touch-action:none; }
 .ck-comida small{ font-size:0.6rem; opacity:0.75; }
 .ck-comida:active{ cursor:grabbing; transform:scale(0.94); }
+/* Chokurei: expresiones, ropa, giro al caminar */
+.ck-cejas path{ stroke:#1b1720; stroke-width:2; stroke-linecap:round; display:none; }
+.enojado .ck-cejas path{ display:inline; }
+.enojado .ck-cachete{ fill:#ff4f6d; opacity:0.75; transform-box:fill-box; transform-origin:center; transform:scale(1.35); }
+.enojado .ck-boca-normal{ display:none; }
+.enojado .ck-boca-triste{ display:inline; }
+.ck-boca-o{ display:none; fill:#8a3448; }
+.sorprendido .ck-boca-o{ display:inline; }
+.sorprendido .ck-boca-normal, .sorprendido .ck-boca-triste{ display:none; }
+.sorprendido .ck-iris{ transform-box:fill-box; transform-origin:center; transform:scale(1.18); }
+.sorprendido .ck-pupila{ transform:scale(0.55); }
+.guino .ck-ojo-d .ck-ojo-abierto{ display:none; }
+.guino .ck-ojo-d .ck-ojo-feliz{ display:inline; }
+.ck-ropa{ display:none; }
+.ropa-bufanda .ck-ropa-bufanda, .ropa-gorrolana .ck-ropa-gorrolana, .ropa-capa .ck-ropa-capa,
+.ropa-calabaza .ck-ropa-calabaza, .ropa-hoja .ck-ropa-hoja, .ropa-navidad .ck-ropa-navidad{ display:inline; }
+.ropa-gorrolana .ck-acc-corona, .ropa-navidad .ck-acc-corona, .ropa-gorrolana .ck-acc-mono, .ropa-navidad .ck-acc-mono,
+.ropa-gorrolana .ck-acc-gorro, .ropa-navidad .ck-acc-gorro{ display:none; }
+.ck-rasgos{ transition:transform 0.25s; }
+.caminando .ck-rasgos{ transform:translateX(6px); }
+.caminando .ck-cabeza{ transform:rotate(4deg); }
+.caminando .ck-oreja-i{ transform:scale(0.82); }
+.adentro .ck-cuerpo, .adentro .ck-panza, .adentro .ck-pata, .adentro .ck-cola, .adentro .ck-sombra, .adentro .ck-ropa-capa, .adentro .ck-ropa-calabaza{ display:none; }
+.adentro .ck-cabeza{ transform:translateY(14px); }
+/* Chokurei: tienda, muebles, juguetes, paneles */
+.ck-panel{ animation:aparecer 0.25s ease; }
+.ck-pestanas{ display:flex; gap:6px; margin-bottom:10px; overflow-x:auto; }
+.ck-pestanas button{ flex:1; white-space:nowrap; padding:7px 10px; border-radius:12px; border:1px solid var(--borde); background:transparent; color:var(--texto); font-family:var(--fuente-texto); font-size:0.78rem; cursor:pointer; }
+.ck-pestanas button.activa{ background:rgba(201,182,255,0.22); border-color:var(--lila); }
+.ck-tienda-grilla{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.ck-item{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 8px; border-radius:14px; background:rgba(255,255,255,0.05); border:1px solid var(--borde); text-align:center; }
+.ck-item.puesto{ border-color:var(--rosa); background:rgba(255,179,198,0.12); }
+.ck-item .emoji{ font-size:1.8rem; }
+.ck-item .nombre{ font-size:0.78rem; font-weight:700; }
+.ck-item .btn-principal, .ck-item .btn-secundario{ padding:7px 8px; font-size:0.78rem; }
+.ck-cama[data-estilo="cama-nube"]{ background:radial-gradient(ellipse at 50% 35%,#ffffff 0 45%,#8fd3ff 46% 100%); box-shadow:0 4px 0 #5fb0e0; }
+.ck-cama[data-estilo="cama-corazon"]{ background:radial-gradient(ellipse at 50% 35%,#ffe1ea 0 45%,#ff7aa2 46% 100%); box-shadow:0 4px 0 #d94f7c; border-radius:50% 50% 45% 45% / 70% 70% 40% 40%; }
+.ck-alfombra[data-estilo="alfombra-arcoiris"]{ background:radial-gradient(ellipse at center,#ff9a9a 0 20%,#ffd166 21% 38%,#a8edea 39% 56%,#8fd3ff 57% 74%,#c9b6ff 75% 100%); }
+.ck-alfombra[data-estilo="alfombra-menta"]{ background:radial-gradient(ellipse at center,#c8f5e0 0 45%,#8fe3c0 46% 60%,#c8f5e0 61% 100%); }
+.ck-mueble-caja{ position:absolute; left:54%; bottom:5%; width:22%; z-index:6; pointer-events:none; }
+.ck-mueble-caja .frente{ font-size:3.4rem; line-height:1; text-align:center; }
+.ck-mueble-rascador{ position:absolute; left:39%; bottom:8%; width:5%; height:30%; z-index:4; }
+.ck-mueble-rascador .poste{ position:absolute; left:20%; right:20%; top:0; bottom:8%; border-radius:4px; background:repeating-linear-gradient(0deg,#d9b38c 0 4px,#c49a6c 4px 6px); }
+.ck-mueble-rascador .poste::before{ content:''; position:absolute; left:-60%; right:-60%; top:-8%; height:10%; border-radius:6px; background:#c9a2ff; }
+.ck-mueble-rascador .base{ position:absolute; left:-70%; right:-70%; bottom:0; height:10%; border-radius:6px; background:#c9a2ff; }
+.ck-juguete{ position:absolute; bottom:6%; font-size:1.3rem; z-index:4; transform-origin:center; pointer-events:none; }
+.ck-laser-otro{ background:#3fb6ff; box-shadow:0 0 10px 4px #3fb6ff99; z-index:9; }
+.ck-espuma.del-otro{ background:radial-gradient(circle at 35% 30%,#fff 0 25%,#ffe9f3 26% 70%,#ffc2dc 71%); }
+.ck-fila-juego{ display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:10px; margin-bottom:8px; border-radius:14px; cursor:pointer;
+    background:rgba(255,255,255,0.05); border:1px solid var(--borde); color:var(--texto); font-family:var(--fuente-texto); }
+.ck-fila-juego .emoji{ font-size:1.8rem; }
+.ck-fila-juego .info{ flex:1; display:flex; flex-direction:column; font-size:0.85rem; }
+.ck-fila-juego .info small{ opacity:0.65; font-size:0.7rem; }
+.ck-fila-juego .record{ display:flex; flex-direction:column; align-items:flex-end; font-weight:700; font-size:0.85rem; white-space:nowrap; }
+.ck-fila-juego .record small{ font-weight:400; opacity:0.6; font-size:0.65rem; }
+.ck-pez{ position:absolute; font-size:1.9rem; transform:translate(-50%,-50%); cursor:pointer; z-index:9; padding:6px; }
+.ck-varita{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.ck-varita line{ stroke:#fff; stroke-width:0.5; opacity:0.8; vector-effect:non-scaling-stroke; }
+.ck-pluma{ position:absolute; font-size:2rem; transform:translate(-50%,-50%); pointer-events:none; z-index:9; }
+.ck-escondite{ position:absolute; bottom:5%; font-size:3.4rem; transform:translateX(-50%); z-index:9; cursor:pointer; line-height:1; filter:drop-shadow(0 3px 2px #0003); }
+.ck-telon{ position:absolute; inset:0; z-index:10; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:1rem;
+    background:linear-gradient(90deg,#8e3b5a,#b8577a 50%,#8e3b5a); opacity:0; pointer-events:none; transition:opacity 0.35s; }
+.ck-telon.visible{ opacity:1; pointer-events:auto; }
+/* Chokurei: mundo (ficha, clima, fechas, fotos) */
+.ck-ficha-fila{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 2px; border-bottom:1px solid var(--borde); font-size:0.8rem; }
+.ck-ficha-fila b{ text-align:right; }
+.ck-chip-clima{ position:absolute; left:50%; bottom:5px; transform:translateX(-50%); z-index:2; font-size:0.55rem; padding:1px 6px; white-space:nowrap; }
+.ck-habitacion[data-clima="nublado"] .ck-ventana{ background:linear-gradient(#b8c4d6,#dfe6ef); }
+.ck-habitacion[data-clima="nublado"] .ck-astro{ opacity:0.35; }
+.ck-habitacion[data-clima="lluvia"] .ck-ventana, .ck-habitacion[data-clima="tormenta"] .ck-ventana{ background:linear-gradient(#6f7f99,#9fadc2); }
+.ck-habitacion[data-clima="lluvia"] .ck-astro, .ck-habitacion[data-clima="tormenta"] .ck-astro{ display:none; }
+.ck-lluvia{ position:absolute; inset:0; background:repeating-linear-gradient(105deg,transparent 0 9px,#ffffff88 9px 10px); background-size:100% 30px; animation:ckLluvia 0.5s linear infinite; }
+@keyframes ckLluvia{ from{ background-position:0 0; } to{ background-position:-8px 30px; } }
+.ck-habitacion[data-clima="tormenta"] .ck-ventana{ animation:ckRelampago 6s infinite; }
+@keyframes ckRelampago{ 0%,92%,96%,100%{ filter:none; } 94%{ filter:brightness(2.5); } }
+.ck-habitacion[data-clima="nieve"] .ck-ventana{ background:linear-gradient(#cfd8e8,#eef3fa); }
+.ck-deco{ position:absolute; z-index:4; pointer-events:none; }
+.ck-murcielago{ animation:ckVolar 6s ease-in-out infinite; }
+@keyframes ckVolar{ 0%,100%{ transform:translate(0,0); } 25%{ transform:translate(30px,-10px); } 50%{ transform:translate(60px,6px); } 75%{ transform:translate(20px,12px); } }
+.ck-guirnalda{ background:radial-gradient(circle,#ff5c6c 0 3px,transparent 4px) 0 0/22px 10px, radial-gradient(circle,#ffd34d 0 3px,transparent 4px) 11px 0/22px 10px; animation:ckTitilar 1.4s ease-in-out infinite; }
+.ck-habitacion[data-fecha="halloween"]{ background:linear-gradient(180deg,#e9d3f0 0%,#dcc3e8 58%,#cfb4dd 66%); }
+.ck-habitacion[data-fecha="halloween"][data-momento="noche"]{ background:linear-gradient(180deg,#3a2a5c 0%,#2e2249 58%,#281d40 66%); }
+.ck-flash{ position:absolute; inset:0; background:#fff; z-index:20; animation:ckFlash 0.45s ease-out forwards; pointer-events:none; }
+@keyframes ckFlash{ from{ opacity:0.95; } to{ opacity:0; } }
+.ck-album{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.ck-album img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; cursor:pointer; border:2px solid #fff3; }
+.ck-visor{ position:fixed; inset:0; z-index:18000; background:#0b0812ee; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; }
+.ck-visor img{ max-width:min(92vw,520px); max-height:65vh; border-radius:14px; box-shadow:0 10px 40px #000a; }

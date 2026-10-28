@@ -102,18 +102,19 @@ function renderAhorcado(estado){
     // sin depender de que cada pantalla la recalcule por su cuenta.
     const fase = estado.fase;
 
+    // Cada letra en su propia cajita, así se puede animar cuando aparece.
     const visual = palabra.split("").map(ch => {
-        if (ch === " ") return "&nbsp;&nbsp;";
+        if (ch === " ") return '<span class="aj-espacio"></span>';
         const norm = normalizarLetra(ch);
         const mostrar = fase !== 'jugando' || letrasIntentadas.includes(norm);
-        return mostrar ? ch.toUpperCase() : "_";
-    }).join(" ");
+        return `<span class="aj-letra${mostrar ? '' : ' aj-oculta'}">${mostrar ? ch.toUpperCase() : '_'}</span>`;
+    }).join("");
 
     let html = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">Nico ${puntajes.nico || 0} — Carito ${puntajes.carito || 0}</div>
     <div class="panel texto-centro">
         <div class="texto-tenue" style="margin-bottom:8px;">${soyProponente ? '👀 Vos elegiste la palabra' : '🎯 Te toca adivinar'} ${estado.categoria ? '· Pista: ' + estado.categoria : ''}</div>
         ${dibujoAhorcadoSVG(errores)}
-        <div style="font-size:1.6rem; letter-spacing:3px; font-family:monospace; margin-bottom:10px; word-break:break-all;">${visual}</div>
+        <div class="aj-palabra">${visual}</div>
         <div class="texto-tenue">Errores: ${errores} / ${erroresMax}</div>
     </div>`;
 

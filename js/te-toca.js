@@ -65,6 +65,7 @@ const DETECTORES_TE_TOCA = {
     },
     mentiroso: _porTurno('jugando'),
     dosverdades: (d) => d.fase === 'adivinando' && d.autor ? [{ quien: d.autor === 'nico' ? 'carito' : 'nico', que: 'adivinar' }] : [],
+    pingpong: (d) => (d.fase === 'respondiendo' || d.fase === 'eligiendo') && d.turno ? [{ quien: d.turno, que: d.fase === 'respondiendo' ? 'pregunta' : 'preguntar' }] : [],
     ahorcado: (d) => d.fase === 'jugando' && d.adivinador ? [{ quien: d.adivinador, que: 'turno' }] : [],
 };
 
@@ -74,6 +75,8 @@ const TEXTO_QUE_TE_TOCA = {
     colocar: 'ubicá tu flota',
     responder: 'te cantaron, respondé',
     adivinar: '¿cuál es la mentira?',
+    pregunta: 'te hicieron una pregunta',
+    preguntar: 'te toca preguntar',
 };
 
 let _teTocaYo = null;
@@ -195,7 +198,7 @@ function avisarPorWhatsAppTeToca(juego){
     const p = (_teTocaEstados[juego]?.pendientes || []).find(x => x.quien === otro);
     const base = location.origin + location.pathname.replace(/[^/]*$/, '');
     const enlace = `${base}juegos.html?juego=${encodeURIComponent(juego)}`;
-    const frase = p && p.que === 'listo' ? 'te estoy esperando para jugar' : p && p.que === 'responder' ? 'te canté, ¡respondé!' : 'te toca jugar';
+    const frase = p && p.que === 'listo' ? 'te estoy esperando para jugar' : p && p.que === 'responder' ? 'te canté, ¡respondé!' : p && p.que === 'pregunta' ? 'te mandé una pregunta' : p && p.que === 'preguntar' ? 'te toca preguntarme algo' : 'te toca jugar';
     const texto = `${j.icono} ${frase} en ${j.nombre} 😏\n${enlace}`;
     window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank');
 }

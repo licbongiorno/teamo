@@ -76,6 +76,7 @@ function textoApuestaMentiroso(a){
 }
 
 function renderMentiroso(estado){
+    if (window.temporadas) window.temporadas.observar('mentiroso', estado);
     const cont = document.getElementById('contenido-mentiroso');
     if (!cont) return;
     const victorias = estado?.victorias || { nico: 0, carito: 0 };

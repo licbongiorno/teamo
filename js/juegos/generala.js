@@ -59,6 +59,7 @@ function iniciarGenerala(){
 }
 
 function renderGenerala(estado){
+    if (window.temporadas) window.temporadas.observar('generala', estado);
     const cont = document.getElementById('contenido-generala');
     if (!cont) return;
     if (!estado || estado.fase === 'esperando') {

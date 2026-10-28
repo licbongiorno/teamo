@@ -1094,3 +1094,26 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
 .repeticion-barra{ width:100%; accent-color:var(--rosa); }
 .repeticion-controles button{ width:auto; padding:8px 12px; }
 @media (prefers-reduced-motion: reduce){ .fila-te-toca.dormida .btn-whatsapp-te-toca{ animation:none; } }
+
+/* ============ CAMPEONATO DEL MES (js/temporadas.js) ============ */
+.campeonato-tarjeta{
+    margin-top:10px; text-align:center;
+    background:linear-gradient(160deg, rgba(245,217,160,0.16), rgba(201,182,255,0.12)); border:1px solid rgba(245,217,160,0.45);
+}
+.campeonato-tarjeta.con-campeon{ box-shadow:0 0 18px rgba(245,217,160,0.35); }
+.camp-juego{
+    display:inline-block; margin:6px 0 8px; padding:6px 14px; border-radius:999px; border:1px solid rgba(245,217,160,0.6);
+    background:rgba(245,217,160,0.12); color:inherit; font-size:1rem; font-weight:700; cursor:pointer;
+}
+.camp-marcador{ display:flex; align-items:center; justify-content:center; gap:12px; font-size:0.85rem; margin-bottom:4px; }
+.camp-marcador b{ font-size:1.2rem; }
+.camp-puntos{ display:inline-flex; gap:3px; vertical-align:middle; }
+.camp-puntos i{ width:10px; height:10px; border-radius:50%; border:1.5px solid #f5d9a0; display:inline-block; }
+.camp-puntos i.lleno{ background:#f5d9a0; box-shadow:0 0 6px #f5d9a0; }
+.camp-campeon{ font-size:1rem; font-weight:700; margin:4px 0; }
+.camp-palmares{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px; font-size:0.72rem; opacity:0.85; }
+.franja-campeonato{
+    margin:-4px 0 10px; padding:6px 12px; border-radius:12px; font-size:0.76rem; text-align:center;
+    background:rgba(245,217,160,0.12); border:1px solid rgba(245,217,160,0.35);
+}
+.pantalla-juego:has(.btn-compu.activo) .franja-campeonato{ display:none; }

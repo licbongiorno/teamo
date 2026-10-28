@@ -857,3 +857,6 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
 .ck-regalo-envuelto small{ display:block; font-size:0.55rem; font-weight:700; background:#fff; color:#b05a7a; border-radius:8px; padding:1px 5px; margin-top:2px; white-space:nowrap; }
 .ck-sol{ position:absolute; left:12%; bottom:6%; width:26%; height:14%; border-radius:50%; background:radial-gradient(ellipse,#fff6b0aa,#fff6b000 70%); z-index:1; opacity:0; transition:opacity 1s; pointer-events:none; }
 .ck-sol.visible{ opacity:1; }
+.ck-clima-otro{ display:flex; flex-direction:column; gap:1px; margin:-6px 0 10px; padding:6px 12px; border-radius:12px; font-size:0.78rem;
+    background:rgba(143,211,255,0.10); border:1px solid rgba(143,211,255,0.35); }
+.ck-clima-otro small{ opacity:0.7; font-size:0.7rem; }

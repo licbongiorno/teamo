@@ -162,26 +162,38 @@ const CIUDAD_POR_DEFECTO_CHOKUREI = { nico: 'cordoba', carito: 'buenosaires' };
     Chokurei.on('actualizar', () => { const hab = Chokurei.hab(); if (hab && (hab.dataset.fecha || '') !== (fechaEspecial() || '')) aplicarFechas(); });
 
     // ==================== CLIMA REAL ====================
-    async function aplicarClima(){
-        const idCiudad = (Chokurei.estado.ciudades || {})[miIdentidad] || CIUDAD_POR_DEFECTO_CHOKUREI[miIdentidad];
+    // Clima de una ciudad (Open-Meteo), con caché de 30 min por ciudad.
+    async function obtenerClima(idCiudad){
         const ciudad = CIUDADES_CHOKUREI[idCiudad];
-        const hab = Chokurei.hab();
-        if (!ciudad || !hab) return;
+        if (!ciudad) return null;
+        const clave = 'climaChokurei-' + idCiudad;
         let datos = null;
-        try { datos = JSON.parse(sessionStorage.getItem('climaChokurei') || 'null'); } catch (e) {}
-        if (!datos || Date.now() - datos.t > 30 * 60000 || datos.ciudad !== idCiudad) {
-            try {
-                const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${ciudad.lat}&longitude=${ciudad.lon}&current=temperature_2m,weather_code`);
-                const j = await r.json();
-                datos = { t: Date.now(), ciudad: idCiudad, temp: Math.round(j.current.temperature_2m), codigo: j.current.weather_code };
-                try { sessionStorage.setItem('climaChokurei', JSON.stringify(datos)); } catch (e) {}
-            } catch (e) { return; /* sin internet o bloqueado: queda el cielo de siempre */ }
-        }
-        const c = datos.codigo;
-        const tipo = c >= 95 ? 'tormenta' : (c >= 71 && c <= 77) || c === 85 || c === 86 ? 'nieve' : (c >= 51 && c <= 67) || (c >= 80 && c <= 82) ? 'lluvia' : c >= 2 ? 'nublado' : 'despejado';
-        const icono = { tormenta: '⛈️', nieve: '🌨️', lluvia: '🌧️', nublado: '☁️', despejado: hab.dataset.momento === 'noche' ? '🌙' : '☀️' }[tipo];
+        try { datos = JSON.parse(sessionStorage.getItem(clave) || 'null'); } catch (e) {}
+        if (datos && Date.now() - datos.t < 30 * 60000) return datos;
+        try {
+            const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${ciudad.lat}&longitude=${ciudad.lon}&current=temperature_2m,weather_code,is_day`);
+            const j = await r.json();
+            datos = { t: Date.now(), temp: Math.round(j.current.temperature_2m), codigo: j.current.weather_code, esDeDia: j.current.is_day !== 0 };
+            try { sessionStorage.setItem(clave, JSON.stringify(datos)); } catch (e) {}
+            return datos;
+        } catch (e) { return null; /* sin internet o bloqueado */ }
+    }
+    const ciudadDe = (quien) => (Chokurei.estado.ciudades || {})[quien] || CIUDAD_POR_DEFECTO_CHOKUREI[quien];
+    function tipoDeClima(c){
+        return c >= 95 ? 'tormenta' : (c >= 71 && c <= 77) || c === 85 || c === 86 ? 'nieve' : (c >= 51 && c <= 67) || (c >= 80 && c <= 82) ? 'lluvia' : c >= 2 ? 'nublado' : 'despejado';
+    }
+    const iconoClima = (tipo, deDia) => ({ tormenta: '⛈️', nieve: '🌨️', lluvia: '🌧️', nublado: '☁️', despejado: deDia ? '☀️' : '🌙' }[tipo]);
+
+    async function aplicarClima(){
+        const idCiudad = ciudadDe(miIdentidad);
+        const ciudad = CIUDADES_CHOKUREI[idCiudad];
+        if (!ciudad || !Chokurei.hab()) return;
+        aplicarClimaDelOtro();
+        const datos = await obtenerClima(idCiudad);
         const h = Chokurei.hab();
-        if (!h) return;
+        if (!datos || !h) return;
+        const tipo = tipoDeClima(datos.codigo);
+        const icono = iconoClima(tipo, h.dataset.momento !== 'noche');
         h.dataset.clima = tipo;
         let chip = h.querySelector('.ck-chip-clima');
         if (!chip) { chip = document.createElement('div'); chip.className = 'ck-chip ck-chip-clima'; (h.querySelector('.ck-ventana') || h).appendChild(chip); }
@@ -195,6 +207,43 @@ const CIUDAD_POR_DEFECTO_CHOKUREI = { nico: 'cordoba', carito: 'buenosaires' };
         if (datos.temp <= 10 && Chokurei.ck && !(Chokurei.estado.equipado || {}).ropa) setTimeout(() => Chokurei.ck && Chokurei.ck.decir('Brrr, hace frío 🥶 ¿Una bufanda?', 2400), 9000);
         if (datos.temp >= 30 && Chokurei.ck) setTimeout(() => Chokurei.ck && Chokurei.ck.decir('Qué calor… 🥵', 2200), 9000);
     }
+
+    // El clima de la ciudad del otro: un cartelito debajo de la habitación
+    // para saber cómo está el día del otro lado.
+    async function aplicarClimaDelOtro(){
+        const quien = otro(), idCiudad = ciudadDe(quien), ciudad = CIUDADES_CHOKUREI[idCiudad];
+        if (!ciudad) return;
+        const datos = await obtenerClima(idCiudad);
+        const h = Chokurei.hab();
+        if (!datos || !h) return;
+        let el = document.getElementById('ck-clima-otro');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'ck-clima-otro'; el.className = 'ck-clima-otro';
+            const bandeja = document.querySelector('#contenido-mascota .ck-bandeja');
+            (bandeja || h).insertAdjacentElement(bandeja ? 'beforebegin' : 'afterend', el);
+        }
+        const tipo = tipoDeClima(datos.codigo), icono = iconoClima(tipo, datos.esDeDia);
+        const mismaCiudad = idCiudad === ciudadDe(miIdentidad);
+        const nombre = nombreJugador(quien);
+        const comentario = tipo === 'tormenta' ? `hay tormenta donde está ${nombre}, mandale un abrazo 🫂`
+            : tipo === 'lluvia' ? `llueve donde está ${nombre} ☔`
+            : tipo === 'nieve' ? `¡nieva donde está ${nombre}! ❄️`
+            : datos.temp <= 8 ? `hace frío donde está ${nombre} 🥶`
+            : datos.temp >= 30 ? `hace calor donde está ${nombre} 🥵`
+            : tipo === 'despejado' && datos.esDeDia ? `lindo día donde está ${nombre} 😎` : '';
+        el.innerHTML = `<span>📍 En la ciudad de ${nombre}${mismaCiudad ? '' : ` (${ciudad.nombre})`}: <b>${icono} ${datos.temp}°</b></span>${comentario ? `<small>${comentario}</small>` : ''}`;
+        if (comentario && (tipo === 'tormenta' || tipo === 'lluvia' || tipo === 'nieve') && Chokurei.ck) {
+            setTimeout(() => Chokurei.ck && Chokurei.ck.decir(`${comentario.charAt(0).toUpperCase()}${comentario.slice(1)}`, 2600), 12000);
+        }
+    }
+    // Si el otro cambia su ciudad, se actualiza el cartelito.
+    let ciudadOtroVista = null;
+    Chokurei.on('actualizar', () => {
+        const c = ciudadDe(otro());
+        if (ciudadOtroVista !== null && c !== ciudadOtroVista) aplicarClimaDelOtro();
+        ciudadOtroVista = c;
+    });
 
     // ==================== 📸 FOTOS Y ÁLBUM ====================
     // Dibuja la habitación en un canvas (formas simples + los emojis que

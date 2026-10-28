@@ -817,7 +817,7 @@
         return h + '</span>';
     }
 
-    window.animJuegos = { historial, cartel, fosforos, siCambia, colorDe, olvidar };
+    window.animJuegos = { historial, cartel, fosforos, siCambia, colorDe, olvidar, naipe: svgNaipe };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', enganchar);
     else enganchar();
 })();

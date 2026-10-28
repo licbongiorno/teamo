@@ -973,7 +973,7 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
     background:rgba(255,255,255,0.06); color:inherit; font-size:0.78rem; cursor:pointer; white-space:nowrap;
 }
 .btn-compu.activo{ border-color:var(--celeste); background:rgba(168,216,255,0.18); }
-@media (max-width:360px){ .btn-compu span{ display:none; } }
+@media (max-width:430px){ .btn-compu span{ display:none; } }
 .franja-compu{
     display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
     margin:-4px 0 10px; padding:8px 12px; border-radius:14px; font-size:0.78rem;
@@ -988,7 +988,7 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
     position:fixed; inset:0; z-index:100000; background:rgba(10,6,16,0.6); display:flex; align-items:flex-end; justify-content:center;
     padding:16px; animation:revelarFade 0.2s ease;
 }
-.compu-selector{ width:100%; max-width:420px; margin-bottom:12px; }
+.compu-selector{ width:100%; max-width:420px; margin-bottom:12px; background:#211a2b; box-shadow:0 -8px 30px rgba(0,0,0,0.5); }
 .compu-selector-titulo{ font-size:1.1rem; font-weight:700; margin-bottom:4px; }
 .compu-nivel{
     display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:10px 12px; margin-top:8px;
@@ -1045,3 +1045,27 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
 .aj-intento{ display:flex; justify-content:center; gap:6px; flex-wrap:wrap; }
 .aj-intento span{ display:inline-block; }
 @media (prefers-reduced-motion: reduce){ .aj-secuencia span, .ahorcado-muneco.aj-colgado{ animation:none; } }
+
+/* ============ ¿CÓMO SE JUEGA? (js/reglas.js) ============ */
+.btn-reglas{
+    margin-left:auto; margin-right:8px; width:34px; height:34px; border-radius:12px; border:1px solid var(--borde);
+    background:rgba(255,255,255,0.06); font-size:0.95rem; cursor:pointer; flex-shrink:0;
+}
+.btn-reglas + .btn-compu{ margin-left:0; }
+.btn-reglas.nuevo{ animation:ajLatirReglas 1.4s ease-in-out infinite; border-color:var(--celeste); }
+@keyframes ajLatirReglas{ 0%,100%{ transform:scale(1); box-shadow:0 0 0 0 rgba(168,216,255,0.5); } 50%{ transform:scale(1.08); box-shadow:0 0 0 6px rgba(168,216,255,0); } }
+.reglas-hoja{ max-height:82vh; overflow-y:auto; text-align:left; }
+.reglas-hoja h4{ margin:14px 0 6px; font-size:0.92rem; color:var(--celeste); }
+.reglas-objetivo{ padding:10px 12px; border-radius:12px; background:rgba(245,217,160,0.12); border:1px solid rgba(245,217,160,0.35); font-size:0.9rem; margin-top:6px; }
+.reglas-lista{ margin:0; padding-left:20px; font-size:0.86rem; line-height:1.5; }
+.reglas-lista li{ margin-bottom:5px; }
+.reglas-tabla{ width:100%; border-collapse:collapse; font-size:0.82rem; margin-top:8px; }
+.reglas-tabla th, .reglas-tabla td{ padding:5px 6px; border-bottom:1px solid rgba(255,255,255,0.08); text-align:left; }
+.reglas-tabla th{ color:var(--rosa); font-weight:700; }
+.reglas-tips{ margin-top:12px; font-size:0.8rem; line-height:1.5; opacity:0.9; }
+.reglas-jerarquia{ display:grid; grid-template-columns:22px auto 1fr; gap:8px; align-items:center; font-size:0.8rem; padding:3px 0; border-bottom:1px dashed rgba(255,255,255,0.07); }
+.reglas-pos{ font-weight:800; color:var(--dorado, #f5d9a0); text-align:right; }
+.reglas-cartas{ display:flex; gap:2px; }
+.reglas-mini{ display:inline-block; width:22px; height:32px; border-radius:3px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.5); }
+.reglas-mini svg{ display:block; width:100%; height:100%; }
+@media (prefers-reduced-motion: reduce){ .btn-reglas.nuevo{ animation:none; } }

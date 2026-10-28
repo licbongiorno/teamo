@@ -479,9 +479,9 @@ function tanteadorTruco(estado){
     const meta = estado.puntosParaGanar;
     const fos = (q) => window.animJuegos ? window.animJuegos.fosforos(p[q], 'truco-' + q, meta) : '';
     return `<div class="aj-tanteador">
-        <div>Nico: <b>${p.nico}</b>${fos('nico')}</div>
+        <div>${nombreJugador('nico')}: <b>${p.nico}</b>${fos('nico')}</div>
         <span class="texto-tenue">a ${meta}</span>
-        <div>Carito: <b>${p.carito}</b>${fos('carito')}</div>
+        <div>${nombreJugador('carito')}: <b>${p.carito}</b>${fos('carito')}</div>
     </div>`;
 }
 

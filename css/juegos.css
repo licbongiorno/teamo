@@ -514,3 +514,170 @@
 .fila-noche{ display:flex; justify-content:space-between; align-items:center; padding:6px 8px; border-radius:10px; font-size:0.88rem; }
 .fila-noche small{ opacity:0.75; }
 .fila-noche.actual{ background:rgba(255,179,198,0.15); }
+
+/* ============ CHOKUREI ANIMADO (js/juegos/chokurei-rig.js) ============ */
+.ck-habitacion{ position:relative; width:100%; aspect-ratio:1/0.92; border-radius:22px; overflow:hidden; margin-bottom:12px;
+    background:linear-gradient(180deg,#f7dfe8 0%,#efd3e6 58%,#e3c7dd 66%); border:1px solid var(--borde); user-select:none; -webkit-user-select:none; }
+.ck-habitacion[data-momento="noche"]{ background:linear-gradient(180deg,#4a3d6b 0%,#3d335a 58%,#352c4f 66%); }
+.ck-habitacion[data-momento="tarde"]{ background:linear-gradient(180deg,#fbd9c4 0%,#f3c9cf 58%,#e9bccb 66%); }
+.ck-piso{ position:absolute; left:0; right:0; bottom:0; height:34%;
+    background:repeating-linear-gradient(90deg,#c99b7a 0 22%,#c0906e 22% 22.6%),linear-gradient(#c99b7a,#b98866); }
+.ck-habitacion[data-momento="noche"] .ck-piso{ filter:brightness(0.6) saturate(0.8); }
+.ck-zocalo{ position:absolute; left:0; right:0; bottom:34%; height:3%; background:#fff6; }
+.ck-alfombra{ position:absolute; left:18%; right:18%; bottom:5%; height:16%; border-radius:50%;
+    background:radial-gradient(ellipse at center,#ffb3c6 0 45%,#f59ab5 46% 60%,#ffc9d8 61% 100%); opacity:0.9; }
+.ck-ventana{ position:absolute; left:8%; top:8%; width:30%; height:30%; border-radius:12px 12px 4px 4px; overflow:hidden;
+    border:5px solid #fff; box-shadow:0 3px 10px #0002; background:linear-gradient(#8fd3ff,#d8f1ff); }
+.ck-ventana::after{ content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent 48%,#fff 48% 52%,transparent 52%),linear-gradient(transparent 48%,#fff 48% 52%,transparent 52%); }
+.ck-habitacion[data-momento="tarde"] .ck-ventana{ background:linear-gradient(#ff9e7a,#ffd6a0); }
+.ck-habitacion[data-momento="noche"] .ck-ventana{ background:linear-gradient(#141233,#2c2660); }
+.ck-astro{ position:absolute; right:14%; top:14%; width:26%; aspect-ratio:1; border-radius:50%; background:#ffd84d; box-shadow:0 0 14px #ffd84d; }
+.ck-habitacion[data-momento="tarde"] .ck-astro{ background:#ff8a5c; top:46%; box-shadow:0 0 14px #ff8a5c; }
+.ck-habitacion[data-momento="noche"] .ck-astro{ background:#f5f1d8; box-shadow:0 0 10px #f5f1d8; }
+.ck-habitacion[data-momento="noche"] .ck-astro::after{ content:''; position:absolute; inset:-8% -8% 8% 18%; border-radius:50%; background:#141233; }
+.ck-nube{ position:absolute; top:40%; width:40%; height:16%; background:#fff; border-radius:20px; opacity:0.9; animation:ckNube 18s linear infinite; }
+.ck-nube::before{ content:''; position:absolute; left:20%; top:-60%; width:45%; height:120%; background:#fff; border-radius:50%; }
+.ck-habitacion[data-momento="noche"] .ck-nube{ display:none; }
+@keyframes ckNube{ from{ left:-45%; } to{ left:105%; } }
+.ck-estrella{ position:absolute; width:3px; height:3px; border-radius:50%; background:#fff; display:none; animation:ckTitilar 2s ease-in-out infinite; }
+.ck-habitacion[data-momento="noche"] .ck-estrella{ display:block; }
+@keyframes ckTitilar{ 50%{ opacity:0.2; } }
+.ck-cuadro{ position:absolute; right:12%; top:10%; width:18%; height:16%; border:4px solid #fff; border-radius:6px; background:linear-gradient(135deg,#c9b6ff,#ffb3c6);
+    display:flex; align-items:center; justify-content:center; font-size:1.2rem; box-shadow:0 3px 8px #0002; }
+.ck-cama{ position:absolute; left:6%; bottom:9%; width:30%; height:14%; border-radius:50% 50% 40% 40%;
+    background:radial-gradient(ellipse at 50% 35%,#ffe1ea 0 45%,#c9a2ff 46% 100%); box-shadow:0 4px 0 #a884e6; }
+.ck-plato{ position:absolute; right:8%; bottom:9%; width:17%; height:7%; border-radius:0 0 40% 40%; background:linear-gradient(#ff8fab,#e46b8c);
+    display:flex; align-items:flex-start; justify-content:center; }
+.ck-plato .comida{ font-size:1.25rem; line-height:1; margin-top:-0.9rem; }
+.ck-planta{ position:absolute; right:3%; bottom:31%; font-size:2.1rem; }
+.ck-oscuro{ position:absolute; inset:0; background:radial-gradient(circle at 25% 80%,#0000 0 18%,#120c2299 45%); opacity:0; transition:opacity 1.2s; pointer-events:none; z-index:6; }
+.ck-habitacion.luces-apagadas .ck-oscuro{ opacity:1; }
+.ck-capa{ position:absolute; inset:0; z-index:8; pointer-events:none; }
+.ck-capa.activa{ pointer-events:auto; touch-action:none; }
+
+.ck-actor{ position:absolute; bottom:5%; width:36%; transform:translateX(-50%); z-index:5; touch-action:none; cursor:pointer; }
+.ck-actor[data-etapa="bebe"]{ width:29%; }
+.ck-actor[data-etapa="adulto"]{ width:42%; }
+.ck-volteo{ transform-origin:50% 92%; }
+.ck-volteo.izquierda .ck-svg{ transform:scaleX(-1); }
+.ck-svg{ display:block; width:100%; overflow:visible; }
+.ck-actor.evolucionando{ filter:drop-shadow(0 0 14px #fff6a8); }
+.ck-sombra{ fill:#0000002e; }
+.ck-pelo{ fill:var(--ck-pelo,#36303d); stroke:var(--ck-borde,#1d1922); stroke-width:1.2; }
+.ck-panza{ fill:var(--ck-panza,#5a5263); }
+.ck-puntas{ fill:var(--ck-puntas,#36303d); stroke:var(--ck-borde,#1d1922); stroke-width:1.2; }
+.ck-dedos{ fill:none; stroke:var(--ck-borde,#1d1922); stroke-width:0.8; opacity:0.7; }
+.ck-oreja-int{ fill:#f6a7c0; }
+.ck-mascara{ display:none; }
+.siames .ck-mascara{ display:inline; fill:var(--ck-puntas); opacity:0.55; }
+.ck-cola-trazo{ fill:none; stroke:var(--ck-puntas,#36303d); stroke-width:8.5; stroke-linecap:round; }
+.ck-cola-punta{ fill:none; stroke:var(--ck-puntas,#36303d); stroke-width:8.5; stroke-linecap:round; filter:brightness(1.15); }
+.ck-iris{ fill:var(--ck-ojos,#f3d35b); stroke:#1b1720; stroke-width:0.8; }
+.ck-pupila{ fill:#1b1720; transition:transform 0.15s; }
+.ck-brillo{ fill:#fff; transition:transform 0.15s; }
+.ck-ojo-abierto{ transform-box:fill-box; transform-origin:center; }
+.ck-parpado-triste{ fill:var(--ck-pelo,#36303d); display:none; }
+.ojos-tristes .ck-parpado-triste{ display:inline; }
+.ck-ojo-feliz, .ck-ojo-cerrado, .ck-ojo-espiral{ fill:none; stroke:#1b1720; stroke-width:1.8; stroke-linecap:round; display:none; }
+.ojos-felices .ck-ojo-abierto, .ojos-cerrados .ck-ojo-abierto, .ojos-espiral .ck-ojo-abierto{ display:none; }
+.ojos-felices .ck-ojo-feliz, .ojos-cerrados .ck-ojo-cerrado, .ojos-espiral .ck-ojo-espiral{ display:inline; }
+.ck-cachete{ fill:#ff8fab; opacity:0.45; }
+.ck-nariz{ fill:#ff8fab; stroke:#c9607e; stroke-width:0.5; }
+.ck-boca{ fill:none; stroke:#1b1720; stroke-width:1.4; stroke-linecap:round; stroke-linejoin:round; }
+.ck-boca-triste, .ck-boca-abierta{ display:none; }
+.boca-abierta .ck-boca-normal, .boca-triste .ck-boca-normal, .boca-abierta .ck-boca-triste{ display:none; }
+.boca-abierta .ck-boca-abierta, .boca-triste:not(.boca-abierta) .ck-boca-triste{ display:inline; }
+.ck-boca-int{ fill:#8a3448; stroke:#1b1720; stroke-width:1; }
+.ck-lengua{ fill:none; stroke:#ff8fab; stroke-width:2.2; }
+.ck-bigotes path{ stroke:var(--ck-borde,#1d1922); stroke-width:0.8; opacity:0.6; fill:none; stroke-linecap:round; }
+.ck-termometro{ display:none; }
+.enfermo .ck-termometro{ display:inline; }
+.enfermo{ filter:saturate(0.6) hue-rotate(-12deg); }
+.enfermo .ck-cachete{ fill:#9adf8c; opacity:0.6; }
+.ck-acc{ display:none; }
+.con-mono .ck-acc-mono, .con-corona .ck-acc-corona, .con-anteojos .ck-acc-anteojos, .de-fiesta .ck-acc-gorro{ display:inline; }
+.de-fiesta .ck-acc-corona{ display:none; }
+.ck-mugre circle{ fill:#7a5a3a; opacity:0; transition:opacity 0.6s; }
+.sucio .ck-mugre circle{ opacity:0.45; }
+.muy-sucio .ck-mugre circle{ opacity:0.75; }
+/* Articulaciones */
+.ck-cuerpo-g{ transform-origin:60px 114px; animation:ckRespirar 2.8s ease-in-out infinite; }
+.ck-cola{ transform-origin:80px 102px; animation:ckCola 2.2s ease-in-out infinite alternate; }
+.ck-cabeza{ transform-origin:60px 78px; transition:transform 0.6s; }
+.ck-oreja{ transition:transform 0.4s; }
+.ck-oreja-i{ transform-origin:46px 46px; }
+.ck-oreja-d{ transform-origin:74px 46px; }
+.orejas-bajas .ck-oreja-i{ transform:rotate(-30deg); }
+.orejas-bajas .ck-oreja-d{ transform:rotate(30deg); }
+.ck-pata{ transform-box:fill-box; transform-origin:center; }
+.triste .ck-cola{ animation-duration:4s; transform:rotate(30deg); }
+.triste .ck-cuerpo-g{ animation-duration:4s; }
+.muy-triste .ck-cabeza{ transform:translateY(3px) rotate(-4deg); }
+.de-fiesta .ck-cola{ animation-duration:0.5s; }
+.caminando .ck-cuerpo-g{ animation:ckTrote 0.36s ease-in-out infinite; }
+.caminando .ck-pata-i{ animation:ckPaso 0.36s ease-in-out infinite; }
+.caminando .ck-pata-d{ animation:ckPaso 0.36s ease-in-out -0.18s infinite; }
+.caminando .ck-cola{ animation-duration:0.7s; }
+.corriendo .ck-cuerpo-g, .corriendo .ck-pata-i, .corriendo .ck-pata-d{ animation-duration:0.2s; }
+.corriendo .ck-pata-d{ animation-delay:-0.1s; }
+.dormido .ck-cuerpo-g{ animation:ckRespirarDormido 4s ease-in-out infinite; }
+.dormido .ck-cabeza{ transform:translateY(7px) rotate(12deg); }
+.dormido .ck-cola{ animation:none; transform:rotate(-40deg); }
+@keyframes ckRespirar{ 0%,100%{ transform:scale(1,1); } 50%{ transform:scale(1.012,1.03); } }
+@keyframes ckRespirarDormido{ 0%,100%{ transform:translateY(5px) scale(1.04,0.94); } 50%{ transform:translateY(5px) scale(1.06,0.97); } }
+@keyframes ckCola{ from{ transform:rotate(-8deg); } to{ transform:rotate(14deg); } }
+@keyframes ckTrote{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px); } }
+@keyframes ckPaso{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-4px); } }
+/* Globo de diálogo y partículas */
+.ck-globo{ position:absolute; left:50%; bottom:96%; transform:translate(-50%,6px) scale(0.6); opacity:0; white-space:nowrap;
+    background:#fff; color:#3b2c45; font-size:0.8rem; font-weight:700; padding:5px 10px; border-radius:14px; box-shadow:0 3px 10px #0003;
+    transition:opacity 0.2s, transform 0.25s cubic-bezier(.3,1.6,.6,1); pointer-events:none; }
+.ck-globo::after{ content:''; position:absolute; left:50%; top:100%; transform:translateX(-50%); border:6px solid transparent; border-top-color:#fff; }
+.ck-globo.visible{ opacity:1; transform:translate(-50%,0) scale(1); }
+.ck-particula{ position:absolute; z-index:7; pointer-events:none; font-weight:700; color:#fff; text-shadow:0 1px 3px #0005; }
+.ck-espuma{ position:absolute; z-index:7; width:var(--t); height:var(--t); border-radius:50%; transform:translate(-50%,-50%); pointer-events:none;
+    background:radial-gradient(circle at 35% 30%,#fff 0 25%,#e9f6ff 26% 70%,#bfe3ff 71%); box-shadow:0 0 0 1px #fff8; animation:ckEspuma 0.25s ease-out; }
+@keyframes ckEspuma{ from{ transform:translate(-50%,-50%) scale(0); } }
+.ck-laser{ position:absolute; width:14px; height:14px; border-radius:50%; background:#ff2d55; box-shadow:0 0 10px 4px #ff2d5599; transform:translate(-50%,-50%); z-index:9; pointer-events:none; }
+.ck-esponja{ position:absolute; font-size:2rem; transform:translate(-50%,-50%) rotate(-15deg); z-index:9; pointer-events:none; }
+.ck-objeto-volando{ position:fixed; z-index:9000; font-size:1.8rem; pointer-events:none; transform:translate(-50%,-50%); }
+.ck-mariposa{ position:absolute; font-size:1.3rem; z-index:6; pointer-events:none; }
+.ck-regalo{ position:absolute; left:46%; bottom:22%; font-size:2rem; z-index:6; cursor:pointer; animation:ckRegalo 1.2s ease-in-out infinite; }
+@keyframes ckRegalo{ 0%,100%{ transform:translateY(0) rotate(0); } 25%{ transform:translateY(-6px) rotate(-8deg); } 75%{ transform:translateY(-6px) rotate(8deg); } }
+.ck-hud{ position:absolute; left:8px; right:8px; top:8px; display:flex; justify-content:space-between; align-items:flex-start; z-index:7; pointer-events:none; }
+.ck-chip{ background:#ffffffd9; color:#3b2c45; border-radius:12px; padding:3px 8px; font-size:0.72rem; font-weight:700; box-shadow:0 2px 6px #0002; }
+.ck-modo-texto{ position:absolute; left:50%; top:20%; transform:translateX(-50%); z-index:9; background:#ffffffe6; color:#3b2c45; padding:6px 12px; border-radius:14px;
+    font-size:0.85rem; font-weight:700; white-space:nowrap; box-shadow:0 3px 10px #0003; pointer-events:none; }
+.ck-barra-modo{ position:absolute; left:15%; right:15%; top:30%; height:8px; border-radius:6px; background:#ffffff88; z-index:9; overflow:hidden; pointer-events:none; }
+.ck-barra-modo > div{ height:100%; width:0; background:linear-gradient(90deg,#8fd3ff,#c9b6ff); transition:width 0.2s; }
+/* Medidores redondos */
+.ck-medidores{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px; }
+.ck-medidor{ display:flex; flex-direction:column; align-items:center; gap:3px; font-size:0.7rem; }
+.ck-anillo{ --v:100; --c:#8fd3ff; width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.35rem;
+    background:conic-gradient(var(--c) calc(var(--v) * 1%), rgba(255,255,255,0.1) 0); position:relative; transition:--v 0.6s; }
+.ck-anillo::before{ content:''; position:absolute; inset:5px; border-radius:50%; background:var(--bg-oscuro); }
+.ck-anillo span{ position:relative; }
+.ck-anillo.bajo{ animation:ckAlerta 1s ease-in-out infinite; }
+@keyframes ckAlerta{ 50%{ transform:scale(1.08); } }
+.ck-acciones{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
+.ck-boton{ display:flex; flex-direction:column; align-items:center; gap:2px; padding:10px 4px; border-radius:16px; cursor:pointer;
+    background:rgba(255,255,255,0.06); border:1px solid var(--borde); color:var(--texto); font-family:var(--fuente-texto); font-size:0.75rem; touch-action:none; }
+.ck-boton b{ font-size:1.5rem; line-height:1.1; }
+.ck-boton:active{ transform:scale(0.95); }
+.ck-boton.destacado{ background:linear-gradient(135deg,#ffb3c655,#c9b6ff55); border-color:var(--rosa); }
+.ck-rutina{ display:flex; gap:6px; justify-content:space-between; margin-top:8px; }
+.ck-rutina span{ flex:1; text-align:center; padding:6px 0; border-radius:10px; background:rgba(255,255,255,0.06); font-size:0.75rem; }
+.ck-rutina span.hecho{ background:rgba(143,211,255,0.25); }
+.ck-pelajes{ display:flex; gap:8px; justify-content:center; margin-top:8px; }
+.ck-pelajes button{ width:34px; height:34px; border-radius:50%; border:3px solid transparent; cursor:pointer; }
+.ck-pelajes button.elegido{ border-color:var(--rosa); }
+html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
+@media (prefers-reduced-motion: reduce){
+    .ck-cuerpo-g, .ck-cola, .ck-nube, .ck-estrella, .ck-regalo, .ck-anillo.bajo{ animation:none !important; }
+}
+.ck-bandeja{ display:flex; align-items:center; justify-content:flex-end; gap:8px; margin:-6px 0 10px; }
+.ck-bandeja .texto-tenue{ flex:1; font-size:0.75rem; }
+.ck-comida{ display:flex; flex-direction:column; align-items:center; font-size:1.6rem; line-height:1.1; padding:6px 10px; border-radius:14px; cursor:grab;
+    background:rgba(255,255,255,0.08); border:1px solid var(--borde); color:var(--texto); touch-action:none; }
+.ck-comida small{ font-size:0.6rem; opacity:0.75; }
+.ck-comida:active{ cursor:grabbing; transform:scale(0.94); }

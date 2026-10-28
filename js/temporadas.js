@@ -16,7 +16,9 @@
 // Contra la compu no cuenta nada de esto.
 // ============================================================
 (function () {
+    // Los primeros 13 de siempre; los nuevos se suman al final para no cambiar el juego del mes en curso.
     const JUEGOS_CAMPEONATO = ['truco', 'escoba', 'chinchon', 'uno', 'ajedrez', 'damas', 'conecta4', 'reversi', 'generala', 'mentiroso', 'cajitas', 'batallanaval', 'tateti'];
+    const NUEVOS_CAMPEONATO = ['gomoku', 'mancala', 'parchis', 'domino', 'backgammon', 'poker'];
     const META_CAMPEONATO = 3;
     const PREMIO_CAMPEONATO = 50;
     const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -33,7 +35,9 @@
         const clave = 'campeonato:' + (mes || mesActual());
         let h = 0;
         for (let i = 0; i < clave.length; i++) h = (h * 31 + clave.charCodeAt(i)) >>> 0;
-        return JUEGOS_CAMPEONATO[h % JUEGOS_CAMPEONATO.length];
+        // Desde diciembre de 2026 entran también los juegos nuevos (así octubre/noviembre no cambian).
+        const lista = (mes || mesActual()) >= '2026-12' ? [...JUEGOS_CAMPEONATO, ...NUEVOS_CAMPEONATO] : JUEGOS_CAMPEONATO;
+        return lista[h % lista.length];
     }
     const infoJuego = (id) => (window.JUEGOS || []).find(j => j.id === id) || { icono: '🎮', nombre: id };
     const ref = () => window.doc(window.db, 'juegos', 'campeonato');

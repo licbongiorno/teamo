@@ -224,6 +224,52 @@
         cocodrilos: { objetivo: 'Llegar juntos a la meta de golpes en 30 segundos.', pasos: [VIVO, 'Los dos martillan el mismo tablero de 9 pozos: pegale al cocodrilo que asome.'] },
         pesca: { objetivo: 'Pescar juntos la meta de peces en 30 segundos.', pasos: [VIVO, 'Tocá los peces que cruzan la pantalla. Cuantos más estén jugando, más peces.'] },
         ladrillos: { objetivo: 'Romper la pared lo más rápido posible, entre los dos.', pasos: [VIVO, 'Cada toque de cualquiera rompe un ladrillo.', 'Se guarda el mejor tiempo de la pareja.'] },
+
+        // ---------- NUEVOS DE PAREJA Y PALABRAS ----------
+        onda: { objetivo: 'Sumar juntos la mayor cantidad de puntos en 8 rondas.', pasos: ['El que da la pista ve una escala (por ejemplo "de frío a caliente") y dónde está el blanco.', 'Escribe una pista que para él caiga justo ahí: una cosa, una comida, una persona…', 'El otro mueve el dial adonde cree que está y toca "¡Acá!".', 'Se revela: en el centro del blanco son 4 puntos, cerca 3, más o menos 2. Después se cambian los roles.'], tips: ['No hay respuestas correctas: lo lindo es descubrir cómo piensa el otro.'] },
+        codigo: { objetivo: 'Encontrar juntos a los 15 agentes antes de que se acaben las 9 pistas.', pasos: ['Hay 25 palabras. Cada uno ve su propia clave: bordes verdes = sus agentes, bordes rojos = sus asesinos.', 'El que da la pista escribe UNA palabra y un número ("fruta 2") para que el otro encuentre sus agentes.', 'El otro toca palabras: si es agente de quien dio la pista, se descubre y puede seguir; si es neutral, termina el turno; si es un asesino… ¡pierden los dos!', 'Se turnan para dar pistas. Cada turno de adivinar gasta una pista.'], tips: ['Algunos agentes son de los dos: ¡pueden aparecer en las pistas de cualquiera!'] },
+        mente: { objetivo: 'Pasar los 8 niveles tirando las cartas en orden… sin hablar.', pasos: ['Los dos tienen que estar conectados al mismo tiempo.', 'En el nivel 1 cada uno tiene 1 carta del 1 al 100; en el nivel 2, dos; y así.', 'Hay que ir tirando al centro de menor a mayor: tocá el botón para tirar tu carta más baja cuando sientas que es el momento.', 'Si tirás una y el otro tenía una más baja, pierden una vida ❤️. Tienen 3.'], tips: ['Con números bajos se tira rápido; con números altos, se espera. ¡Sincronícense!'] },
+        palabradia: { objetivo: 'Adivinar la palabra del día en la menor cantidad de intentos.', pasos: ['Hay una palabra de 5 letras por día, la misma para los dos.', 'Escribí una palabra y tocá OK. Cada letra se pinta: 🟩 está y en su lugar, 🟨 está pero en otro lugar, gris no está.', 'Tenés 6 intentos.', 'Después comparan: ves los colores del otro, y sus palabras cuando vos terminaste.'], tips: ['Mantené la racha 🔥 jugando todos los días.'] },
+        rosco: { objetivo: 'Acertar más palabras que el otro en tu rosco.', pasos: ['Los dos tienen el mismo rosco, pero cada uno juega en su celu con su reloj (150 segundos desde que toca "Empezar").', 'Para cada letra hay una definición: la respuesta empieza con esa letra (o la contiene).', 'Escribila y tocá Responder, o decí "¡Pasapalabra!" para volver después.', 'Gana quien acierta más; si empatan, quien erró menos.'] },
+        sopa: { objetivo: 'Ser el primero en encontrar las 8 palabras.', pasos: ['Los dos tienen la misma sopa de letras de un tema, con 3 minutos.', 'Para marcar una palabra tocá su primera letra y después la última.', 'Pueden estar en horizontal, vertical, diagonal o al revés.', 'Si se termina el tiempo, gana quien haya encontrado más.'] },
+
+        // ---------- NUEVOS DE CARTAS ----------
+        guerra: { objetivo: 'Quedarte con todas las cartas.', pasos: ['Cada uno tiene medio mazo boca abajo.', 'Los dos tocan "Dar vuelta" (cada uno cuando quiere): la carta más alta se lleva las dos.', 'Si empatan, ¡GUERRA!: cada uno pone 3 cartas boca abajo y da vuelta otra. La más alta se lleva todo.', 'Si después de 120 rondas nadie se quedó con todo, gana quien tenga más.'], tabla: [['Orden', ''], ['Más alta', 'A, K, Q, J, 10…'], ['Más baja', '2']] },
+        blackjack: {
+            objetivo: 'Terminar con más fichas que el otro después de 8 manos.',
+            pasos: ['Los dos juegan contra la casa, cada uno con 100 fichas. Primero apuestan.', 'Reciben 2 cartas. En tu turno: <b>Pedir</b> otra carta, <b>Plantarse</b> o <b>Doblar</b> (doble apuesta y una sola carta más).', 'Si te pasás de 21, perdés la apuesta.', 'Después la casa pide cartas hasta tener 17 o más.', 'Si le ganás a la casa cobrás tu apuesta; con blackjack (21 con las dos primeras cartas) cobrás 1 y medio.'],
+            tabla: [['Carta', 'Vale'], ['2 a 10', 'su número'], ['J, Q, K', '10'], ['As', '1 u 11 (lo que más te convenga)']],
+            tips: ['Con 17 o más casi siempre conviene plantarse.', 'Si la casa muestra un 4, 5 o 6, es más probable que se pase.']
+        },
+        poker: {
+            objetivo: 'Dejar al otro sin fichas (o tener más después de 15 manos).',
+            pasos: ['Cada uno tiene 200 fichas. En cada mano se ponen las ciegas (5 y 10) y reciben 2 cartas que sólo ven ustedes.', 'Se apuesta en cuatro rondas: antes del flop, con el flop (3 cartas en la mesa), el turn (la 4ª) y el river (la 5ª).', 'En tu turno podés <b>pasar</b> (si nadie apostó), <b>igualar</b>, <b>subir</b>, ir <b>all-in</b> o <b>retirarte</b>.', 'Al final se muestran las cartas: gana la mejor combinación de 5 entre tus 2 y las 5 de la mesa.'],
+            tabla: [['Mano (de mayor a menor)', ''], ['Escalera de color', '5 seguidas del mismo palo'], ['Póker', '4 iguales'], ['Full', 'trío + par'], ['Color', '5 del mismo palo'], ['Escalera', '5 seguidas'], ['Trío', '3 iguales'], ['Doble par', 'dos pares'], ['Par', '2 iguales'], ['Carta alta', 'nada de lo anterior']],
+            tips: ['Abajo de tus cartas ves qué mano tenés en cada momento.']
+        },
+
+        // ---------- NUEVOS DE MESA ----------
+        gomoku: { objetivo: 'Armar 5 piedras seguidas antes que el otro.', pasos: ['Por turnos, tocá una intersección vacía para poner tu piedra.', 'Valen las líneas horizontales, verticales y diagonales.', 'El primero en hacer 5 seguidas gana.'], tips: ['Un "cuatro abierto" (con lugar libre en las dos puntas) ya no se puede tapar: ¡cuidado!'] },
+        mancala: {
+            objetivo: 'Tener más semillas en tu granero al final.',
+            pasos: ['Cada uno tiene 6 pozos (los de abajo son los tuyos) y un granero a la derecha.', 'Tocá un pozo tuyo: se levantan todas sus semillas y se siembran de a una hacia la derecha, saltando el granero del otro.', 'Si la última cae en tu granero, jugás de nuevo.', 'Si la última cae en un pozo tuyo vacío, te llevás esa y todas las del pozo de enfrente.', 'Cuando un lado se vacía, termina: lo que queda va a su dueño.'],
+            tips: ['Contá las semillas: con la cantidad justa para llegar a tu granero, ganás un turno extra.']
+        },
+        serpientes: { objetivo: 'Llegar primero a la casilla 100.', pasos: ['Por turnos, tirá el dado y tu ficha avanza.', 'Si caés al pie de una escalera 🪜, subís. Si caés en la cabeza de una serpiente 🐍, bajás.', 'Hay que llegar justo al 100: si te pasás, rebotás para atrás.', 'Con un 6 volvés a tirar.'] },
+        parchis: {
+            objetivo: 'Llevar tus 4 fichas a la meta antes que el otro.',
+            pasos: ['Tirá el dado. Con un 6 sacás una ficha de tu casa (y con cualquier 6 volvés a tirar).', 'Tocá la ficha que querés mover: avanza lo que salió en el dado.', 'Si caés donde hay una ficha del otro, te la comés y vuelve a su casa (y tirás otra vez). En las casillas ★ no se come.', 'Al dar la vuelta entrás a tu pasillo de color: hay que llegar justo a la meta.', 'Tres 6 seguidos pierden el turno.'],
+            tips: ['Las fichas que brillan son las que se pueden mover con ese dado.']
+        },
+        domino: {
+            objetivo: 'Quedarte sin fichas antes que el otro.',
+            pasos: ['Cada uno arranca con 7 fichas; el resto queda en el pozo.', 'En tu turno, poné una ficha que tenga el mismo número que una de las puntas de la mesa.', 'Si entra en las dos puntas, elegís de qué lado.', 'Si no tenés ninguna, robá del pozo; si el pozo se acabó, pasás.', 'Si los dos pasan seguido es tranque: gana quien tenga menos puntos en la mano.']
+        },
+        backgammon: {
+            objetivo: 'Sacar tus 15 fichas del tablero antes que el otro.',
+            pasos: ['Tirá los dos dados: movés una ficha con cada dado (con dobles, cuatro movimientos).', 'Tocá una pila tuya y después el punto adonde va. No podés caer donde el otro tiene 2 o más.', 'Si caés sobre una ficha sola del otro, te la comés: va a la barra y tiene que volver a entrar antes de mover otra.', 'Cuando tus 15 fichas están en tu casa (el cuadrante de abajo a la derecha), las empezás a sacar.'],
+            tips: ['Dos fichas juntas forman un punto seguro: no las pueden comer.', 'Los "pips" te dicen cuánto les falta a cada uno para terminar.']
+        },
     };
 
     // Jerarquía del truco, de mayor a menor: [palo, número] (null = todos los palos).

@@ -67,6 +67,18 @@ const DETECTORES_TE_TOCA = {
     dosverdades: (d) => d.fase === 'adivinando' && d.autor ? [{ quien: d.autor === 'nico' ? 'carito' : 'nico', que: 'adivinar' }] : [],
     pingpong: (d) => (d.fase === 'respondiendo' || d.fase === 'eligiendo') && d.turno ? [{ quien: d.turno, que: d.fase === 'respondiendo' ? 'pregunta' : 'preguntar' }] : [],
     ahorcado: (d) => d.fase === 'jugando' && d.adivinador ? [{ quien: d.adivinador, que: 'turno' }] : [],
+    // Juegos nuevos (js/juegos/base-turnos.js): todos usan fase 'jugando' + turno.
+    gomoku: _porTurno('jugando'),
+    mancala: _porTurno('jugando'),
+    serpientes: _porTurno('jugando'),
+    parchis: _porTurno('jugando'),
+    domino: _porTurno('jugando'),
+    backgammon: _porTurno('jugando'),
+    guerra: _porTurno('jugando'),
+    blackjack: _porTurno('jugando'),
+    poker: _porTurno('jugando'),
+    codigo: _porTurno('jugando'),
+    onda: _porTurno('jugando'),
 };
 
 const TEXTO_QUE_TE_TOCA = {

@@ -42,11 +42,15 @@ function _desafioDeLaSemana(semana){
 // Se elige igual que el desafío, por la semana, así los dos ven el mismo
 // sin coordinarse.
 const JUEGOS_DE_LA_SEMANA = ['tateti', 'conecta4', 'damas', 'ajedrez', 'reversi', 'cajitas', 'generala', 'mentiroso', 'truco', 'uno', 'escoba', 'chinchon', 'batallanaval', 'palabras', 'tuttifrutti'];
+// Juegos nuevos: entran a la rotación desde la semana 45 de 2026 (así no cambia el de la semana en curso).
+const JUEGOS_NUEVOS_DE_LA_SEMANA = ['gomoku', 'mancala', 'parchis', 'domino', 'backgammon', 'poker', 'rosco', 'sopa'];
 function juegoDeLaSemana(semana){
     const clave = 'juego:' + (semana || _semanaActual());
     let hash = 0;
     for (let i = 0; i < clave.length; i++) hash = (hash * 31 + clave.charCodeAt(i)) >>> 0;
-    return JUEGOS_DE_LA_SEMANA[hash % JUEGOS_DE_LA_SEMANA.length];
+    const s = semana || _semanaActual();
+    const lista = s >= '2026-W45' ? [...JUEGOS_DE_LA_SEMANA, ...JUEGOS_NUEVOS_DE_LA_SEMANA] : JUEGOS_DE_LA_SEMANA;
+    return lista[hash % lista.length];
 }
 function htmlJuegoDeLaSemana(){
     const id = juegoDeLaSemana();

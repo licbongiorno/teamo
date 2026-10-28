@@ -14,10 +14,14 @@ const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maq
 // listos, arrancar sincronizados con cuenta regresiva, etc).
 const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carreraglobos', 'ritmo', 'bloques', 'cocodrilos', 'pesca', 'ladrillos', 'tiraafloja', 'calculo', 'stroop', 'anagramas', 'tipeo', 'topo', 'blancomovil', 'buscaminas', 'ppt', 'trivia', 'simon', 'memoriarelampago', 'semaforo', 'palabras'];
 
+// Juegos nuevos armados sobre js/juegos/base-turnos.js (listos, turnos,
+// fin de partida, revancha, compu).
+const JUEGOS_QUE_USAN_BASE_TURNOS = ['gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker', 'codigo', 'onda', 'mente', 'palabradia', 'rosco', 'sopa'];
+
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 58;
+const VERSION_CACHE = 61;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)
@@ -42,6 +46,10 @@ function scriptsNecesariosPara(juegoId) {
     }
     if (JUEGOS_QUE_USAN_MOTOR_REFLEXION.includes(juegoId)) {
         return [`js/motor-reflexion.js?v=${VERSION_CACHE}`, propio];
+    }
+    if (JUEGOS_QUE_USAN_BASE_TURNOS.includes(juegoId)) {
+        const extra = ['guerra', 'blackjack', 'poker'].includes(juegoId) ? [`js/juegos/cartas-francesas.js?v=${VERSION_CACHE}`] : [];
+        return [`js/juegos/base-turnos.js?v=${VERSION_CACHE}`, ...extra, propio];
     }
     if (JUEGOS_QUE_USAN_ARCADE_COMUN.includes(juegoId)) {
         return [`js/arcade-comun.js?v=${VERSION_CACHE}`, propio];
@@ -69,7 +77,14 @@ function cargarScript(src) {
 // Descarga (si hace falta) todo lo necesario para abrir un juego.
 // Devuelve una promesa que se resuelve cuando ya está todo listo para
 // llamar a su función iniciar<Juego>().
-window.asegurarJuegoCargado = function (juegoId) {
+window.asegurarJuegoCargado = async function (juegoId) {
     const scripts = scriptsNecesariosPara(juegoId);
-    return Promise.all(scripts.map(cargarScript));
+    // Los juegos sobre base-turnos.js usan la base apenas se ejecutan:
+    // primero la base, después el juego (en paralelo el orden no está
+    // garantizado). Los demás se siguen bajando todos juntos.
+    if (scripts.length > 1 && JUEGOS_QUE_USAN_BASE_TURNOS.includes(juegoId)) {
+        for (const src of scripts) await cargarScript(src);
+        return;
+    }
+    await Promise.all(scripts.map(cargarScript));
 };

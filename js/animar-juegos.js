@@ -18,10 +18,12 @@
 // ============================================================
 (function () {
     const JUEGOS = ['truco', 'escoba', 'chinchon', 'uno', 'ajedrez', 'damas', 'conecta4', 'tateti', 'reversi', 'generala', 'mentiroso',
-        'batallanaval', 'ahorcado', 'cajitas', 'memoria', 'buscaminas', 'sudoku'];
+        'batallanaval', 'ahorcado', 'cajitas', 'memoria', 'buscaminas', 'sudoku',
+        'gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker',
+        'codigo', 'onda', 'mente', 'palabradia', 'rosco', 'sopa'];
     // Juegos donde se compara casilla por casilla (qué cambió desde el dibujo anterior).
     const JUEGOS_CASILLAS = ['batallanaval', 'cajitas', 'buscaminas', 'sudoku'];
-    const SEL_CARTAS = '.naipe-chinchon, div.naipe-uno';
+    const SEL_CARTAS = '.naipe-chinchon, div.naipe-uno, .naipe-frances';
     const SEL_PIEZAS = '.pieza-tablero, .ficha-damas, .ficha-c4, .ficha-reversi, .marca-tateti';
     const NS = 'http://www.w3.org/2000/svg';
 
@@ -186,7 +188,14 @@
         el.dataset.ajC = color;
     }
 
+    // Cartas francesas (Póker, Blackjack, Guerra): el juego ya las dibuja,
+    // acá sólo se les pone la clave para que viajen entre lugares.
+    function adornarFrances(el) {
+        if (el.dataset.ajK) return;
+        el.dataset.ajK = el.classList.contains('dorso') ? (el.hasAttribute('data-aj-mazo') ? 'mazo' : 'dorso') : ('fr:' + (el.dataset.carta || el.textContent.trim()));
+    }
     function adornar(cont) {
+        cont.querySelectorAll('.naipe-frances').forEach(adornarFrances);
         cont.querySelectorAll('.naipe-chinchon').forEach(adornarNaipe);
         cont.querySelectorAll('div.naipe-uno').forEach(adornarUno);
         cont.querySelectorAll('.dado-generala').forEach(adornarDado);
@@ -222,10 +231,13 @@
         const letras = [...cont.querySelectorAll('.aj-palabra > .aj-letra')].map(l => l.textContent);
         const partes = cont.querySelectorAll('.ahorcado-muneco > *').length;
         const intento = cont.querySelectorAll('.aj-intento > span').length;
+        // Fichas con identidad propia (Parchís, Backgammon, Dominó...):
+        // data-aj-id estable entre dibujos.
+        const fichas = [...cont.querySelectorAll('[data-aj-id]')].map(el => ({ el, id: el.dataset.ajId, r: rel(el, base) }));
         const rival = cont.querySelector('[data-aj-rival]');
         const mazo = cont.querySelector('[data-aj-mazo]');
         return {
-            cartas, piezas, filasDados, tableros, letras, partes, intento,
+            cartas, piezas, filasDados, tableros, letras, partes, intento, fichas,
             tableroR: tablero ? rel(tablero, base) : null,
             rivalR: rival ? rel(rival, base) : null,
             mazoR: mazo ? rel(mazo, base) : null,
@@ -614,6 +626,35 @@
         el.animate([{ transform: `scale(${escala || 1.4})` }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(0.34,1.56,0.64,1)' });
     }
 
+    // ==================== FICHAS CON IDENTIDAD ====================
+    function animarFichas(vieja, nueva, base) {
+        if (!nueva.fichas.length && !vieja.fichas.length) return;
+        const antes = new Map(vieja.fichas.map(f => [f.id, f]));
+        const ahora = new Set(nueva.fichas.map(f => f.id));
+        let movio = false;
+        nueva.fichas.forEach((f, i) => {
+            const v = antes.get(f.id);
+            if (!v) {
+                f.el.animate([{ transform: 'scale(0.3)', opacity: 0 }, { transform: 'scale(1.12)', opacity: 1, offset: 0.7 }, { transform: 'none' }], { duration: 340, delay: Math.min(i, 8) * 25, easing: 'ease-out', fill: 'backwards' });
+                return;
+            }
+            const dx = v.r.x - f.r.x, dy = v.r.y - f.r.y;
+            if (Math.abs(dx) < 1.5 && Math.abs(dy) < 1.5) return;
+            const dist = Math.hypot(dx, dy);
+            // Saltito en el medio del viaje, como una ficha que se levanta.
+            const base0 = transformBase(f.el);
+            f.el.classList.add('aj-en-vuelo');
+            f.el.animate([
+                { transform: `translate(${dx}px,${dy}px)${base0}` },
+                { transform: `translate(${dx * 0.5}px,${dy * 0.5 - Math.min(24, dist * 0.2)}px) scale(1.12)${base0}`, offset: 0.5 },
+                { transform: `translate(0,0)${base0}` }
+            ], { duration: Math.min(650, 260 + dist * 0.9), easing: 'ease-in-out' }).onfinish = () => f.el.classList.remove('aj-en-vuelo');
+            movio = true;
+        });
+        vieja.fichas.forEach(v => { if (!ahora.has(v.id)) fantasma(v, base, 0, -20, { escala: 0.3, dur: 400 }); });
+        if (movio && esJugadaAjena()) sonar('toque');
+    }
+
     // ==================== AHORCADO ====================
     function animarAhorcado(cont, vieja, nueva) {
         const spans = [...cont.querySelectorAll('.aj-palabra > .aj-letra')];
@@ -667,13 +708,14 @@
             return;
         }
         cont.classList.remove('aj-sin-entrada');
-        const hayAlgo = nueva.cartas.length || nueva.piezas.length || nueva.filasDados.length || nueva.tableros.length || nueva.letras.length || nueva.partes || nueva.intento;
+        const hayAlgo = nueva.cartas.length || nueva.piezas.length || nueva.filasDados.length || nueva.tableros.length || nueva.letras.length || nueva.partes || nueva.intento || nueva.fichas.length;
         if (!hayAlgo) return;
         const base = cont.getBoundingClientRect();
         const movidasCartas = animarCartas(cont, vieja, nueva, base);
         animarTablero(cont, vieja, nueva, juego, base);
         animarDados(cont, vieja, nueva, base);
         if (JUEGOS_CASILLAS.includes(juego)) animarCasillas(cont, vieja, nueva, juego);
+        animarFichas(vieja, nueva, base);
         if (juego === 'ahorcado') animarAhorcado(cont, vieja, nueva);
         if (juego === 'memoria') animarMemoria(cont, vieja, nueva);
         if (movidasCartas && esJugadaAjena()) sonar('cartaFlip');

@@ -70,8 +70,49 @@ const sonidosChokurei = (function () {
         g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol || 0.12, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
         o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02);
     }
+    // Maullido con "personalidad": mimoso (trino corto), pidiendo (largo e
+    // insistente), triste (grave y lento), enojado (siseo de ruido).
+    function miauSegun(tipo){
+        if (mudo()) return; const a = c(); if (!a) return;
+        if (tipo === 'enojado') {
+            const t = a.currentTime, dur = 0.6;
+            const buf = a.createBuffer(1, a.sampleRate * dur, a.sampleRate), d = buf.getChannelData(0);
+            for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1);
+            const src = a.createBufferSource(); src.buffer = buf;
+            const hp = a.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2500;
+            const g = a.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.25, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            src.connect(hp); hp.connect(g); g.connect(a.destination); src.start(t); src.stop(t + dur);
+            return;
+        }
+        const conf = { mimoso: [900, 0.22, 1.25, 0.9], pidiendo: [620, 0.8, 1.35, 0.8], triste: [420, 0.9, 1.15, 0.7] }[tipo] || [600, 0.5, 1.45, 0.85];
+        const [base, dur, sube, baja] = conf, t = a.currentTime;
+        const o = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(base, t); o.frequency.linearRampToValueAtTime(base * sube, t + dur * 0.35); o.frequency.linearRampToValueAtTime(base * baja, t + dur);
+        if (tipo === 'mimoso') { const l = a.createOscillator(), lg = a.createGain(); l.frequency.value = 28; lg.gain.value = 40; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + dur); }
+        f.type = 'bandpass'; f.Q.value = 6; f.frequency.setValueAtTime(900, t); f.frequency.linearRampToValueAtTime(2000, t + dur * 0.4); f.frequency.linearRampToValueAtTime(1000, t + dur);
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.2, t + 0.04); g.gain.linearRampToValueAtTime(0.14, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(f); f.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.05);
+        if (tipo === 'pidiendo') setTimeout(() => miauSegun('pidiendo-2'), (dur + 0.25) * 1000);
+    }
+    // Musiquita propia de Chokurei (una cajita de música de 8 compases).
+    let musicaHasta = 0;
+    function musica(alGolpe){
+        if (mudo()) return 0; const a = c(); if (!a) return 0;
+        const notas = [523, 659, 784, 659, 587, 698, 880, 698, 523, 659, 784, 1046, 988, 784, 659, 523];
+        const t0 = a.currentTime + 0.05, paso = 0.42;
+        notas.forEach((f, i) => {
+            const o = a.createOscillator(), g = a.createGain(), t = t0 + i * paso;
+            o.type = 'triangle'; o.frequency.value = f;
+            g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.1, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + paso * 0.95);
+            o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + paso);
+            if (alGolpe) setTimeout(() => alGolpe(i), (t - a.currentTime) * 1000);
+        });
+        musicaHasta = Date.now() + notas.length * paso * 1000;
+        return notas.length * paso * 1000;
+    }
     return {
-        miau, ronroneo,
+        miau, ronroneo, miauSegun, musica,
         nam: () => { blip(220, 0.07, 'square', 0.07); blip(180, 0.07, 'square', 0.07, 0.11); },
         burbuja: () => blip(700 + Math.random() * 600, 0.08, 'sine', 0.08),
         salto: () => blip(330, 0.18, 'triangle', 0.12),
@@ -92,6 +133,7 @@ function svgChokurei(){
     <ellipse class="ck-sombra" cx="60" cy="114" rx="27" ry="4.5"/>
     <g class="ck-cuerpo-g">
         <g class="ck-ropa ck-ropa-capa"><path d="M41 76 Q 30 96 24 114 L 96 114 Q 90 96 79 76 Z" fill="#8e6cf0" stroke="#5f43b8" stroke-width="1"/><path d="M41 76 Q 60 84 79 76" fill="none" stroke="#ffd34d" stroke-width="2.5"/></g>
+        <g class="ck-forma ck-forma-angel"><path d="M38 86 C 14 70, 8 96, 22 104 C 28 98, 34 96, 40 96 Z M82 86 C 106 70, 112 96, 98 104 C 92 98, 86 96, 80 96 Z" fill="#ffffff" stroke="#e3dcff" stroke-width="1.2"/></g>
         <g class="ck-cola"><path class="ck-cola-trazo" d="M80 102 C 100 100, 104 82, 98 66"/><path class="ck-cola-punta" d="M99.5 71 C 100.5 68, 99.5 65, 98 63"/></g>
         <ellipse class="ck-pelo ck-cuerpo" cx="60" cy="93" rx="24" ry="20"/>
         <ellipse class="ck-panza" cx="60" cy="98" rx="13.5" ry="13"/>
@@ -135,6 +177,10 @@ function svgChokurei(){
             <g class="ck-ropa ck-ropa-gorrolana"><path d="M33 38 Q 60 2 87 38 Z" fill="#7ec8ff" stroke="#4aa6dd" stroke-width="1"/><path d="M33 38 Q 60 30 87 38 L 87 44 Q 60 36 33 44 Z" fill="#ffd34d" stroke="#d1a21c" stroke-width="0.8"/><circle cx="60" cy="9" r="5" fill="#fff" stroke="#ddd" stroke-width="0.6"/></g>
             <g class="ck-ropa ck-ropa-navidad"><path d="M36 36 Q 52 2 86 12 Q 70 20 82 36 Z" fill="#e8384f" stroke="#b5243a" stroke-width="1"/><path d="M33 36 Q 60 28 86 36 L 86 42 Q 60 34 33 42 Z" fill="#fff"/><circle cx="88" cy="13" r="4.5" fill="#fff"/></g>
             <g class="ck-ropa ck-ropa-hoja"><path d="M58 32 q2 -8 7 -10 q-1 7 -7 10 Z" fill="#5fbf6b"/><path d="M58 33 v-5" stroke="#5a3a1a" stroke-width="2"/></g>
+            <g class="ck-forma ck-forma-angel"><ellipse cx="60" cy="16" rx="16" ry="4" fill="none" stroke="#ffd84d" stroke-width="3"/></g>
+            <g class="ck-forma ck-forma-mago"><path d="M38 34 L 62 -6 L 84 34 Z" fill="#5b3fd1" stroke="#3a2697" stroke-width="1"/><path d="M33 34 Q 60 26 88 34 L 88 39 Q 60 31 33 39 Z" fill="#3a2697"/><text x="56" y="22" font-size="9" fill="#ffd84d">✦</text><text x="66" y="10" font-size="6" fill="#ffd84d">✦</text></g>
+            <g class="ck-forma ck-forma-astronauta"><circle cx="60" cy="56" r="37" fill="rgba(180,225,255,0.22)" stroke="#e8f4ff" stroke-width="3"/><path d="M38 34 Q 50 26 58 30" stroke="#fff" stroke-width="2.5" fill="none" opacity="0.8"/><circle cx="96" cy="44" r="3" fill="#ff6b6b"/></g>
+            <g class="ck-forma ck-forma-pirata"><path d="M33 36 Q 60 6 87 36 Q 60 28 33 36 Z" fill="#2b2530" stroke="#111" stroke-width="1"/><text x="54" y="31" font-size="9" fill="#fff">☠</text><path d="M66 48 h14 v10 h-14 z" fill="#111"/><path d="M33 50 L 66 50 M80 50 L 88 47" stroke="#111" stroke-width="1.4"/></g>
             <g class="ck-acc ck-acc-gorro"><path d="M44 31 L 56 4 L 66 33 Z" fill="#8fd3ff" stroke="#4aa6dd" stroke-width="0.9"/><path d="M48 23 L 61 19 M51 15 L 59 12" stroke="#ff7aa2" stroke-width="2"/><circle cx="56" cy="4" r="3" fill="#ffd34d"/></g>
         </g>
         <g class="ck-mugre"><circle cx="46" cy="88" r="3"/><circle cx="73" cy="95" r="2.4"/><circle cx="64" cy="82" r="1.8"/><circle cx="52" cy="104" r="2"/></g>
@@ -277,9 +323,70 @@ function crearChokurei(contenedor){
             ['bufanda', 'gorrolana', 'capa', 'calabaza', 'navidad'].forEach(r => svg.classList.toggle('ropa-' + r, r === ropaId));
             svg.classList.toggle('ropa-hoja', ropaId === 'calabaza');
         },
+        // Un pasito de baile al ritmo (no usa la cola de acciones: se puede
+        // llamar en cada golpe de la música).
+        golpe(i){
+            if (dormido) return;
+            const lado = i % 2 ? 1 : -1;
+            anim(volteo, [{ transform: 'translateY(0) rotate(0)' }, { transform: `translateY(-7px) rotate(${lado * 8}deg)` }, { transform: 'translateY(0) rotate(0)' }], { duration: 300 });
+            if (i % 4 === 0) particula(['🎵', '🎶', '✨'][Math.floor(i / 4) % 3], { dx: lado * 40, dy: -50, dur: 1200 });
+            if (i === 0) clases(['ojos-felices'], []);
+        },
+        // Forma especial (nivel 15): 'angel', 'mago', 'astronauta', 'pirata' o null.
+        forma(id){
+            ['angel', 'mago', 'astronauta', 'pirata'].forEach(f => svg.classList.toggle('forma-' + f, f === id));
+        },
+        // ---------- Trucos ----------
+        truco(id){
+            return accion(async () => {
+                if (dormido) { dormido = false; svg.classList.remove('dormido', 'ojos-cerrados'); }
+                mirarAlFrente();
+                const pd = q('.ck-pata-d'), cabeza = q('.ck-cabeza');
+                if (id === 'patita') {
+                    cara(['ojos-felices']);
+                    decir('¡Patita! 🐾', 1600);
+                    await anim(pd, [{ transform: 'translate(0,0) scale(1)' }, { transform: 'translate(-4px,-20px) scale(1.5)', offset: 0.35 }, { transform: 'translate(-4px,-20px) scale(1.5)', offset: 0.75 }, { transform: 'translate(0,0) scale(1)' }], { duration: 1500 }).finished;
+                } else if (id === 'sentarse') {
+                    decir('¡Sentado! 😼', 1400);
+                    await anim(volteo, [{ transform: 'scale(1,1)' }, { transform: 'scale(1.08,0.88)', offset: 0.3 }, { transform: 'scale(1.08,0.88)', offset: 0.8 }, { transform: 'scale(1,1)' }], { duration: 1400 }).finished;
+                    ck.expresion('guino', 900);
+                } else if (id === 'girar') {
+                    cara(['ojos-felices', 'boca-abierta']);
+                    svg.classList.add('caminando');
+                    await anim(volteo, [{ transform: 'rotateY(0)' }, { transform: 'rotateY(360deg)' }], { duration: 900 }).finished;
+                    svg.classList.remove('caminando');
+                    decir('¡Tarán! ✨', 1200);
+                } else if (id === 'saludar') {
+                    cara(['ojos-felices']);
+                    decir('¡Holaaa! 👋', 1600);
+                    await anim(pd, [{ transform: 'translate(0,0) rotate(0)' }, { transform: 'translate(8px,-46px) rotate(-20deg)', offset: 0.2 }, { transform: 'translate(12px,-48px) rotate(20deg)', offset: 0.35 },
+                        { transform: 'translate(8px,-46px) rotate(-20deg)', offset: 0.5 }, { transform: 'translate(12px,-48px) rotate(20deg)', offset: 0.65 }, { transform: 'translate(0,0) rotate(0)' }], { duration: 1600 }).finished;
+                } else if (id === 'besito') {
+                    ck.expresion('guino', 1600);
+                    clases(['boca-abierta']);
+                    await anim(cabeza, [{ transform: 'rotate(0)' }, { transform: 'rotate(-8deg) translateY(-2px)' }, { transform: 'rotate(0)' }], { duration: 600 }).finished;
+                    clases([], ['boca-abierta']);
+                    for (let i = 0; i < 3; i++) particula('💋', { dx: 40 + i * 15, dy: -40 - i * 10, dur: 1300, tam: 1.2 });
+                    decir('Mua 😘', 1400);
+                } else if (id === 'muerto') {
+                    decir('¡Bang! 🔫', 900);
+                    await esperar(500);
+                    cara(['ojos-espiral', 'boca-abierta']);
+                    await anim(volteo, [{ transform: 'rotate(0) translateY(0)' }, { transform: 'rotate(90deg) translateY(-18%)' }], { duration: 450, fill: 'forwards' }).finished;
+                    particula('💫', { dur: 1300 });
+                    await esperar(1700);
+                    volteo.getAnimations().forEach(a => a.cancel());
+                    cara([]);
+                    await saltar(20);
+                    decir('¡Jaja, era chiste! 😹', 1600);
+                }
+                cara([]);
+            });
+        },
         // Cara pasajera: 'sorprendido', 'enojado' o 'guino'.
         expresion(id, ms){
             ['sorprendido', 'enojado', 'guino'].forEach(c => svg.classList.remove(c));
+            if (id === 'enojado') sonidosChokurei.miauSegun('enojado');
             if (id === 'enojado') clases(['orejas-bajas'], ['ojos-felices', 'ojos-cerrados']);
             svg.classList.add(id);
             despues(ms || 1600, () => { svg.classList.remove(id); if (id === 'enojado') clases([], ['orejas-bajas']); });
@@ -302,11 +409,11 @@ function crearChokurei(contenedor){
             }
         },
         // ---------- Acciones ----------
-        maullar(texto){
+        maullar(texto, tono){
             return accion(async () => {
                 const antes = [...svg.classList].filter(c => CARAS.includes(c));
                 clases(['boca-abierta'], ['boca-triste']);
-                sonidosChokurei.miau(Math.random() < 0.5);
+                if (tono) sonidosChokurei.miauSegun(tono); else sonidosChokurei.miau(Math.random() < 0.5);
                 decir(texto || ['¡Miau!', 'Miau 💕', 'Mrrp?', '¡Miauuu!'][Math.floor(Math.random() * 4)]);
                 await anim(q('.ck-cabeza'), [{ transform: 'rotate(0)' }, { transform: 'rotate(-6deg) translateY(-2px)' }, { transform: 'rotate(0)' }], { duration: 520 }).finished;
                 clases(antes, ['boca-abierta']);

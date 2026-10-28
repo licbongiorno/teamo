@@ -122,12 +122,12 @@ const SECCIONES_TIENDA = [
                 const lo = tiene(i.id);
                 const puesto = (i.tipo === 'ropa' && eq.ropa === i.id) || (i.tipo === 'cama' && eq.cama === i.id) || (i.tipo === 'cuadro' && eq.cuadro === i.id) || (i.tipo === 'alfombra' && eq.alfombra === i.id);
                 const equipable = ['ropa', 'cama', 'cuadro', 'alfombra'].includes(i.tipo);
-                const boton = !lo ? `<button class="btn-principal" ${puntos < i.costo ? 'disabled style="opacity:0.45"' : ''} onclick="comprarTiendaChokurei('${i.id}')">${i.costo} ⭐</button>`
+                const boton = !lo ? `<div class="ck-item-botones"><button class="btn-principal" ${puntos < i.costo ? 'disabled style="opacity:0.45"' : ''} onclick="comprarTiendaChokurei('${i.id}')">${i.costo} ⭐</button><button class="btn-secundario" title="Regalárselo al otro" ${puntos < i.costo ? 'disabled style="opacity:0.45"' : ''} onclick="regalarTiendaChokurei('${i.id}')">🎁</button></div>`
                     : equipable ? `<button class="btn-secundario" onclick="equiparTiendaChokurei('${i.id}')">${puesto ? 'Sacar' : 'Usar'}</button>`
                     : `<span class="texto-tenue">✅ En la habitación</span>`;
                 return `<div class="ck-item${puesto ? ' puesto' : ''}"><div class="emoji">${i.emoji}</div><div class="nombre">${i.nombre}</div>${i.desc ? `<div class="texto-tenue" style="font-size:0.65rem;">${i.desc}</div>` : ''}${boton}</div>`;
             }).join('')}</div>
-            <div class="texto-tenue" style="font-size:0.72rem; margin-top:8px;">Los puntos se ganan jugando en la app. Lo que compra uno es de los dos.</div>`;
+            <div class="texto-tenue" style="font-size:0.72rem; margin-top:8px;">Los puntos se ganan jugando en la app. Lo que compra uno es de los dos. Con 🎁 se lo regalás al otro: queda envuelto hasta que lo abra.</div>`;
     };
     window.seccionTiendaChokurei = (id) => { seccion = id; refrescarPanelChokurei(); };
     window.comprarTiendaChokurei = async (id) => {

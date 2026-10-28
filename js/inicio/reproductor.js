@@ -135,7 +135,14 @@
             }
         }
 
+        // Avisa a las otras pestañas de la app (Chokurei baila si suena música).
+        function avisarMusicaRefugio(sonando) {
+            try { localStorage.setItem('musicaRefugio', JSON.stringify({ sonando, t: Date.now() })); } catch (e) {}
+            try { if (!window._canalMusica) window._canalMusica = new BroadcastChannel('refugio-musica'); window._canalMusica.postMessage({ sonando }); } catch (e) {}
+        }
+
         function onYtEstadoCambio(event) {
+            if (window.YT && YT.PlayerState) avisarMusicaRefugio(event.data === YT.PlayerState.PLAYING);
             const btn = document.getElementById('btn-play-pause');
             const burbuja = document.getElementById('burbuja-reproductor');
             if (event.data === YT.PlayerState.PLAYING) {

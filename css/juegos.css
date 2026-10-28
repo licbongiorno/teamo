@@ -769,3 +769,91 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
 .ck-album img{ width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; cursor:pointer; border:2px solid #fff3; }
 .ck-visor{ position:fixed; inset:0; z-index:18000; background:#0b0812ee; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; }
 .ck-visor img{ max-width:min(92vw,520px); max-height:65vh; border-radius:14px; box-shadow:0 10px 40px #000a; }
+/* Chokurei: formas especiales del nivel 15 */
+.ck-forma{ display:none; }
+.forma-angel .ck-forma-angel, .forma-mago .ck-forma-mago, .forma-astronauta .ck-forma-astronauta, .forma-pirata .ck-forma-pirata{ display:inline; }
+.forma-angel .ck-forma-angel ellipse{ animation:ckTitilar 2s ease-in-out infinite; }
+.forma-mago .ck-acc-corona, .forma-astronauta .ck-acc-corona, .forma-pirata .ck-acc-corona,
+.forma-mago .ck-acc-mono, .forma-astronauta .ck-acc-mono, .forma-pirata .ck-acc-mono, .forma-angel .ck-acc-corona{ display:none; }
+.forma-mago .ck-ropa-gorrolana, .forma-mago .ck-ropa-navidad, .forma-pirata .ck-ropa-gorrolana, .forma-pirata .ck-ropa-navidad, .forma-astronauta .ck-ropa-gorrolana, .forma-astronauta .ck-ropa-navidad{ display:none; }
+.ck-volteo{ transform-style:preserve-3d; }
+/* Chokurei: diario, evolución, logros, ranking */
+.ck-diario{ display:flex; flex-direction:column; gap:10px; max-height:420px; overflow-y:auto; }
+.ck-diario-entrada{ padding:12px 14px; border-radius:6px 16px 16px 6px; background:#fff8ec; color:#4a3628; font-family:Georgia, serif; font-size:0.86rem; line-height:1.5;
+    border-left:4px solid #ff9ec4; box-shadow:0 2px 6px #0003; background-image:repeating-linear-gradient(transparent 0 24px,#e9dccb 24px 25px); }
+.ck-diario-entrada .fecha{ font-weight:700; font-size:0.78rem; color:#b05a7a; margin-bottom:4px; font-family:var(--fuente-texto); }
+.ck-diario-entrada .fecha::first-letter{ text-transform:uppercase; }
+.ck-diario-entrada.hoy{ border-left-color:#8fd3ff; opacity:0.92; }
+.ck-evolucion{ background:linear-gradient(135deg,#c9b6ff33,#ffd34d22); border-color:#ffd34d88; text-align:center; }
+.ck-formas{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.ck-formas button{ display:flex; flex-direction:column; align-items:center; gap:2px; padding:10px; border-radius:14px; border:1px solid var(--borde); background:rgba(255,255,255,0.06); color:var(--texto); font-family:var(--fuente-texto); font-size:0.78rem; cursor:pointer; }
+.ck-formas button span{ font-size:1.8rem; }
+.ck-formas button small{ font-size:0.62rem; color:var(--rosa); }
+.ck-formas button.elegido{ border-color:#ffd34d; background:#ffd34d22; }
+.ck-ranking{ padding:10px; border-radius:14px; background:rgba(255,255,255,0.05); margin-bottom:10px; font-size:0.82rem; }
+.ck-ranking-barras > div{ display:grid; grid-template-columns:52px 1fr 28px; align-items:center; gap:6px; margin:6px 0; }
+.ck-ranking .barra, .ck-logro .barra{ height:8px; border-radius:6px; background:rgba(255,255,255,0.1); overflow:hidden; }
+.ck-ranking .barra > div, .ck-logro .barra > div{ height:100%; background:linear-gradient(90deg,var(--rosa),var(--lila)); }
+.ck-logros{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.ck-logro{ display:flex; flex-direction:column; align-items:center; gap:2px; padding:10px 8px; border-radius:14px; background:rgba(255,255,255,0.04); border:1px solid var(--borde); text-align:center; font-size:0.78rem; opacity:0.75; }
+.ck-logro .emoji{ font-size:1.6rem; }
+.ck-logro small{ font-size:0.65rem; opacity:0.7; }
+.ck-logro .barra{ width:100%; margin-top:4px; }
+.ck-logro.ganado{ opacity:1; border-color:#ffd34d; background:#ffd34d18; }
+/* Chokurei: ambientes, visitas, plantita, pelota */
+.ck-ambientes{ display:flex; gap:6px; margin-bottom:8px; overflow-x:auto; }
+.ck-ambientes button{ flex:1; white-space:nowrap; padding:6px 8px; border-radius:12px; border:1px solid var(--borde); background:transparent; color:var(--texto); font-family:var(--fuente-texto); font-size:0.75rem; cursor:pointer; }
+.ck-ambientes button.activo{ background:rgba(168,237,170,0.2); border-color:#8fe3a8; }
+.ck-ambientes button:disabled{ opacity:0.4; cursor:default; }
+.ck-amb{ position:absolute; pointer-events:none; z-index:1; }
+.ck-habitacion[data-ambiente="jardin"]{ background:linear-gradient(180deg,#9fd8ff 0%,#d6f0ff 60%,#d6f0ff 66%) !important; }
+.ck-habitacion[data-ambiente="jardin"][data-momento="noche"]{ background:linear-gradient(180deg,#1a1a40 0%,#2e2a5c 66%) !important; }
+.ck-habitacion[data-ambiente="jardin"] .ck-piso{ background:linear-gradient(#8fd877,#6cc35a); }
+.ck-habitacion[data-ambiente="jardin"] .ck-ventana, .ck-habitacion[data-ambiente="jardin"] .ck-cuadro, .ck-habitacion[data-ambiente="jardin"] .ck-zocalo,
+.ck-habitacion[data-ambiente="balcon"] .ck-ventana, .ck-habitacion[data-ambiente="balcon"] .ck-cuadro, .ck-habitacion[data-ambiente="balcon"] .ck-zocalo{ display:none; }
+.ck-cerca{ left:0; right:0; bottom:33%; height:12%; background:repeating-linear-gradient(90deg,#fff 0 7%,transparent 7% 10%); border-top:4px solid #fff; opacity:0.9; }
+.ck-nube-libre{ animation:ckNube 30s linear infinite; }
+.ck-habitacion[data-ambiente="cocina"]{ background:repeating-conic-gradient(#e8f6ff 0 25%,#d4edfb 0 50%) 0 0/28px 28px !important; }
+.ck-habitacion[data-ambiente="cocina"] .ck-piso{ background:repeating-conic-gradient(#f3f3f3 0 25%,#c9c9d6 0 50%) 0 0/36px 36px; }
+.ck-mesada{ left:28%; right:30%; bottom:34%; height:12%; background:linear-gradient(#fff 0 18%,#c99b7a 18%); border-radius:4px; box-shadow:0 3px 0 #a5785a; }
+.ck-heladera{ right:5%; bottom:34%; width:16%; height:42%; background:#f4f8ff; border:2px solid #cfd8e8; border-radius:10px; }
+.ck-heladera .puerta{ position:absolute; left:8%; right:8%; top:6%; height:30%; border-bottom:2px solid #cfd8e8; }
+.ck-heladera .puerta.abajo{ top:40%; height:0; border:none; }
+.ck-heladera::after{ content:''; position:absolute; right:12%; top:14%; width:5%; height:16%; background:#9aa6bd; border-radius:3px; }
+.ck-habitacion[data-ambiente="cocina"] .ck-planta{ display:none; }
+.ck-habitacion[data-ambiente="balcon"]{ background:linear-gradient(180deg,#ffb88a 0%,#ffd6c0 66%) !important; }
+.ck-habitacion[data-ambiente="balcon"][data-momento="dia"]{ background:linear-gradient(180deg,#8fd3ff 0%,#dff3ff 66%) !important; }
+.ck-habitacion[data-ambiente="balcon"][data-momento="noche"]{ background:linear-gradient(180deg,#0f0d2a 0%,#2a2560 66%) !important; }
+.ck-ciudad{ left:0; right:0; bottom:33%; height:34%;
+    background:linear-gradient(#5d5f8a,#5d5f8a) 4% 100%/10% 70% no-repeat, linear-gradient(#6c6f9c,#6c6f9c) 16% 100%/8% 95% no-repeat, linear-gradient(#545680,#545680) 27% 100%/12% 55% no-repeat,
+        linear-gradient(#6c6f9c,#6c6f9c) 42% 100%/9% 85% no-repeat, linear-gradient(#5d5f8a,#5d5f8a) 55% 100%/11% 65% no-repeat, linear-gradient(#4b4d75,#4b4d75) 70% 100%/8% 100% no-repeat, linear-gradient(#5d5f8a,#5d5f8a) 84% 100%/13% 75% no-repeat; }
+.ck-habitacion[data-momento="noche"] .ck-ciudad{ filter:brightness(0.6); }
+.ck-baranda{ left:0; right:0; bottom:20%; height:16%; background:repeating-linear-gradient(90deg,#fff 0 1.5%,transparent 1.5% 8%); border-top:5px solid #fff; z-index:4 !important; opacity:0.85; }
+.ck-visita{ position:absolute; font-size:1.7rem; z-index:6; transform:translate(-50%,-50%); pointer-events:none; }
+.ck-perro{ font-size:2.2rem; }
+.ck-plantita{ position:absolute; left:30%; bottom:27%; width:9%; z-index:3; cursor:pointer; text-align:center; }
+.ck-plantita .tallo{ display:block; font-size:1.6rem; line-height:1; transform-origin:bottom; animation:ckMecer 3s ease-in-out infinite; }
+.ck-plantita .maceta{ display:block; height:12px; margin:0 18%; background:linear-gradient(#e07a5f,#c95f45); border-radius:2px 2px 6px 6px; }
+.ck-plantita .gota{ position:absolute; right:-8px; top:-6px; font-size:0.8rem; animation:ckAlerta 1.2s ease-in-out infinite; }
+@keyframes ckMecer{ 0%,100%{ transform:rotate(-3deg); } 50%{ transform:rotate(3deg); } }
+.ck-habitacion[data-ambiente="cocina"] .ck-plantita{ bottom:46%; left:63%; }
+.ck-pelota{ position:absolute; font-size:2rem; transform:translate(-50%,-50%); z-index:9; cursor:pointer; padding:8px; }
+.ck-pelota-ayuda{ position:absolute; left:50%; bottom:3%; transform:translateX(-50%); z-index:9; background:#ffffffd9; color:#3b2c45; padding:4px 10px; border-radius:12px; font-size:0.75rem; font-weight:700; white-space:nowrap; pointer-events:none; }
+.ck-pelota-salir{ position:absolute; right:8px; bottom:8px; z-index:10; border:none; border-radius:10px; padding:5px 10px; background:#ffffffd9; color:#3b2c45; font-size:0.72rem; cursor:pointer; }
+/* Chokurei: mensajes, regalos, sol */
+.ck-nota-fila{ padding:6px 0; border-bottom:1px solid var(--borde); }
+.ck-nota-fila small{ display:block; opacity:0.6; font-size:0.68rem; }
+.ck-carta{ width:min(88vw,380px); padding:22px 20px; border-radius:16px; background:#fff8ec; color:#4a3628; text-align:center; font-family:Georgia, serif;
+    box-shadow:0 12px 40px #000a; animation:ckCarta 0.5s cubic-bezier(.3,1.5,.6,1); }
+.ck-carta .sobre{ font-size:2.6rem; }
+.ck-carta .de{ font-family:var(--fuente-texto); font-size:0.8rem; color:#b05a7a; margin:6px 0 10px; }
+.ck-carta .texto{ font-size:1.15rem; line-height:1.5; white-space:pre-wrap; }
+.ck-carta .firma{ margin-top:12px; font-size:0.75rem; opacity:0.7; }
+@keyframes ckCarta{ from{ transform:scale(0.4) rotate(-10deg); opacity:0; } }
+.ck-item-botones{ display:flex; gap:6px; width:100%; }
+.ck-item-botones .btn-principal{ flex:1; }
+.ck-item-botones .btn-secundario{ width:auto; padding:7px 10px; }
+.ck-regalo-envuelto{ position:absolute; bottom:24%; transform:translateX(-50%); z-index:6; font-size:2.2rem; cursor:pointer; text-align:center; line-height:1; animation:ckRegalo 1.4s ease-in-out infinite; }
+.ck-regalo-envuelto small{ display:block; font-size:0.55rem; font-weight:700; background:#fff; color:#b05a7a; border-radius:8px; padding:1px 5px; margin-top:2px; white-space:nowrap; }
+.ck-sol{ position:absolute; left:12%; bottom:6%; width:26%; height:14%; border-radius:50%; background:radial-gradient(ellipse,#fff6b0aa,#fff6b000 70%); z-index:1; opacity:0; transition:opacity 1s; pointer-events:none; }
+.ck-sol.visible{ opacity:1; }

@@ -76,7 +76,7 @@ async function crearEscritura(){
         tipo: 'escritura',
         titulo: titulo,
         creadaPor: miIdentidad,
-        creadaEn: Date.now(),
+        creadaEn: ahoraSync(),
         turno: miIdentidad,
         estado: 'activa',
         fragmentos: []
@@ -157,7 +157,7 @@ async function agregarFragmento(){
     const siguienteTurno = miIdentidad === 'nico' ? 'carito' : 'nico';
     const res = await window.jugadaSegura(refEscritura(id), (e) => {
         if (!e || e.turno !== miIdentidad || e.estado !== 'activa') return null;
-        return { fragmentos: [...(e.fragmentos || []), { autor: miIdentidad, texto, ts: Date.now() }], turno: siguienteTurno };
+        return { fragmentos: [...(e.fragmentos || []), { autor: miIdentidad, texto, ts: ahoraSync() }], turno: siguienteTurno };
     });
     if (!res) return;
     input.value = '';

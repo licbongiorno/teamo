@@ -230,7 +230,7 @@ async function guardarSerenata(){
         await window.addDoc(window.collection(window.db, 'juegos'), {
             tipo: 'serenata', autor: miIdentidad, audio: _grabadorSerenataAudioUri,
             tituloReal, estado: 'esperando', adivinanza: null, acertada: null,
-            creadoEn: Date.now(),
+            creadoEn: ahoraSync(),
         });
         _grabadorSerenataAudioUri = null;
         const cont = document.getElementById('grabador-serenata');

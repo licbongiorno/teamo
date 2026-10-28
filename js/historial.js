@@ -88,6 +88,8 @@ function escucharUltimosEventos(limite, callback){
 // falla (por ejemplo, sin conexión) se suma igual el total y el juego
 // con increment(), que Firestore guarda y manda cuando vuelve la red.
 async function registrarVictoria(juegoId, ganador){
+    // La Noche de juegos (noche.js) también se entera de los empates.
+    if (typeof nocheRegistrarResultado === 'function') nocheRegistrarResultado(juegoId, ganador === 'nico' || ganador === 'carito' ? ganador : null);
     if (!window.db || (ganador !== 'nico' && ganador !== 'carito')) return;
     const ref = window.doc(window.db, 'juegos', 'ranking');
     const ahora = new Date();

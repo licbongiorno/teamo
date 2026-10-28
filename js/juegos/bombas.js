@@ -57,7 +57,7 @@ function renderBombas(estado){
 
     if (estado.fase === 'jugando') {
         if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBombas(), 'bombas');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -164,7 +164,7 @@ function arrancarCanvasBombas(horaFin){
 
     function actualizarTiempo(){
         const el = document.getElementById('tiempo-bombas');
-        const seg = Math.max(0, Math.ceil((horaFin - Date.now()) / 1000));
+        const seg = Math.max(0, Math.ceil((horaFin - ahoraSync()) / 1000));
         if (el) el.innerText = seg + 's';
     }
 
@@ -192,7 +192,7 @@ function arrancarCanvasBombas(horaFin){
             if (o.x < -30) objetos.splice(i, 1);
         }
         actualizarTiempo();
-        if (Date.now() >= horaFin) { terminar(); return; }
+        if (ahoraSync() >= horaFin) { terminar(); return; }
         window._loopBombas = requestAnimationFrame(loop);
     }
     loop();
@@ -209,5 +209,5 @@ async function finalizarRondaBombas(puntajeObtenido){
 async function revanchaBombas(){
     vibrarJ(10);
     const puntajes = await leerPuntajesBombas();
-    await window.setDoc(refBombas(), { fase: 'esperando', listos: {}, puntajes });
+    await revanchaUnToque(refBombas(), 'bombas', { puntajes });
 }

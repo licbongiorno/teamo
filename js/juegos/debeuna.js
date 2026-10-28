@@ -106,7 +106,7 @@ async function crearDebeUna(direccion){
     try {
         await window.addDoc(window.collection(window.db, 'juegos'), {
             tipo: 'debeuna', de, para, motivo, estado: 'pendiente',
-            creadoEn: Date.now(),
+            creadoEn: ahoraSync(),
         });
         const form = document.getElementById('form-nuevo-debeuna');
         if (form) form.innerHTML = '';
@@ -118,6 +118,6 @@ async function cobrarDebeUna(id){
     vibrarJ([15, 30, 15]);
     if (window.sfx) window.sfx.moneda();
     try {
-        await window.updateDoc(refDebeUna(id), { estado: 'cobrado', cobradoEn: Date.now() });
+        await window.updateDoc(refDebeUna(id), { estado: 'cobrado', cobradoEn: ahoraSync() });
     } catch (e) { console.error('No se pudo cobrar la deuda:', e); }
 }

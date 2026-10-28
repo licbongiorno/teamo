@@ -8,7 +8,7 @@
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {
-    initializeFirestore, doc, enableNetwork, disableNetwork, setDoc, updateDoc, onSnapshot, serverTimestamp,
+    initializeFirestore, doc, getDocFromServer, enableNetwork, disableNetwork, setDoc, updateDoc, onSnapshot, serverTimestamp,
     deleteField, collection, addDoc, query, where, orderBy, limit,
     runTransaction, increment, arrayUnion, arrayRemove
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -34,6 +34,7 @@ const auth = getAuth(app);
 window.db = db;
 window.auth = auth;
 window.doc = doc;
+window.getDocFromServer = getDocFromServer;
 window.setDoc = setDoc;
 window.updateDoc = updateDoc;
 window.onSnapshot = onSnapshot;

@@ -326,8 +326,9 @@ function iniciarJuegos(){
     if (typeof registrarActividadRacha === 'function') registrarActividadRacha();
     if (typeof iniciarDesafioSemanal === 'function') iniciarDesafioSemanal();
     if (typeof iniciarEscuchaPresencia === 'function') iniciarEscuchaPresencia();
+    if (typeof iniciarNocheDeJuegos === 'function') iniciarNocheDeJuegos();
     if (typeof iniciarTeToca === 'function') {
-        iniciarTeToca(miIdentidad, (p) => { renderTarjetaTeToca(p); actualizarTituloTeToca(p); });
+        iniciarTeToca(miIdentidad, (p) => { renderTarjetaTeToca(p); actualizarTituloTeToca(p); if (typeof renderBarraEnVivo === 'function') renderBarraEnVivo(); });
     }
     _verificarNostalgiaNueva();
     // El indicador de "mensaje nuevo" en la burbuja de chat empieza a

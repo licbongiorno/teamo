@@ -187,7 +187,7 @@ async function guardarCapsulaVoz(){
         // setDoc con merge (no updateDoc): la primera vez que alguien
         // manda una cápsula, el documento todavía no existe.
         await window.setDoc(refCapsulaVoz(), {
-            [_campoCapsula(miIdentidad)]: { audio: _grabadorCapsulaAudioUri, enviadoEn: Date.now() },
+            [_campoCapsula(miIdentidad)]: { audio: _grabadorCapsulaAudioUri, enviadoEn: ahoraSync() },
             [_campoFechaEnvio(miIdentidad)]: _fechaHoyCapsula(),
         }, { merge: true });
         _grabadorCapsulaAudioUri = null;

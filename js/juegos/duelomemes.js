@@ -126,7 +126,7 @@ async function crearMeme(){
     try {
         await window.addDoc(window.collection(window.db, 'juegos'), {
             tipo: 'meme', autor: miIdentidad, texto, estado: 'esperando', risa: null,
-            creadoEn: Date.now(),
+            creadoEn: ahoraSync(),
         });
         const form = document.getElementById('form-nuevo-meme');
         if (form) form.innerHTML = '';

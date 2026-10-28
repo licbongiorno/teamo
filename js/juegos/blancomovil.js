@@ -60,7 +60,7 @@ function renderBlancoMovil(estado){
 
     if (estado.fase === 'jugando') {
         if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBlancoMovil(), 'blancomovil');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -125,7 +125,7 @@ function arrancarBlancoMovil(horaFin){
         if (terminando) return;
         idBlancoActual++;
         const miId = idBlancoActual;
-        const nacio = Date.now();
+        const nacio = ahoraSync();
         const cont = document.createElement('div');
         cont.style.cssText = `position:absolute; left:${8 + Math.random() * 74}%; top:${8 + Math.random() * 68}%; width:56px; height:56px;`;
         cont.innerHTML = `
@@ -133,7 +133,7 @@ function arrancarBlancoMovil(horaFin){
             <div class="anillo-blanco"></div>`;
         cont.onclick = () => {
             if (idBlancoActual !== miId) return;
-            const elapsed = Date.now() - nacio;
+            const elapsed = ahoraSync() - nacio;
             const distancia = Math.abs(elapsed - MOMENTO_IDEAL);
             const puntos = distancia < 90 ? 3 : distancia < 220 ? 2 : 1;
             idBlancoActual++; // invalida este blanco para que no se pueda re-tocar
@@ -160,9 +160,9 @@ function arrancarBlancoMovil(horaFin){
 
     function tick(){
         const el = document.getElementById('tiempo-blanco');
-        const seg = Math.max(0, Math.ceil((horaFin - Date.now()) / 1000));
+        const seg = Math.max(0, Math.ceil((horaFin - ahoraSync()) / 1000));
         if (el) el.innerText = seg + 's';
-        if (Date.now() >= horaFin) { terminar(); return; }
+        if (ahoraSync() >= horaFin) { terminar(); return; }
         window._timerBlancoMovil = setTimeout(tick, 200);
     }
     tick();
@@ -194,5 +194,5 @@ async function finalizarRondaBlancoMovil(puntajeObtenido){
 async function revanchaBlancoMovil(){
     vibrarJ(10);
     const puntajes = await leerPuntajesBlancoMovil();
-    await window.setDoc(refBlancoMovil(), { fase: 'esperando', listos: {}, puntajes });
+    await revanchaUnToque(refBlancoMovil(), 'blancomovil', { puntajes });
 }

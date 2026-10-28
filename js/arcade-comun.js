@@ -44,7 +44,7 @@ async function iniciarRondaArcadeSiCorresponde(refDoc, juegoId, duracionMs, extr
             const snap = await tx.get(refDoc);
             const estado = snap.exists() ? snap.data() : null;
             if (!estado || estado.fase !== 'esperando') return; // ya arrancó (el otro dispositivo ganó la carrera) o cambió mientras tanto
-            const horaInicio = Date.now() + 3000;
+            const horaInicio = ahoraSync() + 3000;
             // Se limpian las marcas de "terminé" de la ronda anterior: el
             // documento se mezcla (merge), así que si no, podían quedar de
             // antes y la ronda nueva arrancaba como "ya terminada".
@@ -54,6 +54,7 @@ async function iniciarRondaArcadeSiCorresponde(refDoc, juegoId, duracionMs, extr
                 terminoNico: false, terminoCarito: false,
                 ptsFinalesNico: del, ptsFinalesCarito: del,
                 resultadosNico: del, resultadosCarito: del,
+                ultimoPunto: del, horaRonda: del, cierreEn: del,
                 ...(extraInicial || {})
             }, { merge: true });
         });
@@ -133,9 +134,9 @@ const _pendienteVivo = {};
 function sincronizarPuntajeEnVivo(refDoc, campo, valor, intervaloMs){
     const intervalo = intervaloMs || 600;
     const clave = refDoc.path + '/' + campo;
-    const ahora = Date.now();
+    const ahora = ahoraSync();
     const escribir = (v) => {
-        _ultimaEscrituraVivo[clave] = Date.now();
+        _ultimaEscrituraVivo[clave] = ahoraSync();
         window.updateDoc(refDoc, { [campo]: v }).catch(() => {});
     };
     const transcurrido = ahora - (_ultimaEscrituraVivo[clave] || 0);
@@ -273,3 +274,109 @@ function htmlEsperandoRivalArcade(estado){
 }
 window.yaTermineRondaArcade = yaTermineRondaArcade;
 window.htmlEsperandoRivalArcade = htmlEsperandoRivalArcade;
+
+// ==================== DUELOS DE "EL PRIMERO QUE TOCA" ====================
+// Cálculo, Trivia, Tipeo, Anagramas y Stroop. Antes ganaba el toque
+// que llegaba PRIMERO AL SERVIDOR, no el que se hizo primero: con peor
+// conexión se perdía aunque se hubiera tocado antes. Además la pregunta
+// siguiente le aparecía al instante al que sumó el punto (su propia
+// escritura) y al otro recién cuando le llegaba por internet.
+//
+// Ahora:
+//  - cada toque lleva su hora sincronizada (ahoraSync(), ver reloj.js),
+//    tomada en el momento del toque, antes de esperar a la red;
+//  - si el otro ya se había llevado el punto de esa ronda pero mi toque
+//    fue anterior, el punto pasa a ser mío ("ultimoPunto");
+//  - la ronda siguiente aparece a la vez para los dos, en "horaRonda"
+//    (un ratito después del punto: es la ventana en la que puede
+//    llegar un toque anterior por una conexión más lenta);
+//  - el punto final no cierra la partida al instante: queda en
+//    "cierreEn" por la misma ventana, y recién ahí se declara ganador.
+const PAUSA_RONDA_DUELO_MS = 1200;
+
+function _otroDuelo(){ return miIdentidad === 'nico' ? 'carito' : 'nico'; }
+
+// Se llama ADENTRO de la transacción, con los datos recién leídos.
+// Devuelve los cambios a escribir o null si el toque ya no cuenta.
+function calcularPuntoDuelo(data, rondaEsperada, tToque, meta){
+    if (!data || data.fase !== 'jugando') return null;
+    const yo = miIdentidad, otro = _otroDuelo();
+    const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
+    const ronda = data.ronda || 1;
+    const up = data.ultimoPunto;
+    const cerrar = (cambios) => {
+        if ((cambios.puntajes[yo] || 0) >= meta) { cambios.cierreEn = tToque + PAUSA_RONDA_DUELO_MS; cambios.ganadorPendiente = yo; }
+        else if (data.ganadorPendiente) { cambios.cierreEn = window.deleteField(); cambios.ganadorPendiente = window.deleteField(); }
+        return cambios;
+    };
+    if (ronda === rondaEsperada && !data.ganadorPendiente) {
+        puntajes[yo] = (puntajes[yo] || 0) + 1;
+        return cerrar({ puntajes, ronda: ronda + 1, fallos: {}, horaRonda: ahoraSync() + PAUSA_RONDA_DUELO_MS,
+            ultimoPunto: { ronda: rondaEsperada, quien: yo, t: tToque } });
+    }
+    // El otro se llevó esta ronda, pero yo toqué antes: el punto es mío.
+    if (up && up.ronda === rondaEsperada && up.quien === otro && tToque < up.t) {
+        puntajes[otro] = Math.max(0, (puntajes[otro] || 0) - 1);
+        puntajes[yo] = (puntajes[yo] || 0) + 1;
+        return cerrar({ puntajes, ultimoPunto: { ronda: rondaEsperada, quien: yo, t: tToque } });
+    }
+    return null;
+}
+
+// Cuando vence "cierreEn", cualquiera de los dos cierra la partida.
+// Devuelve el ganador si la cerró este dispositivo.
+async function cerrarDueloSiCorresponde(refDoc, juegoId, textoEvento){
+    let ganador = null;
+    try {
+        await window.runTransaction(window.db, async (tx) => {
+            ganador = null;
+            const snap = await tx.get(refDoc);
+            const d = snap.exists() ? snap.data() : null;
+            if (!d || d.fase !== 'jugando' || !d.ganadorPendiente || ahoraSync() < (d.cierreEn || 0)) return;
+            ganador = d.ganadorPendiente;
+            const victorias = { ...(d.victorias || { nico: 0, carito: 0 }) };
+            victorias[ganador] = (victorias[ganador] || 0) + 1;
+            tx.update(refDoc, { fase: 'terminado', ganador, victorias, ganadorPendiente: window.deleteField(), cierreEn: window.deleteField() });
+        });
+    } catch (e) { console.error('No se pudo cerrar el duelo:', e); return null; }
+    if (ganador) {
+        if (typeof registrarEvento === 'function') registrarEvento('gano_partida', `${nombreJugador(ganador)} ganó ${textoEvento}`);
+        if (typeof registrarVictoria === 'function') registrarVictoria(juegoId, ganador);
+    }
+    return ganador;
+}
+
+// Pantalla entre rondas (o antes del cierre): muestra quién sumó y
+// programa el próximo dibujado justo cuando corresponde. Devuelve true
+// si ya dibujó la pausa (el juego no tiene que dibujar la pregunta).
+const _timersPausaDuelo = {};
+function pausaDueloSiCorresponde(estado, juegoId, refDoc, renderFn, textoEvento){
+    clearTimeout(_timersPausaDuelo[juegoId]);
+    const cont = document.getElementById('contenido-' + juegoId);
+    const up = estado.ultimoPunto;
+    const quien = up ? nombreJugador(up.quien) : '';
+    if (estado.ganadorPendiente) {
+        const falta = (estado.cierreEn || 0) - ahoraSync();
+        cont.innerHTML = `<div class="panel texto-centro logro-animado"><div style="font-size:1.3rem;">🏁 ¡Punto final para ${quien}!</div><div class="texto-tenue destello">Confirmando…</div></div>`;
+        _timersPausaDuelo[juegoId] = setTimeout(() => cerrarDueloSiCorresponde(refDoc, juegoId, textoEvento), Math.max(0, falta) + 50);
+        return true;
+    }
+    const falta = (estado.horaRonda || 0) - ahoraSync();
+    if (falta <= 0) return false;
+    const p = estado.puntajes || { nico: 0, carito: 0 };
+    cont.innerHTML = `<div class="panel texto-centro">
+        <div style="font-size:1.2rem; margin-bottom:6px;">${up ? `✅ Punto para ${quien}` : '⏭️ Nadie acertó'}</div>
+        <div class="texto-tenue">Nico ${p.nico || 0} — Carito ${p.carito || 0}</div>
+        <div class="texto-tenue destello" style="margin-top:6px;">Preparate…</div>
+    </div>`;
+    // Al vencer la pausa se dibuja con el estado MÁS NUEVO (no con el de
+    // ahora): en el medio pudo llegar un punto robado o el fin de la partida.
+    _timersPausaDuelo[juegoId] = setTimeout(() => {
+        const u = window.onSnapshot(refDoc, (snap) => { u(); renderFn(snap.exists() ? snap.data() : null); }, () => {});
+    }, falta + 20);
+    return true;
+}
+
+window.calcularPuntoDuelo = calcularPuntoDuelo;
+window.cerrarDueloSiCorresponde = cerrarDueloSiCorresponde;
+window.pausaDueloSiCorresponde = pausaDueloSiCorresponde;

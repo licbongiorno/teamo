@@ -156,7 +156,7 @@ async function crearCartaEspejo(){
     vibrarJ(12);
     const pregunta = PREGUNTAS_ESPEJO[Math.floor(Math.random() * PREGUNTAS_ESPEJO.length)];
     const docRef = await window.addDoc(window.collection(window.db, 'juegos'), {
-        tipo: 'espejo-carta', pregunta, creadaEn: Date.now(), fase: 'respondiendo',
+        tipo: 'espejo-carta', pregunta, creadaEn: ahoraSync(), fase: 'respondiendo',
         respuestas: { nico: null, carito: null }, predicciones: { nico: null, carito: null }
     });
     abrirCartaEspejo(docRef.id);

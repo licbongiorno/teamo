@@ -165,7 +165,7 @@ async function crearCartaIndagacion(){
         tipo: 'carta-indagacion',
         pregunta,
         creadaPor: miIdentidad,
-        creadaEn: Date.now(),
+        creadaEn: ahoraSync(),
         fase: 'necesita_respuesta',
         respuesta: null,
         adivinanza: null

@@ -63,7 +63,7 @@ function renderPinatas(estado){
 
     if (estado.fase === 'jugando') {
         if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refPinatas(), 'pinatas');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -160,9 +160,9 @@ function arrancarPinatas(horaFin){
 
     function tick(){
         const el = document.getElementById('tiempo-pinatas');
-        const seg = Math.max(0, Math.ceil((horaFin - Date.now()) / 1000));
+        const seg = Math.max(0, Math.ceil((horaFin - ahoraSync()) / 1000));
         if (el) el.innerText = seg + 's';
-        if (Date.now() >= horaFin) { terminar(); return; }
+        if (ahoraSync() >= horaFin) { terminar(); return; }
         window._timerPinatas = setTimeout(tick, 200);
     }
     tick();
@@ -200,5 +200,5 @@ async function finalizarRondaPinatas(puntajeObtenido){
 async function revanchaPinatas(){
     vibrarJ(10);
     const puntajes = await leerPuntajesPinatas();
-    await window.setDoc(refPinatas(), { fase: 'esperando', listos: {}, puntajes });
+    await revanchaUnToque(refPinatas(), 'pinatas', { puntajes });
 }

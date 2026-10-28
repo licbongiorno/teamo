@@ -63,7 +63,7 @@ function renderBuscaminas(estado){
         </div>`;
         if (listoYo && listoRival) {
             iniciarRondaArcadeSiCorresponde(refBuscaminas(), 'buscaminas', 0, {
-                semillaMinas: Date.now(),
+                semillaMinas: ahoraSync(),
                 reveladas: [],
                 reveladasPor: { nico: 0, carito: 0 },
                 ganadorRonda: null
@@ -83,7 +83,7 @@ function renderBuscaminas(estado){
         return;
     }
 
-    const restante = (estado.horaInicio || Date.now()) - Date.now();
+    const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBuscaminas(), 'buscaminas');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -182,8 +182,5 @@ async function revanchaBuscaminas(){
     const estado = await new Promise(res => { const u = window.onSnapshot(refBuscaminas(), s => { u(); res(s.exists() ? s.data() : null); }); });
     const rg = estado?.rondasGanadas || { nico: 0, carito: 0 };
     const terminoMatch = (rg.nico || 0) >= META_RONDAS_BUSCAMINAS || (rg.carito || 0) >= META_RONDAS_BUSCAMINAS;
-    await window.setDoc(refBuscaminas(), {
-        fase: 'esperando', listos: {},
-        rondasGanadas: terminoMatch ? { nico: 0, carito: 0 } : rg
-    });
+    await revanchaUnToque(refBuscaminas(), 'buscaminas', { rondasGanadas: terminoMatch ? { nico: 0, carito: 0 } : rg });
 }

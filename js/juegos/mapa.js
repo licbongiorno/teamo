@@ -83,7 +83,7 @@ async function agregarLugarMapa(){
     if (window.sfx) window.sfx.pop();
     await window.addDoc(window.collection(window.db, 'juegos'), {
         tipo: 'lugar-mapa', nombre, descripcion, categoria: _categoriaElegidaMapa,
-        autor: miIdentidad, creadoEn: Date.now()
+        autor: miIdentidad, creadoEn: ahoraSync()
     });
     if (typeof registrarEvento === 'function') {
         registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} agregó "${nombre}" al Mapa de Nuestros Lugares`);

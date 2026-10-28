@@ -283,7 +283,7 @@ function renderTrivia(estado){
         return;
     }
 
-    const restante = (estado.horaInicio || Date.now()) - Date.now();
+    const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refTrivia(), 'trivia');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -292,6 +292,7 @@ function renderTrivia(estado){
     }
 
     const p = estado.puntajes || { nico: 0, carito: 0 };
+    if (pausaDueloSiCorresponde(estado, 'trivia', refTrivia(), renderTrivia, 'Trivia Relámpago')) return;
     const ronda = estado.ronda || 1;
     const prob = problemaTrivia(ronda);
     const yoFalle = estado.fallos?.[miIdentidad] === ronda;
@@ -327,44 +328,37 @@ async function marcarListoTrivia(){
 }
 
 async function responderTrivia(rondaEsperada, textoElegido){
+    const tToque = ahoraSync(); // hora del toque, antes de esperar a la red
     const ref = refTrivia();
+    const opcion = problemaTrivia(rondaEsperada).opciones.find(o => o.texto === textoElegido);
+    const correcta = !!(opcion && opcion.correcta);
     const resultado = await window.runTransaction(window.db, async (tx) => {
         const snap = await tx.get(ref);
         const data = snap.data();
-        if (!data || data.fase !== 'jugando' || (data.ronda || 1) !== rondaEsperada) return { acierto: false };
-        const ronda = data.ronda || 1;
+        if (!data || data.fase !== 'jugando') return { acierto: false, cuenta: false };
         // Quien ya falló esta pregunta no puede volver a intentar (antes
         // no había castigo y se podían tocar las 4 opciones hasta acertar).
         const fallos = { ...(data.fallos || {}) };
-        if (fallos[miIdentidad] === ronda) return { acierto: false, yaFallo: true };
-        const prob = problemaTrivia(ronda);
-        const opcion = prob.opciones.find(o => o.texto === textoElegido);
-        if (!opcion || !opcion.correcta) {
-            fallos[miIdentidad] = ronda;
+        if (fallos[miIdentidad] === rondaEsperada) return { acierto: false, yaFallo: true };
+        if (!correcta) {
+            if ((data.ronda || 1) !== rondaEsperada) return { acierto: false, cuenta: false };
+            fallos[miIdentidad] = rondaEsperada;
             // Si fallaron los dos, nadie suma y se pasa a la siguiente.
-            if (fallos[miRival] === ronda) tx.update(ref, { fallos: {}, ronda: ronda + 1 });
-            else tx.update(ref, { fallos });
-            return { acierto: false };
+            if (fallos[miRival] === rondaEsperada) {
+                tx.update(ref, { fallos: {}, ronda: rondaEsperada + 1, horaRonda: ahoraSync() + PAUSA_RONDA_DUELO_MS, ultimoPunto: window.deleteField() });
+            } else tx.update(ref, { fallos });
+            return { acierto: false, cuenta: false };
         }
-        const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
-        puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
-        const gano = puntajes[miIdentidad] >= META_TRIVIA;
-        const updates = { puntajes, ronda: ronda + 1, fallos: {} };
-        if (gano) {
-            updates.fase = 'terminado'; updates.ganador = miIdentidad;
-            const victorias = { ...(data.victorias || { nico: 0, carito: 0 }) };
-            victorias[miIdentidad] = (victorias[miIdentidad] || 0) + 1;
-            updates.victorias = victorias;
-        }
-        tx.update(ref, updates);
-        return { acierto: true, gano };
+        const cambios = calcularPuntoDuelo(data, rondaEsperada, tToque, META_TRIVIA);
+        if (!cambios) return { acierto: true, cuenta: false };
+        tx.update(ref, cambios);
+        return { acierto: true, cuenta: true };
     });
-    if (resultado.acierto) {
+    if (resultado.cuenta) {
         vibrarJ(15);
         if (window.sfx) window.sfx.acierto();
-        if (resultado.gano && typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Trivia Relámpago`); if (typeof registrarVictoria === 'function') registrarVictoria('trivia', miIdentidad);
-        }
+    } else if (resultado.acierto) {
+        vibrarJ(10); // acertó, pero el otro tocó antes
     } else if (!resultado.yaFallo) {
         vibrarJ([10, 30, 10]);
         if (window.sfx) window.sfx.error();
@@ -375,5 +369,5 @@ async function responderTrivia(rondaEsperada, textoElegido){
 async function revanchaTrivia(){
     vibrarJ(10);
     const estado = await new Promise(res => { const u = window.onSnapshot(refTrivia(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refTrivia(), { fase: 'esperando', listos: {}, victorias: estado?.victorias || { nico: 0, carito: 0 } });
+    await revanchaUnToque(refTrivia(), 'trivia', { victorias: estado?.victorias || { nico: 0, carito: 0 } });
 }

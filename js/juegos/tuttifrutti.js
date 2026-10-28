@@ -130,9 +130,9 @@ function renderTuttiFrutti(estado){
             if (_tuttiTimerGuardar) { clearTimeout(_tuttiTimerGuardar); _tuttiTimerGuardar = null; }
             window.updateDoc(refTutti(), { [_campoTutti('respuestas', miIdentidad)]: [..._tuttiMias] }).catch(() => {});
         }
-        if (!_tuttiCorrigiendoDesde[estado.ronda]) _tuttiCorrigiendoDesde[estado.ronda] = Date.now();
+        if (!_tuttiCorrigiendoDesde[estado.ronda]) _tuttiCorrigiendoDesde[estado.ronda] = ahoraSync();
         cont.innerHTML = marcador + htmlRevisionTutti(estado);
-        const falta = ESPERA_REVISION_TUTTI_MS - (Date.now() - _tuttiCorrigiendoDesde[estado.ronda]);
+        const falta = ESPERA_REVISION_TUTTI_MS - (ahoraSync() - _tuttiCorrigiendoDesde[estado.ronda]);
         if (falta > 0) setTimeout(() => {
             const b = document.getElementById('btn-confirmar-tutti');
             if (b && !estado[_campoTutti('confirmado', miIdentidad)]) { b.disabled = false; b.style.opacity = ''; b.innerText = '✅ Listo, revisé'; }
@@ -146,7 +146,7 @@ function htmlRevisionTutti(estado){
     const misRechazos = estado[_campoTutti('rechazos', miIdentidad)] || [];
     const confirmeYo = !!estado[_campoTutti('confirmado', miIdentidad)];
     const confirmoRival = !!estado[_campoTutti('confirmado', miRival)];
-    const esperando = (Date.now() - (_tuttiCorrigiendoDesde[estado.ronda] || Date.now())) < ESPERA_REVISION_TUTTI_MS;
+    const esperando = (ahoraSync() - (_tuttiCorrigiendoDesde[estado.ronda] || ahoraSync())) < ESPERA_REVISION_TUTTI_MS;
     let html = `<div class="panel texto-centro">
         <div style="font-size:1.1rem;">✋ ¡${nombreJugador(estado.bastaDe)} cantó BASTA!</div>
         <div class="texto-tenue" style="font-size:0.8rem;">Letra ${estado.letra}. Tocá ✓/✗ en las respuestas de ${nombreJugador(miRival)} para aceptarlas o rechazarlas.</div>

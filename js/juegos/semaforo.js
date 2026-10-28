@@ -55,7 +55,7 @@ function renderSemaforo(estado){
 
     if (estado.fase === 'jugando') {
         if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refSemaforo(), 'semaforo');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -124,7 +124,7 @@ function arrancarRondasSemaforo(horaInicio){
         const rng = rngRonda(Math.floor(horaInicio / 977) + ronda * 7919);
         const demoraVerde = DEMORA_VERDE_MIN + Math.floor(rng() * DEMORA_VERDE_RANGO);
         horaVerde = inicioVentana + demoraVerde;
-        timeoutVerde = setTimeout(ponerVerde, Math.max(0, horaVerde - Date.now()));
+        timeoutVerde = setTimeout(ponerVerde, Math.max(0, horaVerde - ahoraSync()));
         timeoutFinVentana = setTimeout(() => {
             if (!tocado) {
                 tocado = true;
@@ -133,14 +133,14 @@ function arrancarRondasSemaforo(horaInicio){
             }
             ronda++;
             timeoutSiguiente = setTimeout(jugarSiguiente, 50);
-        }, Math.max(0, (inicioVentana + DURACION_VENTANA_SEMAFORO) - Date.now()));
+        }, Math.max(0, (inicioVentana + DURACION_VENTANA_SEMAFORO) - ahoraSync()));
     }
 
     window.tocarSemaforo = function(){
         if (tocado) return;
         tocado = true;
         clearTimeout(timeoutFinVentana);
-        const ahora = Date.now();
+        const ahora = ahoraSync();
         if (ahora < horaVerde) {
             resultados.push({ anticipado: true });
             vibrarJ([10, 10, 10]);
@@ -237,5 +237,5 @@ function renderResultadoFinalSemaforo(resNico, resCarito){
 
 async function revanchaSemaforo(){
     vibrarJ(10);
-    await window.setDoc(refSemaforo(), { fase: 'esperando', listos: {} });
+    await revanchaUnToque(refSemaforo(), 'semaforo');
 }

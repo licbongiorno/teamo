@@ -50,7 +50,7 @@ function renderBarometro(estado){
     </div>`;
 
     const pausaHasta = estado.pausaHasta || 0;
-    const enPausa = pausaHasta > Date.now();
+    const enPausa = pausaHasta > ahoraSync();
     if (enPausa) {
         html += `<div class="panel texto-centro" id="panel-pausa-barometro">
             <p class="texto-tenue" style="margin:0 0 6px;">🌬️ Tómense un respiro</p>
@@ -66,7 +66,7 @@ function renderBarometro(estado){
 
     if (enPausa) {
         const actualizarReloj = () => {
-            const restanteMs = pausaHasta - Date.now();
+            const restanteMs = pausaHasta - ahoraSync();
             const relojEl = document.getElementById('reloj-pausa-barometro');
             if (!relojEl) { if (_intervaloBarometro) { clearInterval(_intervaloBarometro); _intervaloBarometro = null; } return; }
             if (restanteMs <= 0) {
@@ -98,6 +98,6 @@ async function pasarTurnoBarometro(){
 
 async function pedirPausaBarometro(){
     vibrarJ([15, 30, 15]);
-    try { await window.setDoc(refBarometro(), { pausaHasta: Date.now() + 10 * 60 * 1000 }, { merge: true }); }
+    try { await window.setDoc(refBarometro(), { pausaHasta: ahoraSync() + 10 * 60 * 1000 }, { merge: true }); }
     catch (e) { console.error('No se pudo pedir la pausa:', e); }
 }

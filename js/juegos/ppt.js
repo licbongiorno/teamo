@@ -72,7 +72,7 @@ function renderPPT(estado){
         return;
     }
 
-    const restante = (estado.horaInicio || Date.now()) - Date.now();
+    const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refPPT(), 'ppt');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -180,5 +180,5 @@ async function siguienteRondaPPT(rondaAnterior){
 async function revanchaPPT(){
     vibrarJ(10);
     const estado = await new Promise(res => { const u = window.onSnapshot(refPPT(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refPPT(), { fase: 'esperando', listos: {}, victorias: estado?.victorias || { nico: 0, carito: 0 } });
+    await revanchaUnToque(refPPT(), 'ppt', { victorias: estado?.victorias || { nico: 0, carito: 0 } });
 }

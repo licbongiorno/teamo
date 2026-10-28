@@ -58,7 +58,7 @@ function renderBurbujas(estado){
 
     if (estado.fase === 'jugando') {
         if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBurbujas(), 'burbujas');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -165,7 +165,7 @@ function arrancarCanvasBurbujas(horaFin){
 
     function actualizarTiempo(){
         const el = document.getElementById('tiempo-burbujas');
-        const seg = Math.max(0, Math.ceil((horaFin - Date.now()) / 1000));
+        const seg = Math.max(0, Math.ceil((horaFin - ahoraSync()) / 1000));
         if (el) el.innerText = seg + 's';
     }
 
@@ -193,7 +193,7 @@ function arrancarCanvasBurbujas(horaFin){
             if (o.x < -30) objetos.splice(i, 1);
         }
         actualizarTiempo();
-        if (Date.now() >= horaFin) { terminar(); return; }
+        if (ahoraSync() >= horaFin) { terminar(); return; }
         window._loopBurbujas = requestAnimationFrame(loop);
     }
     loop();
@@ -210,5 +210,5 @@ async function finalizarRondaBurbujas(puntajeObtenido){
 async function revanchaBurbujas(){
     vibrarJ(10);
     const puntajes = await leerPuntajesBurbujas();
-    await window.setDoc(refBurbujas(), { fase: 'esperando', listos: {}, puntajes });
+    await revanchaUnToque(refBurbujas(), 'burbujas', { puntajes });
 }

@@ -55,7 +55,7 @@ function renderPesca(estado){
     }
 
     if (estado.fase === 'jugando') {
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refPesca(), 'pesca');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -195,9 +195,9 @@ function arrancarCanvasPesca(horaFin){
             if (o.x < -30 || o.x > canvas.width + 30) objetos.splice(i, 1);
         }
         const el = document.getElementById('tiempo-pesca');
-        const seg = Math.max(0, Math.ceil((horaFin - Date.now()) / 1000));
+        const seg = Math.max(0, Math.ceil((horaFin - ahoraSync()) / 1000));
         if (el) el.innerText = seg + 's';
-        if (Date.now() >= horaFin) { terminar(); return; }
+        if (ahoraSync() >= horaFin) { terminar(); return; }
         window._loopPesca = requestAnimationFrame(loop);
     }
     loop();
@@ -227,12 +227,8 @@ async function finalizarRondaPesca(){
 
 async function revanchaPesca(){
     vibrarJ(10);
-    // Sólo si la ronda ya terminó: si el otro tocó Revancha primero y ya
-    // marcó "listo", no se le borra.
-    await window.runTransaction(window.db, async (tx) => {
-        const snap = await tx.get(refPesca());
-        const data = snap.exists() ? snap.data() : null;
-        if (data && data.fase !== 'terminado') return;
-        tx.set(refPesca(), { fase: 'esperando', listos: {}, mejorConjunto: data?.mejorConjunto || 0 });
-    });
+    const data = await new Promise(res => { const u = window.onSnapshot(refPesca(), s => { u(); res(s.exists() ? s.data() : null); }); });
+    // revanchaUnToque (presencia.js) no le borra el "listo" al otro si
+    // ya había tocado Revancha primero.
+    await revanchaUnToque(refPesca(), 'pesca', { mejorConjunto: data?.mejorConjunto || 0 });
 }

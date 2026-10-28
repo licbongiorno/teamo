@@ -65,7 +65,7 @@ function renderMemoriaRelampago(estado){
         </div>`;
         if (listoYo && listoRival) {
             iniciarRondaArcadeSiCorresponde(refMemoriaRelampago(), 'memoriarelampago', 0, {
-                semilla: Date.now(), volteadas: [], resueltas: [], puntajes: { nico: 0, carito: 0 }
+                semilla: ahoraSync(), volteadas: [], resueltas: [], puntajes: { nico: 0, carito: 0 }
             });
         }
         return;
@@ -84,7 +84,7 @@ function renderMemoriaRelampago(estado){
         return;
     }
 
-    const restante = (estado.horaInicio || Date.now()) - Date.now();
+    const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refMemoriaRelampago(), 'memoriarelampago');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -209,5 +209,5 @@ async function limpiarVolteadasMemoria(){
 async function revanchaMemoriaRelampago(){
     vibrarJ(10);
     const estado = await new Promise(res => { const u = window.onSnapshot(refMemoriaRelampago(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refMemoriaRelampago(), { fase: 'esperando', listos: {}, victorias: estado?.victorias || { nico: 0, carito: 0 } });
+    await revanchaUnToque(refMemoriaRelampago(), 'memoriarelampago', { victorias: estado?.victorias || { nico: 0, carito: 0 } });
 }

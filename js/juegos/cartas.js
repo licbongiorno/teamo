@@ -44,7 +44,7 @@ function renderListaCartas(cartas){
     } else {
         html += `<div class="lista-escrituras">`;
         lista.forEach(c => {
-            const puedeAbrir = Date.now() >= c.fechaApertura;
+            const puedeAbrir = ahoraSync() >= c.fechaApertura;
             const fechaTexto = new Date(c.fechaApertura).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
             if (_tabActualCartas === 'recibidas') {
                 if (!puedeAbrir) {
@@ -102,15 +102,15 @@ async function enviarCartaTiempo(){
     if (fechaInput) {
         fechaApertura = new Date(fechaInput + 'T09:00:00').getTime();
     } else if (_plazoSeleccionadoCarta) {
-        fechaApertura = Date.now() + _plazoSeleccionadoCarta * 86400000;
+        fechaApertura = ahoraSync() + _plazoSeleccionadoCarta * 86400000;
     } else {
-        fechaApertura = Date.now() + 86400000; // por defecto, mañana
+        fechaApertura = ahoraSync() + 86400000; // por defecto, mañana
     }
     vibrarJ([15, 30, 15]);
     if (window.sfx) window.sfx.swoosh();
     await window.addDoc(window.collection(window.db, 'juegos'), {
         tipo: 'carta-tiempo', autor: miIdentidad, destinatario: miRival, texto,
-        creadaEn: Date.now(), fechaApertura, abierta: false, fechaAbierta: null
+        creadaEn: ahoraSync(), fechaApertura, abierta: false, fechaAbierta: null
     });
     if (typeof registrarEvento === 'function') {
         registrarEvento('carta_tiempo_enviada', `${nombreJugador(miIdentidad)} mandó una carta para abrir después`);
@@ -131,12 +131,12 @@ function abrirCartaTiempo(id){
 
 async function renderCartaTiempoAbierta(c){
     const cont = document.getElementById('contenido-cartas');
-    const puedeVer = Date.now() >= c.fechaApertura;
+    const puedeVer = ahoraSync() >= c.fechaApertura;
     if (!puedeVer) { mostrarListaCartas(); return; }
 
     if (c.destinatario === miIdentidad && !c.abierta) {
         if (window.sfx) window.sfx.revelar();
-        await window.updateDoc(refCartaTiempo(c.id), { abierta: true, fechaAbierta: Date.now() });
+        await window.updateDoc(refCartaTiempo(c.id), { abierta: true, fechaAbierta: ahoraSync() });
         return; // el propio onSnapshot va a re-renderizar con abierta:true
     }
 

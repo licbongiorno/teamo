@@ -74,7 +74,7 @@ function renderSimon(estado){
         </div>`;
         if (listoYo && listoRival) {
             iniciarRondaArcadeSiCorresponde(refSimon(), 'simon', 0, {
-                semilla: Date.now(), nivel: 1, horaMuestraInicio: Date.now() + 3500,
+                semilla: ahoraSync(), nivel: 1, horaMuestraInicio: ahoraSync() + 3500,
                 completoNico: null, completoCarito: null, perdedor: null, ganador: null
             });
         }
@@ -92,7 +92,7 @@ function renderSimon(estado){
     }
 
     // Cuenta regresiva inicial (una sola vez, antes del nivel 1).
-    const restanteInicio = (estado.horaInicio || Date.now()) - Date.now();
+    const restanteInicio = (estado.horaInicio || ahoraSync()) - ahoraSync();
     if (restanteInicio > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refSimon(), 'simon');
         cont.innerHTML = htmlCuentaRegresivaArcade(restanteInicio);
@@ -115,7 +115,7 @@ function renderSimon(estado){
         return;
     }
 
-    const elapsedMuestra = Date.now() - (estado.horaMuestraInicio || Date.now());
+    const elapsedMuestra = ahoraSync() - (estado.horaMuestraInicio || ahoraSync());
     const duracionMuestra = nivel * PASO_SIMON_MS + 350;
 
     if (elapsedMuestra < 0) {
@@ -202,7 +202,7 @@ async function marcarCompletoSimon(nivel){
         const campoRival = `completo${_capSimon(miRival)}`;
         if (data[campoRival] === nivel) {
             updates.nivel = nivel + 1;
-            updates.horaMuestraInicio = Date.now() + 900;
+            updates.horaMuestraInicio = ahoraSync() + 900;
             updates.completoNico = null;
             updates.completoCarito = null;
         }
@@ -235,5 +235,5 @@ async function revanchaSimon(){
     vibrarJ(10);
     _simonNivelMontado = 0;
     const estado = await new Promise(res => { const u = window.onSnapshot(refSimon(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refSimon(), { fase: 'esperando', listos: {}, victorias: estado?.victorias || { nico: 0, carito: 0 } });
+    await revanchaUnToque(refSimon(), 'simon', { victorias: estado?.victorias || { nico: 0, carito: 0 } });
 }

@@ -140,7 +140,7 @@ function renderPalabras(estado){
     }
 
     if (estado.fase === 'jugando') {
-        const restanteInicio = estado.horaInicio - Date.now();
+        const restanteInicio = estado.horaInicio - ahoraSync();
         if (restanteInicio > -300) {
             cont.innerHTML = marcador + htmlCuentaRegresivaArcade(restanteInicio);
             if (_palabrasTimer) clearTimeout(_palabrasTimer);
@@ -176,9 +176,9 @@ function renderPalabras(estado){
     if (estado.fase === 'revisando') {
         _palabrasRondaDibujada = null;
         const ronda = estado.horaInicio;
-        if (!_palabrasRevisionDesde[ronda]) _palabrasRevisionDesde[ronda] = Date.now();
+        if (!_palabrasRevisionDesde[ronda]) _palabrasRevisionDesde[ronda] = ahoraSync();
         cont.innerHTML = marcador + htmlRevisionPalabras(estado);
-        const falta = ESPERA_REVISION_PALABRAS_MS - (Date.now() - _palabrasRevisionDesde[ronda]);
+        const falta = ESPERA_REVISION_PALABRAS_MS - (ahoraSync() - _palabrasRevisionDesde[ronda]);
         if (falta > 0) setTimeout(() => {
             const b = document.getElementById('btn-confirmar-palabras');
             if (b && !estado[_campoPal('confirmado', miIdentidad)]) { b.disabled = false; b.style.opacity = ''; b.innerText = '✅ Listo, revisé'; }
@@ -188,7 +188,7 @@ function renderPalabras(estado){
 
 function tickTiempoPalabras(estado){
     if (_palabrasTimer) clearTimeout(_palabrasTimer);
-    const restante = estado.horaFin - Date.now();
+    const restante = estado.horaFin - ahoraSync();
     const el = document.getElementById('tiempo-palabras');
     if (el) el.innerText = restante > 0 ? `⏱️ ${Math.ceil(restante / 1000)} s` : '⏱️ ¡Tiempo!';
     if (restante <= 0) { terminarTiempoPalabras(); return; }
@@ -223,7 +223,7 @@ async function enviarPalabra(){
     if (palabra.length < 3) { avisar('Tiene que tener 3 letras o más.'); return; }
     if (_palabrasMias.includes(palabra)) { avisar(`Ya tenés "${palabra}".`); return; }
     const estado = await new Promise(res => { const u = window.onSnapshot(refPalabras(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    if (!estado || estado.fase !== 'jugando' || estado.horaInicio !== ronda || Date.now() > estado.horaFin) { avisar('Se terminó el tiempo.'); return; }
+    if (!estado || estado.fase !== 'jugando' || estado.horaInicio !== ronda || ahoraSync() > estado.horaFin) { avisar('Se terminó el tiempo.'); return; }
     if (!palabraEnGrilla(estado.grilla, palabra)) {
         avisar(`"${palabra}" no se puede armar con letras vecinas.`);
         vibrarJ([10, 30, 10]);
@@ -244,7 +244,7 @@ async function terminarTiempoPalabras(){
     await window.runTransaction(window.db, async (tx) => {
         const snap = await tx.get(ref);
         const e = snap.exists() ? snap.data() : null;
-        if (!e || e.fase !== 'jugando' || Date.now() < e.horaFin) return;
+        if (!e || e.fase !== 'jugando' || ahoraSync() < e.horaFin) return;
         tx.update(ref, { fase: 'revisando' });
     }).catch(() => {});
 }
@@ -256,7 +256,7 @@ function htmlRevisionPalabras(estado){
     const meRechazo = estado[_campoPal('rechazos', miRival)] || [];
     const confirmeYo = !!estado[_campoPal('confirmado', miIdentidad)];
     const confirmoRival = !!estado[_campoPal('confirmado', miRival)];
-    const esperando = (Date.now() - (_palabrasRevisionDesde[estado.horaInicio] || Date.now())) < ESPERA_REVISION_PALABRAS_MS;
+    const esperando = (ahoraSync() - (_palabrasRevisionDesde[estado.horaInicio] || ahoraSync())) < ESPERA_REVISION_PALABRAS_MS;
     const chip = (p, rechazada, repetida, boton) =>
         `<span class="chip-palabra${rechazada ? ' chip-rechazada' : ''}${repetida ? ' chip-repetida' : ''}">${_escPal(p)}${repetida ? ' <small>(los dos)</small>' : ''}${boton || ''}</span>`;
     let html = `<div class="panel texto-centro">
@@ -307,7 +307,7 @@ async function marcarListoPalabras(){
         const listos = { ...(estado?.listos || {}), [miIdentidad]: true };
         const puntajes = estado?.puntajes || { nico: 0, carito: 0 };
         if (listos.nico && listos.carito) {
-            const horaInicio = Date.now() + 3000;
+            const horaInicio = ahoraSync() + 3000;
             tx.set(ref, {
                 fase: 'jugando', listos: {}, puntajes, horaInicio, horaFin: horaInicio + DURACION_PALABRAS,
                 grilla: generarGrillaPalabras(),

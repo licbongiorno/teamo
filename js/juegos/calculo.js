@@ -80,7 +80,7 @@ function renderCalculo(estado){
         return;
     }
 
-    const restante = (estado.horaInicio || Date.now()) - Date.now();
+    const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refCalculo(), 'calculo');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -88,6 +88,7 @@ function renderCalculo(estado){
         return;
     }
 
+    if (pausaDueloSiCorresponde(estado, 'calculo', refCalculo(), renderCalculo, 'Cálculo Mental Rayo')) return;
     const p = estado.puntajes || { nico: 0, carito: 0 };
     const prob = problemaCalculo(estado.ronda || 1);
     cont.innerHTML = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">Nico ${p.nico || 0} — Carito ${p.carito || 0} · a ${META_CALCULO}</div>
@@ -119,32 +120,26 @@ async function marcarListoCalculo(){
 }
 
 async function responderCalculo(rondaEsperada, valor){
+    // La hora del toque se toma ACÁ, antes de esperar a la red (ver
+    // calcularPuntoDuelo en arcade-comun.js).
+    const tToque = ahoraSync();
     const ref = refCalculo();
-    const resultado = await window.runTransaction(window.db, async (tx) => {
-        const snap = await tx.get(ref);
-        const data = snap.data();
-        if (!data || data.fase !== 'jugando' || (data.ronda || 1) !== rondaEsperada) return { acierto: false };
-        const prob = problemaCalculo(data.ronda || 1);
-        if (valor !== prob.correcta) return { acierto: false };
-        const puntajes = { ...(data.puntajes || { nico: 0, carito: 0 }) };
-        puntajes[miIdentidad] = (puntajes[miIdentidad] || 0) + 1;
-        const gano = puntajes[miIdentidad] >= META_CALCULO;
-        const updates = { puntajes, ronda: (data.ronda || 1) + 1 };
-        if (gano) {
-            updates.fase = 'terminado'; updates.ganador = miIdentidad;
-            const victorias = { ...(data.victorias || { nico: 0, carito: 0 }) };
-            victorias[miIdentidad] = (victorias[miIdentidad] || 0) + 1;
-            updates.victorias = victorias;
-        }
-        tx.update(ref, updates);
-        return { acierto: true, gano };
-    });
-    if (resultado.acierto) {
+    const correcta = valor === problemaCalculo(rondaEsperada).correcta;
+    let resultado = { acierto: correcta, cuenta: false };
+    if (correcta) {
+        resultado = await window.runTransaction(window.db, async (tx) => {
+            const snap = await tx.get(ref);
+            const cambios = calcularPuntoDuelo(snap.data(), rondaEsperada, tToque, META_CALCULO);
+            if (!cambios) return { acierto: true, cuenta: false };
+            tx.update(ref, cambios);
+            return { acierto: true, cuenta: true };
+        });
+    }
+    if (resultado.cuenta) {
         vibrarJ(15);
         if (window.sfx) window.sfx.acierto();
-        if (resultado.gano && typeof registrarEvento === 'function') {
-            registrarEvento('gano_partida', `${nombreJugador(miIdentidad)} ganó Cálculo Mental Rayo`); if (typeof registrarVictoria === 'function') registrarVictoria('calculo', miIdentidad);
-        }
+    } else if (resultado.acierto) {
+        vibrarJ(10); // acertó, pero el otro tocó antes
     } else {
         vibrarJ([10, 30, 10]);
         if (window.sfx) window.sfx.error();
@@ -155,5 +150,5 @@ async function responderCalculo(rondaEsperada, valor){
 async function revanchaCalculo(){
     vibrarJ(10);
     const estado = await new Promise(res => { const u = window.onSnapshot(refCalculo(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refCalculo(), { fase: 'esperando', listos: {}, victorias: estado?.victorias || { nico: 0, carito: 0 } });
+    await revanchaUnToque(refCalculo(), 'calculo', { victorias: estado?.victorias || { nico: 0, carito: 0 } });
 }

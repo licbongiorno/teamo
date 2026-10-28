@@ -297,5 +297,14 @@ async function confirmarJugadaUno(estadoVisto, indice, colorNuevo){
 
 async function revanchaUno(){
     vibrarJ(12);
-    await window.setDoc(refUno(), { fase: 'esperando', listos: {} });
+    // UNO reparte adentro de marcarListoUno cuando están los dos, así que
+    // la revancha deja la mesa en "esperando" (si el otro no la pidió ya)
+    // y después marca listo por el camino normal.
+    invitarAJugar('uno', 'revancha');
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(refUno());
+        const d = snap.exists() ? snap.data() : null;
+        if (!d || d.fase !== 'esperando') tx.set(refUno(), { fase: 'esperando', listos: {} });
+    });
+    await marcarListoUno();
 }

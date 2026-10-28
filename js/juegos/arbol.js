@@ -67,7 +67,7 @@ async function agregarPuntosArbol(cantidad, mensaje){
     await window.runTransaction(window.db, async (tx) => {
         const snap = await tx.get(ref);
         const data = snap.exists() ? snap.data() : { puntos: 0, historial: [] };
-        const historial = [...(data.historial || []), { texto: mensaje, autor: miIdentidad, ts: Date.now() }].slice(-12);
+        const historial = [...(data.historial || []), { texto: mensaje, autor: miIdentidad, ts: ahoraSync() }].slice(-12);
         tx.set(ref, { puntos: (data.puntos || 0) + cantidad, historial }, { merge: true });
     });
     if (typeof registrarEvento === 'function') {

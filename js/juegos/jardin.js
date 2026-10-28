@@ -28,7 +28,7 @@ function etapaJardinActual(progreso){
 function nivelActualJardin(timestampGuardado){
     if (!timestampGuardado) return 100;
     const ms = timestampGuardado.toDate ? timestampGuardado.toDate().getTime() : timestampGuardado;
-    const horasTranscurridas = Math.max(0, (Date.now() - ms) / 3600000);
+    const horasTranscurridas = Math.max(0, (ahoraSync() - ms) / 3600000);
     return Math.max(0, Math.round(100 - horasTranscurridas * DECAIMIENTO_POR_HORA_JARDIN));
 }
 

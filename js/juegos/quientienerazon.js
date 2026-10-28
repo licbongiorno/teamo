@@ -87,7 +87,7 @@ async function crearTemaRazon(){
         await window.addDoc(window.collection(window.db, 'juegos'), {
             tipo: 'debate', pregunta, creadoPor: miIdentidad,
             victoriasNico: 0, victoriasCarito: 0,
-            creadoEn: Date.now(), actualizadoEn: Date.now()
+            creadoEn: ahoraSync(), actualizadoEn: ahoraSync()
         });
         const form = document.getElementById('form-nuevo-tema-razon');
         if (form) form.innerHTML = '';
@@ -100,6 +100,6 @@ async function votarTemaRazon(id, jugador){
     if (window.sfx) window.sfx.click();
     const campo = jugador === 'nico' ? 'victoriasNico' : 'victoriasCarito';
     try {
-        await window.updateDoc(refTemaRazon(id), { [campo]: window.increment(1), actualizadoEn: Date.now() });
+        await window.updateDoc(refTemaRazon(id), { [campo]: window.increment(1), actualizadoEn: ahoraSync() });
     } catch (e) { console.error('No se pudo sumar el voto:', e); }
 }

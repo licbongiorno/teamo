@@ -290,7 +290,7 @@ function _enviarPingPong(pregunta, conWhatsApp){
             de: miIdentidad,
             pregunta: { texto: pregunta.texto, cat: pregunta.cat },
             usadas: pregunta.id && !usadas.includes(pregunta.id) ? [...usadas, pregunta.id] : usadas,
-            enviadaEn: Date.now()
+            enviadaEn: ahoraSync()
         }, { merge: true });
     })).then(() => {
         _ppCandidata = null;
@@ -321,7 +321,7 @@ async function _cerrarRondaPingPong(respuesta, paso){
             const snap = await tx.get(ref);
             const d = snap.exists() ? snap.data() : null;
             if (!d || d.fase !== 'respondiendo' || d.turno !== miIdentidad) return;
-            ronda = { pregunta: d.pregunta.texto, cat: d.pregunta.cat, de: d.de, por: miIdentidad, respuesta, paso, en: Date.now() };
+            ronda = { pregunta: d.pregunta.texto, cat: d.pregunta.cat, de: d.de, por: miIdentidad, respuesta, paso, en: ahoraSync() };
             tx.update(ref, {
                 fase: 'eligiendo', turno: miIdentidad, pregunta: null, ultima: ronda,
                 pelotazos: (d.pelotazos || 0) + (paso ? 0 : 1)

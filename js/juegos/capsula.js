@@ -10,7 +10,7 @@ function iniciarCapsula(){
     if (window._unsubCapsula) window._unsubCapsula();
     window._unsubCapsula = window.onSnapshot(refCapsula(), (snap) => {
         const datos = snap.exists() ? snap.data() : null;
-        const abierta = !!datos && Date.now() >= datos.fechaApertura;
+        const abierta = !!datos && ahoraSync() >= datos.fechaApertura;
         if (window.sfx && _capsulaAbiertaAnterior === false && abierta) window.sfx.logro();
         if (window.fx) window.fx.confeti();
         _capsulaAbiertaAnterior = datos ? abierta : null;
@@ -37,11 +37,11 @@ function renderCapsula(estado){
         return;
     }
 
-    const abierta = Date.now() >= estado.fechaApertura;
+    const abierta = ahoraSync() >= estado.fechaApertura;
     const items = estado.items || [];
 
     if (!abierta) {
-        const dias = Math.ceil((estado.fechaApertura - Date.now()) / 86400000);
+        const dias = Math.ceil((estado.fechaApertura - ahoraSync()) / 86400000);
         cont.innerHTML = `<div class="panel texto-centro">
             <div style="font-size:2rem;">📦</div>
             <div class="texto-tenue">Sellada hasta el ${new Date(estado.fechaApertura).toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' })}</div>
@@ -88,7 +88,7 @@ async function crearCapsula(dias){
     vibrarJ(12);
     if (window.sfx) window.sfx.swoosh();
     await window.setDoc(refCapsula(), {
-        fechaApertura: Date.now() + dias * 86400000, items: [], creadaEn: Date.now()
+        fechaApertura: ahoraSync() + dias * 86400000, items: [], creadaEn: ahoraSync()
     });
 }
 
@@ -104,8 +104,8 @@ async function agregarItemCapsula(){
     const agregado = await window.runTransaction(window.db, async (tx) => {
         const snap = await tx.get(ref);
         const data = snap.exists() ? snap.data() : null;
-        if (!data || Date.now() >= data.fechaApertura) return false;
-        const items = [...(data.items || []), { autor: miIdentidad, texto, ts: Date.now() }];
+        if (!data || ahoraSync() >= data.fechaApertura) return false;
+        const items = [...(data.items || []), { autor: miIdentidad, texto, ts: ahoraSync() }];
         tx.update(ref, { items });
         return true;
     });

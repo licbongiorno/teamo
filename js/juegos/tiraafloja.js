@@ -73,7 +73,7 @@ function renderTiraAfloja(estado){
     }
 
     // fase === 'jugando'
-    const restante = (estado.horaInicio || Date.now()) - Date.now();
+    const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refTiraAfloja(), 'tiraafloja');
         cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -186,7 +186,5 @@ async function revanchaTiraAfloja(){
     _toquesLocalesTA = 0;
     const snap = await new Promise(res => { const u = window.onSnapshot(refTiraAfloja(), s => { u(); res(s); }); });
     const anterior = snap.exists() ? snap.data() : null;
-    await window.setDoc(refTiraAfloja(), {
-        fase: 'esperando', listos: {}, puntajes: anterior?.puntajes || { nico: 0, carito: 0 }
-    });
+    await revanchaUnToque(refTiraAfloja(), 'tiraafloja', { puntajes: anterior?.puntajes || { nico: 0, carito: 0 } });
 }

@@ -83,7 +83,7 @@ async function marcarTermometro(valor){
         const yaExistia = snapExistente.exists();
         await window.setDoc(refTermometro(idDeHoy), {
             tipo: 'termometro-dia', fecha: hoy, autor: miIdentidad, valor,
-            creadoEn: yaExistia ? snapExistente.data().creadoEn : Date.now()
+            creadoEn: yaExistia ? snapExistente.data().creadoEn : ahoraSync()
         }, { merge: true });
         if (!yaExistia && typeof registrarEvento === 'function') {
             registrarEvento('cuidado_compartido', `${nombreJugador(miIdentidad)} marcó cómo está hoy`);

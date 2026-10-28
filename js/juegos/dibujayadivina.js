@@ -176,6 +176,8 @@ function renderDibujaYAdivina(estado){
     configurarCanvasDibujo(estado, soyDibujante);
 }
 
+function refDibujoVivo(){ return window.doc(window.db, 'juegos', 'dibujayadivina-vivo'); }
+
 function configurarCanvasDibujo(estado, soyDibujante){
     const canvas = document.getElementById('canvas-dibujo');
     if (!canvas) return;
@@ -196,7 +198,34 @@ function configurarCanvasDibujo(estado, soyDibujante){
     }
     redibujarTodo();
 
-    if (!soyDibujante) return;
+    // Trazo en directo: mientras el dibujante mueve el dedo, el trazo
+    // que está haciendo se va guardando aparte (dibujayadivina-vivo) y
+    // el que adivina lo ve aparecer en vivo, en vez de recién al
+    // levantar el dedo. Va en otro documento para no redibujar toda la
+    // pantalla del dibujante en medio del trazo.
+    if (window._unsubDibujoVivo) { window._unsubDibujoVivo(); window._unsubDibujoVivo = null; }
+    if (!soyDibujante) {
+        window._unsubDibujoVivo = window.onSnapshot(refDibujoVivo(), (snap) => {
+            const v = snap.exists() ? snap.data() : null;
+            redibujarTodo();
+            if (!v || !v.puntos || v.puntos.length < 2 || v.palabra !== estado.palabra) return;
+            ctx.beginPath();
+            ctx.strokeStyle = v.color; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.moveTo(v.puntos[0].x * canvas.width, v.puntos[0].y * canvas.height);
+            v.puntos.slice(1).forEach(p => ctx.lineTo(p.x * canvas.width, p.y * canvas.height));
+            ctx.stroke();
+        }, () => {});
+        return;
+    }
+    let ultimoEnvioVivo = 0, envioPendiente = null;
+    function mandarTrazoVivo(){
+        if (!_trazoActual) return;
+        const ahora = Date.now();
+        const espera = 120 - (ahora - ultimoEnvioVivo);
+        if (espera > 0) { if (!envioPendiente) envioPendiente = setTimeout(() => { envioPendiente = null; mandarTrazoVivo(); }, espera); return; }
+        ultimoEnvioVivo = ahora;
+        window.setDoc(refDibujoVivo(), { color: _trazoActual.color, puntos: _trazoActual.puntos.slice(-400), palabra: estado.palabra }).catch(() => {});
+    }
     // Cada render reemplaza el <canvas> por uno nuevo (renderDibujaYAdivina
     // hace cont.innerHTML), así que hay que enganchar los listeners de
     // nuevo en cada llamada — antes había un guard de "sólo la primera
@@ -226,6 +255,7 @@ function configurarCanvasDibujo(estado, soyDibujante){
             ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
             ctx.stroke();
         }
+        mandarTrazoVivo();
     }
     async function terminar(){
         if (!_dibujando) return;
@@ -234,8 +264,11 @@ function configurarCanvasDibujo(estado, soyDibujante){
             // arrayUnion: agrega SÓLO este trazo del lado del servidor. Antes
             // se leía el dibujo entero y se reescribía cada vez (cada vez más
             // pesado y lento, y dos trazos rápidos podían pisarse entre sí).
-            const trazo = { ..._trazoActual, id: Date.now() + Math.random() };
+            const trazo = { ..._trazoActual, id: ahoraSync() + Math.random() };
+            _trazoActual = null;
+            clearTimeout(envioPendiente); envioPendiente = null;
             await window.updateDoc(refDibujaYAdivina(), { trazos: window.arrayUnion(trazo) }).catch(e => console.warn('No se pudo guardar el trazo:', e));
+            window.setDoc(refDibujoVivo(), { puntos: [] }).catch(() => {});
         }
         _trazoActual = null;
     }
@@ -310,7 +343,7 @@ async function adivinarDibujo(){
         try {
             await window.addDoc(window.collection(window.db, 'juegos'), {
                 tipo: 'dibujo-galeria', palabra: data.palabra, trazos: data.trazos,
-                dibujante: data.dibujante, creadoEn: Date.now()
+                dibujante: data.dibujante, creadoEn: ahoraSync()
             });
         } catch (e) { console.warn('No se pudo guardar el dibujo en la galería:', e); }
     }

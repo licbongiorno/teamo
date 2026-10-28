@@ -58,7 +58,7 @@ function renderCocodrilos(estado){
     }
 
     if (estado.fase === 'jugando') {
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refCocodrilos(), 'cocodrilos');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -141,15 +141,15 @@ function arrancarSpawnCocodrilosSiCorresponde(horaFin){
 
     function tick(){
         const el = document.getElementById('tiempo-cocodrilos');
-        const seg = Math.max(0, Math.ceil((horaFin - Date.now()) / 1000));
+        const seg = Math.max(0, Math.ceil((horaFin - ahoraSync()) / 1000));
         if (el) el.innerText = seg + 's';
-        if (Date.now() >= horaFin) { finalizarRondaCocodrilos(); return; }
+        if (ahoraSync() >= horaFin) { finalizarRondaCocodrilos(); return; }
         window._timerCocodrilos = setTimeout(tick, 200);
     }
     tick();
 
     async function spawnLoop(){
-        if (Date.now() >= horaFin) return;
+        if (ahoraSync() >= horaFin) return;
         try {
             const snap = await new Promise(res => { const u = window.onSnapshot(refCocodrilos(), s => { u(); res(s); }); });
             const data = snap.data();
@@ -171,7 +171,7 @@ function arrancarSpawnCocodrilosSiCorresponde(horaFin){
                 }
             }
         } catch (e) { /* silencioso */ }
-        if (Date.now() < horaFin) window._spawnLoopCocodrilos = setTimeout(spawnLoop, 700);
+        if (ahoraSync() < horaFin) window._spawnLoopCocodrilos = setTimeout(spawnLoop, 700);
     }
     spawnLoop();
 }
@@ -202,5 +202,5 @@ async function revanchaCocodrilos(){
     vibrarJ(10);
     const mejorConjunto = await leerMejorCocodrilos();
     _cocodrilosMostrados = false;
-    await window.setDoc(refCocodrilos(), { fase: 'esperando', listos: {}, mejorConjunto });
+    await revanchaUnToque(refCocodrilos(), 'cocodrilos', { mejorConjunto });
 }

@@ -67,7 +67,7 @@ function renderBloques(estado){
     }
 
     if (estado.fase === 'jugando') {
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refBloques(), 'bloques');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -304,5 +304,5 @@ function manejarSnapshotBloques(data){
 async function revanchaBloques(){
     vibrarJ(10);
     const victorias = await leerVictoriasBloques();
-    await window.setDoc(refBloques(), { fase: 'esperando', listos: {}, victorias });
+    await revanchaUnToque(refBloques(), 'bloques', { victorias });
 }

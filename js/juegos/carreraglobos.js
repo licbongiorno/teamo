@@ -54,7 +54,7 @@ function renderCarreraGlobos(estado){
     }
 
     if (estado.fase === 'jugando') {
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refCarreraGlobos(), 'carreraglobos');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -130,9 +130,9 @@ function arrancarCarreraGlobos(horaFin){
 
     window._loopGlobos = setInterval(() => {
         const el = document.getElementById('tiempo-globos');
-        const seg = Math.max(0, Math.ceil((horaFin - Date.now()) / 1000));
+        const seg = Math.max(0, Math.ceil((horaFin - ahoraSync()) / 1000));
         if (el) el.innerText = seg + 's';
-        if (Date.now() >= horaFin && !_terminandoGlobos) terminarCarreraGlobos(null);
+        if (ahoraSync() >= horaFin && !_terminandoGlobos) terminarCarreraGlobos(null);
     }, 200);
 }
 
@@ -195,5 +195,5 @@ async function terminarCarreraGlobos(ganadorForzado){
 async function revanchaCarreraGlobos(){
     vibrarJ(10);
     const victorias = await leerVictoriasCarreraGlobos();
-    await window.setDoc(refCarreraGlobos(), { fase: 'esperando', listos: {}, victorias });
+    await revanchaUnToque(refCarreraGlobos(), 'carreraglobos', { victorias });
 }

@@ -164,7 +164,7 @@ function renderPalabraExplosiva(estado){
         return;
     }
 
-    const restante = Math.max(0, DURACION_PE - Math.floor((Date.now() - estado.inicioEn) / 1000));
+    const restante = Math.max(0, DURACION_PE - Math.floor((ahoraSync() - estado.inicioEn) / 1000));
     let html = `<div class="panel texto-centro">
         <div class="texto-tenue">Categoría</div>
         <div style="font-family:var(--fuente-titulo); font-size:1.4rem;">${estado.categoria}</div>
@@ -188,7 +188,7 @@ function renderPalabraExplosiva(estado){
 
     let _ultimoSegPE = null;
     window._timerPE = setInterval(() => {
-        const r = Math.max(0, DURACION_PE - Math.floor((Date.now() - estado.inicioEn) / 1000));
+        const r = Math.max(0, DURACION_PE - Math.floor((ahoraSync() - estado.inicioEn) / 1000));
         const el = document.getElementById('cronometro-pe');
         if (el) el.innerText = r + 's';
         if (r !== _ultimoSegPE) {
@@ -225,7 +225,7 @@ async function nuevaRondaPalabraExplosiva(){
     const categoria = CATEGORIAS_PALABRA_EXPLOSIVA[Math.floor(Math.random() * CATEGORIAS_PALABRA_EXPLOSIVA.length)];
     const letra = LETRAS_PALABRA_EXPLOSIVA[Math.floor(Math.random() * LETRAS_PALABRA_EXPLOSIVA.length)];
     await window.setDoc(refPalabraExplosiva(), {
-        fase: 'jugando', categoria, letra, inicioEn: Date.now(),
+        fase: 'jugando', categoria, letra, inicioEn: ahoraSync(),
         palabrasNico: null, palabrasCarito: null
     });
 }

@@ -267,6 +267,16 @@ function renderGloboTeToca(pendientes){
     planeta.title = n === 1 ? '¡Te toca en un juego!' : `¡Te toca en ${n} juegos!`;
 }
 
+// ¿Hay una partida en curso de este juego? (alguien tiene que jugar, y
+// no es sólo "esperando que el otro toque listo"). La usa el botón
+// "Abandonar" de presencia.js.
+function partidaEnCursoTeToca(juego){
+    const e = _teTocaEstados[juego];
+    return !!(e && e.pendientes.some(p => p.que !== 'listo'));
+}
+window.partidaEnCursoTeToca = partidaEnCursoTeToca;
+// Lo mismo pero mirando un documento recién leído (adentro de una transacción).
+window.partidaEnCursoDesdeDatos = (juego, d) => !!(d && DETECTORES_TE_TOCA[juego] && DETECTORES_TE_TOCA[juego](d).some(p => p.que !== 'listo'));
 window.iniciarTeToca = iniciarTeToca;
 window.renderGloboTeToca = renderGloboTeToca;
 window.pendientesTeToca = pendientesTeToca;

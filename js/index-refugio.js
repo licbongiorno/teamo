@@ -1398,6 +1398,7 @@
             if (miIdentidad && typeof iniciarTeToca === 'function') {
                 iniciarTeToca(miIdentidad, (p) => { renderGloboTeToca(p); actualizarTituloTeToca(p); });
             }
+            if (miIdentidad && typeof iniciarEnVivo === 'function') iniciarEnVivo(miIdentidad, 'inicio');
         }
         if (window._firebaseListoIndex) _arrancarEscuchaChatSiCorresponde();
         else document.addEventListener('firebase-listo-index', _arrancarEscuchaChatSiCorresponde, { once: true });

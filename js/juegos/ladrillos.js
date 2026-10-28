@@ -76,7 +76,7 @@ function renderLadrillos(estado){
     if (estado.fase === 'terminado') {
         _ladrillosMostrados = false;
         if (window._tickLadrillos) { clearInterval(window._tickLadrillos); window._tickLadrillos = null; }
-        const tiempo = ((estado.horaFinReal || Date.now()) - estado.horaInicio) / 1000;
+        const tiempo = ((estado.horaFinReal || ahoraSync()) - estado.horaInicio) / 1000;
         cont.innerHTML = `<div class="panel texto-centro logro-animado">
             <div style="font-size:1.3rem; margin-bottom:6px;">🎉 ¡Pared limpia!</div>
             <div style="font-size:1.6rem;">${tiempo.toFixed(1)}s</div>
@@ -87,7 +87,7 @@ function renderLadrillos(estado){
     }
 
     // fase === 'jugando'
-    const restante = (estado.horaInicio || Date.now()) - Date.now();
+    const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
     if (restante > -500) {
         if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refLadrillos(), 'ladrillos');
         _ladrillosMostrados = false;
@@ -114,7 +114,7 @@ function renderLadrillos(estado){
         if (window._tickLadrillos) clearInterval(window._tickLadrillos);
         window._tickLadrillos = setInterval(() => {
             const el = document.getElementById('tiempo-ladrillos');
-            if (el) el.innerText = ((Date.now() - estado.horaInicio) / 1000).toFixed(1) + 's';
+            if (el) el.innerText = ((ahoraSync() - estado.horaInicio) / 1000).toFixed(1) + 's';
         }, 100);
     }
     (estado.ladrillos || []).forEach((activo, i) => {
@@ -148,9 +148,7 @@ async function marcarListoLadrillos(){
 async function revanchaLadrillos(){
     vibrarJ(10);
     const estado = await new Promise(res => { const u = window.onSnapshot(refLadrillos(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refLadrillos(), {
-        fase: 'esperando', listos: {}, mejorTiempoMs: estado?.mejorTiempoMs || null
-    });
+    await revanchaUnToque(refLadrillos(), 'ladrillos', { mejorTiempoMs: estado?.mejorTiempoMs || null });
 }
 
 async function romperLadrillo(indice){
@@ -168,7 +166,7 @@ async function romperLadrillo(indice){
         const quedan = ladrillos.some(Boolean);
         const updates = { ladrillos };
         if (!quedan) {
-            const horaFinReal = Date.now();
+            const horaFinReal = ahoraSync();
             const tiempoMs = horaFinReal - data.horaInicio;
             const mejorTiempoMs = data.mejorTiempoMs && data.mejorTiempoMs < tiempoMs ? data.mejorTiempoMs : tiempoMs;
             updates.fase = 'terminado';

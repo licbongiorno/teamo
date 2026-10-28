@@ -14,11 +14,8 @@ function iniciarReflejos(){
     window._unsubReflejos = window.onSnapshot(refReflejos(), (snap) => {
         const datos = snap.exists() ? snap.data() : null;
         if (window.sfx && datos) {
-            if (datos.fase === 'fuego' && _reflejosFaseAnterior === 'preparados') window.sfx.tiempoFinal();
             if (datos.fase === 'terminado' && _reflejosFaseAnterior !== 'terminado') {
-                const antes = _reflejosPuntajesAnteriores || { nico: 0, carito: 0 };
-                const ahora = datos.puntajes || { nico: 0, carito: 0 };
-                const gano = ahora.nico > (antes.nico || 0) ? 'nico' : (ahora.carito > (antes.carito || 0) ? 'carito' : null);
+                const gano = datos.ganadorRonda;
                 if (gano) window.sfx[gano === miIdentidad ? 'victoria' : 'derrota']();
                 if (gano === miIdentidad && window.fx) window.fx.confeti();
             }
@@ -56,21 +53,28 @@ function renderReflejos(estado){
         return;
     }
 
-    if (estado.fase === 'preparados') {
-        cont.innerHTML = `<div class="area-reflejos area-espera" onclick="tocarReflejos('falso')">
-            <div class="texto-reflejos">Preparados…</div>
-        </div>`;
-        const restante = (estado.horaFuego || Date.now()) - Date.now();
-        // Cualquiera de los dos dispositivos puede ser quien efectivamente
-        // dispare 'fuego' al llegar la hora (con guarda para no duplicar).
-        _timeoutFuegoReflejos = setTimeout(() => dispararFuegoSiCorresponde(estado), Math.max(0, restante));
-        return;
-    }
-
-    if (estado.fase === 'fuego') {
-        cont.innerHTML = `<div class="area-reflejos area-fuego" onclick="tocarReflejos('valido')">
-            <div class="texto-reflejos">💥 ¡AHORA!</div>
-        </div>`;
+    // La pantalla roja ya no espera a que llegue 'fuego' por internet
+    // (le aparecía antes al celular que lo escribía): cada uno la pone
+    // sola a la hora sincronizada "horaFuego", y gana el menor tiempo de
+    // reacción medido contra esa misma hora.
+    if (estado.fase === 'preparados' || estado.fase === 'fuego') {
+        const yaToque = estado.tiempos?.[miIdentidad] != null;
+        if (yaToque) {
+            cont.innerHTML = `<div class="panel texto-centro">
+                <div style="font-size:1.4rem;">⚡ ${estado.tiempos[miIdentidad]} ms</div>
+                <div class="texto-tenue destello">Esperando a ${nombreJugador(miRival)}…</div>
+            </div>`;
+        } else {
+            const rojo = ahoraSync() >= (estado.horaFuego || 0);
+            cont.innerHTML = rojo
+                ? `<div class="area-reflejos area-fuego" onpointerdown="tocarReflejos()"><div class="texto-reflejos">💥 ¡AHORA!</div></div>`
+                : `<div class="area-reflejos area-espera" onpointerdown="tocarReflejos()"><div class="texto-reflejos">Preparados…</div></div>`;
+            if (!rojo) _timeoutFuegoReflejos = setTimeout(() => { if (window.sfx) window.sfx.tiempoFinal(); renderReflejos(estado); }, Math.max(0, estado.horaFuego - ahoraSync()));
+        }
+        // Si el otro no toca nunca (se fue), a los 3 s del fuego se cierra igual.
+        const cierre = (estado.horaFuego || 0) + 3000 - ahoraSync();
+        clearTimeout(window._cierreReflejos);
+        window._cierreReflejos = setTimeout(() => cerrarRondaReflejos(), Math.max(0, cierre) + 100);
         return;
     }
 
@@ -107,63 +111,55 @@ async function iniciarRondaReflejosSiCorresponde(estado){
     if (estado.fase !== 'esperando' || _iniciandoReflejos) return;
     _iniciandoReflejos = true;
     try {
-        const horaFuego = Date.now() + 2000 + Math.random() * 5000;
-        await window.updateDoc(refReflejos(), { fase: 'preparados', horaFuego, tocoNico: null, tocoCarito: null });
+        const horaFuego = ahoraSync() + 2000 + Math.random() * 5000;
+        await window.updateDoc(refReflejos(), { fase: 'preparados', horaFuego, tiempos: {}, ganadorRonda: null });
     } finally {
         setTimeout(() => { _iniciandoReflejos = false; }, 1000);
     }
 }
 
-let _fuegoDisparado = false;
-async function dispararFuegoSiCorresponde(estadoPrevio){
-    if (_fuegoDisparado) return;
-    _fuegoDisparado = true;
-    try {
-        const snap = await new Promise(res => { const u = window.onSnapshot(refReflejos(), s => { u(); res(s); }); });
-        const estado = snap.exists() ? snap.data() : null;
-        if (estado && estado.fase === 'preparados') {
-            await window.updateDoc(refReflejos(), { fase: 'fuego' });
+async function tocarReflejos(){
+    const t = ahoraSync(); // hora del toque, antes de esperar a la red
+    let falso = false;
+    const res = await window.jugadaSegura(refReflejos(), (estado) => {
+        if (!estado || (estado.fase !== 'preparados' && estado.fase !== 'fuego') || estado.tiempos?.[miIdentidad] != null) return null;
+        const puntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
+        if (t < estado.horaFuego) {
+            // Tiro en falso: pierde quien tocó antes de tiempo.
+            falso = true;
+            puntajes[miRival] = (puntajes[miRival] || 0) + 1;
+            return { fase: 'terminado', puntajes, ganadorRonda: miRival,
+                mensajeRonda: `${nombreJugador(miIdentidad)} tocó antes de tiempo 🙈 — punto para ${nombreJugador(miRival)}.` };
         }
-    } finally {
-        setTimeout(() => { _fuegoDisparado = false; }, 500);
-    }
+        const tiempos = { ...(estado.tiempos || {}), [miIdentidad]: Math.round(t - estado.horaFuego) };
+        if (tiempos[miRival] == null) return { tiempos };
+        return { tiempos, ..._resultadoReflejos(tiempos, puntajes) };
+    });
+    vibrarJ(falso ? [10, 30, 10] : [15, 30, 15]);
+    if (res?.cambios.ganadorRonda && typeof registrarVictoria === 'function') registrarVictoria('reflejos', res.cambios.ganadorRonda);
 }
 
-async function tocarReflejos(tipo){
-    vibrarJ(tipo === 'falso' ? [10, 30, 10] : [15, 30, 15]);
-    // Transacción (ver js/jugada-segura.js). Antes, si los dos tocaban
-    // casi juntos en 'fuego', los dos leían "todavía nadie ganó" y la
-    // ÚLTIMA escritura pisaba a la primera: ganaba el más lento.
-    // Ahora el primero que llega al servidor cierra la ronda y el
-    // segundo ve 'terminado' y no escribe nada.
+function _resultadoReflejos(tiempos, puntajes){
+    const n = tiempos.nico, c = tiempos.carito;
+    const ganador = n == null ? 'carito' : c == null ? 'nico' : (n <= c ? 'nico' : 'carito');
+    puntajes[ganador] = (puntajes[ganador] || 0) + 1;
+    const detalle = n != null && c != null ? ` (Nico ${n} ms · Carito ${c} ms)` : ` (${tiempos[ganador]} ms)`;
+    return { fase: 'terminado', puntajes, ganadorRonda: ganador, mensajeRonda: `🏆 ¡Ganó ${nombreJugador(ganador)}!${detalle}` };
+}
+
+// Cierre por tiempo: el que tocó gana; si nadie tocó, nadie suma.
+async function cerrarRondaReflejos(){
     const res = await window.jugadaSegura(refReflejos(), (estado) => {
-        if (!estado || estado.fase === 'terminado') return null;
-        const nuevosPuntajes = { ...(estado.puntajes || { nico: 0, carito: 0 }) };
-        if (tipo === 'falso' && estado.fase === 'preparados') {
-            // Tiro en falso: pierde quien tocó antes de tiempo.
-            nuevosPuntajes[miRival] = (nuevosPuntajes[miRival] || 0) + 1;
-            return {
-                fase: 'terminado', puntajes: nuevosPuntajes,
-                mensajeRonda: `${nombreJugador(miIdentidad)} tocó antes de tiempo 🙈 — punto para ${nombreJugador(miRival)}.`
-            };
-        }
-        if (estado.fase === 'fuego') {
-            nuevosPuntajes[miIdentidad] = (nuevosPuntajes[miIdentidad] || 0) + 1;
-            return {
-                fase: 'terminado', puntajes: nuevosPuntajes,
-                mensajeRonda: `🏆 ¡Ganó ${nombreJugador(miIdentidad)}!`
-            };
-        }
-        return null;
+        if (!estado || (estado.fase !== 'preparados' && estado.fase !== 'fuego') || ahoraSync() < estado.horaFuego + 3000) return null;
+        const tiempos = estado.tiempos || {};
+        if (tiempos.nico == null && tiempos.carito == null) return { fase: 'terminado', ganadorRonda: null, mensajeRonda: '😴 Nadie tocó a tiempo.' };
+        return _resultadoReflejos(tiempos, { ...(estado.puntajes || { nico: 0, carito: 0 }) });
     });
-    // Cada ronda ganada suma al ranking general.
-    if (res && typeof registrarVictoria === 'function') registrarVictoria('reflejos', ganadorPorPuntos({ nico: (res.cambios.puntajes.nico || 0) - (res.estado.puntajes?.nico || 0), carito: (res.cambios.puntajes.carito || 0) - (res.estado.puntajes?.carito || 0) }));
+    if (res?.cambios.ganadorRonda && typeof registrarVictoria === 'function') registrarVictoria('reflejos', res.cambios.ganadorRonda);
 }
 
 async function revanchaReflejos(){
     vibrarJ(10);
     const estado = await new Promise(res => { const u = window.onSnapshot(refReflejos(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await window.setDoc(refReflejos(), {
-        fase: 'esperando', listos: {}, puntajes: estado?.puntajes || { nico: 0, carito: 0 }
-    });
+    await revanchaUnToque(refReflejos(), 'reflejos', { puntajes: estado?.puntajes || { nico: 0, carito: 0 } });
 }

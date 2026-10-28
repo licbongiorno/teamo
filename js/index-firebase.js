@@ -1,5 +1,5 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache, enableNetwork, disableNetwork, collection, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, doc, updateDoc, deleteDoc, setDoc, runTransaction, increment, arrayUnion, arrayRemove, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, memoryLocalCache, enableNetwork, disableNetwork, collection, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, doc, getDocFromServer, updateDoc, deleteDoc, setDoc, runTransaction, increment, arrayUnion, arrayRemove, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -43,6 +43,7 @@
         window.limit = limit;
         window.serverTimestamp = serverTimestamp;
         window.doc = doc;
+        window.getDocFromServer = getDocFromServer;
         window.updateDoc = updateDoc;
         window.deleteDoc = deleteDoc;
         window.setDoc = setDoc;

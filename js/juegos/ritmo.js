@@ -63,7 +63,7 @@ function renderRitmo(estado){
 
     if (estado.fase === 'jugando') {
         if (yaTermineRondaArcade(estado)) { cont.innerHTML = htmlEsperandoRivalArcade(estado); return; }
-        const restante = (estado.horaInicio || Date.now()) - Date.now();
+        const restante = (estado.horaInicio || ahoraSync()) - ahoraSync();
         if (restante > -500) {
             if (!estado.horaInicio) repararRondaArcadeSiCorresponde(refRitmo(), 'ritmo');
             cont.innerHTML = htmlCuentaRegresivaArcade(restante);
@@ -139,7 +139,7 @@ function arrancarLoopRitmo(horaInicio){
         }
         window._tickRitmoTimeout = setTimeout(marcarPulso, INTERVALO_RITMO_MS);
     }
-    const esperar = Math.max(0, horaInicio - Date.now());
+    const esperar = Math.max(0, horaInicio - ahoraSync());
     window._tickRitmoTimeout = setTimeout(marcarPulso, esperar);
 }
 
@@ -198,5 +198,5 @@ async function terminarRitmo(){
 async function revanchaRitmo(){
     vibrarJ(10);
     const victorias = await leerVictoriasRitmo();
-    await window.setDoc(refRitmo(), { fase: 'esperando', listos: {}, victorias });
+    await revanchaUnToque(refRitmo(), 'ritmo', { victorias });
 }

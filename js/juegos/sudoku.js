@@ -71,7 +71,7 @@ async function nuevoSudoku(){
     const celdas = solucion.map((v, i) => huecos.has(i) ? 0 : v);
     const dados = solucion.map((_, i) => !huecos.has(i));
     await window.setDoc(refSudoku(), {
-        fase: 'jugando', solucion, celdas, dados, autorCelda: new Array(81).fill(null), creadoEn: Date.now()
+        fase: 'jugando', solucion, celdas, dados, autorCelda: new Array(81).fill(null), creadoEn: ahoraSync()
     });
 }
 

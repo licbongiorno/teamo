@@ -45,7 +45,7 @@ function iniciarMascota(){
 
 function valorConDecaimiento(valorGuardado, actualizadoEn, decayPorHora){
     if (valorGuardado == null) return 100;
-    const horas = (Date.now() - (actualizadoEn || Date.now())) / 3600000;
+    const horas = (ahoraSync() - (actualizadoEn || ahoraSync())) / 3600000;
     return Math.max(0, Math.round(valorGuardado - horas * decayPorHora));
 }
 
@@ -57,12 +57,12 @@ function horasEnCero(valorGuardado, actualizadoEn, decayPorHora){
     if (valorGuardado == null || !actualizadoEn) return 0;
     const horasHastaCero = valorGuardado / decayPorHora;
     const momentoCero = actualizadoEn + horasHastaCero * 3600000;
-    return Math.max(0, (Date.now() - momentoCero) / 3600000);
+    return Math.max(0, (ahoraSync() - momentoCero) / 3600000);
 }
 
 function haceCuanto(ms){
     if (!ms) return '';
-    const minutos = Math.floor((Date.now() - ms) / 60000);
+    const minutos = Math.floor((ahoraSync() - ms) / 60000);
     if (minutos < 1) return 'recién';
     if (minutos < 60) return `hace ${minutos} min`;
     const horas = Math.floor(minutos / 60);
@@ -91,7 +91,7 @@ function renderMascota(estado){
     // momento de "nacimiento" para poder festejarle el cumpleaños todos
     // los años, sin que nadie tenga que configurar nada a mano.
     if (!estado.nacioEn) {
-        const ahora = Date.now();
+        const ahora = ahoraSync();
         window.setDoc(refMascota(), { nacioEn: ahora }, { merge: true });
         estado = { ...estado, nacioEn: ahora };
     }
@@ -110,7 +110,7 @@ function renderMascota(estado){
         horasEnCero(estado.higiene ?? 100, estado.higieneActualizada, DECAY_HIGIENE),
     ].some(h => h >= HORAS_PARA_ENFERMAR);
 
-    const fiestaActiva = estado.fiestaHasta && estado.fiestaHasta > Date.now();
+    const fiestaActiva = estado.fiestaHasta && estado.fiestaHasta > ahoraSync();
 
     const xp = estado.xp || 0;
     const nivel = Math.floor(xp / 50) + 1;
@@ -131,14 +131,14 @@ function renderMascota(estado){
     const nacimiento = new Date(estado.nacioEn);
     const esCumple = hoy.getMonth() === nacimiento.getMonth() && hoy.getDate() === nacimiento.getDate();
     const yaFestejadoHoy = estado.ultimoCumpleFestejado === fechaISO(hoy);
-    const edadDias = Math.floor((Date.now() - estado.nacioEn) / 86400000);
+    const edadDias = Math.floor((ahoraSync() - estado.nacioEn) / 86400000);
     const edadAnios = Math.floor(edadDias / 365);
 
     // Regalito aleatorio: se sortea una sola vez por visita (no en cada
     // actualización que llega de Firestore), y como mucho cada 3 horas.
     if (!_regaloEvaluadoEstaVisita) {
         _regaloEvaluadoEstaVisita = true;
-        const puedeHaberRegalo = !estado.ultimoRegalo || (Date.now() - estado.ultimoRegalo) > 3 * 3600000;
+        const puedeHaberRegalo = !estado.ultimoRegalo || (ahoraSync() - estado.ultimoRegalo) > 3 * 3600000;
         window._hayRegaloMascota = puedeHaberRegalo && Math.random() < 0.18;
     }
 
@@ -240,7 +240,7 @@ async function _aplicarCuidadoMascota(efectos, detalle, xpGanada){
     await window.runTransaction(window.db, async (tx) => {
     const snap = await tx.get(ref);
     estado = snap.exists() ? snap.data() : {};
-    const ahora = Date.now();
+    const ahora = ahoraSync();
     const actualizaciones = { xp: window.increment(xpGanada) };
     const decays = { hambre: DECAY_HAMBRE, diversion: DECAY_DIVERSION, carino: DECAY_CARINO, higiene: DECAY_HIGIENE };
     for (const campo of Object.keys(decays)) {
@@ -321,7 +321,7 @@ async function hacerFiestaMascota(){
     await window.runTransaction(window.db, async (tx) => {
     const snap = await tx.get(ref);
     const estado = snap.exists() ? snap.data() : {};
-    const ahora = Date.now();
+    const ahora = ahoraSync();
     const historial = [...(estado.historial || []), { detalle: 'organizó una fiesta para Chokurei 🎉', autor: miIdentidad, timestamp: ahora }].slice(-15);
     tx.set(ref, {
         hambre: 100, hambreActualizada: ahora,
@@ -350,7 +350,7 @@ async function festejarCumpleMascota(){
         const snap = await tx.get(ref);
         const estado = snap.exists() ? snap.data() : {};
         if (estado.ultimoCumpleFestejado === hoy) return;
-        const ahora = Date.now();
+        const ahora = ahoraSync();
         const historial = [...(estado.historial || []), { detalle: '¡festejó el cumpleaños de Chokurei! 🎂', autor: miIdentidad, timestamp: ahora }].slice(-15);
         tx.set(ref, { ultimoCumpleFestejado: hoy, xp: window.increment(15), historial }, { merge: true });
         festejo = true;
@@ -365,7 +365,7 @@ async function reclamarRegaloMascota(){
     if (window.sfx) window.sfx.moneda();
     if (window.fx) window.fx.confeti();
     window._hayRegaloMascota = false;
-    await window.setDoc(refMascota(), { ultimoRegalo: Date.now() }, { merge: true });
+    await window.setDoc(refMascota(), { ultimoRegalo: ahoraSync() }, { merge: true });
     if (window.sumarPuntos) window.sumarPuntos(miIdentidad, 3);
     renderMascota((await new Promise(res => { const u = window.onSnapshot(refMascota(), s => { u(); res(s.exists() ? s.data() : {}); }); })));
 }

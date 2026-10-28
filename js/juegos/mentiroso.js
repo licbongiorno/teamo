@@ -65,11 +65,11 @@ function iniciarMentiroso(){
     });
 }
 
-function htmlDadosMentiroso(dados){
-    return `<div class="fila-dados-generala">${(dados || []).map(d => `<span class="dado-generala dado-mentiroso" aria-label="Dado ${d}">${CARAS_DADO_MENTIROSO[d]}</span>`).join('')}</div>`;
+function htmlDadosMentiroso(dados, quien){
+    return `<div class="fila-dados-generala" data-aj-quien="${quien || ''}">${(dados || []).map(d => `<span class="dado-generala dado-mentiroso" aria-label="Dado ${d}">${CARAS_DADO_MENTIROSO[d]}</span>`).join('')}</div>`;
 }
-function htmlTapadosMentiroso(n){
-    return `<div class="fila-dados-generala">${Array.from({ length: n }, () => `<span class="dado-generala dado-mentiroso dado-tapado">?</span>`).join('')}</div>`;
+function htmlTapadosMentiroso(n, quien){
+    return `<div class="fila-dados-generala" data-aj-quien="${quien || ''}">${Array.from({ length: n }, () => `<span class="dado-generala dado-mentiroso dado-tapado">?</span>`).join('')}</div>`;
 }
 function textoApuestaMentiroso(a){
     return `${a.cantidad} × ${CARAS_DADO_MENTIROSO[a.cara]} <span class="texto-tenue">(${a.cantidad} ${a.cantidad === 1 ? 'dado' : 'dados'} de ${a.cara})</span>`;
@@ -107,8 +107,8 @@ function renderMentiroso(estado){
             <div>Había <b>${r.total}</b> → ${r.cumplida ? '✅ la apuesta se cumplía' : '❌ la apuesta era mentira'}</div>
             <div style="margin-top:6px;">${nombreJugador(r.perdedor)} pierde un dado</div>
         </div>
-        <div class="panel"><div class="texto-tenue texto-centro">💙 Nico</div>${htmlDadosMentiroso(r.dadosNico)}
-            <div class="texto-tenue texto-centro" style="margin-top:8px;">💖 Carito</div>${htmlDadosMentiroso(r.dadosCarito)}</div>`;
+        <div class="panel"><div class="texto-tenue texto-centro">💙 Nico</div>${htmlDadosMentiroso(r.dadosNico, 'nico')}
+            <div class="texto-tenue texto-centro" style="margin-top:8px;">💖 Carito</div>${htmlDadosMentiroso(r.dadosCarito, 'carito')}</div>`;
         if (estado.fase === 'terminado') {
             html += `<div class="panel texto-centro"><div style="font-size:1.2rem; margin-bottom:10px;">🏆 ¡Ganó ${nombreJugador(estado.ganador)}!</div>
                 <button class="btn-principal" onclick="reiniciarMentiroso()">🔁 Revancha</button></div>`;
@@ -124,8 +124,8 @@ function renderMentiroso(estado){
     const a = estado.apuesta;
     const total = misDados.length + cantRival;
     html += `<div class="panel texto-centro">
-        <div class="texto-tenue">Tus dados (${misDados.length})</div>${htmlDadosMentiroso(misDados)}
-        <div class="texto-tenue" style="margin-top:10px;">${nombreJugador(miRival)} (${cantRival})</div>${htmlTapadosMentiroso(cantRival)}
+        <div class="texto-tenue">Tus dados (${misDados.length})</div>${htmlDadosMentiroso(misDados, miIdentidad)}
+        <div class="texto-tenue" style="margin-top:10px;">${nombreJugador(miRival)} (${cantRival})</div>${htmlTapadosMentiroso(cantRival, miRival)}
     </div>
     <div class="panel texto-centro">
         <div class="texto-tenue">Apuesta actual</div>

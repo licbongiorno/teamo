@@ -473,8 +473,21 @@ async function ajustarPuntajeTruco(jugador, delta){
     await window.updateDoc(refTruco(), { puntajes: nuevosPuntajes });
 }
 
+// Tanteador: el número y, abajo, los tantos en fosforitos como en la mesa.
+function tanteadorTruco(estado){
+    const p = estado.puntajes || { nico: 0, carito: 0 };
+    const meta = estado.puntosParaGanar;
+    const fos = (q) => window.animJuegos ? window.animJuegos.fosforos(p[q], 'truco-' + q, meta) : '';
+    return `<div class="aj-tanteador">
+        <div>Nico: <b>${p.nico}</b>${fos('nico')}</div>
+        <span class="texto-tenue">a ${meta}</span>
+        <div>Carito: <b>${p.carito}</b>${fos('carito')}</div>
+    </div>`;
+}
+
 function renderTruco(estado){
     const cont = document.getElementById('contenido-truco');
+    if (window.animJuegos) window.animJuegos.historial('truco', estado?.historial);
 
     if (!estado || estado.fase === 'esperando') {
         const listoYo = estado?.listos?.[miIdentidad];
@@ -517,8 +530,8 @@ function renderTruco(estado){
         cont.innerHTML = `
             <div class="panel texto-centro">
                 <div style="font-size:1.15rem; margin-bottom:8px;">${estado.manoGanadorTexto}</div>
-                <div class="texto-tenue" style="margin-bottom:14px;">Nico ${estado.puntajes.nico} — Carito ${estado.puntajes.carito} (a ${estado.puntosParaGanar})</div>
-                <button class="btn-principal" onclick="siguienteManoTruco()">Repartir siguiente mano ▶️</button>
+                ${tanteadorTruco(estado)}
+                <button class="btn-principal" style="margin-top:10px;" onclick="siguienteManoTruco()">Repartir siguiente mano ▶️</button>
             </div>`;
         return;
     }
@@ -533,22 +546,31 @@ function renderTruco(estado){
     for (let r = 1; r <= estado.rondaActual; r++) {
         const mia = estado.cartasJugadas.find(c => c.jugador === miIdentidad && c.ronda === r);
         const delRival = estado.cartasJugadas.find(c => c.jugador === miRival && c.ronda === r);
-        filaCartasArea += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; ${r<estado.rondaActual?'opacity:0.55;':''} border-bottom:${r<estado.rondaActual?'1px dashed rgba(255,255,255,0.1)':'none'};">
-            ${delRival ? naipeTruco(delRival.carta) : '<div class="naipe-chinchon dorso"></div>'}
-            <span style="font-size:0.7rem; opacity:0.5;">ronda ${r}</span>
-            ${mia ? naipeTruco(mia.carta) : '<div class="naipe-chinchon" style="opacity:0.3;"></div>'}
+        filaCartasArea += `<div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; ${r<estado.rondaActual?'opacity:0.6;':''} border-bottom:${r<estado.rondaActual?'1px dashed rgba(255,255,255,0.15)':'none'};">
+            ${delRival ? naipeTruco(delRival.carta) : '<div class="aj-hueco-naipe"></div>'}
+            <span class="ronda-truco">ronda ${r}</span>
+            ${mia ? naipeTruco(mia.carta) : '<div class="aj-hueco-naipe"></div>'}
         </div>`;
     }
+    // La mano del otro, boca abajo: así se ve de dónde sale su carta.
+    const jugadasRival = estado.cartasJugadas.filter(c => c.jugador === miRival).length;
+    const quedanRival = Math.max(0, (estado.cartas[miRival] || []).length - jugadasRival);
+    const manoRivalHtml = `<div class="aj-mano-rival" data-aj-rival>${'<div class="naipe-chinchon dorso"></div>'.repeat(quedanRival)}</div>`;
+    const esMiTurnoMano = estado.jugadorEnTurno === miIdentidad && !canto;
+    let manoHtml = `<div class="panel">
+            <div class="texto-tenue" style="margin-bottom:8px;">Tu mano:</div>
+            <div class="fila-cartas-chinchon" data-aj-mia>`;
+    misDisponibles.forEach(c => {
+        manoHtml += naipeTruco(c, esMiTurnoMano ? `jugarCartaTruco('${c}')` : '', esMiTurnoMano ? '' : 'deshabilitada');
+    });
+    manoHtml += `</div></div>`;
 
     let html = `
         <div class="panel">
-            <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:6px;">
-                <span>Nico: <b>${estado.puntajes.nico}</b></span>
-                <span class="texto-tenue">a ${estado.puntosParaGanar}</span>
-                <span>Carito: <b>${estado.puntajes.carito}</b></span>
-            </div>
-            <div style="text-align:center; font-size:0.72rem; opacity:0.55;">mano: ${nombreJugador(miRival)} arriba · vos abajo</div>
-            <div style="margin-top:8px;">${filaCartasArea}</div>
+            ${tanteadorTruco(estado)}
+            ${manoRivalHtml}
+            <div class="aj-mesa-truco">${filaCartasArea}</div>
+            <div style="text-align:center; font-size:0.72rem; opacity:0.55; margin-top:4px;">${nombreJugador(miRival)} arriba · vos abajo</div>
         </div>
     `;
 
@@ -568,8 +590,10 @@ function renderTruco(estado){
             html += `<button class="btn-secundario" style="margin-top:6px;" onclick="escalarTruco()">${nombreCantoTruco(['','truco','retruco','vale_cuatro'][canto.nivel+1])}</button>`;
         }
         html += `</div>`;
+        html += manoHtml;
     } else if (canto && canto.de === miIdentidad) {
         html += `<div class="panel texto-centro texto-tenue">Cantaste ${nombreCantoTruco(canto.tipo)}. Esperando la respuesta de ${nombreJugador(miRival)}…</div>`;
+        html += manoHtml;
     } else {
         const esMiTurno = estado.jugadorEnTurno === miIdentidad;
         const puedeEnvido = esMiTurno && estado.rondaActual === 1 && !estado.envidoResuelto && estado.trucoNivel === 0 && estado.envidoCadena.length === 0;
@@ -593,13 +617,7 @@ function renderTruco(estado){
             html += `<div class="panel texto-centro"><button class="btn-secundario" onclick="cantarFlorTruco()">🌺 ¡Tengo flor! Cantarla (+3)</button></div>`;
         }
 
-        html += `<div class="panel">
-            <div class="texto-tenue" style="margin-bottom:8px;">Tu mano:</div>
-            <div class="fila-cartas-chinchon">`;
-        misDisponibles.forEach(c => {
-            html += naipeTruco(c, esMiTurno ? `jugarCartaTruco('${c}')` : '', esMiTurno ? '' : 'deshabilitada');
-        });
-        html += `</div></div>`;
+        html += manoHtml;
 
         html += `<button class="btn-secundario" onclick="irseAlMazoTruco()">🏳️ Irse al mazo</button>`;
     }

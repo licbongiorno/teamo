@@ -100,6 +100,7 @@ async function reiniciarEscoba(){
 
 function renderEscoba(estado){
     const cont = document.getElementById('contenido-escoba');
+    if (window.animJuegos) window.animJuegos.historial('escoba', estado?.historial);
     if (!estado || estado.fase === 'sin_partida' || estado.fase === 'esperando') {
         const listoYo = estado?.listos?.[miIdentidad];
         const listoRival = estado?.listos?.[miRival];
@@ -140,6 +141,7 @@ function renderEscoba(estado){
             <span>Carito: ${(estado.bazasCarito || []).length} cartas</span>
         </div>
         <div class="info-turno-tablero">${esMiTurno ? '🎯 Tu turno' : `Turno de ${nombreJugador(estado.turno)}…`}</div>
+        <div class="aj-mano-rival" data-aj-rival>${'<div class="naipe-chinchon dorso"></div>'.repeat((estado[`mano${miIdentidad === 'nico' ? 'Carito' : 'Nico'}`] || []).length)}</div>
     </div>`;
 
     html += `<div class="panel"><div class="texto-tenue" style="margin-bottom:8px;">Mesa (tocá para sumar 15):</div>
@@ -148,7 +150,7 @@ function renderEscoba(estado){
         </div></div>`;
 
     html += `<div class="panel"><div class="texto-tenue" style="margin-bottom:8px;">Tu mano ${sumaSeleccion ? `(suma actual: ${sumaSeleccion})` : ''}:</div>
-        <div class="fila-cartas-chinchon">
+        <div class="fila-cartas-chinchon" data-aj-mia>
         ${miMano.map(c => naipeEscoba(c, esMiTurno ? `elegirManoEscoba('${c}')` : '', `${_cartaManoEscoba === c ? 'seleccionada' : ''} ${esMiTurno ? '' : 'deshabilitada'}`)).join('')}
         </div>
         <div class="btn-fila" style="margin-top:10px;">

@@ -860,3 +860,109 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
 .ck-clima-otro{ display:flex; flex-direction:column; gap:1px; margin:-6px 0 10px; padding:6px 12px; border-radius:12px; font-size:0.78rem;
     background:rgba(143,211,255,0.10); border:1px solid rgba(143,211,255,0.35); }
 .ck-clima-otro small{ opacity:0.7; font-size:0.7rem; }
+
+/* ============ JUEGOS DE MESA ANIMADOS (js/animar-juegos.js) ============ */
+.aj-capa{ position:fixed; inset:0; pointer-events:none; z-index:9000; }
+.aj-en-vuelo{ position:relative; z-index:20; }
+/* Las fichas ya no rebotan todas en cada redibujo: sólo la que se movió. */
+.aj-activo .pieza-tablero, .aj-activo .ficha-damas, .aj-activo .ficha-damas.coronada::after,
+.aj-activo .ficha-c4, .aj-activo .marca-tateti{ animation:none; }
+
+/* Naipes españoles dibujados */
+.naipe-chinchon.aj-naipe{ padding:0; background:none; overflow:hidden; width:50px; height:72px; border-radius:7px; }
+.naipe-chinchon.aj-naipe.dorso{ background:none; }
+.aj-svg-naipe{ display:block; width:100%; height:100%; }
+.naipe-chinchon.aj-naipe.seleccionada{ box-shadow:0 8px 18px rgba(255,179,198,0.55), 0 0 0 2px var(--rosa); }
+.aj-hueco-naipe{ width:50px; height:72px; border-radius:7px; border:2px dashed rgba(255,255,255,0.14); flex-shrink:0; }
+.aj-mesa-truco{
+    background:radial-gradient(ellipse at center, #2f6b47 0%, #1f4a32 70%, #183a28 100%);
+    border-radius:16px; padding:6px 10px; box-shadow:inset 0 0 0 3px #6b4a2a, inset 0 0 0 5px #8a6238, inset 0 6px 18px rgba(0,0,0,0.45);
+}
+.aj-mesa-truco .ronda-truco{ font-size:0.7rem; opacity:0.6; color:#e9f5ec; }
+.aj-mano-rival{ display:flex; justify-content:center; padding:4px 0 8px; min-height:44px; }
+.aj-mano-rival > *{ transform:scale(0.62); margin:0 -12px; transform-origin:center top; }
+.aj-mano-rival > *:nth-child(odd){ rotate:-4deg; }
+.aj-mano-rival > *:nth-child(even){ rotate:3deg; }
+.aj-mano-rival .aj-mas{ transform:none; margin-left:16px; align-self:center; font-size:0.75rem; opacity:0.7; }
+
+/* Cartas de UNO */
+.naipe-uno.aj-uno, .naipe-uno.dorso-uno{ overflow:hidden; padding:0; }
+.aj-uno-ovalo{
+    position:absolute; left:50%; top:50%; width:82%; height:62%; border-radius:50%;
+    background:#fff; transform:translate(-50%,-50%) rotate(-28deg); box-shadow:inset 0 0 0 2px rgba(0,0,0,0.08);
+}
+.aj-uno-v{ position:relative; font-size:1.25rem; font-weight:900; letter-spacing:-0.5px; text-shadow:1px 1px 0 rgba(0,0,0,0.25); }
+.naipe-uno.rojo .aj-uno-v{ color:#c93a26; } .naipe-uno.amarillo .aj-uno-v{ color:#c48c06; }
+.naipe-uno.verde .aj-uno-v{ color:#237a3d; } .naipe-uno.azul .aj-uno-v{ color:#2452b8; }
+.naipe-uno.comodin .aj-uno-ovalo{ background:conic-gradient(#e6543f 0 25%, #e8b93d 0 50%, #3fae5c 0 75%, #3f7fe6 0); }
+.naipe-uno.comodin .aj-uno-v{ color:#fff; text-shadow:0 0 4px #000, 0 0 2px #000; }
+.naipe-uno.comodin{ background:#1d1724; }
+.aj-uno-esq{ position:absolute; top:3px; left:5px; font-size:0.6rem; font-weight:900; color:#fff; text-shadow:0 1px 1px rgba(0,0,0,0.5); }
+.aj-uno-esq.aj-abajo{ top:auto; left:auto; bottom:3px; right:5px; transform:rotate(180deg); }
+.naipe-uno.dorso-uno{ background:#1d1724; cursor:default; }
+.naipe-uno.dorso-uno .aj-uno-ovalo{ background:#e6543f; }
+.aj-uno-logo{ color:#f5cf5f !important; font-size:0.85rem; transform:rotate(-28deg); text-shadow:1px 1px 0 #6b1a10; font-style:italic; }
+.naipe-uno.dorso-uno[data-aj-mazo]{ cursor:pointer; box-shadow:3px 3px 0 #120d18, 6px 6px 0 #0b0810, 0 6px 14px rgba(0,0,0,0.5); }
+.aj-mesa-uno{ display:flex; gap:18px; justify-content:center; align-items:center; }
+.aj-mesa-uno [data-aj-pila] .naipe-uno{ width:62px; height:88px; }
+.aj-mesa-uno [data-aj-pila] .aj-uno-v{ font-size:1.6rem; }
+
+/* Dados con puntos de verdad */
+.dado-generala.aj-dado-lindo{
+    display:inline-flex; align-items:center; justify-content:center; padding:0;
+    background:linear-gradient(145deg,#fffdf8,#e9e1d4); border-color:rgba(0,0,0,0.12);
+    box-shadow:0 4px 8px rgba(0,0,0,0.35), inset 0 -3px 4px rgba(0,0,0,0.12);
+}
+.dado-generala.aj-dado-lindo.dado-guardado{ border-color:var(--rosa); box-shadow:0 0 0 3px var(--rosa), 0 6px 12px rgba(255,179,198,0.4); }
+.aj-dado{ display:grid; grid-template:repeat(3,1fr)/repeat(3,1fr); width:70%; height:70%; gap:2px; }
+.aj-dado i{ border-radius:50%; }
+.aj-dado i.on{ background:radial-gradient(circle at 35% 30%, #5a4a66, #1d1724); }
+.dado-generala.aj-dado-tapado{
+    background:linear-gradient(160deg,#8a5a3a,#5a3520); color:#f5d9a0; font-size:1.4rem; font-weight:900;
+    border-color:#3a2214; box-shadow:inset 0 -6px 8px rgba(0,0,0,0.3), 0 3px 6px rgba(0,0,0,0.4);
+}
+.aj-cubilete{
+    position:fixed; width:100px; height:78px; pointer-events:none;
+    background:linear-gradient(90deg,#5a3520,#9a6a44 40%,#6a4028); border-radius:14px 14px 30px 30px / 10px 10px 30px 30px;
+    box-shadow:0 8px 16px rgba(0,0,0,0.5), inset 0 -8px 0 #3a2214;
+}
+
+/* Ajedrez: mismas piezas rellenas para los dos, coloreadas */
+.pieza-tablero.aj-pieza-blanca{ color:#fffaf2; -webkit-text-stroke:1px #4a3b55; font-variant-emoji:text; }
+.pieza-tablero.aj-pieza-negra{ color:#2a2133; -webkit-text-stroke:1.2px #e9dccb; font-variant-emoji:text; filter:drop-shadow(0 0 2px rgba(255,240,220,0.35)) drop-shadow(0 2px 3px rgba(0,0,0,0.6)); }
+
+/* Ta-Te-Ti: X y O trazadas */
+.marca-tateti.aj-marca::before, .marca-tateti.aj-marca::after{ display:none; }
+.marca-tateti.marca-o.aj-marca{ border:none; box-shadow:none; }
+.marca-tateti.aj-marca svg{ width:100%; height:100%; overflow:visible; }
+.aj-trazo{ fill:none; stroke-width:5.5; stroke-linecap:round; }
+.marca-x .aj-trazo{ stroke:var(--celeste); filter:drop-shadow(0 0 3px rgba(168,216,255,0.7)); }
+.marca-o .aj-trazo{ stroke:var(--rosa); filter:drop-shadow(0 0 3px rgba(255,179,198,0.7)); }
+.aj-dibujando .aj-trazo{ stroke-dasharray:100; animation:ajTrazar 0.28s ease-out backwards; }
+.aj-dibujando .aj-trazo2{ animation-delay:0.2s; }
+.aj-dibujando .marca-o .aj-trazo, .marca-o.aj-dibujando .aj-trazo{ animation-duration:0.45s; }
+@keyframes ajTrazar{ from{ stroke-dashoffset:100; } to{ stroke-dashoffset:0; } }
+
+/* Carteles grandes: ¡TRUCO!, ¡ESCOBA!, +4 */
+.aj-cartel{ position:fixed; left:50%; top:42%; z-index:9500; pointer-events:none; text-align:center; transform:translate(-50%,-50%); }
+.aj-cartel-texto{
+    font-size:clamp(2.2rem, 11vw, 3.6rem); font-weight:900; font-style:italic; letter-spacing:1px; white-space:nowrap;
+    color:var(--aj-color); -webkit-text-stroke:2px #1d1724; paint-order:stroke fill;
+    text-shadow:0 4px 0 #1d1724, 0 0 24px var(--aj-color);
+}
+.aj-cartel-sub{ margin-top:4px; font-size:0.95rem; font-weight:700; color:#fdf6f0; text-shadow:0 2px 4px #000; }
+
+/* Fosforitos del truco */
+.aj-fosforos{ display:flex; flex-wrap:wrap; gap:3px; justify-content:center; align-items:center; min-height:22px; }
+.aj-fosforo-grupo{ width:22px; height:22px; }
+.aj-palito{ stroke:#e8c48a; stroke-width:1.8; stroke-linecap:round; }
+.aj-cabeza{ fill:#d9452f; }
+.aj-fosforo-nuevo{ animation:ajFosforo 0.35s ease-out backwards; transform-box:fill-box; transform-origin:center; }
+@keyframes ajFosforo{ 0%{ opacity:0; transform:scale(1.8) rotate(-30deg); } 100%{ opacity:1; transform:none; } }
+.aj-fosforos-buenas{ width:2px; height:20px; background:rgba(255,255,255,0.35); margin:0 4px; }
+.aj-tanteador{ display:grid; grid-template-columns:1fr auto 1fr; gap:6px; align-items:start; font-size:0.9rem; margin-bottom:6px; }
+.aj-tanteador > div{ text-align:center; }
+
+@media (prefers-reduced-motion: reduce){
+    .aj-fosforo-nuevo, .aj-dibujando .aj-trazo{ animation:none; }
+}

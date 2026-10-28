@@ -64,6 +64,7 @@ let _nivelVistoMascota = null;
 
 function iniciarMascota(){
     _regaloEvaluadoEstaVisita = false;
+    if (window.Chokurei) window.Chokurei.visitaAnterior = undefined;
     _ultimoHistorialVisto = null;
     _nivelVistoMascota = null;
     _modoMascota = null;
@@ -107,6 +108,52 @@ function haceCuanto(ms){
     const dias = Math.floor(horas / 24);
     return `hace ${dias} día${dias === 1 ? '' : 's'}`;
 }
+
+// Clasifica un cuidado (para contadores, logros y el diario).
+function _tipoDeCuidado(detalle, rutinaId){
+    if (rutinaId === 'comer' || /le dio (pescado|torta|salm)/.test(detalle)) return 'comer';
+    if (rutinaId === 'mimos' || /mimos/.test(detalle)) return 'mimos';
+    if (rutinaId === 'banio' || /bañó/.test(detalle)) return 'banio';
+    if (/medicina/.test(detalle)) return 'medicina';
+    if (/fiesta/.test(detalle)) return 'fiesta';
+    if (/compró|regaló/.test(detalle)) return 'tienda';
+    if (/truco/.test(detalle)) return 'truco';
+    if (/regó/.test(detalle)) return 'regar';
+    if (rutinaId === 'jugar' || /jugó/.test(detalle)) return 'jugar';
+    return 'otro';
+}
+
+// El diario de Chokurei: arma una entrada con lo que pasó en el día,
+// como si la escribiera él.
+function _escribirDiarioMascota(reg, estado){
+    const ev = reg.eventos || [];
+    const cuenta = (t, quien) => ev.filter(e => e.t === t && (!quien || e.a === quien)).length;
+    const quienes = [...new Set(ev.map(e => e.a))];
+    const nombres = quienes.map(nombreJugador);
+    const frases = [];
+    const azar = (lista) => lista[(reg.fecha.charCodeAt(9) + ev.length) % lista.length];
+    frases.push(quienes.length === 2 ? azar(['Hoy vinieron mis dos humanos favoritos 💕.', 'Hoy me cuidaron Nico y Carito, los dos 😻.', 'Día de familia completa: Nico y Carito estuvieron conmigo.'])
+        : `Hoy me cuidó ${nombres[0] || 'alguien'}${azar([' 💜.', ', y lo pasamos re bien.', '. ¡Qué suerte tengo!'])}`);
+    for (const q of quienes) {
+        const partes = [];
+        if (cuenta('comer', q)) partes.push(cuenta('comer', q) > 1 ? `me dio de comer ${cuenta('comer', q)} veces` : 'me dio de comer');
+        if (cuenta('mimos', q)) partes.push('me hizo mimos');
+        if (cuenta('banio', q)) partes.push('me bañó (no me gustó tanto 😾)');
+        if (cuenta('jugar', q)) partes.push('jugó conmigo');
+        if (cuenta('tienda', q)) partes.push('me compró algo lindo');
+        if (cuenta('truco', q)) partes.push('practicamos trucos');
+        if (partes.length) frases.push(`${nombreJugador(q)} ${partes.length > 1 ? partes.slice(0, -1).join(', ') + ' y ' + partes.slice(-1) : partes[0]}.`);
+    }
+    const detalles = ev.map(e => e.d).join(' | ');
+    if (/récord/.test(detalles)) frases.push('¡Rompimos un récord! 🏅');
+    if (/fiesta/.test(detalles)) frases.push('¡Hubo FIESTA! 🎉 Bailé toda la tarde.');
+    if (/rutina/.test(detalles)) frases.push('Completamos la rutina del día 📋.');
+    if (/medicina/.test(detalles)) frases.push('Estuve un poquito enfermo, pero me cuidaron 🤒💊.');
+    if (/favorit/.test(detalles)) frases.push('Descubrieron cuál es mi comida favorita 😋.');
+    frases.push(azar(['Fue un buen día. Miau.', 'Ahora me voy a dormir hecho bolita 💤.', 'Los quiero mucho. Fin. 🐾', 'Mañana quiero salmón. 🍣']));
+    return frases.join(' ');
+}
+window._escribirDiarioMascota = _escribirDiarioMascota;
 
 // Semana ISO ("2026-W44"), para el desafío semanal.
 function _semanaMascota(fecha){
@@ -173,6 +220,12 @@ function renderMascota(estado){
         const ahora = ahoraSync();
         window.setDoc(refMascota(), { nacioEn: ahora }, { merge: true });
         estado = { ...estado, nacioEn: ahora };
+    }
+    // Última visita de cada uno: se guarda la mía al entrar (una vez),
+    // y antes se recuerda cuándo había sido la anterior (bienvenidas).
+    if (Chokurei.visitaAnterior === undefined) {
+        Chokurei.visitaAnterior = (estado.visitas || {})[miIdentidad] || null;
+        window.setDoc(refMascota(), { visitas: { [miIdentidad]: ahoraSync() } }, { merge: true });
     }
     _estadoMascota = estado;
     const d = _derivarMascota(estado);
@@ -283,8 +336,15 @@ const Chokurei = window.Chokurei = {
     hab: () => document.getElementById('ck-habitacion'),
     ref: refMascota,
     aplicarCuidado: (...a) => _aplicarCuidadoMascota(...a),
+    semana: (f) => _semanaMascota(f || new Date()),
     gastarPuntos: (c) => _gastarPuntosMascota(c),
     fechaISO,
+    // Suma un botón a la grilla de acciones (lo usan los módulos al armarse).
+    agregarBoton(emoji, texto, onclick, id){
+        const g = document.querySelector('#contenido-mascota .ck-acciones');
+        if (!g || (id && document.getElementById(id))) return;
+        g.insertAdjacentHTML('beforeend', `<button class="ck-boton" ${id ? `id="${id}"` : ''} onclick="${onclick}"><b>${emoji}</b>${texto}</button>`);
+    },
     paneles: {},          // id -> función que devuelve el HTML del panel
     comportamientos: [],  // funciones (d) => true si Chokurei hizo algo
     _oyentes: {},
@@ -425,10 +485,10 @@ function _comportamientoMascota(d){
     if (d.mood.id === 'enferma') { if (r < 0.5) ck.tiritar(); else ck.decir('No me siento bien… 🤒', 2200); return; }
     if (d.mood.id === 'fiesta' && r < 0.5) { ck.bailar(); return; }
     // Necesidades: avisa lo que le falta.
-    if (d.hambre < 35 && r < 0.45) { ck.caminarA(76).then(() => ck.maullar('Tengo hambre 🐟')); return; }
+    if (d.hambre < 35 && r < 0.45) { ck.caminarA(76).then(() => ck.maullar('Tengo hambre 🐟', 'pidiendo')); return; }
     if (d.higiene < 15 && r < 0.4) { ck.particula('🪰', { dx: 40, dy: -30, dur: 2200 }); ck.decir('Necesito un baño… 🫧', 2000); return; }
-    if (d.carino < 35 && r < 0.4) { ck.decir(['Te extrañé… 🥺', '¿Mimos? 🖐️', 'Prrr…?'][Math.floor(Math.random() * 3)], 2200); return; }
-    if (d.diversion < 35 && r < 0.4) { ck.decir('¡Estoy aburrido! 🔴', 2000); return; }
+    if (d.carino < 35 && r < 0.4) { ck.maullar(['Te extrañé… 🥺', '¿Mimos? 🖐️', 'Prrr…?'][Math.floor(Math.random() * 3)], 'triste'); return; }
+    if (d.diversion < 35 && r < 0.4) { ck.maullar('¡Estoy aburrido! 🔴', 'pidiendo'); return; }
     if (d.mood.id === 'triste' || d.mood.id === 'deprimido') { if (r < 0.5) ck.caminarA(20 + Math.random() * 20); return; }
     // Con la diversión a full le agarran los "zoomies".
     if (d.diversion >= 95 && r < 0.12) { ck.zoomies(); return; }
@@ -519,7 +579,7 @@ function _prepararInteraccionesMascota(hab){
             vibrarJ(8);
             if (_ck.dormido) { _despiertoHastaMascota = Date.now() + 10 * 60000; _ck.despertar().then(() => _ck.maullar('😾 ¡Estaba durmiendo!')); _actualizarEscenaMascota(_derivadoMascota, _estadoMascota); }
             else if (tocadasSeguidas >= 7) { tocadasSeguidas = 0; _ck.expresion('enojado', 2500); _ck.maullar('¡Basta! 😾'); setTimeout(() => _ck && _ck.animo(_derivadoMascota.mood.id, { higiene: _derivadoMascota.higiene }), 2500); }
-            else { const r = Math.random(); if (r < 0.35) _ck.maullar(); else if (r < 0.6) _ck.alegrarse(); else if (r < 0.75) { _ck.expresion('guino', 1200); _ck.decir('😉', 1200); } else _ck.saltar(); }
+            else { const r = Math.random(); if (r < 0.35) _ck.maullar(null, _derivadoMascota && _derivadoMascota.promedio > 70 ? 'mimoso' : undefined); else if (r < 0.6) _ck.alegrarse(); else if (r < 0.75) { _ck.expresion('guino', 1200); _ck.decir('😉', 1200); } else _ck.saltar(); }
             Chokurei.emitir('tocar');
         }
     };
@@ -781,6 +841,29 @@ async function _aplicarCuidadoMascota(efectos, detalle, xpGanada, rutinaId){
         }
         // Memoria: cuántas veces lo cuidó cada uno (para saber quién es "su humano favorito").
         actualizaciones.cuidados = { ...(estado.cuidados || {}), [miIdentidad]: ((estado.cuidados || {})[miIdentidad] || 0) + 1 };
+        // Contadores por tipo (para los logros) y quién lo cuidó más esta semana.
+        const tipo = _tipoDeCuidado(detalle, rutinaId);
+        actualizaciones.contadores = { ...(estado.contadores || {}), [tipo]: ((estado.contadores || {})[tipo] || 0) + 1 };
+        const semana = _semanaMascota(new Date());
+        let sem = estado.semanaCuidados || { semana, nico: 0, carito: 0 };
+        if (sem.semana !== semana) {
+            actualizaciones.semanaPasada = { ...sem, premiada: false };
+            sem = { semana, nico: 0, carito: 0 };
+        }
+        actualizaciones.semanaCuidados = { ...sem, [miIdentidad]: (sem[miIdentidad] || 0) + 1 };
+        // Lo que pasó en el día, para el diario. Al cambiar de día, el día
+        // anterior se escribe como una entrada del diario.
+        let reg = estado.registroHoy && estado.registroHoy.fecha === hoy ? estado.registroHoy : null;
+        if (!reg) {
+            if (estado.registroHoy && estado.registroHoy.eventos?.length) {
+                const diario = { ...(estado.diario || {}) };
+                diario[estado.registroHoy.fecha] = _escribirDiarioMascota(estado.registroHoy, estado);
+                Object.keys(diario).sort().slice(0, -60).forEach(k => delete diario[k]);
+                actualizaciones.diario = diario;
+            }
+            reg = { fecha: hoy, eventos: [] };
+        }
+        actualizaciones.registroHoy = { fecha: hoy, eventos: [...reg.eventos, { a: miIdentidad, t: tipo, d: detalle.replace(/ a Chokurei| con Chokurei/g, '') }].slice(-40) };
         actualizaciones.xp = (estado.xp || 0) + xp;
         const nivelAntes = Math.floor((estado.xp || 0) / 50) + 1, nivelDespues = Math.floor(actualizaciones.xp / 50) + 1;
         if (nivelDespues > nivelAntes) {

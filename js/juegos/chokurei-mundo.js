@@ -11,12 +11,24 @@
 //  - 📲 Un mensajito por WhatsApp "de parte de Chokurei".
 // ============================================================
 
-// Ciudad de cada uno para el clima de la ventana (según la característica
-// de sus celulares: 351 = Córdoba, 11 = Buenos Aires). Cambiar acá si no.
+// Ciudades para el clima de la ventana. Cada uno elige la suya en la
+// Ficha; hasta que elijan, se usa la de la característica de su celular
+// (351 = Córdoba, 11 = Buenos Aires).
 const CIUDADES_CHOKUREI = {
-    nico:   { nombre: 'Córdoba',      lat: -31.42, lon: -64.18 },
-    carito: { nombre: 'Buenos Aires', lat: -34.60, lon: -58.38 },
+    cordoba:     { nombre: 'Córdoba',       lat: -31.42, lon: -64.18 },
+    buenosaires: { nombre: 'Buenos Aires',  lat: -34.60, lon: -58.38 },
+    rosario:     { nombre: 'Rosario',       lat: -32.95, lon: -60.66 },
+    laplata:     { nombre: 'La Plata',      lat: -34.92, lon: -57.95 },
+    mardelplata: { nombre: 'Mar del Plata', lat: -38.00, lon: -57.56 },
+    mendoza:     { nombre: 'Mendoza',       lat: -32.89, lon: -68.84 },
+    tucuman:     { nombre: 'Tucumán',       lat: -26.81, lon: -65.22 },
+    salta:       { nombre: 'Salta',         lat: -24.79, lon: -65.41 },
+    neuquen:     { nombre: 'Neuquén',       lat: -38.95, lon: -68.06 },
+    bariloche:   { nombre: 'Bariloche',     lat: -41.13, lon: -71.31 },
+    santafe:     { nombre: 'Santa Fe',      lat: -31.63, lon: -60.70 },
+    montevideo:  { nombre: 'Montevideo',    lat: -34.90, lon: -56.16 },
 };
+const CIUDAD_POR_DEFECTO_CHOKUREI = { nico: 'cordoba', carito: 'buenosaires' };
 
 (window.CHOKUREI_MODULOS = window.CHOKUREI_MODULOS || []).push(function (Chokurei) {
     const otro = () => (miIdentidad === 'nico' ? 'carito' : 'nico');
@@ -83,8 +95,16 @@ const CIUDADES_CHOKUREI = {
             ${fila('🎮 Juego favorito', des.juego && fav.juego ? `${fav.juego.emoji} ${fav.juego.nombre}` : '❓ Jugá a todo y vas a ver')}
             ${fila('🔥 Mejor racha', `${(e.rachaDias || {}).mejor || 0} días`)}
             ${fila('🏅 Medallas', med.length ? `${med.length} (Nico ${med.filter(m => m.quien === 'nico').length} · Carito ${med.filter(m => m.quien === 'carito').length})` : 'Todavía ninguna')}
+            <div class="ck-ficha-fila"><span>🌦️ Mi ciudad (clima)</span><select onchange="elegirCiudadChokurei(this.value)" style="background:var(--bg-oscuro); color:var(--texto); border:1px solid var(--borde); border-radius:8px; padding:3px 6px;">
+                ${Object.entries(CIUDADES_CHOKUREI).map(([id, c]) => `<option value="${id}" ${id === ((e.ciudades || {})[miIdentidad] || CIUDAD_POR_DEFECTO_CHOKUREI[miIdentidad]) ? 'selected' : ''}>${c.nombre}</option>`).join('')}
+            </select></div>
             <div class="ck-ficha-fila"><span>💞 Nuestro aniversario</span><input type="date" id="ck-aniversario" value="${e.aniversarioFecha || ''}" onchange="guardarAniversarioChokurei(this.value)" style="background:transparent; color:var(--texto); border:1px solid var(--borde); border-radius:8px; padding:3px 6px;"></div>
             <div class="texto-tenue" style="font-size:0.7rem; margin-top:6px;">Ese día la habitación se decora sola y Chokurei los saluda 💕</div>`;
+    };
+    window.elegirCiudadChokurei = async (id) => {
+        if (!CIUDADES_CHOKUREI[id]) return;
+        await window.setDoc(Chokurei.ref(), { ciudades: { [miIdentidad]: id } }, { merge: true });
+        setTimeout(aplicarClima, 400);
     };
     window.guardarAniversarioChokurei = async (valor) => {
         if (!valor) return;
@@ -134,7 +154,8 @@ const CIUDADES_CHOKUREI = {
         }
         if (f && f !== fechaAplicada && Chokurei.ck) {
             const frases = { halloween: '¡Feliz Halloween! 🎃 ¿Dulce o truco?', navidad: '¡Feliz Navidad! 🎄', sanvalentin: 'Feliz San Valentín 💕', anionuevo: '¡Feliz año nuevo! 🥂', aniversario: '¡Feliz aniversario, mis humanos! 💞' };
-            setTimeout(() => Chokurei.ck && Chokurei.ck.decir(frases[f], 3200), 4500);
+            // Después del saludo y de una posible bienvenida (chokurei-conexion.js), que tienen prioridad.
+            setTimeout(() => Chokurei.ck && !Chokurei.bienvenidaDada && Chokurei.ck.decir(frases[f], 3200), 8500);
         }
         fechaAplicada = f;
     }
@@ -142,16 +163,17 @@ const CIUDADES_CHOKUREI = {
 
     // ==================== CLIMA REAL ====================
     async function aplicarClima(){
-        const ciudad = CIUDADES_CHOKUREI[miIdentidad];
+        const idCiudad = (Chokurei.estado.ciudades || {})[miIdentidad] || CIUDAD_POR_DEFECTO_CHOKUREI[miIdentidad];
+        const ciudad = CIUDADES_CHOKUREI[idCiudad];
         const hab = Chokurei.hab();
         if (!ciudad || !hab) return;
         let datos = null;
         try { datos = JSON.parse(sessionStorage.getItem('climaChokurei') || 'null'); } catch (e) {}
-        if (!datos || Date.now() - datos.t > 30 * 60000) {
+        if (!datos || Date.now() - datos.t > 30 * 60000 || datos.ciudad !== idCiudad) {
             try {
                 const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${ciudad.lat}&longitude=${ciudad.lon}&current=temperature_2m,weather_code`);
                 const j = await r.json();
-                datos = { t: Date.now(), temp: Math.round(j.current.temperature_2m), codigo: j.current.weather_code };
+                datos = { t: Date.now(), ciudad: idCiudad, temp: Math.round(j.current.temperature_2m), codigo: j.current.weather_code };
                 try { sessionStorage.setItem('climaChokurei', JSON.stringify(datos)); } catch (e) {}
             } catch (e) { return; /* sin internet o bloqueado: queda el cielo de siempre */ }
         }
@@ -163,7 +185,8 @@ const CIUDADES_CHOKUREI = {
         h.dataset.clima = tipo;
         let chip = h.querySelector('.ck-chip-clima');
         if (!chip) { chip = document.createElement('div'); chip.className = 'ck-chip ck-chip-clima'; (h.querySelector('.ck-ventana') || h).appendChild(chip); }
-        chip.textContent = `${icono} ${datos.temp}° ${ciudad.nombre}`;
+        chip.textContent = `${icono} ${datos.temp}°`;
+        chip.title = `${ciudad.nombre}: ${datos.temp}°`;
         if (tipo === 'lluvia' || tipo === 'tormenta') {
             const v = h.querySelector('.ck-ventana');
             if (v && !v.querySelector('.ck-lluvia')) v.insertAdjacentHTML('beforeend', '<div class="ck-lluvia"></div>');
@@ -221,7 +244,10 @@ const CIUDADES_CHOKUREI = {
         g.fillText('Chokurei 🐾', 24, H + 35);
         g.font = '20px sans-serif'; g.textAlign = 'right';
         g.fillText(new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) + ' · por ' + nombreJugador(miIdentidad), W - 24, H + 35);
-        return cv.toDataURL('image/jpeg', 0.78);
+        // Miniatura para el álbum (liviana) + la foto grande, que se guarda aparte.
+        const mini = document.createElement('canvas'); mini.width = 240; mini.height = Math.round(240 * cv.height / cv.width);
+        mini.getContext('2d').drawImage(cv, 0, 0, mini.width, mini.height);
+        return { grande: cv.toDataURL('image/jpeg', 0.78), mini: mini.toDataURL('image/jpeg', 0.7) };
     }
     window.sacarFotoChokurei = async () => {
         const hab = Chokurei.hab();
@@ -231,8 +257,13 @@ const CIUDADES_CHOKUREI = {
         const flash = document.createElement('div'); flash.className = 'ck-flash'; hab.appendChild(flash);
         setTimeout(() => flash.remove(), 500);
         try {
-            const img = await capturarEscena();
-            await window.addDoc(window.collection(window.db, 'juegos'), { tipo: 'chokurei-foto', img, autor: miIdentidad, en: ahoraSync() });
+            const { grande, mini } = await capturarEscena();
+            // El álbum baja sólo las miniaturas (~8 KB cada una); la foto grande
+            // vive en otro documento y se pide recién al abrirla.
+            const ref = await window.addDoc(window.collection(window.db, 'juegos'), { tipo: 'chokurei-foto-grande', img: grande });
+            await window.addDoc(window.collection(window.db, 'juegos'), { tipo: 'chokurei-foto', mini, grandeId: ref.id, autor: miIdentidad, en: ahoraSync() });
+            Chokurei.emitir('foto');
+            window.setDoc(Chokurei.ref(), { contadores: { fotos: window.increment(1) } }, { merge: true }).catch(() => {});
             Chokurei.ck.expresion('guino', 1500);
             Chokurei.ck.decir('¡Salí divino! 📸', 1800);
             if (typeof mostrarCartelEnVivo === 'function') mostrarCartelEnVivo({ titulo: '📸 Foto guardada en el álbum', sub: 'Tocá 📒 Álbum para verla', duracion: 2500 });
@@ -241,7 +272,8 @@ const CIUDADES_CHOKUREI = {
             Chokurei.ck.decir('Uy, la foto salió movida 😿', 1800);
         }
     };
-    let fotos = null;
+    let fotos = null, mostrarFotos = 24;
+    window.masFotosChokurei = () => { mostrarFotos += 24; refrescarPanelChokurei(); };
     Chokurei.paneles.album = () => {
         if (fotos === null) {
             fotos = [];
@@ -256,12 +288,19 @@ const CIUDADES_CHOKUREI = {
             return '<div class="texto-centro texto-tenue">Cargando el álbum…</div>';
         }
         return `<div style="text-align:center; margin-bottom:8px;"><b>📒 Álbum de Chokurei</b></div>
-            ${fotos.length ? `<div class="ck-album">${fotos.map(f => `<img src="${f.img}" alt="Foto de Chokurei" loading="lazy" onclick="verFotoChokurei('${f.id}')">`).join('')}</div>`
+            ${fotos.length ? `<div class="ck-album">${fotos.slice(0, mostrarFotos).map(f => `<img src="${f.mini || f.img}" alt="Foto de Chokurei" loading="lazy" onclick="verFotoChokurei('${f.id}')">`).join('')}</div>
+                ${fotos.length > mostrarFotos ? `<button class="btn-secundario" style="margin-top:8px;" onclick="masFotosChokurei()">Ver más fotos (${fotos.length - mostrarFotos})</button>` : ''}`
                 : '<div class="texto-centro texto-tenue">Todavía no hay fotos. Tocá 📸 cuando haga algo lindo.</div>'}`;
     };
-    window.verFotoChokurei = (id) => {
-        const f = (fotos || []).find(x => x.id === id);
-        if (!f) return;
+    window.verFotoChokurei = async (id) => {
+        const f0 = (fotos || []).find(x => x.id === id);
+        if (!f0) return;
+        let f = f0;
+        // Las fotos nuevas guardan la grande aparte: se baja recién ahora.
+        if (!f0.img && f0.grandeId) {
+            const g = await new Promise(res => { const u = window.onSnapshot(window.doc(window.db, 'juegos', f0.grandeId), s => { u(); res(s.exists() ? s.data() : null); }, () => res(null)); });
+            f = { ...f0, img: g ? g.img : f0.mini };
+        }
         const fondo = document.createElement('div');
         fondo.className = 'ck-visor';
         fondo.innerHTML = `<img src="${f.img}" alt="Foto de Chokurei">
@@ -277,7 +316,11 @@ const CIUDADES_CHOKUREI = {
                 if (navigator.canShare && navigator.canShare({ files: [archivo] })) navigator.share({ files: [archivo], title: 'Chokurei', text: 'Mirá a Chokurei 🐾' }).catch(() => {});
                 else { const l = document.createElement('a'); l.href = f.img; l.download = 'chokurei.jpg'; l.click(); }
             }
-            if (a === 'borrar' && confirm('¿Borrar esta foto del álbum?')) { await window.deleteDoc(window.doc(window.db, 'juegos', f.id)); fondo.remove(); }
+            if (a === 'borrar' && confirm('¿Borrar esta foto del álbum?')) {
+                await window.deleteDoc(window.doc(window.db, 'juegos', f.id));
+                if (f.grandeId) window.deleteDoc(window.doc(window.db, 'juegos', f.grandeId)).catch(() => {});
+                fondo.remove();
+            }
         };
         document.body.appendChild(fondo);
     };

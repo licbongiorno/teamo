@@ -127,6 +127,7 @@ const JUEGOS_CHOKUREI = [
                 const r = (e.records || {})[juegoId] || {};
                 const mejor = Math.max(r.nico || 0, r.carito || 0);
                 const cambios = { records: { [juegoId]: { [miIdentidad]: Math.max(r[miIdentidad] || 0, puntos) } } };
+                if (juegoId === 'pescar') cambios.contadores = { peces: ((e.contadores || {}).peces || 0) + puntos };
                 if (puntos > 0 && puntos > mejor) {
                     record = true;
                     cambios.medallas = [...(e.medallas || []), { juego: juegoId, quien: miIdentidad, puntos, fecha: Chokurei.fechaISO(new Date()) }].slice(-30);
@@ -169,7 +170,11 @@ const JUEGOS_CHOKUREI = [
         if (id === 'pescar') return pescar();
         if (id === 'pluma') return pluma();
         if (id === 'escondidas') return escondidas();
+        if (Chokurei.miniJuegos[id]) return Chokurei.miniJuegos[id]();
     };
+    // Otros módulos pueden sumar mini-juegos (ej. la pelota de a dos en chokurei-casa.js).
+    Chokurei.miniJuegos = Chokurei.miniJuegos || {};
+    Chokurei.modoMiniJuego = (id, texto) => modo(id, texto);
 
     // Arranca un mini-juego en la capa de la habitación. Devuelve helpers.
     function modo(id, texto){

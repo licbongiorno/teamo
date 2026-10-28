@@ -90,10 +90,10 @@
         </svg>`;
     }
     const SVG_DORSO = `<svg class="aj-svg-naipe" viewBox="0 0 50 72" aria-hidden="true">
-        <rect x="0.5" y="0.5" width="49" height="71" rx="5" fill="#7a2944"/>
-        <rect x="3.5" y="3.5" width="43" height="65" rx="3" fill="none" stroke="#e8c27a" stroke-width="1.2"/>
-        <path d="M6,6 L44,66 M18,6 L44,46 M30,6 L44,26 M6,26 L32,66 M6,46 L20,66 M44,6 L6,66 M32,6 L6,46 M20,6 L6,26 M44,26 L18,66 M44,46 L30,66" stroke="#e8c27a" stroke-width="0.5" opacity="0.35"/>
-        <circle cx="25" cy="36" r="10" fill="#7a2944" stroke="#e8c27a" stroke-width="1.2"/>
+        <rect x="0.5" y="0.5" width="49" height="71" rx="5" style="fill:var(--aj-dorso,#7a2944)"/>
+        <rect x="3.5" y="3.5" width="43" height="65" rx="3" fill="none" style="stroke:var(--aj-dorso-linea,#e8c27a)" stroke-width="1.2"/>
+        <path d="M6,6 L44,66 M18,6 L44,46 M30,6 L44,26 M6,26 L32,66 M6,46 L20,66 M44,6 L6,66 M32,6 L6,46 M20,6 L6,26 M44,26 L18,66 M44,46 L30,66" style="stroke:var(--aj-dorso-linea,#e8c27a)" stroke-width="0.5" opacity="0.35"/>
+        <circle cx="25" cy="36" r="10" style="fill:var(--aj-dorso,#7a2944); stroke:var(--aj-dorso-linea,#e8c27a)" stroke-width="1.2"/>
         <path d="M25,41 C18,36 20,30 25,33 C30,30 32,36 25,41 Z" fill="#ffb3c6"/>
     </svg>`;
 

@@ -998,3 +998,50 @@ html[data-tema="claro"] .ck-anillo::before{ background:#fff; }
 .compu-nivel .texto-tenue{ font-size:0.74rem; }
 .compu-nivel-emoji{ font-size:1.6rem; }
 .compu-bloqueo{ position:fixed; inset:0; z-index:9400; display:none; }
+
+/* ---- Animaciones de Batalla Naval, Cajitas, Buscaminas, Sudoku, Ahorcado, Memoria ---- */
+.aj-activo .celda-sudoku.llenada{ animation:none; }
+.aj-fx{ position:fixed; width:0; height:0; pointer-events:none; }
+.aj-fx::before{
+    content:''; position:absolute; left:calc(var(--aj-t) * -0.5); top:calc(var(--aj-t) * -0.5);
+    width:var(--aj-t); height:var(--aj-t); border-radius:50%;
+}
+.aj-explosion::before{
+    background:radial-gradient(circle, #fff6d0 0%, #ffb347 35%, #ff5e3a 60%, rgba(255,94,58,0) 72%);
+    animation:ajBoom 0.6s ease-out forwards;
+}
+.aj-explosion.aj-grande::before{ animation-duration:0.8s; }
+.aj-explosion i, .aj-chispas i{
+    position:absolute; left:-3px; top:-3px; width:6px; height:6px; border-radius:50%;
+    background:#ffb347; box-shadow:0 0 6px #ff8a3a; animation:ajParticula 0.7s ease-out forwards;
+}
+.aj-chispas::before{ display:none; }
+.aj-chispas i{ background:#f5d9a0; box-shadow:0 0 6px #f5d9a0; width:5px; height:5px; }
+.aj-salpicadura::before{
+    border:3px solid rgba(168,216,255,0.9); box-sizing:border-box; animation:ajOnda 0.7s ease-out forwards;
+}
+.aj-salpicadura::after{
+    content:''; position:absolute; left:calc(var(--aj-t) * -0.3); top:calc(var(--aj-t) * -0.3);
+    width:calc(var(--aj-t) * 0.6); height:calc(var(--aj-t) * 0.6); border-radius:50%;
+    border:2px solid rgba(168,216,255,0.7); box-sizing:border-box; animation:ajOnda 0.7s 0.15s ease-out both;
+}
+@keyframes ajBoom{ 0%{ transform:scale(0.2); opacity:1; } 60%{ transform:scale(2.2); opacity:0.9; } 100%{ transform:scale(2.8); opacity:0; } }
+@keyframes ajOnda{ 0%{ transform:scale(0.3); opacity:1; } 100%{ transform:scale(2.4); opacity:0; } }
+@keyframes ajParticula{ 0%{ transform:translate(0,0) scale(1); opacity:1; } 100%{ transform:translate(var(--dx),var(--dy)) scale(0.3); opacity:0; } }
+
+.aj-palabra{ display:flex; flex-wrap:wrap; justify-content:center; gap:5px; margin-bottom:10px; perspective:400px; }
+.aj-letra{
+    min-width:1.35em; padding:2px 0 4px; font-size:1.5rem; font-weight:800; text-align:center;
+    border-bottom:3px solid rgba(255,255,255,0.35); display:inline-block;
+}
+.aj-letra.aj-oculta{ color:transparent; }
+.aj-espacio{ width:0.9em; }
+.ahorcado-muneco.aj-colgado{ transform-origin:70px 10px; animation:ajColgado 1.6s ease-in-out infinite; }
+@keyframes ajColgado{ 0%,100%{ transform:rotate(-6deg); } 50%{ transform:rotate(6deg); } }
+
+.aj-secuencia{ font-size:2.2rem; display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+.aj-secuencia span{ display:inline-block; animation:ajCartaMemoria 0.45s cubic-bezier(0.34,1.56,0.64,1) backwards; }
+@keyframes ajCartaMemoria{ 0%{ transform:rotateY(90deg) scale(0.5); opacity:0; } 100%{ transform:none; opacity:1; } }
+.aj-intento{ display:flex; justify-content:center; gap:6px; flex-wrap:wrap; }
+.aj-intento span{ display:inline-block; }
+@media (prefers-reduced-motion: reduce){ .aj-secuencia span, .ahorcado-muneco.aj-colgado{ animation:none; } }

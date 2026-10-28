@@ -17,7 +17,10 @@
 // historial de cada partida y los fosforitos para anotar los tantos.
 // ============================================================
 (function () {
-    const JUEGOS = ['truco', 'escoba', 'chinchon', 'uno', 'ajedrez', 'damas', 'conecta4', 'tateti', 'reversi', 'generala', 'mentiroso'];
+    const JUEGOS = ['truco', 'escoba', 'chinchon', 'uno', 'ajedrez', 'damas', 'conecta4', 'tateti', 'reversi', 'generala', 'mentiroso',
+        'batallanaval', 'ahorcado', 'cajitas', 'memoria', 'buscaminas', 'sudoku'];
+    // Juegos donde se compara casilla por casilla (qué cambió desde el dibujo anterior).
+    const JUEGOS_CASILLAS = ['batallanaval', 'cajitas', 'buscaminas', 'sudoku'];
     const SEL_CARTAS = '.naipe-chinchon, div.naipe-uno';
     const SEL_PIEZAS = '.pieza-tablero, .ficha-damas, .ficha-c4, .ficha-reversi, .marca-tateti';
     const NS = 'http://www.w3.org/2000/svg';
@@ -214,10 +217,15 @@
             const dados = [...f.querySelectorAll('.dado-generala')];
             return { el: f, vals: dados.map(d => d.dataset.ajV), dados, r: rel(f, base), quien: f.dataset.ajQuien || '' };
         });
+        const tableros = [...cont.querySelectorAll('.tablero-juego, .grilla-cajitas, .tablero-sudoku')].map(t =>
+            [...t.children].map(c => ({ el: c, k: c.className + '|' + c.textContent.trim() })));
+        const letras = [...cont.querySelectorAll('.aj-palabra > .aj-letra')].map(l => l.textContent);
+        const partes = cont.querySelectorAll('.ahorcado-muneco > *').length;
+        const intento = cont.querySelectorAll('.aj-intento > span').length;
         const rival = cont.querySelector('[data-aj-rival]');
         const mazo = cont.querySelector('[data-aj-mazo]');
         return {
-            cartas, piezas, filasDados,
+            cartas, piezas, filasDados, tableros, letras, partes, intento,
             tableroR: tablero ? rel(tablero, base) : null,
             rivalR: rival ? rel(rival, base) : null,
             mazoR: mazo ? rel(mazo, base) : null,
@@ -499,6 +507,151 @@
         }, 60);
     }
 
+    // ==================== CASILLAS: NAVAL, CAJITAS, BUSCAMINAS, SUDOKU ====================
+    // Efectos sueltos sobre la capa fija: explosión, salpicadura, chispas.
+    function efectoEn(el, clase, dur) {
+        const r = el.getBoundingClientRect();
+        const fx = document.createElement('div');
+        fx.className = 'aj-fx ' + clase;
+        fx.style.cssText = `left:${r.left + r.width / 2}px;top:${r.top + r.height / 2}px;--aj-t:${Math.max(r.width, 24)}px;`;
+        if (clase.includes('explosion') || clase.includes('chispas')) {
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('i');
+                const ang = (i / 10) * Math.PI * 2 + Math.random() * 0.4;
+                const d = (clase.includes('chispas') ? 18 : 26) + Math.random() * 22;
+                p.style.cssText = `--dx:${Math.cos(ang) * d}px;--dy:${Math.sin(ang) * d}px;animation-delay:${Math.random() * 60}ms;`;
+                fx.appendChild(p);
+            }
+        }
+        capaFantasmas().appendChild(fx);
+        setTimeout(() => fx.remove(), dur || 900);
+    }
+    function sacudirEl(el, fuerza) {
+        const f = fuerza || 5;
+        el.animate([{ transform: 'translate(0,0)' }, { transform: `translate(${-f}px,${f / 2}px)` }, { transform: `translate(${f}px,${-f / 2}px)` },
+            { transform: `translate(${-f / 2}px,0)` }, { transform: 'translate(0,0)' }], { duration: 380 });
+    }
+    function animarCasillas(cont, vieja, nueva, juego) {
+        nueva.tableros.forEach((celdas, b) => {
+            const antes = vieja.tableros[b];
+            if (!antes || antes.length !== celdas.length) return;
+            const cambiadas = celdas.map((c, i) => ({ ...c, i, previo: antes[i].k })).filter(c => c.k !== c.previo);
+            if (!cambiadas.length || cambiadas.length > celdas.length * 0.8) return; // tablero nuevo: nada que animar
+            const tablero = celdas[0].el.parentElement;
+            if (juego === 'batallanaval') {
+                cambiadas.forEach(c => {
+                    const txt = c.el.textContent;
+                    if (txt.includes('💥') && !c.previo.includes('💥')) {
+                        efectoEn(c.el, 'aj-explosion', 900);
+                        pop(c.el, 1.6);
+                        sacudirEl(tablero, 6);
+                        sonar('explosion');
+                        cartel(b === 0 ? '💥 ¡TOCADO!' : '💥 ¡Te dieron!', { color: '#ff9b6b', dur: 1000, sonido: false });
+                    } else if (txt.includes('💦') && !c.previo.includes('💦')) {
+                        efectoEn(c.el, 'aj-salpicadura', 900);
+                        pop(c.el, 1.3);
+                        sonar('swoosh');
+                        if (b === 0 || esJugadaAjena()) cartel('💦 Agua', { color: '#a8d8ff', dur: 800, sonido: false });
+                    } else if (txt.includes('🚢') && !c.previo.includes('🚢')) {
+                        c.el.animate([{ transform: 'translateY(-14px) rotate(-12deg)', opacity: 0 }, { transform: 'translateY(2px) rotate(4deg)', opacity: 1, offset: 0.7 }, { transform: 'none' }], { duration: 380, easing: 'ease-out' });
+                    }
+                });
+            } else if (juego === 'cajitas') {
+                cambiadas.forEach(c => {
+                    const el = c.el;
+                    if (/linea-(nico|carito)/.test(c.k) && !/linea-(nico|carito)/.test(c.previo)) {
+                        const h = el.classList.contains('linea-h');
+                        el.animate([{ transform: h ? 'scaleX(0)' : 'scaleY(0)' }, { transform: 'none' }], { duration: 260, easing: 'ease-out' });
+                        if (esJugadaAjena()) sonar('toque');
+                    } else if (/caja-(nico|carito)/.test(c.k) && !/caja-(nico|carito)/.test(c.previo)) {
+                        el.animate([{ transform: 'scale(0.2)', opacity: 0 }, { transform: 'scale(1.25)', opacity: 1, offset: 0.6 }, { transform: 'scale(1)' }], { duration: 460, delay: 200, easing: 'ease-out', fill: 'backwards' });
+                        efectoEn(el, 'aj-chispas', 800);
+                        sonar('punto');
+                    }
+                });
+            } else if (juego === 'buscaminas') {
+                const origen = cambiadas[0];
+                const cols = getComputedStyle(tablero).gridTemplateColumns.split(' ').length || 6;
+                cambiadas.forEach(c => {
+                    const d = Math.hypot((c.i % cols) - (origen.i % cols), Math.floor(c.i / cols) - Math.floor(origen.i / cols));
+                    if (c.el.textContent.includes('💥')) {
+                        efectoEn(c.el, 'aj-explosion aj-grande', 1000);
+                        sacudirEl(tablero, 9);
+                        sonar('explosion');
+                        if (navigator.vibrate && esJugadaAjena()) { try { navigator.vibrate([40, 30, 60]); } catch (e) { /* nada */ } }
+                    } else {
+                        c.el.animate([{ transform: 'scale(0.4) rotateX(90deg)', opacity: 0.3 }, { transform: 'scale(1.08)', opacity: 1, offset: 0.7 }, { transform: 'none' }],
+                            { duration: 300, delay: d * 45, easing: 'ease-out', fill: 'backwards' });
+                    }
+                });
+            } else if (juego === 'sudoku') {
+                const llenas = celdas.map(c => /\d/.test(c.k.split('|')[1] || ''));
+                const llenasAntes = antes.map(c => /\d/.test(c.k.split('|')[1] || ''));
+                cambiadas.forEach(c => {
+                    if (llenas[c.i] && c.el.textContent !== (c.previo.split('|')[1] || '')) pop(c.el, 1.5);
+                });
+                // Fila, columna o cuadro recién completos: una ola de brillo.
+                const grupos = [];
+                for (let g = 0; g < 9; g++) {
+                    grupos.push([...Array(9)].map((_, k) => g * 9 + k));
+                    grupos.push([...Array(9)].map((_, k) => k * 9 + g));
+                    const f0 = Math.floor(g / 3) * 3, c0 = (g % 3) * 3;
+                    grupos.push([...Array(9)].map((_, k) => (f0 + Math.floor(k / 3)) * 9 + c0 + (k % 3)));
+                }
+                let hubo = false;
+                grupos.forEach(gr => {
+                    if (gr.every(i => llenas[i]) && !gr.every(i => llenasAntes[i])) {
+                        hubo = true;
+                        gr.forEach((i, k) => celdas[i].el.animate([{ background: 'rgba(245,217,160,0)' }, { background: 'rgba(245,217,160,0.55)' }, { background: 'rgba(245,217,160,0)' }],
+                            { duration: 600, delay: k * 50 }));
+                    }
+                });
+                if (hubo) sonar('logro');
+            }
+        });
+    }
+    function pop(el, escala) {
+        el.animate([{ transform: `scale(${escala || 1.4})` }, { transform: 'scale(1)' }], { duration: 320, easing: 'cubic-bezier(0.34,1.56,0.64,1)' });
+    }
+
+    // ==================== AHORCADO ====================
+    function animarAhorcado(cont, vieja, nueva) {
+        const spans = [...cont.querySelectorAll('.aj-palabra > .aj-letra')];
+        let aparecieron = 0;
+        if (vieja.letras.length === nueva.letras.length) {
+            spans.forEach((s, i) => {
+                if (vieja.letras[i] === '_' && nueva.letras[i] !== '_') {
+                    s.animate([{ transform: 'rotateY(90deg) scale(0.6)', color: '#f5d9a0' }, { transform: 'rotateY(0) scale(1.3)', offset: 0.6 }, { transform: 'none' }],
+                        { duration: 420, delay: aparecieron++ * 90, easing: 'ease-out', fill: 'backwards' });
+                }
+            });
+        }
+        const svg = cont.querySelector('.ahorcado-svg');
+        if (nueva.partes > vieja.partes && svg) {
+            const hijos = [...cont.querySelectorAll('.ahorcado-muneco > *')].slice(vieja.partes);
+            hijos.forEach(h => {
+                const largo = h.getTotalLength ? h.getTotalLength() : 60;
+                h.style.strokeDasharray = largo;
+                h.animate([{ strokeDashoffset: largo }, { strokeDashoffset: 0 }], { duration: 450, easing: 'ease-out', fill: 'backwards' });
+            });
+            sacudirEl(svg, 4);
+            if (esJugadaAjena()) sonar('error');
+        }
+        const muneco = cont.querySelector('.ahorcado-muneco');
+        if (muneco && nueva.partes >= 6 && vieja.partes < 6) muneco.classList.add('aj-colgado');
+        if (aparecieron && nueva.letras.every(l => l !== '_') && vieja.letras.some(l => l === '_')) {
+            spans.forEach((s, i) => s.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-12px)' }, { transform: 'translateY(0)' }], { duration: 420, delay: 500 + i * 70 }));
+        }
+    }
+
+    // ==================== MEMORIA ====================
+    function animarMemoria(cont, vieja, nueva) {
+        if (nueva.intento > vieja.intento) {
+            const ultimo = cont.querySelector('.aj-intento > span:last-child');
+            if (ultimo) ultimo.animate([{ transform: 'translateY(40px) scale(0.3)', opacity: 0 }, { transform: 'translateY(-6px) scale(1.2)', opacity: 1, offset: 0.7 }, { transform: 'none' }], { duration: 360, easing: 'ease-out' });
+        }
+    }
+
     // ==================== OBSERVADOR ====================
     const fotos = new Map();
     function procesar(cont) {
@@ -514,12 +667,15 @@
             return;
         }
         cont.classList.remove('aj-sin-entrada');
-        const hayAlgo = nueva.cartas.length || nueva.piezas.length || nueva.filasDados.length;
+        const hayAlgo = nueva.cartas.length || nueva.piezas.length || nueva.filasDados.length || nueva.tableros.length || nueva.letras.length || nueva.partes || nueva.intento;
         if (!hayAlgo) return;
         const base = cont.getBoundingClientRect();
         const movidasCartas = animarCartas(cont, vieja, nueva, base);
         animarTablero(cont, vieja, nueva, juego, base);
         animarDados(cont, vieja, nueva, base);
+        if (JUEGOS_CASILLAS.includes(juego)) animarCasillas(cont, vieja, nueva, juego);
+        if (juego === 'ahorcado') animarAhorcado(cont, vieja, nueva);
+        if (juego === 'memoria') animarMemoria(cont, vieja, nueva);
         if (movidasCartas && esJugadaAjena()) sonar('cartaFlip');
     }
     const observador = new MutationObserver((registros) => {

@@ -69,7 +69,7 @@ function renderMemoria(estado){
     }
 
     if (_mostrandoSecuenciaMemoria) {
-        cont.innerHTML = `<div class="panel texto-centro"><div style="font-size:2.2rem; letter-spacing:8px;" class="flip-carta">${estado.secuencia.join(' ')}</div>
+        cont.innerHTML = `<div class="panel texto-centro"><div style="font-size:2.2rem; letter-spacing:8px;" class="aj-secuencia">${estado.secuencia.map((e, i) => `<span style="animation-delay:${i * 0.12}s">${e}</span>`).join('')}</div>
             <p class="texto-tenue" style="margin-top:10px;">Memorizá... 👀</p></div>`;
         return;
     }
@@ -85,7 +85,7 @@ function renderMemoria(estado){
     // Reconstrucción
     let html = `<div class="panel texto-centro">
         <p class="texto-tenue">Tocá los emojis en el orden que recordás (${_intentoLocalMemoria.length}/${estado.dificultad}):</p>
-        <div style="font-size:1.5rem; min-height:2em; margin:10px 0;">${_intentoLocalMemoria.join(' ') || '—'}</div>
+        <div class="aj-intento" style="font-size:1.5rem; min-height:2em; margin:10px 0;">${_intentoLocalMemoria.map(e => `<span>${e}</span>`).join('') || '—'}</div>
     </div>
     <div class="panel" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px;">
         ${POOL_EMOJIS_MEMORIA.map(e => `<button class="btn-secundario" style="font-size:1.4rem; padding:10px 0;" onclick="tocarEmojiMemoria('${e}')">${e}</button>`).join('')}

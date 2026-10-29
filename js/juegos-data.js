@@ -159,6 +159,9 @@ window.JUEGOS = [
     { id:'hex', nombre:'Hex', icono:'⬡', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Uní tus dos bordes con un camino de fichas. Nunca hay empate.' },
     { id:'fosforos', nombre:'El Último Fósforo', icono:'🔥', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Sacá fósforos de una fila por turno. El que se lleva el último, pierde.' },
     { id:'chancho', nombre:'El Chancho', icono:'🐷', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Tirá el dado y sumá… hasta que sale el 1. ¿Te plantás o seguís? Primero a 100.' },
+    // ---- CARTAS ESPAÑOLAS ----
+    { id:'sieteymedio', nombre:'Siete y Medio', icono:'🃏', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Acercate a 7½ sin pasarte. Se turnan la banca y gana quien se lleva 5 manos.' },
+    { id:'pescar', nombre:'¿Tenés…?', icono:'🎣', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Pedile cartas al otro o ¡pescá! Juntá las cuatro de cada número para armar juegos.' },
     // ---- DUELOS Y CREATIVOS ----
     { id:'damaschinas', nombre:'Damas Chinas', icono:'⭐', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Tablero estrella: llevá tus 10 fichas a la punta de enfrente saltando en cadena.' },
     { id:'quoridor', nombre:'Quoridor', icono:'🧱', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Mové tu peón o poné paredes para trabar al otro. Gana quien cruza primero.' },

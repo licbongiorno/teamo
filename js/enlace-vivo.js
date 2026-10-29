@@ -13,7 +13,13 @@
 //   enlace.enviar('moneda', {...}, true);   // confiable: llega sí o sí, una vez
 //   enlace.estado → 'conectando' | 'directo' | 'respaldo' | 'cerrado'
 //   enlace.ultimo → Date.now() del último mensaje del otro (0 si todavía nada)
+//   enlace.rtt → ida y vuelta medido con el otro celu (ms), o null
 //   enlace.cerrar();
+// Cada mensaje lleva la hora (ahoraSync) en que salió: mientras corre
+// alMensaje, EnlaceVivo.sello tiene esa hora (VivoComun la usa para
+// interpolar y para adelantar la pelota lo que tardó en llegar).
+// Con conexión directa se mide cada tanto el viaje de ida y vuelta, y
+// Carito ajusta su reloj al de Nico (más fino que el del servidor).
 // ============================================================
 (function () {
     const ICE = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
@@ -38,8 +44,41 @@
             if (!m || !m.t) return;
             if (m.id) { if (vistosEv.has(m.id)) return; vistosEv.add(m.id); }
             api.ultimo = Date.now();
-            try { cb.alMensaje && cb.alMensaje(m.t, m.d); } catch (err) { console.warn('enlace-vivo:', err); }
+            if (m.t === '_ping') { enviarCrudo({ t: '_pong', d: { a: m.d.a, b: ahora() } }); return; }
+            if (m.t === '_pong') { medirPong(m.d); return; }
+            window.EnlaceVivo.sello = m.s || null;
+            try { cb.alMensaje && cb.alMensaje(m.t, m.d, m.s); } catch (err) { console.warn('enlace-vivo:', err); }
+            window.EnlaceVivo.sello = null;
         };
+
+        // ---------- Reloj fino entre los dos celus ----------
+        // ping → pong con las dos horas; con el viaje más corto de los últimos
+        // se estima cuánto difieren los relojes. Carito corrige el suyo de a poco.
+        const muestras = [];
+        let timerPing = null;
+        function enviarCrudo(m) { if (estado === 'directo' && rapido && rapido.readyState === 'open') { try { rapido.send(JSON.stringify(m)); } catch (e) { /* lleno */ } } }
+        function medirPong(d) {
+            const t = ahora(), rtt = t - d.a;
+            if (!(rtt >= 0) || rtt > 1500) return;
+            const dif = d.b - (d.a + rtt / 2); // cuánto adelanta el reloj del otro respecto del mío
+            muestras.push({ rtt, dif }); if (muestras.length > 8) muestras.shift();
+            const mejor = muestras.reduce((m, x) => x.rtt < m.rtt ? x : m, muestras[0]);
+            api.rtt = Math.round(mejor.rtt);
+            if (!ofrezco && muestras.length >= 2 && Math.abs(mejor.dif) > 4 && Math.abs(mejor.dif) < 3000) {
+                // Al principio corrige rápido (durante la cuenta regresiva); después, de a poquito.
+                const tope = muestras.length < 8 || Math.abs(mejor.dif) > 150 ? 150 : 25;
+                const paso = Math.max(-tope, Math.min(tope, mejor.dif * 0.7));
+                window._desfaseReloj = (window._desfaseReloj || 0) + Math.round(paso);
+                muestras.forEach(x => { x.dif -= paso; });
+            }
+        }
+        function arrancarPings() {
+            clearInterval(timerPing);
+            let n = 0;
+            const ping = () => { enviarCrudo({ t: '_ping', d: { a: ahora() } }); n++; if (n === 12) { clearInterval(timerPing); timerPing = setInterval(ping, 2000); } };
+            ping();
+            timerPing = setInterval(ping, 250);
+        }
 
         // ---------- WebRTC ----------
         function nuevoPc() {
@@ -68,6 +107,7 @@
                     if (rapido && seguro && rapido.readyState === 'open' && seguro.readyState === 'open') {
                         clearTimeout(timerRespaldo);
                         avisarEstado('directo');
+                        arrancarPings();
                         cola.splice(0).forEach(m => seguro.send(m));
                     }
                 };
@@ -134,7 +174,7 @@
             unsubs.push(onSnap(refPos(otro), (snap) => {
                 if (!snap.exists()) return;
                 const d = snap.data();
-                if (d.pos) recibir({ t: 'pos', d: d.pos });
+                if (d.pos) recibir({ t: d.pos.__t || 'pos', d: d.pos.__d || d.pos, s: d.pos.__s });
                 (d.ev || []).forEach(m => recibir(m));
             }, () => {}));
             cola.splice(0).forEach(m => enviarRespaldoEvento(JSON.parse(m)));
@@ -156,11 +196,11 @@
 
         const api = {
             estado,
-            creado: Date.now(), ultimo: 0, // ultimo: cuándo llegó el último mensaje del otro
+            creado: Date.now(), ultimo: 0, rtt: null, // ultimo: cuándo llegó el último mensaje del otro
 
             enviar(tipo, datos, confiable) {
                 if (cerrado) return;
-                const m = { t: tipo, d: datos };
+                const m = { t: tipo, d: datos, s: ahora() };
                 if (confiable) m.id = yo[0] + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
                 if (estado === 'directo') {
                     const canal = confiable ? seguro : rapido;
@@ -169,7 +209,7 @@
                 }
                 if (estado === 'respaldo') {
                     if (confiable) { enviarRespaldoEvento(m); return; }
-                    posPendiente = datos;
+                    posPendiente = { __t: tipo, __d: datos, __s: m.s };
                     if (!timerPos) timerPos = setTimeout(escribirPosRespaldo, Math.max(0, HZ_RESPALDO - (Date.now() - ultimaPosRespaldo)));
                     return;
                 }
@@ -178,7 +218,7 @@
             cerrar() {
                 if (cerrado) return;
                 cerrado = true;
-                clearTimeout(timerRespaldo); clearTimeout(timerPos);
+                clearTimeout(timerRespaldo); clearTimeout(timerPos); clearInterval(timerPing);
                 unsubs.forEach(u => { try { u(); } catch (e) { /* nada */ } });
                 try { pc && pc.close(); } catch (e) { /* nada */ }
                 avisarEstado('cerrado');
@@ -196,5 +236,5 @@
         return api;
     }
 
-    window.EnlaceVivo = { conectar };
+    window.EnlaceVivo = { conectar, sello: null };
 })();

@@ -7,8 +7,10 @@
 //      Mantener apretado = teclas[k] true (pointerdown/up/cancel/leave).
 //  VivoComun.teclado(idPantalla, mapa, teclas, alTocar?) → teclado (una vez).
 //  VivoComun.recibir(prev, d) → el otro con la hora y su velocidad estimada.
-//  VivoComun.suave(o) → [x, y] para dibujar: extrapola un poquito con la
-//      velocidad (así no se ve "a los saltos") y se acerca suave.
+//  VivoComun.suave(o) → [x, y] para dibujar: interpola entre los últimos
+//      mensajes unos ms en el pasado (o.ra: el ángulo, si manda `a`).
+//  VivoComun.adelantar(b, remoto, avanzar) / posBola(b) → pelota del otro
+//      adelantada por el retraso, corregida de a poco al dibujarla.
 //  VivoComun.cuenta(id, inicio) → pitidos de la cuenta regresiva (llamar en cada cuadro).
 //  VivoComun.estado(ctx, W, H, enlace, nombreOtro, activo) → puntito de conexión
 //      y avisos de "conexión lenta" / "el otro salió de la pantalla".
@@ -48,22 +50,81 @@
         if (!alTocar) window.addEventListener('keyup', f);
         return f;
     }
+    // El otro jugador se dibuja un poquito en el pasado (unos 60–160 ms, según
+    // cuánto varíe la red), interpolando entre los mensajes que ya llegaron:
+    // así se ve fluido aunque algún paquete llegue tarde o se pierda.
+    // Cada mensaje trae la hora en que salió (EnlaceVivo.sello).
+    const ahoraJ = () => (typeof window.ahoraSync === 'function' ? window.ahoraSync() : Date.now());
     function recibir(prev, d) {
-        const t = performance.now(), o = prev || {};
+        const t = performance.now(), o = prev || {}, sello = window.EnlaceVivo && window.EnlaceVivo.sello;
         if (o.x != null && o.t && d.x != null) {
             const dt = t - o.t;
             if (dt > 8) { o.vxe = (d.x - o.x) / dt; o.vye = (d.y - o.y) / dt; }
         }
+        if (sello && d.x != null) {
+            const buf = o.buf || (o.buf = []);
+            if (!buf.length || sello > buf[buf.length - 1].s) {
+                buf.push({ s: sello, x: d.x, y: d.y, a: d.a, lat: ahoraJ() - sello });
+                if (buf.length > 14) buf.shift();
+            }
+        }
         Object.assign(o, d, { t, visto: Date.now() });
         return o;
     }
+    const lerpAng = (a, b, f) => { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return a + d * f; };
+    function objetivo(o) {
+        const buf = o.buf;
+        if (!buf || buf.length < 2) {
+            const ext = Math.min(100, performance.now() - (o.t || 0));
+            return { x: o.x + (o.vxe || 0) * ext, y: o.y + (o.vye || 0) * ext, a: o.a };
+        }
+        const lats = buf.map(m => m.lat), jitter = Math.max(...lats) - Math.min(...lats);
+        const retardo = Math.max(50, Math.min(160, 35 + jitter));
+        const tr = ahoraJ() - retardo;
+        for (let k = buf.length - 1; k > 0; k--) {
+            const a = buf[k - 1], b = buf[k];
+            if (tr >= a.s && tr <= b.s) {
+                const f = (tr - a.s) / Math.max(1, b.s - a.s);
+                // Un salto grande (reaparecer, teletransporte) no se interpola.
+                if (Math.hypot(b.x - a.x, b.y - a.y) > 70) return { x: b.x, y: b.y, a: b.a };
+                return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, a: a.a != null && b.a != null ? lerpAng(a.a, b.a, f) : b.a };
+            }
+        }
+        const ult = buf[buf.length - 1], ant = buf[buf.length - 2];
+        if (tr < buf[0].s) return { x: buf[0].x, y: buf[0].y, a: buf[0].a };
+        // Pasado el último: sigue un poquito con la velocidad que traía.
+        const ext = Math.min(120, tr - ult.s), dt = Math.max(1, ult.s - ant.s);
+        if (Math.hypot(ult.x - ant.x, ult.y - ant.y) > 70) return { x: ult.x, y: ult.y, a: ult.a };
+        return { x: ult.x + (ult.x - ant.x) / dt * ext, y: ult.y + (ult.y - ant.y) / dt * ext, a: ult.a };
+    }
     function suave(o) {
         if (!o || o.x == null) return null;
-        const ext = Math.min(100, performance.now() - (o.t || 0));
-        const tx = o.x + (o.vxe || 0) * ext, ty = o.y + (o.vye || 0) * ext;
-        if (o.rx == null || Math.hypot(tx - o.rx, ty - o.ry) > 48) { o.rx = tx; o.ry = ty; }
-        else { o.rx += (tx - o.rx) * 0.4; o.ry += (ty - o.ry) * 0.4; }
+        const p = objetivo(o);
+        if (o.rx == null || Math.hypot(p.x - o.rx, p.y - o.ry) > 48) { o.rx = p.x; o.ry = p.y; }
+        else { o.rx += (p.x - o.rx) * 0.55; o.ry += (p.y - o.ry) * 0.55; }
+        if (p.a != null) o.ra = o.ra == null ? p.a : lerpAng(o.ra, p.a, 0.55);
         return [o.rx, o.ry];
+    }
+    // Pelota/disco que manda el otro: se adelanta lo que tardó el mensaje
+    // (con la misma física del juego, `avanzar(copia, dt)`), y la diferencia
+    // con lo que yo ya tenía se corrige de a poco en el dibujo (sin saltos).
+    function adelantar(b, remoto, avanzar) {
+        const sello = window.EnlaceVivo && window.EnlaceVivo.sello;
+        const lat = sello ? Math.max(0, Math.min(250, ahoraJ() - sello)) : 0;
+        const c = { ...b, ...remoto };
+        let falta = lat / 16.67;
+        while (falta > 0.001 && avanzar) { const paso = Math.min(1, falta); avanzar(c, paso); falta -= paso; }
+        const ex = (b.x - c.x) + (b.ox || 0), ey = (b.y - c.y) + (b.oy || 0);
+        Object.assign(b, c);
+        if (Math.hypot(ex, ey) < 45) { b.ox = ex; b.oy = ey; } else { b.ox = 0; b.oy = 0; }
+        return b;
+    }
+    // Dónde dibujar la pelota (con la corrección que se va apagando).
+    function posBola(b) {
+        if (!b) return [0, 0];
+        b.ox = (b.ox || 0) * 0.8; b.oy = (b.oy || 0) * 0.8;
+        if (Math.abs(b.ox) < 0.05) b.ox = 0; if (Math.abs(b.oy) < 0.05) b.oy = 0;
+        return [b.x + b.ox, b.y + b.oy];
     }
     // activo = false mientras el otro no tiene por qué mandar nada (cuenta regresiva, entre rondas).
     function estado(c, W, H, enlace, nombreOtro, activo = true) {
@@ -256,5 +317,5 @@
     }
     // Para los que dibujan con HTML: guarda el estado antes de dibujar (así reloj() ya lo usa).
     function sync(id, e) { if (e) { estados[id] = e; actual = id; refrescar(id); } }
-    window.VivoComun = { botones, teclado, recibir, suave, estado, cuenta, montar, reloj, pausa, cartelPausa, encuadrar, soloEncuadre, escritor, sync };
+    window.VivoComun = { botones, teclado, recibir, suave, adelantar, posBola, estado, cuenta, montar, reloj, pausa, cartelPausa, encuadrar, soloEncuadre, escritor, sync };
 })();

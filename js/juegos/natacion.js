@@ -6,7 +6,7 @@
 // segundo). Gana el primero en tocar la pared del final; se guarda el
 // récord de la pareja. Cada uno simula su nadador y manda los metros.
 const W_NT = 240, H_NT = 352, LARGO_NT = 25, TOTAL_NT = 50, Y0_NT = 326, Y1_NT = 30;
-const NT = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, yo: null, el: null, teclas: {}, antes: {}, ultimoEnvio: 0, ultimoTs: 0, llegue: false };
+const NT = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, yo: null, el: null, teclas: {}, antes: {}, ultimoEnvio: 0, ultimoTs: 0, llegue: false, fx: null, vis: {} };
 
 const compuNt = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'natacion' ? m : null; };
 const nadadorNt = () => ({ d: 0, v: 0, lado: null, tBrazada: 0, vuelta: false, frenado: 0, brazo: 0, aviso: '', tAviso: 0 });
@@ -32,7 +32,7 @@ function brazadaNt(n, lado, t){
 function avisoNt(n, txt, t){ n.aviso = txt; n.tAviso = t; }
 function vueltaNt(n, t){
     if (n.vuelta || n.d < LARGO_NT - 2.5) return false;
-    n.vuelta = true; n.d = LARGO_NT; n.v += 0.8; avisoNt(n, '¡Vueltón! 🔄', t);
+    n.vuelta = true; n.d = LARGO_NT; n.v += 0.8; avisoNt(n, '¡Vueltón! 🔄', t); n.vueltaT = performance.now(); n.vueltaBuena = true;
     return true;
 }
 function moverNt(n, dt, t){
@@ -40,7 +40,7 @@ function moverNt(n, dt, t){
     n.v = Math.max(0, n.v - n.v * 1.2 * seg);
     n.d += n.v * seg;
     // Se comió la pared: un segundo quieto y da la vuelta igual.
-    if (!n.vuelta && n.d >= LARGO_NT) { n.d = LARGO_NT; n.v = 0; n.vuelta = true; n.frenado = t + 1000; avisoNt(n, '¡Pum! Contra la pared', t); return 'pared'; }
+    if (!n.vuelta && n.d >= LARGO_NT) { n.d = LARGO_NT; n.v = 0; n.vuelta = true; n.frenado = t + 1000; avisoNt(n, '¡Pum! Contra la pared', t); n.vueltaT = performance.now(); n.vueltaBuena = false; return 'pared'; }
     if (n.d >= TOTAL_NT) { n.d = TOTAL_NT; return 'meta'; }
 }
 function pasoNt(dt){
@@ -78,7 +78,7 @@ function pensarCompuNt(n, nivel, dt, t){
     if (moverNt(n, dt, t) === 'meta') { n.llego = true; llegarNt(miRival); }
 }
 async function llegarNt(quien = miIdentidad){
-    if (quien === miIdentidad) { if (NT.llegue) return; NT.llegue = true; if (window.sfx) window.sfx.victoria(); NT.enlace && NT.enlace.enviar('meta', { c: NT.clave }, true); }
+    if (quien === miIdentidad) { if (NT.llegue) return; NT.llegue = true; if (window.sfx) window.sfx.victoria(); NT.enlace && NT.enlace.enviar('meta', { c: NT.clave }, true); if (NT.fx) { NT.fx.confeti(W_NT / 4 + 11, Y0_NT, 50); NT.fx.salpicadura(W_NT / 4 + 11, Y0_NT, undefined, 20, -Math.PI / 2); } }
     const clave = NT.clave, tiempo = VivoComun.reloj('natacion') - NT.estado.inicio;
     await Natacion.accionEnCola((e) => {
         if (e.clave !== clave) return null;
@@ -91,54 +91,119 @@ const yNt = (d) => d <= LARGO_NT ? Y0_NT - (d / LARGO_NT) * (Y0_NT - Y1_NT) : Y1
 function dibujarNt(){
     const c = NT.ctx, e = NT.estado;
     if (!c || !e) return;
-    const t = Date.now();
-    c.fillStyle = '#d9e6ea'; c.fillRect(0, 0, W_NT, H_NT);
-    // Agua
-    const x0 = 22, x1 = W_NT - 22, carril = (x1 - x0) / 2;
-    c.fillStyle = '#3fa9d8'; c.fillRect(x0, Y1_NT - 10, x1 - x0, Y0_NT - Y1_NT + 20);
-    c.strokeStyle = 'rgba(255,255,255,0.18)'; c.lineWidth = 1;
-    for (let i = 0; i < 9; i++) { const y = Y1_NT + ((i * 37 + t / 40) % (Y0_NT - Y1_NT)); c.beginPath(); c.moveTo(x0, y); c.quadraticCurveTo(x0 + carril, y + 4, x1, y); c.stroke(); }
-    // Líneas del fondo y corcheras
-    c.fillStyle = 'rgba(20,60,110,0.4)'; c.fillRect(x0 + carril / 2 - 2, Y1_NT + 6, 4, Y0_NT - Y1_NT - 12); c.fillRect(x0 + carril * 1.5 - 2, Y1_NT + 6, 4, Y0_NT - Y1_NT - 12);
-    for (let y = Y1_NT - 10; y < Y0_NT + 10; y += 8) { c.fillStyle = (y / 8) % 2 ? '#e8496b' : '#fff'; c.fillRect(x0 + carril - 2, y, 4, 6); }
+    const t = Date.now(), pt = performance.now(), fx = NT.fx;
+    if (fx) fx.antes(c);
+    // Borde de la pileta con baldosas
+    c.fillStyle = '#e4eef1'; c.fillRect(-10, -10, W_NT + 20, H_NT + 20);
+    c.fillStyle = '#d2e0e5'; for (let y = 0; y < H_NT; y += 12) for (let x = (y / 12) % 2 ? 0 : 6; x < W_NT; x += 12) c.fillRect(x, y, 6, 6);
+    const x0 = 22, x1 = W_NT - 22, carril = (x1 - x0) / 2, yTop = Y1_NT - 10, alto = Y0_NT - Y1_NT + 20;
+    // Agua con degradé y reflejos que se mueven (cáusticas)
+    const ga = c.createLinearGradient(0, yTop, 0, yTop + alto); ga.addColorStop(0, '#2f9fd6'); ga.addColorStop(1, '#46b6e3');
+    c.fillStyle = ga; c.fillRect(x0, yTop, x1 - x0, alto);
+    c.save(); c.beginPath(); c.rect(x0, yTop, x1 - x0, alto); c.clip();
+    c.strokeStyle = 'rgba(255,255,255,0.16)'; c.lineWidth = 1.2;
+    for (let i = 0; i < 14; i++) {
+        const y = yTop + ((i * 29 + pt / 45) % alto);
+        c.beginPath();
+        for (let x = x0; x <= x1; x += 8) c.lineTo(x, y + Math.sin(x / 14 + pt / 500 + i) * 3);
+        c.stroke();
+    }
+    // Líneas del fondo con la T al final
+    c.fillStyle = 'rgba(15,55,105,0.45)';
+    for (const k of [0, 1]) { const cx = x0 + carril * (k + 0.5); c.fillRect(cx - 2, Y1_NT + 6, 4, Y0_NT - Y1_NT - 12); c.fillRect(cx - 8, Y1_NT + 6, 16, 3); c.fillRect(cx - 8, Y0_NT - 9, 16, 3); }
+    c.restore();
+    // Corchera del medio que flota
+    for (let y = yTop; y < yTop + alto; y += 7) { const bob = Math.sin(y / 9 + pt / 300) * 0.8; c.fillStyle = Math.floor(y / 7) % 3 === 0 ? '#e8496b' : Math.floor(y / 7) % 3 === 1 ? '#fff' : '#3d8bfd'; c.beginPath(); c.ellipse(x0 + carril + bob, y + 3, 3, 3.2, 0, 0, Math.PI * 2); c.fill(); }
     c.fillStyle = '#9fb3ba'; c.fillRect(x0 - 4, Y1_NT - 14, x1 - x0 + 8, 4); c.fillRect(x0 - 4, Y0_NT + 10, x1 - x0 + 8, 4);
-    // Banderines a 5 m de cada pared
-    c.fillStyle = '#f5d36b'; for (const y of [yNt(LARGO_NT - 5), yNt(5)]) for (let x = x0; x < x1; x += 10) { c.beginPath(); c.moveTo(x, y); c.lineTo(x + 5, y + 4); c.lineTo(x + 10, y); c.fill(); }
-    const nadador = (n, carrilI, gorra) => {
+    // Banderines a 5 m de cada pared (se mueven con el viento)
+    for (const y of [yNt(LARGO_NT - 5), yNt(5)]) {
+        c.strokeStyle = 'rgba(80,80,80,0.6)'; c.lineWidth = 0.6; c.beginPath(); c.moveTo(x0 - 6, y); c.lineTo(x1 + 6, y); c.stroke();
+        for (let x = x0 - 4; x < x1 + 4; x += 10) { const v = Math.sin(x / 7 + pt / 200) * 1.2; c.fillStyle = (x / 10) % 2 < 1 ? '#f5d36b' : '#e8496b'; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 5 + v, y + 5); c.lineTo(x + 10, y); c.fill(); }
+    }
+    const nadador = (clave, n, carrilI, gorra, d) => {
         if (!n) return;
-        const d = n.rd != null ? n.rd : n.d, cx = x0 + carril * (carrilI + 0.5), cy = yNt(d), sube = d < LARGO_NT ? -1 : 1;
-        c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.ellipse(cx, cy - sube * 10, 12, 5, 0, 0, Math.PI * 2); c.fill();
-        // Brazos: el último que remó va adelante.
-        const fase = Math.min(1, (t - (n.tBrazadaReal || 0)) / 350);
-        c.strokeStyle = '#f2c9a0'; c.lineWidth = 3; c.lineCap = 'round';
-        for (const lado of [-1, 1]) {
-            const adelante = lado === (n.brazo || 1) ? 1 - fase : fase;
-            c.beginPath(); c.moveTo(cx + lado * 6, cy); c.lineTo(cx + lado * 11, cy + sube * (4 + 12 * adelante)); c.stroke();
+        const cx = x0 + carril * (carrilI + 0.5), cy = yNt(d), sube = d < LARGO_NT ? -1 : 1;
+        const v = NT.vis[clave] || (NT.vis[clave] = { tb: 0, vt: 0, burb: 0 });
+        // Una brazada nueva: salpica la mano que entra al agua.
+        if (n.tBrazadaReal && n.tBrazadaReal !== v.tb) { v.tb = n.tBrazadaReal; fx && fx.salpicadura(cx + (n.brazo || 1) * 10, cy + sube * 12, undefined, 7, sube < 0 ? -Math.PI / 2 : Math.PI / 2); }
+        // La vuelta: giro con espuma (o el golpe contra la pared).
+        if (n.vueltaT && n.vueltaT !== v.vt) {
+            v.vt = n.vueltaT;
+            if (fx) { fx.salpicadura(cx, Y1_NT, undefined, 18, Math.PI / 2); fx.onda(cx, Y1_NT + 6, { radio: 22, vida: 600, achatar: 0.5 }); if (n.vueltaBuena) fx.texto(cx, Y1_NT + 26, '¡Vueltón!', { tam: 11, color: '#fff' }); else { fx.texto(cx, Y1_NT + 26, '¡PUM!', { tam: 13, color: '#ffd23a' }); if (clave === 'yo') fx.temblor(4, 300); } }
         }
-        c.fillStyle = '#2a4a66'; c.beginPath(); c.ellipse(cx, cy - sube * 10, 6, 12, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = gorra; c.beginPath(); c.arc(cx, cy, 6.5, 0, Math.PI * 2); c.fill();
-        c.fillStyle = 'rgba(255,255,255,0.7)'; c.fillRect(cx - 4, cy - 1, 8, 2);
+        // Burbujitas detrás mientras nada rápido
+        const vel = n.v || 0;
+        if (fx && vel > 0.6 && pt - v.burb > 140 - Math.min(100, vel * 40)) { v.burb = pt; fx.burbujas(cx + (Math.random() - 0.5) * 6, cy - sube * 22, 1); }
+        // Estela (la V que deja en el agua)
+        c.strokeStyle = `rgba(255,255,255,${Math.min(0.45, vel * 0.2)})`; c.lineWidth = 1.2;
+        c.beginPath(); c.moveTo(cx - 10, cy - sube * 30); c.lineTo(cx, cy - sube * 6); c.lineTo(cx + 10, cy - sube * 30); c.stroke();
+        const giro = n.vueltaT ? Math.min(1, (pt - n.vueltaT) / 380) : 1;
+        c.save(); c.translate(cx, cy);
+        if (giro < 1) c.rotate(giro * Math.PI * (n.vueltaBuena ? 1 : 0.15));
+        else if (sube > 0) c.rotate(Math.PI);
+        // Cuerpo bajo el agua (más claro y ondulado)
+        const ond = Math.sin(pt / 120) * 0.8;
+        c.fillStyle = 'rgba(30,60,90,0.55)'; c.beginPath(); c.ellipse(ond, 12, 6, 13, 0, 0, Math.PI * 2); c.fill();
+        // Piernas que patalean
+        const pat = Math.sin(pt / 70) * 2.5 * Math.min(1, vel + 0.2);
+        c.strokeStyle = 'rgba(242,201,160,0.75)'; c.lineWidth = 2.4; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(-2.5, 22); c.lineTo(-3 + pat, 30); c.stroke();
+        c.beginPath(); c.moveTo(2.5, 22); c.lineTo(3 - pat, 30); c.stroke();
+        // Brazos: el último que remó va adelante, el otro vuelve por arriba.
+        const fase = Math.min(1, (t - (n.tBrazadaReal || 0)) / 380);
+        c.strokeStyle = '#f2c9a0'; c.lineWidth = 3;
+        for (const lado of [-1, 1]) {
+            const adelante = lado === (n.brazo || 1) ? 1 - FxVivo.suave(fase) : FxVivo.suave(fase);
+            c.beginPath(); c.moveTo(lado * 6, 2); c.quadraticCurveTo(lado * 12, -4 * adelante, lado * 5, -(6 + 12 * adelante)); c.stroke();
+        }
+        // Cabeza con gorra y antiparras
+        c.fillStyle = gorra; c.beginPath(); c.arc(0, 0, 6.5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.5)'; c.beginPath(); c.arc(-2, -2.5, 2, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#20262e'; c.fillRect(-5, -1.2, 10, 2.4); c.fillStyle = '#7fe0ff'; c.fillRect(-4, -0.8, 3, 1.6); c.fillRect(1, -0.8, 3, 1.6);
+        c.restore();
+        // Aro de agua alrededor de la cabeza
+        c.strokeStyle = 'rgba(255,255,255,0.5)'; c.lineWidth = 1; c.beginPath(); c.ellipse(cx, cy, 9 + Math.sin(pt / 160) * 1.2, 7, 0, 0, Math.PI * 2); c.stroke();
     };
     const yoCol = miIdentidad === 'nico' ? '#3d8bfd' : '#e8496b', elCol = miIdentidad === 'nico' ? '#e8496b' : '#3d8bfd';
-    if (NT.el) { const o = NT.el; if (!o.bot && o.d != null) o.rd = o.rd == null ? o.d : o.rd + (o.d + (o.vd || 0) * Math.min(0.15, (performance.now() - (o.t || 0)) / 1000) - o.rd) * 0.35; nadador(o, 1, elCol); }
-    nadador(NT.yo, 0, yoCol);
-    // Arriba: metros, tiempo y puesto
+    if (NT.el) {
+        const o = NT.el;
+        let d = o.d || 0;
+        if (!o.bot) { const pos = VivoComun.suave(o); if (pos) d = Math.max(0, Math.min(TOTAL_NT, pos[0])); }
+        o.rd = d;
+        nadador('el', o, 1, elCol, d);
+    }
+    if (NT.yo) nadador('yo', NT.yo, 0, yoCol, NT.yo.d);
+    if (fx) fx.dibujar(c);
+    // Arriba: metros, tiempo y puesto (con barrita de progreso de cada uno)
     const yo = NT.yo, ahora = VivoComun.reloj('natacion'), falta = e.inicio - ahora;
-    c.fillStyle = 'rgba(20,16,30,0.6)'; c.fillRect(0, 0, W_NT, 16);
+    c.fillStyle = 'rgba(20,16,30,0.7)'; c.fillRect(0, 0, W_NT, 18);
+    const barra = (d, col, y) => { c.fillStyle = 'rgba(255,255,255,0.15)'; c.fillRect(150, y, 70, 2.5); c.fillStyle = col; c.fillRect(150, y, 70 * d / TOTAL_NT, 2.5); };
+    if (yo) barra(yo.d, yoCol, 5);
+    if (NT.el) barra(NT.el.rd || 0, elCol, 10);
     c.fillStyle = '#fff'; c.font = 'bold 9px monospace';
     const seg = Math.max(0, (NT.llegue ? (NT.tLlegada || ahora) : ahora) - e.inicio) / 1000;
-    if (yo) c.fillText(`${yo.d.toFixed(1)} / ${TOTAL_NT} m · ⏱ ${seg.toFixed(1)} s${NT.el ? (yo.d >= (NT.el.d || 0) ? ' · 1°' : ' · 2°') : ''}`, 5, 11);
-    if (e.record) { c.textAlign = 'right'; c.fillText(`🏅 ${(e.record.t / 1000).toFixed(1)}s`, W_NT - 14, 11); c.textAlign = 'left'; }
+    if (yo) c.fillText(`${yo.d.toFixed(1)}m · ⏱${seg.toFixed(1)}s${NT.el ? (yo.d >= (NT.el.rd || 0) ? ' · 1°' : ' · 2°') : ''}`, 5, 12);
+    if (e.record) { c.textAlign = 'right'; c.font = '7px monospace'; c.fillText(`🏅 ${(e.record.t / 1000).toFixed(1)}s`, W_NT - 4, 26); c.textAlign = 'left'; }
     // Compás: la barrita se pone verde cuando es buen momento para la próxima brazada.
     if (yo && falta <= 0 && !NT.llegue) {
         const inter = ahora - (yo.tBrazada || 0), bien = inter >= 300 && inter <= 550;
-        c.fillStyle = 'rgba(20,16,30,0.5)'; c.fillRect(W_NT / 2 - 40, H_NT - 12, 80, 6);
-        c.fillStyle = bien ? '#4cd18a' : inter < 300 ? '#f5d36b' : '#9fb3ba'; c.fillRect(W_NT / 2 - 40, H_NT - 12, Math.min(80, inter / 550 * 80), 6);
-        if (!yo.vuelta && yo.d > LARGO_NT - 2.5) { c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 12px monospace'; c.fillText('¡Tocá 🔄!', W_NT / 2, H_NT / 2); c.textAlign = 'left'; }
-        if (yo.aviso && ahora - yo.tAviso < 1200) { c.fillStyle = '#2a1f33'; c.textAlign = 'center'; c.font = 'bold 9px monospace'; c.fillText(yo.aviso, W_NT / 2, H_NT - 18); c.textAlign = 'left'; }
+        c.fillStyle = 'rgba(20,16,30,0.55)'; c.beginPath(); c.roundRect ? c.roundRect(W_NT / 2 - 44, H_NT - 14, 88, 9, 4) : c.rect(W_NT / 2 - 44, H_NT - 14, 88, 9); c.fill();
+        c.fillStyle = 'rgba(76,209,138,0.35)'; c.fillRect(W_NT / 2 - 42 + 84 * 300 / 900, H_NT - 12, 84 * 250 / 900, 5);
+        c.fillStyle = bien ? '#4cd18a' : inter < 300 ? '#f5d36b' : '#9fb3ba'; c.fillRect(W_NT / 2 - 42, H_NT - 12, Math.min(84, inter / 900 * 84), 5);
+        if (bien) { c.strokeStyle = 'rgba(76,209,138,0.9)'; c.lineWidth = 1; c.strokeRect(W_NT / 2 - 45, H_NT - 15, 90, 11); }
+        if (!yo.vuelta && yo.d > LARGO_NT - 2.5) {
+            const pulso = 1 + Math.sin(pt / 90) * 0.12;
+            c.save(); c.translate(W_NT / 2, H_NT / 2); c.scale(pulso, pulso); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(20,16,30,0.6)'; c.lineWidth = 3; c.textAlign = 'center'; c.font = 'bold 14px monospace'; c.strokeText('¡Tocá 🔄!', 0, 0); c.fillText('¡Tocá 🔄!', 0, 0); c.restore();
+        }
+        if (yo.aviso && ahora - yo.tAviso < 1200) { c.fillStyle = '#2a1f33'; c.textAlign = 'center'; c.font = 'bold 9px monospace'; c.fillText(yo.aviso, W_NT / 2, H_NT - 20); c.textAlign = 'left'; }
     }
-    if (e.fase === 'jugando' && falta > 0) { c.fillStyle = 'rgba(20,16,30,0.5)'; c.fillRect(0, H_NT / 2 - 24, W_NT, 40); c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 22px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W_NT / 2, H_NT / 2 + 2); c.font = '8px monospace'; c.fillText('◀ ▶ alternados, con ritmo · 🔄 en la pared', W_NT / 2, H_NT / 2 + 12); c.textAlign = 'left'; }
-    else if (NT.llegue && e.fase === 'jugando') { c.fillStyle = '#2a1f33'; c.textAlign = 'center'; c.font = 'bold 14px monospace'; c.fillText('🏁 ¡Tocaste la pared!', W_NT / 2, H_NT / 2); c.textAlign = 'left'; }
+    if (e.fase === 'jugando' && falta > 0) {
+        const n = Math.ceil(falta / 1000), k = 1 - (falta % 1000) / 1000, esc = FxVivo.rebote(Math.min(1, k * 3));
+        c.fillStyle = 'rgba(20,16,30,0.45)'; c.fillRect(0, H_NT / 2 - 28, W_NT, 48);
+        c.save(); c.translate(W_NT / 2, H_NT / 2 - 4); c.scale(esc, esc); c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 26px monospace'; c.fillText(String(n), 0, 6); c.restore();
+        c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = '8px monospace'; c.fillText('◀ ▶ alternados, con ritmo · 🔄 en la pared', W_NT / 2, H_NT / 2 + 14); c.textAlign = 'left';
+    } else if (NT.llegue && e.fase === 'jugando') { c.fillStyle = '#2a1f33'; c.textAlign = 'center'; c.font = 'bold 14px monospace'; c.fillText('🏁 ¡Tocaste la pared!', W_NT / 2, H_NT / 2); c.textAlign = 'left'; }
+    if (fx) fx.despues(c);
     VivoComun.estado(c, W_NT, H_NT, NT.enlace, nombreJugador(miRival), e.fase === 'jugando' && falta < -500 && !NT.llegue);
 }
 function bucleNt(ts){
@@ -154,13 +219,14 @@ function bucleNt(ts){
     if (NT.llegue && !NT.tLlegada) NT.tLlegada = VivoComun.reloj('natacion');
     if (NT.enlace && NT.yo && Date.now() - NT.ultimoEnvio > 60) {
         NT.ultimoEnvio = Date.now();
-        NT.enlace.enviar('p', { d: +NT.yo.d.toFixed(2), v: +NT.yo.v.toFixed(2), b: NT.yo.brazo, tb: Math.round(NT.yo.tBrazada || 0), c: NT.clave });
+        NT.enlace.enviar('p', { d: +NT.yo.d.toFixed(2), v: +NT.yo.v.toFixed(2), b: NT.yo.brazo, tb: Math.round(NT.yo.tBrazada || 0), vu: NT.yo.vuelta ? (NT.yo.vueltaBuena ? 1 : 2) : 0, c: NT.clave });
     }
     if (NT.estado && NT.estado.fase === 'jugando') VivoComun.cuenta('NT', NT.estado.inicio);
     dibujarNt();
     NT.loop = requestAnimationFrame(bucleNt);
 }
 function arrancarNt(){
+    NT.fx = NT.fx || FxVivo.crear();
     if (!NT.canvas) {
         NT.canvas = document.createElement('canvas');
         NT.canvas.width = W_NT; NT.canvas.height = H_NT;
@@ -176,7 +242,10 @@ function arrancarNt(){
                 if (t === 'p') {
                     const o = NT.el || (NT.el = {});
                     if (o.tb !== d.tb) o.tBrazadaReal = Date.now();
-                    Object.assign(o, { d: d.d, vd: d.v, brazo: d.b, tb: d.tb, t: performance.now(), visto: Date.now() });
+                    if (d.vu && !o.vuelta) { o.vueltaT = performance.now(); o.vueltaBuena = d.vu === 1; }
+                    // Los metros pasan por la misma interpolación que las posiciones de los otros juegos.
+                    VivoComun.recibir(o, { x: d.d, y: 0 });
+                    Object.assign(o, { d: d.d, vd: d.v, v: d.v, brazo: d.b, tb: d.tb, vuelta: !!d.vu });
                 }
             }
         });

@@ -69,6 +69,11 @@
             if (!res || !res.cambios || res.cambios.fase !== 'terminado') return;
             const g = res.cambios.ganador;
             if (typeof registrarVictoria === 'function') registrarVictoria(id, g === 'nico' || g === 'carito' ? g : null);
+            const m = res.cambios.motivo;
+            if (g === 'empate' && typeof m === 'string' && m.startsWith('🎉') && window.guardarMomento) {
+                const info = (window.JUEGOS || []).find(j => j.id === id);
+                window.guardarMomento({ juego: id, icono: '🤝', titulo: `¡Lo lograron juntos en ${info ? info.nombre : id}!`, sub: m.replace(/^🎉\s*/, '') });
+            }
             if ((g === 'nico' || g === 'carito') && typeof registrarEvento === 'function') {
                 const info = (window.JUEGOS || []).find(j => j.id === id);
                 registrarEvento('gano_partida', `${nombre(g)} ganó al ${info ? info.nombre : id}`);

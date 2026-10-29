@@ -18,7 +18,14 @@
         pano: { nombre: 'Paño verde', muestra: 'linear-gradient(135deg,#3f8a5c 50%,#25603f 50%)' },
         madera: { nombre: 'Madera', muestra: 'linear-gradient(135deg,#e0bb8f 50%,#8a5a3a 50%)' },
         noche: { nombre: 'Noche', muestra: 'radial-gradient(circle at 30% 30%,#fff 1px,transparent 2px),linear-gradient(135deg,#2e2c55 50%,#16142b 50%)' },
+        // Se desbloquean con el Nivel de pareja (js/nivel-pareja.js).
+        playa: { nombre: 'Playa', nivel: 3, muestra: 'linear-gradient(135deg,#f3dfb4 50%,#4fb3c9 50%)' },
+        otono: { nombre: 'Otoño', nivel: 5, muestra: 'linear-gradient(135deg,#e9a25a 50%,#8a3f22 50%)' },
+        sanvalentin: { nombre: 'San Valentín', nivel: 7, muestra: 'linear-gradient(135deg,#ffc2d4 50%,#c2335f 50%)' },
+        dorado: { nombre: 'Dorada', nivel: 8, muestra: 'linear-gradient(135deg,#f7e29a 50%,#a8812c 50%)' },
     };
+    const nivelActual = () => window.nivelPareja ? window.nivelPareja.nivel() : 1;
+    const bloqueada = (id) => MESAS[id] && MESAS[id].nivel && nivelActual() < MESAS[id].nivel;
     function aplicarMesa(m) {
         if (!MESAS[m]) m = 'clasico';
         document.documentElement.dataset.mesa = m;
@@ -112,8 +119,8 @@
             ${musica ? `<label class="ajuste-volumen">🔉 <input type="range" min="0" max="1" step="0.05" value="${volumen()}" oninput="volumenMusicaJuego(this.value)" aria-label="Volumen de la música"> 🔊</label>` : ''}
             ${interruptor('vibracion', leer('vibracionJuegos', 'on') !== 'off', '📳 Vibración', 'Un toquecito al jugar')}
             <div class="ajuste-titulo">🎨 Diseño de mesa</div>
-            <div class="ajuste-mesas">${Object.entries(MESAS).map(([id, m]) => `<button type="button" class="ajuste-mesa${mesa === id ? ' elegida' : ''}" onclick="elegirMesaJuego('${id}')">
-                <span class="ajuste-muestra" style="background:${m.muestra}; background-size:${id === 'noche' ? '12px 12px, auto' : 'auto'};"></span>${m.nombre}</button>`).join('')}</div>`;
+            <div class="ajuste-mesas">${Object.entries(MESAS).map(([id, m]) => `<button type="button" class="ajuste-mesa${mesa === id ? ' elegida' : ''}${bloqueada(id) ? ' bloqueada' : ''}" onclick="elegirMesaJuego('${id}')">
+                <span class="ajuste-muestra" style="background:${m.muestra}; background-size:${id === 'noche' ? '12px 12px, auto' : 'auto'};">${bloqueada(id) ? '🔒' : ''}</span>${m.nombre}${bloqueada(id) ? `<small>Nivel ${m.nivel}</small>` : ''}</button>`).join('')}</div>`;
     }
     function abrir() {
         cerrar();
@@ -147,7 +154,14 @@
     window.abrirAjustesJuego = abrir;
     window.cerrarAjustesJuego = cerrar;
     window.cambiarAjusteJuego = cambiar;
-    window.elegirMesaJuego = (m) => { aplicarMesa(m); if (window.sfx) window.sfx.toque(); dibujar(); };
+    window.elegirMesaJuego = (m) => {
+        if (bloqueada(m)) {
+            if (window.sfx) window.sfx.error();
+            if (window.animJuegos) window.animJuegos.cartel(`🔒 Se desbloquea en el nivel ${MESAS[m].nivel}`, { sub: 'Jueguen juntos para subir el Nivel de pareja ⭐', dur: 1800, sonido: false });
+            return;
+        }
+        aplicarMesa(m); if (window.sfx) window.sfx.toque(); dibujar();
+    };
     window.volumenMusicaJuego = (v) => {
         guardar('volumenMusicaJuegos', String(v));
         if (ctx && master && sonando) { master.gain.cancelScheduledValues(ctx.currentTime); master.gain.setTargetAtTime(0.9 * volumen(), ctx.currentTime, 0.1); }

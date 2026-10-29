@@ -127,6 +127,7 @@ async function cumplirSueno(id){
     const x = (_suenosDatos.items || []).find(y => y.id === id);
     await _cambiarSuenos(items => items.map(y => y.id === id ? { ...y, cumplido: Date.now() } : y));
     if (x && typeof registrarEvento === 'function') registrarEvento('sueno_cumplido', `Cumplieron un sueño: ${x.texto}`);
+    if (x && window.guardarMomento) window.guardarMomento({ id: 'sueno-' + id, juego: 'suenos', icono: '🌠', titulo: `¡Cumplieron un sueño!`, sub: x.texto });
     _suenosVista = 'cumplidos';
     renderSuenos();
 }

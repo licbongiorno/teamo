@@ -131,6 +131,8 @@
         try { logradas = DETECTORES[juego](p, estado); } catch (e) { console.warn('hazañas:', e); }
         logradas.forEach(([tipo, quien]) => {
             if (quien === miIdentidad && typeof window.sumarContadorYVerificarLogros === 'function') window.sumarContadorYVerificarLogros(tipo);
+            const hz = HAZANAS.find(h => h.tipo === tipo);
+            if (quien === miIdentidad && hz && window.guardarMomento) window.guardarMomento({ juego, icono: hz.icono, titulo: `${nombre(quien)}: ${hz.nombre}`, sub: hz.descripcion, quien });
         });
     }
 
@@ -163,6 +165,7 @@
             if (campeon) {
                 if (typeof window.sumarPuntos === 'function') window.sumarPuntos(campeon, PREMIO_CAMPEONATO);
                 if (typeof window.verificarLogroDeValor === 'function') window.verificarLogroDeValor('hz_campeon', 1);
+                if (window.guardarMomento) window.guardarMomento({ id: 'camp-' + mes, juego: juegoId, icono: '🏆', titulo: `${nombre(campeon)}, ${campeonDe(campeon)} de ${nombreMes(mes)}`, sub: `Campeonato del mes en ${infoJuego(juegoId).nombre}`, quien: campeon });
             }
         } catch (e) { console.warn('No se pudo anotar en el campeonato:', e); }
     }

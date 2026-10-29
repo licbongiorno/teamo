@@ -91,11 +91,14 @@ async function darPistaOnda() {
     if (window.sfx) window.sfx.pop();
 }
 async function adivinarOnda() {
+    let blanco = null;
     await Onda.jugar((e) => {
         if (e.etapa !== 'adivinar') return null;
         const p = puntosOnda(e.objetivo, _dialOnda);
+        blanco = p === 4 ? { escala: e.escala, pista: e.pista, guia: e.turno === 'nico' ? 'carito' : 'nico' } : null;
         return { etapa: 'revelado', dial: _dialOnda, puntos: e.puntos + p, historial: [...(e.historial || []), `${e.escala[0]}↔${e.escala[1]}: "${e.pista}" → +${p}`].slice(-8) };
     });
+    if (blanco && window.guardarMomento) window.guardarMomento({ juego: 'onda', icono: '🎯', titulo: '¡En el blanco en La Onda!', sub: `${blanco.escala[0]} ↔ ${blanco.escala[1]}: "${blanco.pista}"`, quien: miIdentidad });
 }
 async function siguienteOnda() {
     await Onda.accion((e) => {

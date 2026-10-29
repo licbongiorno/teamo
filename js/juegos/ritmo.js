@@ -200,3 +200,6 @@ async function revanchaRitmo(){
     const victorias = await leerVictoriasRitmo();
     await revanchaUnToque(refRitmo(), 'ritmo', { victorias });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('ritmo', '#pulso-ritmo');

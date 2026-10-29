@@ -202,3 +202,6 @@ async function revanchaPinatas(){
     const puntajes = await leerPuntajesPinatas();
     await revanchaUnToque(refPinatas(), 'pinatas', { puntajes });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('pinatas', '#area-pinatas');

@@ -204,3 +204,6 @@ async function revanchaCocodrilos(){
     _cocodrilosMostrados = false;
     await revanchaUnToque(refCocodrilos(), 'cocodrilos', { mejorConjunto });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('cocodrilos', '#contador-cocodrilos');

@@ -212,3 +212,6 @@ async function revanchaBurbujas(){
     const puntajes = await leerPuntajesBurbujas();
     await revanchaUnToque(refBurbujas(), 'burbujas', { puntajes });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('burbujas', '#area-burbujas');

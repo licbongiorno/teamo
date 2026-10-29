@@ -197,3 +197,6 @@ async function revanchaCarreraGlobos(){
     const victorias = await leerVictoriasCarreraGlobos();
     await revanchaUnToque(refCarreraGlobos(), 'carreraglobos', { victorias });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('carreraglobos', '#tiempo-globos');

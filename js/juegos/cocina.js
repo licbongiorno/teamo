@@ -32,9 +32,10 @@ const Cocina = JuegoTurnos.crear({
     },
     tituloFin: (e) => e.motivo && e.motivo.startsWith('🎉') ? '👩‍🍳 ¡Servicio impecable!' : '🔥 Se cerró la cocina',
     render(e, c) {
+        VivoComun.sync('cocina', e);
         const mia = (e.alacenas && e.alacenas[c.yo]) || '';
-        const ahora = window.ahoraSync();
-        let h = `<div class="texto-centro" style="font-size:0.9rem;">🍽️ Servidos <b>${e.servidos}</b>/${META_COCINA} · ⏱️ <b id="reloj-cocina">${SEGUNDOS_COCINA}</b>s · ❌ ${e.perdidos}/${MAX_PERDIDOS_COCINA}</div>`;
+        const ahora = VivoComun.reloj('cocina');
+        let h = `<div class="zona-cocina"><div class="texto-centro" style="font-size:0.9rem;">🍽️ Servidos <b>${e.servidos}</b>/${META_COCINA} · ⏱️ <b id="reloj-cocina">${SEGUNDOS_COCINA}</b>s · ❌ ${e.perdidos}/${MAX_PERDIDOS_COCINA}</div>`;
         h += `<div class="pedidos-cocina">${e.pedidos.map(p => {
             const quedan = Math.max(0, Math.ceil((p.hasta - ahora) / 1000));
             const enPlato = e.plato && [...e.plato].every(k => p.ing.includes(k));
@@ -46,13 +47,15 @@ const Cocina = JuegoTurnos.crear({
         h += `<div class="texto-tenue texto-centro" style="font-size:0.78rem;">Tu alacena (los de ${nombreJugador(c.rival)} los pone ${nombreJugador(c.rival)}):</div>
             <div class="alacena-cocina">${[...mia].map(k => `<button ${e.fase === 'jugando' ? `onclick="agregarCocina('${k}')"` : 'disabled'}><span>${INGREDIENTES_COCINA[k]}</span>${NOMBRES_COCINA[k]}</button>`).join('')}</div>`;
         if (e.fase === 'jugando' && e.plato) h += `<button class="btn-secundario" onclick="tirarPlatoCocina()">🗑️ Tirar el plato</button>`;
-        return h;
+        return h + '</div>';
     },
     alDibujar(cont, e) {
         clearInterval(_timerCocina);
+        VivoComun.montar('cocina', Cocina, cont, e, { velo: cont.querySelector('.zona-cocina') });
         if (e.fase !== 'jugando') return;
         const tic = () => {
-            const ahora = window.ahoraSync();
+            if (VivoComun.pausa('cocina')) return;
+            const ahora = VivoComun.reloj('cocina');
             const quedan = Math.max(0, Math.ceil(SEGUNDOS_COCINA - (ahora - e.inicio) / 1000));
             const r = document.getElementById('reloj-cocina');
             if (r) r.textContent = quedan;
@@ -66,6 +69,7 @@ const Cocina = JuegoTurnos.crear({
 });
 
 async function agregarCocina(k){
+    if (VivoComun.pausa('cocina')) return;
     vibrarJ(8);
     let resultado = null;
     await Cocina.accion((e) => {
@@ -77,7 +81,7 @@ async function agregarCocina(k){
             resultado = 'servido';
             const servidos = e.servidos + 1;
             if (servidos >= META_COCINA) return { plato: '', servidos, ganador: 'empate', motivo: `🎉 ¡Sirvieron los ${META_COCINA} pedidos!` };
-            const pedidos = e.pedidos.map(p => p.id === sirve.id ? pedidoCocina(e.alacenas, window.ahoraSync()) : p);
+            const pedidos = e.pedidos.map(p => p.id === sirve.id ? pedidoCocina(e.alacenas, VivoComun.reloj('cocina')) : p);
             return { plato: '', servidos, pedidos, aviso: `🍽️ ¡Pedido servido!` };
         }
         if (!e.pedidos.some(p => [...plato].every(x => p.ing.includes(x)))) {
@@ -90,11 +94,11 @@ async function agregarCocina(k){
     if (!window.sfx) return;
     if (resultado === 'servido') window.sfx.acierto(); else if (resultado === 'quemado') window.sfx.error(); else if (resultado) window.sfx.click();
 }
-async function tirarPlatoCocina(){ vibrarJ(10); await Cocina.accion((e) => e.plato ? { plato: '', aviso: null } : null); }
+async function tirarPlatoCocina(){ if (VivoComun.pausa('cocina')) return; vibrarJ(10); await Cocina.accion((e) => e.plato ? { plato: '', aviso: null } : null); }
 // Pedidos vencidos y fin del turno (lo puede disparar cualquiera de los dos).
 async function vencerCocina(){
     await Cocina.accion((e) => {
-        const ahora = window.ahoraSync();
+        const ahora = VivoComun.reloj('cocina');
         if ((ahora - e.inicio) / 1000 >= SEGUNDOS_COCINA) return { ganador: 'empate', motivo: `Sirvieron ${e.servidos} de ${META_COCINA}. ¡Casi!` };
         const vencidos = e.pedidos.filter(p => p.hasta <= ahora);
         if (!vencidos.length) return null;

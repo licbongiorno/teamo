@@ -17,6 +17,8 @@
 //  VivoComun.reloj(id) → el reloj de juego: ahoraSync() menos lo que estuvo en
 //      pausa (y quieto mientras dura). Usarlo en vez de ahoraSync() en el juego.
 //  VivoComun.pausa(id) → true si está en pausa. VivoComun.cartelPausa(ctx) → el velo.
+//  VivoComun.soloEncuadre(id, selector) → juegos rápidos: sólo ⛶ Encuadrar.
+//  VivoComun.escritor(refFn) → G para montar() en juegos que no usan JuegoTurnos.
 // ============================================================
 (function () {
     function botones(grupos, teclas) {
@@ -99,7 +101,7 @@
     // En el doc: pausa = {por, desde} mientras dura y pausaTotal = ms ya pausados.
     // Todos los tiempos del juego (inicio, plazos, plataformas) se miden con
     // reloj(id), así que al seguir todo retoma donde quedó, igual en los dos.
-    const estados = {}, juegos = {}, barras = {};
+    const estados = {}, juegos = {}, barras = {}, areas = {};
     let actual = null;
     const ahora = () => (typeof window.ahoraSync === 'function' ? window.ahoraSync() : Date.now());
     function pausa(id) { const e = estados[id]; return !!(e && e.fase === 'jugando' && e.pausa); }
@@ -147,7 +149,10 @@
     function ajustar() {
         if (!encuadrado()) return;
         const p = document.querySelector('.pantalla-juego.activa');
-        const lienzo = p && p.querySelector('canvas');
+        const id = p && p.id.replace('pantalla-', ''), sel = areas[id];
+        let lienzo = sel ? p.querySelector(sel) : (p && p.querySelector('canvas'));
+        // Sólo se achica lo que guarda su proporción (aspect-ratio); lo demás queda como está.
+        if (lienzo && sel && getComputedStyle(lienzo).aspectRatio === 'auto') lienzo = null;
         if (!lienzo) return;
         lienzo.style.maxWidth = '';
         const sobra = p.scrollHeight - p.clientHeight;
@@ -166,7 +171,7 @@
             if (!si && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => { });
         } catch (_) { }
         window.scrollTo(0, 0);
-        if (!si) document.querySelectorAll('.pantalla-juego canvas').forEach(l => { l.style.maxWidth = ''; });
+        if (!si) document.querySelectorAll('.pantalla-juego canvas, .pantalla-juego [style*="max-width"]').forEach(l => { if (l.closest('.barra-vivo')) return; if (l.tagName === 'CANVAS' || Object.values(areas).some(a => l.matches(a))) l.style.maxWidth = ''; });
         Object.keys(barras).forEach(refrescar);
         setTimeout(ajustar, 60); setTimeout(ajustar, 400);
     }
@@ -176,7 +181,7 @@
     document.addEventListener('touchmove', (ev) => {
         if (!encuadrado()) return;
         const p = document.querySelector('.pantalla-juego.activa'), t = ev.target;
-        const enJuego = t && t.closest && t.closest('canvas, .controles-aventura, .barra-vivo');
+        const enJuego = t && t.closest && t.closest('canvas, .controles-aventura, .barra-vivo, .area-vivo');
         if (enJuego || !p || p.scrollHeight <= p.clientHeight) ev.preventDefault();
     }, { passive: false });
     // Si se sale del juego, se saca el encuadre (sin olvidar la preferencia).
@@ -191,13 +196,23 @@
         const b = barras[id];
         if (!b) return;
         const e = estados[id], jugando = e && e.fase === 'jugando', p = pausa(id);
+        b.bPausa.style.display = juegos[id] ? '' : 'none';
+        if (b.velo) {
+            let v = b.velo.querySelector(':scope > .velo-pausa');
+            if (p && b.velo.isConnected) {
+                if (!v) { v = document.createElement('div'); v.className = 'velo-pausa'; b.velo.appendChild(v); }
+                if (getComputedStyle(b.velo).position === 'static') b.velo.style.position = 'relative';
+                v.innerHTML = `<b>⏸ Pausa</b><span>${e.pausa.por === miIdentidad ? 'Pausaste vos' : 'Pausó ' + (typeof nombreJugador === 'function' ? nombreJugador(e.pausa.por) : e.pausa.por)} · tocá ▶ Seguir</span>`;
+            } else if (v) v.remove();
+        }
         b.bPausa.textContent = p ? '▶ Seguir' : '⏸ Pausa';
         b.bPausa.disabled = !jugando;
         b.bPausa.classList.toggle('activo', p);
         b.bEnc.textContent = encuadrado() ? '✕ Salir del encuadre' : '⛶ Encuadrar';
         document.body.classList.toggle('vivo-pausado', !!p && actual === id);
     }
-    function montar(id, G, host, e) {
+    // opciones.velo: elemento sobre el que se pone el velo de pausa (juegos sin lienzo).
+    function montar(id, G, host, e, opciones) {
         estados[id] = e; juegos[id] = G; actual = id;
         if (!barras[id]) {
             const el = document.createElement('div');
@@ -208,10 +223,38 @@
             bEnc.addEventListener('click', () => encuadrar(!encuadrado()));
             barras[id] = { el, bPausa, bEnc };
         }
+        if (opciones && opciones.velo) barras[id].velo = opciones.velo;
+        if (opciones && opciones.area) areas[id] = opciones.area;
         refrescar(id);
-        if (host) host.prepend(barras[id].el);
+        if (host && barras[id].el.parentNode !== host) host.prepend(barras[id].el);
         if (quiereEncuadre && e && e.fase === 'jugando' && !encuadrado()) encuadrar(true, false);
         else setTimeout(ajustar, 30);
     }
-    window.VivoComun = { botones, teclado, recibir, suave, estado, cuenta, montar, reloj, pausa, cartelPausa, encuadrar };
+    // Juegos rápidos (rondas de 30 s): sólo el botón de encuadre, que aparece
+    // cuando en #contenido-<id> está la ronda (se reconoce por `selector`).
+    function soloEncuadre(id, selector) {
+        const arrancar = () => {
+            const cont = document.getElementById('contenido-' + id);
+            if (!cont) return;
+            areas[id] = selector;
+            const revisar = () => {
+                const area = cont.querySelector(selector);
+                if (!area) return;
+                area.classList.add('area-vivo');
+                if (!barras[id] || barras[id].el.parentNode !== cont) montar(id, null, cont, { fase: 'jugando' });
+            };
+            new MutationObserver(revisar).observe(cont, { childList: true });
+            revisar();
+        };
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', arrancar); else arrancar();
+    }
+    // Para los juegos que no usan JuegoTurnos: misma interfaz que G.accionEnCola.
+    function escritor(refFn) {
+        let cola = Promise.resolve();
+        const accion = (calcular) => window.jugadaSegura(refFn(), (d) => (!d || d.fase !== 'jugando') ? null : calcular(d));
+        return { accionEnCola(calcular) { const p = cola.then(() => accion(calcular)); cola = p.catch(() => null); return p; } };
+    }
+    // Para los que dibujan con HTML: guarda el estado antes de dibujar (así reloj() ya lo usa).
+    function sync(id, e) { if (e) { estados[id] = e; actual = id; refrescar(id); } }
+    window.VivoComun = { botones, teclado, recibir, suave, estado, cuenta, montar, reloj, pausa, cartelPausa, encuadrar, soloEncuadre, escritor, sync };
 })();

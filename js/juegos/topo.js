@@ -193,3 +193,6 @@ async function revanchaTopo(){
     const puntajes = await leerPuntajesTopo();
     await revanchaUnToque(refTopo(), 'topo', { puntajes });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('topo', '#tiempo-topo');

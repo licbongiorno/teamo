@@ -1699,3 +1699,11 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .botones-tabu button{ padding:14px 4px; border-radius:14px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:inherit; font:inherit; font-size:0.85rem; cursor:pointer; }
 .botones-tabu .si{ background:rgba(76,209,138,0.22); border-color:#4cd18a; }
 .botones-tabu .no{ background:rgba(255,107,107,0.18); border-color:#ff6b6b; }
+
+/* ==================== Aventura de a Dos ==================== */
+.lienzo-aventura{ display:block; width:100%; max-width:560px; margin:4px auto 8px; aspect-ratio:256/176; image-rendering:pixelated; image-rendering:crisp-edges; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
+.controles-aventura{ display:flex; justify-content:space-between; align-items:center; gap:12px; max-width:560px; margin:0 auto 8px; user-select:none; -webkit-user-select:none; touch-action:none; }
+.controles-aventura > div{ display:flex; gap:10px; }
+.controles-aventura button{ width:72px; height:64px; border-radius:18px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.08); color:inherit; font-size:1.6rem; cursor:pointer; touch-action:none; -webkit-tap-highlight-color:transparent; }
+.controles-aventura button.salto{ width:96px; height:72px; border-radius:50%; background:rgba(255,179,198,0.2); border-color:#ffb3c6; }
+.controles-aventura button.apretado{ background:rgba(255,255,255,0.25); transform:scale(0.95); }

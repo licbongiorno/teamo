@@ -260,7 +260,7 @@ function pasoFa(dt){
     portalFa(p);
     // Polvo y aplaste al aterrizar; estirón al saltar.
     if (p.suelo && !p.sueloAntes && (p.vyAntes || 0) > 3 && FA.fx) { FA.fx.polvo(p.x + ANCHO_FA / 2, p.y + ALTO_FA, 'rgba(220,200,170,0.6)', 4); p.aplasta = 1; }
-    if (!p.suelo && p.sueloAntes && p.vy < -2) p.estira = 1;
+    if (!p.suelo && p.sueloAntes && p.vy < -2) { p.estira = 1; if (window.sonarArcade) sonarArcade('salto'); }
     p.sueloAntes = p.suelo; p.vyAntes = p.vy;
     p.aplasta = Math.max(0, (p.aplasta || 0) - 0.12 * dt); p.estira = Math.max(0, (p.estira || 0) - 0.08 * dt);
     FA.cajas.forEach(cj => Plataformas.caerCaja(cj, dt, (x, y) => solidoFa(x, y, placa), T_FA, FA.cajas));
@@ -307,7 +307,7 @@ function tomarGemaFa(id){
     FA.tomados.add(id);
     efectoGemaFa(id, true);
     const [, x, y] = id.split('-'); FA.mapa[+y][+x] = '.';
-    if (window.sfx) window.sfx.acierto();
+    if (!(window.sonarArcade && sonarArcade('gema')) && window.sfx) window.sfx.acierto();
     FA.enlace && FA.enlace.enviar('gema', { id, c: FA.clave }, true);
     const clave = FA.clave;
     FuegoAgua.accionEnCola((e) => e.nivel + '-' + e.inicio !== clave || (e.tomados || []).includes(id) ? null : { tomados: [...(e.tomados || []), id], gemas: (e.gemas || 0) + 1 });

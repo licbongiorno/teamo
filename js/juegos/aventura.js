@@ -231,8 +231,8 @@ function pasoFisicaAv(dt){
     // En el hielo cuesta arrancar y frenar; en el agua todo es más lento.
     const agarre = p.suelo ? (p.hielo ? 0.035 : 0.35) : 0.18;
     p.vx += (objetivo * VEL_AV * (enAgua ? 0.7 : 1) - p.vx) * Math.min(1, agarre * dt);
-    if (enAgua && k.salto && !AV.saltoPrevio) { p.vy = -3.4; p.suelo = false; if (window.sfx) window.sfx.click(); } // brazada
-    else if (k.salto && !AV.saltoPrevio && p.suelo) { p.vy = -SALTO_AV; p.suelo = false; if (window.sfx) window.sfx.click(); if (AV.fx) AV.fx.polvo(p.x + ANCHO_PJ / 2, p.y + ALTO_PJ, 'rgba(240,235,220,0.7)', 4); p.estira = 1; }
+    if (enAgua && k.salto && !AV.saltoPrevio) { p.vy = -3.4; p.suelo = false; if (!(window.sonarArcade && sonarArcade('chapuzon')) && window.sfx) window.sfx.click(); } // brazada
+    else if (k.salto && !AV.saltoPrevio && p.suelo) { p.vy = -SALTO_AV; p.suelo = false; if (!(window.sonarArcade && sonarArcade('salto')) && window.sfx) window.sfx.click(); if (AV.fx) AV.fx.polvo(p.x + ANCHO_PJ / 2, p.y + ALTO_PJ, 'rgba(240,235,220,0.7)', 4); p.estira = 1; }
     if (enAgua && AV.fx && Math.random() < 0.04) AV.fx.burbujas(p.x + ANCHO_PJ / 2, p.y + 3, 1);
     if (!enAgua && !k.salto && p.vy < -2.5 && !p.resorte) p.vy *= 0.6; // salto variable: soltar antes = saltito
     AV.saltoPrevio = k.salto;
@@ -290,7 +290,7 @@ function pasoFisicaAv(dt){
         if (c === '^' && y === cy1 && AV.invulnerable <= 0) { morirAv('¡Ay, los pinchos!'); return; }
         if (c === 'C' && (AV.checkpoint.x !== x * T_AV)) { AV.checkpoint = { x: x * T_AV, y: 8 * T_AV }; if (window.sfx) window.sfx.acierto(); if (AV.fx) { AV.fx.onda(x * T_AV + 12, y * T_AV + 5, { color: 'rgba(76,209,138,0.9)', radio: 16 }); AV.fx.estrellitas(x * T_AV + 12, y * T_AV + 5, 8, ['#4cd18a', '#fff']); } }
         if (c === 'F' && !AV.llegue && !jefeVivoAv()) llegarAv();
-        if (c === 'R' && p.vy >= 0 && y === cy1) { p.vy = -11.2; p.resorte = true; p.suelo = false; if (window.sfx) window.sfx.acierto(); AV.golpes['r' + x + ',' + y] = performance.now(); p.estira = 1; if (AV.fx) AV.fx.onda(x * T_AV + 8, y * T_AV + 12, { color: 'rgba(255,255,255,0.8)', radio: 12, achatar: 0.4 }); }
+        if (c === 'R' && p.vy >= 0 && y === cy1) { p.vy = -11.2; p.resorte = true; p.suelo = false; if (!(window.sonarArcade && sonarArcade('rebote')) && window.sfx) window.sfx.acierto(); AV.golpes['r' + x + ',' + y] = performance.now(); p.estira = 1; if (AV.fx) AV.fx.onda(x * T_AV + 8, y * T_AV + 12, { color: 'rgba(255,255,255,0.8)', radio: 12, achatar: 0.4 }); }
     }
     if (p.y > FILAS_AV * T_AV + 20) { morirAv('¡Al pozo!'); return; }
     // Jefe
@@ -307,7 +307,7 @@ function pasoFisicaAv(dt){
         if (AV.tomados.has(b.id)) continue;
         const bx = posBichoAv(b);
         if (p.x + ANCHO_PJ > bx + 1 && p.x < bx + 13 && p.y + ALTO_PJ > b.y + 2 && p.y < b.y + 12) {
-            if (p.vy > 0 && yAntes + ALTO_PJ <= b.y + 6) { tomarAv(b.id, true); p.vy = -5; if (window.sfx) window.sfx.toque(); }
+            if (p.vy > 0 && yAntes + ALTO_PJ <= b.y + 6) { tomarAv(b.id, true); p.vy = -5; if (!(window.sonarArcade && sonarArcade('pisar')) && window.sfx) window.sfx.toque(); }
             else if (AV.invulnerable <= 0) { morirAv('¡Te agarró un bichito!'); return; }
         }
     }
@@ -339,7 +339,7 @@ function tomarAv(id, mio){
     aplicarTomadoAv(id);
     if (id[0] !== 'e') AV.monedasLocal++;
     if (!mio) return;
-    if (window.sfx) id[0] === 'e' ? null : window.sfx.acierto();
+    if (id[0] !== 'e' && !(window.sonarArcade && sonarArcade('moneda')) && window.sfx) window.sfx.acierto();
     if (AV.enlace) AV.enlace.enviar('tomar', { id, n: AV.estado.nivel }, true);
     const nivel = AV.estado.nivel;
     Aventura.accion((e) => e.nivel !== nivel || (e.tomados || []).includes(id) ? null : { tomados: [...(e.tomados || []), id], monedas: (e.monedas || 0) + (id[0] === 'e' ? 0 : 1) });

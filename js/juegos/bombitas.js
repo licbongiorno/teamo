@@ -70,7 +70,7 @@ function simularBom(){
         });
         BM.fuegos.push({ celdas, hasta: proxima.t + FUEGO_BOM });
         if (fresca) { efectoExplosionBom(proxima, celdas); vibrarJ(15); }
-        if (window.sfx && fresca) window.sfx.dado ? window.sfx.dado() : window.sfx.toque();
+        if (fresca && !(window.sonarArcade && sonarArcade('explosion', { tam: Math.min(1, 0.35 + proxima.alcance * 0.12) })) && window.sfx) window.sfx.dado ? window.sfx.dado() : window.sfx.toque();
     }
     BM.fuegos = BM.fuegos.filter(f => f.hasta > ahora);
 }
@@ -105,7 +105,7 @@ function pasoBom(dt){
         if (mej === 'fuego') BM.alcance++; else BM.maxBombas++;
         efectoMejoraBom(cx, cy, mej, true);
         BM.enlace && BM.enlace.enviar('mejora', { k: cx + ',' + cy, c: BM.clave }, true);
-        if (window.sfx) window.sfx.acierto();
+        if (!(window.sonarArcade && sonarArcade('powerup')) && window.sfx) window.sfx.acierto();
     }
     // ¿Me alcanzó el fuego?
     if (BM.fuegos.some(f => f.celdas.some(([x, y]) => x === cx && y === cy))) morirBom();

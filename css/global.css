@@ -55,8 +55,10 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 @keyframes aparecer{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 
 .panel{ background:var(--panel); border:1px solid var(--borde); border-radius:18px; padding:16px; margin-bottom:14px; }
-.fila-superior-juego{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-.titulo-juego{ font-family:var(--fuente-titulo); font-size:1.6rem; }
+.fila-superior-juego{ display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+/* El título ocupa lo que sobra; si los botones (☆ 💝 ❓ 🤖 ✕) no entran, bajan a otra fila en vez de apretarlo. */
+.titulo-juego{ font-family:var(--fuente-titulo); font-size:1.6rem; flex:1 1 auto; min-width:0; margin-right:auto; line-height:1.15; overflow-wrap:anywhere; }
+@media (max-width: 420px){ .titulo-juego{ font-size:1.3rem; } }
 .btn-cerrar-juego{ background:var(--panel); border:1px solid var(--borde); color:var(--texto); border-radius:12px;
     width:34px; height:34px; font-size:1rem; cursor:pointer; }
 

@@ -1846,3 +1846,7 @@ body.encuadre .pantalla-juego.activa .mv-host{ border-radius:0; }
 
 /* Capa de efectos de los juegos rápidos (js/arcade-comun.js) */
 .capa-fx-arcade{ position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:9000; }
+
+/* Cronómetro de turno en los juegos por turnos (js/juegos/base-turnos.js) */
+.crono-turno{ font-size:0.75em; opacity:0.6; margin-left:6px; font-variant-numeric:tabular-nums; }
+.crono-turno:empty{ display:none; }

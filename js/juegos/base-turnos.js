@@ -136,11 +136,13 @@
                     <button class="btn-principal" style="margin-top:12px;" onclick="JuegoTurnos.revancha('${id}')">🔁 Revancha</button>
                 </div>`;
             } else if (!cfg.sinTurno && e.turno) {
-                html += `<div class="info-turno-tablero">${c.miTurno ? (cfg.textoTurno ? cfg.textoTurno(e, c) : '🎯 Tu turno') : `Turno de ${nombre(e.turno)}…`}</div>`;
+                html += `<div class="info-turno-tablero">${c.miTurno ? (cfg.textoTurno ? cfg.textoTurno(e, c) : '🎯 Tu turno') : `Turno de ${nombre(e.turno)}…`} <span class="crono-turno" id="crono-turno-${id}"></span></div>`;
             }
             html += cfg.render(e, c);
             if (e.aviso) html += `<div class="panel texto-tenue texto-centro" style="font-size:0.8rem;">${e.aviso}</div>`;
             cont.innerHTML = html;
+            // Cuánto lleva el turno (cosmético, como en Ajedrez y Damas).
+            if (!cfg.sinTurno && e.fase === 'jugando' && e.turno && typeof actualizarCronometroTurno === 'function') actualizarCronometroTurno('crono-turno-' + id, e.turno);
             if (cfg.alDibujar) cfg.alDibujar(cont, e, c);
         }
         function iniciar() {

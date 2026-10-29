@@ -29,7 +29,7 @@ const Mastermind = JuegoTurnos.crear({
     sinTurno: false,
     textoTurno: (e) => e.etapa === 'secreto' ? '🔒 Elegí tu código secreto' : '🎯 Tu turno: adiviná el código',
     render(e, c) {
-        const fila = (codigo, pista) => `<div class="fila-mm"><span class="codigo-mm">${[...codigo].map(d => COLORES_MM[d]).join('')}</span>${pista ? `<span class="pista-mm">${'⚫'.repeat(pista.b)}${'⚪'.repeat(pista.w)}${'·'.repeat(4 - pista.b - pista.w)}</span>` : ''}</div>`;
+        const fila = (codigo, pista, id) => `<div class="fila-mm"${id ? ` data-aj-id="${id}"` : ''}><span class="codigo-mm">${[...codigo].map(d => COLORES_MM[d]).join('')}</span>${pista ? `<span class="pista-mm">${'⚫'.repeat(pista.b)}${'⚪'.repeat(pista.w)}${'·'.repeat(4 - pista.b - pista.w)}</span>` : ''}</div>`;
         let h = '';
         if (e.etapa === 'secreto') {
             if (e.secretos[c.yo]) return `<div class="panel texto-centro">Tu código: <span class="codigo-mm">${[...e.secretos[c.yo]].map(d => COLORES_MM[d]).join('')}</span><br><span class="texto-tenue">Esperando que ${nombreJugador(c.rival)} elija el suyo…</span></div>`;
@@ -38,10 +38,10 @@ const Mastermind = JuegoTurnos.crear({
         }
         const mios = e.intentos[c.yo] || [], suyos = e.intentos[c.rival] || [];
         h += `<div class="tableros-mm"><div class="panel"><div class="texto-tenue" style="font-size:0.78rem;">Tus intentos (código de ${nombreJugador(c.rival)})</div>
-            ${mios.map(x => fila(x.g, x)).join('') || '<div class="texto-tenue" style="font-size:0.8rem;">Todavía ninguno</div>'}
+            ${mios.map((x, i) => fila(x.g, x, 'mm-yo-' + i)).join('') || '<div class="texto-tenue" style="font-size:0.8rem;">Todavía ninguno</div>'}
             ${e.fase === 'terminado' ? `<div class="texto-tenue" style="font-size:0.78rem; margin-top:6px;">Era: ${fila(e.secretos[c.rival])}</div>` : ''}</div>
             <div class="panel"><div class="texto-tenue" style="font-size:0.78rem;">Los de ${nombreJugador(c.rival)} con tu código ${[...e.secretos[c.yo]].map(d => COLORES_MM[d]).join('')}</div>
-            ${suyos.map(x => fila(x.g, x)).join('') || '<div class="texto-tenue" style="font-size:0.8rem;">Todavía ninguno</div>'}</div></div>`;
+            ${suyos.map((x, i) => fila(x.g, x, 'mm-el-' + i)).join('') || '<div class="texto-tenue" style="font-size:0.8rem;">Todavía ninguno</div>'}</div></div>`;
         if (c.miTurno) {
             h += `<div class="panel texto-centro"><div class="codigo-mm grande">${[0, 1, 2, 3].map(i => _codigoMM[i] != null ? COLORES_MM[_codigoMM[i]] : '⚪').join('')}</div>${paletaMM()}
                 <div class="btn-fila"><button class="btn-secundario" onclick="borrarMM()">↩️</button><button class="btn-principal" ${_codigoMM.length === 4 ? '' : 'disabled style="opacity:0.5;"'} onclick="adivinarMM()">Probar (${mios.length + 1}/${MAX_INTENTOS_MM})</button></div></div>`;

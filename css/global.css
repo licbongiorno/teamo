@@ -242,6 +242,27 @@ input, textarea { -webkit-user-select:text; user-select:text; }
 .badge-disponible{ background:rgba(184,232,201,0.2); color:#b8e8c9; }
 .badge-proximamente{ background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.5); }
 
+/* Etiquetas y sello "Nuevo" de la tarjeta (js/juegos-data.js → tarjetaJuegoHTML) */
+.sello-nuevo{ display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; font-size:0.62rem; font-weight:700; vertical-align:middle; background:linear-gradient(135deg, rgba(255,214,120,0.3), rgba(255,179,198,0.3)); color:#ffe3a8; animation:sello-brillo 2.6s ease-in-out infinite; }
+@keyframes sello-brillo{ 50%{ box-shadow:0 0 10px rgba(255,214,120,0.45); } }
+.etiquetas-juego{ display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+.etiquetas-juego span{ font-size:0.64rem; padding:2px 7px; border-radius:999px; background:color-mix(in srgb, var(--color-cat, var(--rosa)) 14%, transparent); border:1px solid color-mix(in srgb, var(--color-cat, var(--rosa)) 30%, transparent); white-space:nowrap; }
+.etiquetas-juego span.tenue{ background:none; border-color:rgba(255,255,255,0.1); opacity:0.7; }
+@media (prefers-reduced-motion: reduce){ .sello-nuevo{ animation:none; } }
+
+/* Página de categoría (categorias/index.html) */
+.otras-categorias{ display:flex; gap:6px; overflow-x:auto; padding:2px 0 10px; margin-bottom:6px; scrollbar-width:none; }
+.otras-categorias::-webkit-scrollbar{ display:none; }
+.otras-categorias a{ flex:0 0 auto; padding:6px 11px; border-radius:999px; font-size:0.75rem; text-decoration:none; color:var(--texto); border:1px solid color-mix(in srgb, var(--color-cat) 35%, var(--borde)); background:rgba(255,255,255,0.03); }
+.otras-categorias a.activa{ background:color-mix(in srgb, var(--color-cat) 25%, var(--panel)); font-weight:700; }
+.controles-categoria{ display:flex; align-items:center; gap:8px; margin:-4px 0 12px; flex-wrap:wrap; }
+.controles-categoria .filtros-rapidos{ flex:1 1 100%; min-width:0; display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; }
+.controles-categoria .filtros-rapidos::-webkit-scrollbar{ display:none; }
+.controles-categoria .filtros-rapidos button{ flex:0 0 auto; padding:6px 11px; border-radius:999px; border:1px dashed rgba(255,255,255,0.2); background:transparent; color:inherit; font:inherit; font-size:0.75rem; cursor:pointer; }
+.controles-categoria .filtros-rapidos button.activa{ border-style:solid; border-color:var(--color-cat, #ffb3c6); background:color-mix(in srgb, var(--color-cat, #ffb3c6) 18%, transparent); }
+.orden-categoria{ font-size:0.75rem; opacity:0.85; display:flex; align-items:center; gap:6px; margin-left:auto; }
+.orden-categoria select{ background:var(--panel); color:var(--texto); border:1px solid var(--borde); border-radius:10px; padding:5px 8px; font:inherit; font-size:0.78rem; }
+
 /* Sugerencia del día (juegos.html): misma tarjeta que .tarjeta-juego-cat,
    con un resalte cálido para que se note que es una elegida, no una más
    de la lista. */

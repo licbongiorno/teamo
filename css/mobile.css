@@ -18,7 +18,30 @@
 @media (pointer: coarse){
     .btn-principal, .btn-secundario{ padding-top:13px; padding-bottom:13px; }
     .casilla-tablero{ min-height:38px; }
+    /* Lo que se toca con el dedo: al menos ~42 px (antes había botones de 27 a 34 px). */
+    .btn-icono-header, .btn-reglas, .btn-cerrar-juego{ min-width:42px; min-height:42px; }
+    .btn-compu, .barra-en-vivo button{ min-height:40px; }
+    .barra-en-vivo button{ min-width:40px; }
+    .filtros-rapidos button, .chip-juego{ min-height:38px; }
+    .btn-volver{ min-height:42px; }
 }
+
+/* Encabezado de los juegos en celus angostos: que ☆ 💝 ❓ 🤖 ✕ entren en la misma línea que el título. */
+@media (max-width: 400px){
+    .fila-superior-juego{ gap:4px; }
+    .fila-superior-juego .titulo-juego{ font-size:1.15rem; }
+    .fila-superior-juego .btn-reglas{ margin-left:0; margin-right:0; }
+    .fila-superior-juego .btn-reglas, .fila-superior-juego .btn-cerrar-juego{ min-width:40px; min-height:40px; }
+}
+
+/* Celus muy angostos: las categorías en una sola columna para que no se corten los nombres. */
+@media (max-width: 330px){
+    .grid-categorias{ grid-template-columns:1fr; }
+    .tarjeta-categoria{ flex-direction:row; justify-content:flex-start; gap:12px; padding:12px 14px; text-align:left; }
+}
+
+/* Que el contenido no quede debajo de la rayita de abajo del iPhone ni de las burbujas flotantes. */
+.contenedor{ padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px)); }
 
 /* Landscape en celular: la app está pensada vertical, pero al menos
    que el contenido no quede gigante y desbordado al girar. */

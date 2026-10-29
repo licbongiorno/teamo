@@ -8,7 +8,7 @@
 // La pelota la simula quien le pegó último (js/enlace-vivo.js), y ese
 // mismo decide el punto. En el mundo Nico está abajo; a Carito se le da vuelta.
 const W_PP = 240, H_PP = 360, MESA_PP = { x0: 24, x1: 216, y0: 30, y1: 330 }, PALETA_PP = 44, R_BOLA_PP = 5, PUNTOS_PP = 11;
-const PP = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, mio: null, suyo: null, bola: null, dueno: false, dedo: null, ultimoEnvio: 0, ultimoTs: 0, puntoMarcado: null, golpes: 0 };
+const PP = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, mio: null, suyo: null, bola: null, dueno: false, dedo: null, ultimoEnvio: 0, ultimoTs: 0, puntoMarcado: null, golpes: 0, fx: null, estela: [], golpeVis: {}, redT: 0, puntoT: 0 };
 
 const girarPp = () => miIdentidad === 'carito';
 const compuPp = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'pingpongvivo' ? m : null; };
@@ -24,7 +24,8 @@ function quienSacaPp(e){
 function reiniciarPp(e){
     PP.clave = e.clave;
     PP.mio = { x: W_PP / 2, y: yBasePp(miIdentidad), vx: 0, vy: 0 };
-    PP.suyo = { x: W_PP / 2, y: yBasePp(miRival), vx: 0, vy: 0 };
+    // Contra la otra persona se conserva (tiene el historial para dibujarla suave).
+    if (compuPp() || !PP.suyo) PP.suyo = { x: W_PP / 2, y: yBasePp(miRival), vx: 0, vy: 0 };
     const saca = quienSacaPp(e);
     PP.bola = { x: W_PP / 2, y: yBasePp(saca) + (abajoPp(saca) ? -14 : 14), vx: 0, vy: 0, efecto: 0, de: saca, enMesa: false, sacada: false };
     PP.dueno = saca === miIdentidad || !!compuPp();
@@ -37,7 +38,11 @@ function moverBolaPp(b, dt){
     b.x += b.vx * dt; b.y += b.vy * dt;
     // ¿Ya pasó la red y llegó a la mitad del otro? Desde ahí cuenta como "en la mesa".
     const receptor = haciaPp(b);
-    if (!b.enMesa && (abajoPp(receptor) ? b.y > H_PP / 2 + 20 : b.y < H_PP / 2 - 20) && b.x > MESA_PP.x0 && b.x < MESA_PP.x1) b.enMesa = true;
+    if (!b.enMesa && (abajoPp(receptor) ? b.y > H_PP / 2 + 20 : b.y < H_PP / 2 - 20) && b.x > MESA_PP.x0 && b.x < MESA_PP.x1) { b.enMesa = true; b.pique = performance.now(); b.px = b.x; b.py = b.y; }
+    // Cruza la red
+    const lado = b.y < H_PP / 2;
+    if (b.ladoAnt != null && b.ladoAnt !== lado) b.cruce = performance.now();
+    b.ladoAnt = lado;
 }
 function chocarPp(p, b, quien){
     if (b.de === quien && b.sacada) return false; // no se le pega dos veces seguidas
@@ -46,6 +51,8 @@ function chocarPp(p, b, quien){
     const hacia = abajoPp(quien) ? -1 : 1;
     if (b.sacada && Math.sign(b.vy) === hacia) return false; // tiene que venir hacia mí
     PP.golpes++;
+    PP.golpeVis[quien] = performance.now();
+    efectoGolpePp(b, p, quien);
     const vel = Math.min(6.2, 3.3 + PP.golpes * 0.14 + Math.abs(p.vy) * 0.15);
     b.vy = hacia * vel;
     b.vx = (b.x - p.x) / mitad * 2.1 + p.vx * 0.22;
@@ -53,6 +60,13 @@ function chocarPp(p, b, quien){
     b.y = p.y + hacia * (8 + R_BOLA_PP);
     b.de = quien; b.enMesa = false; b.sacada = true;
     return true;
+}
+function efectoGolpePp(b, p, quien){
+    if (!PP.fx) return;
+    const [sx, sy] = aPantallaPp(b.x, b.y), fuerte = Math.abs(p.vx) + Math.abs(p.vy) > 4;
+    PP.fx.chispas(sx, sy, ['#fff', '#ffe58a', quien === 'nico' ? '#9fd0ff' : '#ffb3c6'], fuerte ? 14 : 7);
+    PP.fx.onda(sx, sy, { radio: fuerte ? 18 : 11, vida: 240 });
+    if (fuerte) { PP.fx.temblor(1.5, 120); PP.fx.texto(sx, sy - 14, Math.abs(p.vx) > 3 ? '¡Efecto!' : '¡Smash!', { tam: 10, color: '#ffe58a', vida: 600 }); }
 }
 function pasoPp(dt){
     const e = PP.estado;
@@ -109,9 +123,21 @@ function pensarCompuPp(p, b, nivel, dt){
     const nx = p.x + dx / d * paso, ny = p.y + dy / d * paso;
     p.vx = (nx - p.x) / dt; p.vy = (ny - p.y) / dt; p.x = Math.max(0, Math.min(W_PP, nx)); p.y = ny;
 }
+function efectoPuntoPp(quien, b){
+    PP.puntoT = performance.now();
+    if (!PP.fx) return;
+    const [sx, sy] = aPantallaPp(Math.max(0, Math.min(W_PP, b.x)), Math.max(0, Math.min(H_PP, b.y)));
+    PP.fx.onda(sx, sy, { radio: 30, vida: 500, color: 'rgba(255,255,255,0.7)' });
+    PP.fx.temblor(3, 260);
+    const mio = quien === miIdentidad;
+    PP.fx.flash(mio ? 'rgba(120,255,170,0.22)' : 'rgba(255,110,140,0.22)', 200);
+    PP.fx.texto(W_PP / 2, mio ? H_PP * 0.72 : H_PP * 0.28, mio ? '+1 ¡Punto!' : `+1 ${nombreJugador(quien)}`, { tam: 16, color: mio ? '#7dffb0' : '#ffb3c6', vida: 1100 });
+    if (mio) PP.fx.estrellitas(W_PP / 2, H_PP * 0.72, 10);
+}
 async function marcarPuntoPp(quien, como){
     if (PP.puntoMarcado) return;
     PP.puntoMarcado = quien;
+    efectoPuntoPp(quien, PP.bola);
     PP.enlace && PP.enlace.enviar('punto', { q: quien, x: PP.bola.x, y: PP.bola.y, c: PP.clave }, true);
     vibrarJ([20, 40, 20]);
     if (window.sfx) window.sfx[quien === miIdentidad ? 'punto' : 'error']();
@@ -127,52 +153,95 @@ async function marcarPuntoPp(quien, como){
 function dibujarPp(){
     const c = PP.ctx, e = PP.estado;
     if (!c || !e) return;
-    c.fillStyle = '#2a1f33'; c.fillRect(0, 0, W_PP, H_PP);
-    c.fillStyle = '#3a2d47'; for (let i = 0; i < 12; i++) c.fillRect(0, i * 30, W_PP, 15);
-    // Mesa (igual de los dos lados, así que no hace falta girarla)
-    c.fillStyle = '#1f6fb5'; c.fillRect(MESA_PP.x0, MESA_PP.y0, MESA_PP.x1 - MESA_PP.x0, MESA_PP.y1 - MESA_PP.y0);
+    const ahora = performance.now();
+    if (PP.fx) PP.fx.antes(c);
+    // Piso del gimnasio con reflejo de luz
+    c.fillStyle = '#241a2e'; c.fillRect(-10, -10, W_PP + 20, H_PP + 20);
+    for (let i = 0; i < 12; i++) { c.fillStyle = i % 2 ? '#2e2240' : '#2a1f3a'; c.fillRect(0, i * 30, W_PP, 30); }
+    const luz = c.createRadialGradient(W_PP / 2, H_PP / 2, 20, W_PP / 2, H_PP / 2, 240); luz.addColorStop(0, 'rgba(255,250,230,0.12)'); luz.addColorStop(1, 'rgba(255,250,230,0)');
+    c.fillStyle = luz; c.fillRect(0, 0, W_PP, H_PP);
+    // Mesa: sombra, borde con grosor y superficie con brillo
+    c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(MESA_PP.x0 + 5, MESA_PP.y0 + 7, MESA_PP.x1 - MESA_PP.x0, MESA_PP.y1 - MESA_PP.y0);
+    c.fillStyle = '#123f6b'; c.fillRect(MESA_PP.x0 - 2, MESA_PP.y0 - 2, MESA_PP.x1 - MESA_PP.x0 + 4, MESA_PP.y1 - MESA_PP.y0 + 6);
+    const gm = c.createLinearGradient(MESA_PP.x0, MESA_PP.y0, MESA_PP.x1, MESA_PP.y1); gm.addColorStop(0, '#2b86cf'); gm.addColorStop(0.5, '#1f6fb5'); gm.addColorStop(1, '#1b62a1');
+    c.fillStyle = gm; c.fillRect(MESA_PP.x0, MESA_PP.y0, MESA_PP.x1 - MESA_PP.x0, MESA_PP.y1 - MESA_PP.y0);
     c.strokeStyle = '#fff'; c.lineWidth = 2; c.strokeRect(MESA_PP.x0 + 1, MESA_PP.y0 + 1, MESA_PP.x1 - MESA_PP.x0 - 2, MESA_PP.y1 - MESA_PP.y0 - 2);
     c.lineWidth = 1; c.beginPath(); c.moveTo(W_PP / 2, MESA_PP.y0); c.lineTo(W_PP / 2, MESA_PP.y1); c.stroke();
-    // Red
-    c.fillStyle = 'rgba(255,255,255,0.85)'; c.fillRect(MESA_PP.x0 - 6, H_PP / 2 - 2, MESA_PP.x1 - MESA_PP.x0 + 12, 4);
-    c.fillStyle = '#222'; c.fillRect(MESA_PP.x0 - 8, H_PP / 2 - 3, 4, 6); c.fillRect(MESA_PP.x1 + 4, H_PP / 2 - 3, 4, 6);
-    const paleta = (p, col) => {
+    const b = PP.bola, pb = b ? VivoComun.posBola(b) : null;
+    // Marca del pique en la mesa
+    if (b && b.pique && ahora - b.pique < 600) { const [px, py] = aPantallaPp(b.px, b.py), k = (ahora - b.pique) / 600; c.strokeStyle = `rgba(255,255,255,${0.7 * (1 - k)})`; c.lineWidth = 1.5; c.beginPath(); c.ellipse(px, py, 4 + k * 12, (4 + k * 12) * 0.6, 0, 0, Math.PI * 2); c.stroke(); }
+    // Red: tiembla cuando pasa la pelota
+    const tiembla = b && b.cruce ? Math.max(0, 1 - (ahora - b.cruce) / 300) : 0;
+    c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(MESA_PP.x0 - 6, H_PP / 2 - 5, MESA_PP.x1 - MESA_PP.x0 + 12, 6);
+    c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 0.6;
+    for (let x = MESA_PP.x0 - 4; x < MESA_PP.x1 + 6; x += 4) { const ond = Math.sin(x / 6 + ahora / 40) * tiembla * 1.5; c.beginPath(); c.moveTo(x, H_PP / 2 - 5 + ond); c.lineTo(x, H_PP / 2 + 1 + ond); c.stroke(); }
+    c.fillStyle = 'rgba(255,255,255,0.92)'; c.fillRect(MESA_PP.x0 - 6, H_PP / 2 - 6 + Math.sin(ahora / 30) * tiembla, MESA_PP.x1 - MESA_PP.x0 + 12, 2);
+    c.fillStyle = '#d8d8e0'; c.fillRect(MESA_PP.x0 - 9, H_PP / 2 - 7, 4, 9); c.fillRect(MESA_PP.x1 + 5, H_PP / 2 - 7, 4, 9);
+    const paleta = (p, col, quien) => {
         if (!p) return;
-        const [sx, sy] = aPantallaPp(p.x, p.y);
-        c.fillStyle = 'rgba(0,0,0,0.3)'; c.fillRect(sx - PALETA_PP / 2 + 2, sy - 4 + 3, PALETA_PP, 9);
-        c.fillStyle = col; c.beginPath(); c.roundRect ? c.roundRect(sx - PALETA_PP / 2, sy - 5, PALETA_PP, 10, 5) : c.rect(sx - PALETA_PP / 2, sy - 5, PALETA_PP, 10); c.fill();
-        c.fillStyle = '#c9a26b'; c.fillRect(sx - 3, sy + (sy > H_PP / 2 ? 5 : -12), 6, 7);
+        const [sx, sy] = aPantallaPp(p.x, p.y), arriba = sy < H_PP / 2;
+        const golpe = Math.max(0, 1 - (ahora - (PP.golpeVis[quien] || 0)) / 180);
+        const incl = Math.max(-0.45, Math.min(0.45, (p.vxd || 0) * 0.08)) * (girarPp() ? -1 : 1);
+        c.save(); c.translate(sx, sy); c.rotate(incl); c.scale(1 + golpe * 0.18, 1 + golpe * 0.3);
+        c.fillStyle = 'rgba(0,0,0,0.35)'; c.beginPath(); c.ellipse(3, 4, PALETA_PP / 2, 7, 0, 0, Math.PI * 2); c.fill();
+        // Mango de madera
+        c.fillStyle = '#c99a5b'; c.fillRect(-3, arriba ? -15 : 5, 6, 10); c.fillStyle = '#a77a43'; c.fillRect(-3, arriba ? -15 : 5, 2, 10);
+        // Goma con borde y brillo
+        c.fillStyle = '#1b1b22'; c.beginPath(); c.ellipse(0, 0, PALETA_PP / 2 + 1.5, 7.5, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = col; c.beginPath(); c.ellipse(0, 0, PALETA_PP / 2, 6, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.28)'; c.beginPath(); c.ellipse(-PALETA_PP / 6, -2, PALETA_PP / 4, 1.8, 0, 0, Math.PI * 2); c.fill();
+        if (golpe > 0) { c.strokeStyle = `rgba(255,255,255,${golpe})`; c.lineWidth = 2; c.beginPath(); c.ellipse(0, 0, PALETA_PP / 2 + 4, 10, 0, 0, Math.PI * 2); c.stroke(); }
+        c.restore();
     };
     const yoCol = miIdentidad === 'nico' ? '#3d8bfd' : '#e8496b', elCol = miIdentidad === 'nico' ? '#e8496b' : '#3d8bfd';
+    // Velocidad lateral de cada paleta (para inclinarla)
+    const velX = (p) => { if (!p) return; const x = p.dx != null ? p.dx : p.x; p.vxd = (p.vxd || 0) * 0.7 + ((x - (p.ux != null ? p.ux : x)) || 0) * 0.3; p.ux = x; };
     if (PP.suyo) {
-        const s = PP.suyo;
-        if (!compuPp()) { s.rx = s.rx == null ? s.x : s.rx + (s.x - s.rx) * 0.5; s.ry = s.ry == null ? s.y : s.ry + (s.y - s.ry) * 0.5; paleta({ x: s.rx, y: s.ry }, elCol); }
-        else paleta(s, elCol);
+        const s = PP.suyo, pos = compuPp() ? [s.x, s.y] : VivoComun.suave(s);
+        if (pos) { s.dx = pos[0]; velX(s); paleta({ x: pos[0], y: pos[1], vxd: s.vxd }, elCol, miRival); }
     }
-    const b = PP.bola;
-    if (b) {
-        const [sx, sy] = aPantallaPp(b.x, b.y);
+    if (pb) {
+        const [sx, sy] = aPantallaPp(pb[0], pb[1]);
         // Altura de mentira: sube después del golpe y pica en la mesa del otro.
         const lejos = b.sacada ? Math.abs(b.y - yBasePp(b.de)) / (H_PP * 0.7) : 0;
-        const alto = b.sacada ? Math.abs(Math.sin(Math.min(1, lejos) * Math.PI)) * 9 + 2 : 3;
+        const alto = b.sacada ? Math.abs(Math.sin(Math.min(1, lejos) * Math.PI)) * 10 + 2 : 3 + Math.sin(ahora / 160) * 2;
+        PP.estela.push({ x: sx, y: sy - alto * 0.3 }); if (PP.estela.length > 8) PP.estela.shift();
+        const vel = Math.hypot(b.vx, b.vy);
+        if (vel > 3.6) PP.estela.forEach((q, k) => { c.globalAlpha = k / PP.estela.length * 0.3; c.fillStyle = Math.abs(b.efecto) > 0.02 ? '#ffe58a' : '#fff'; c.beginPath(); c.arc(q.x, q.y, R_BOLA_PP * (0.4 + k / 16), 0, Math.PI * 2); c.fill(); });
+        c.globalAlpha = 1;
         c.fillStyle = 'rgba(0,0,0,0.35)'; c.beginPath(); c.ellipse(sx + alto * 0.6, sy + alto * 0.6, R_BOLA_PP, R_BOLA_PP * 0.7, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#fff'; c.beginPath(); c.arc(sx, sy - alto * 0.3, R_BOLA_PP + alto * 0.08, 0, Math.PI * 2); c.fill();
-        if (Math.abs(b.efecto) > 0.02) { c.strokeStyle = 'rgba(255,210,90,0.8)'; c.lineWidth = 1; c.beginPath(); c.arc(sx, sy - alto * 0.3, R_BOLA_PP + 3, 0, Math.PI * (b.efecto > 0 ? 1 : -1)); c.stroke(); }
+        // Antes del saque la pelota "late" para avisar que ya sale.
+        if (!b.sacada) { c.strokeStyle = `rgba(255,255,255,${0.4 + Math.sin(ahora / 120) * 0.3})`; c.lineWidth = 1; c.beginPath(); c.arc(sx, sy - alto * 0.3, R_BOLA_PP + 4 + Math.sin(ahora / 120) * 2, 0, Math.PI * 2); c.stroke(); }
+        const gb = c.createRadialGradient(sx - 1.5, sy - alto * 0.3 - 1.5, 0.5, sx, sy - alto * 0.3, R_BOLA_PP + alto * 0.08);
+        gb.addColorStop(0, '#ffffff'); gb.addColorStop(1, '#ffe3b8');
+        c.fillStyle = gb; c.beginPath(); c.arc(sx, sy - alto * 0.3, R_BOLA_PP + alto * 0.08, 0, Math.PI * 2); c.fill();
+        if (Math.abs(b.efecto) > 0.02) { c.strokeStyle = 'rgba(255,210,90,0.85)'; c.lineWidth = 1.2; const g = ahora / 60 * Math.sign(b.efecto); c.beginPath(); c.arc(sx, sy - alto * 0.3, R_BOLA_PP + 3, g, g + Math.PI * 1.2); c.stroke(); }
     }
-    paleta(PP.mio, yoCol);
-    const yo = e.puntos[miIdentidad], el = e.puntos[miRival];
-    c.fillStyle = 'rgba(255,255,255,0.55)'; c.font = 'bold 26px monospace'; c.textAlign = 'right';
-    c.fillText(String(el), W_PP - 6, H_PP / 2 - 12); c.fillText(String(yo), W_PP - 6, H_PP / 2 + 34);
+    if (PP.mio) { velX(PP.mio); paleta(PP.mio, yoCol, miIdentidad); }
+    if (PP.fx) PP.fx.dibujar(c);
+    // Marcador (salta cuando cambia)
+    const yo = e.puntos[miIdentidad], el = e.puntos[miRival], pop = PP.puntoT ? FxVivo.rebote(Math.min(1, (ahora - PP.puntoT) / 450)) : 1;
+    c.textAlign = 'right'; c.font = 'bold 26px monospace';
+    c.save(); c.translate(W_PP - 6, H_PP / 2 - 12); if (PP.puntoMarcado === miRival) c.scale(pop, pop); c.fillStyle = 'rgba(255,255,255,0.6)'; c.fillText(String(el), 0, 0); c.restore();
+    c.save(); c.translate(W_PP - 6, H_PP / 2 + 34); if (PP.puntoMarcado === miIdentidad || e.ultimoPunto === miIdentidad && ahora - PP.puntoT < 450) c.scale(pop, pop); c.fillStyle = 'rgba(255,255,255,0.6)'; c.fillText(String(yo), 0, 0); c.restore();
+    // Puntitos de saque: quién saca y cuántos saques le quedan
+    const saca = quienSacaPp(e), total = e.puntos.nico + e.puntos.carito, deuce = e.puntos.nico >= PUNTOS_PP - 1 && e.puntos.carito >= PUNTOS_PP - 1;
+    const quedanSaques = deuce ? 1 : 2 - (total % 2);
+    for (let k = 0; k < quedanSaques; k++) { c.fillStyle = '#ffe58a'; c.beginPath(); c.arc(W_PP - 10 - k * 7, saca === miIdentidad ? H_PP / 2 + 44 : H_PP / 2 - 44, 2.2, 0, Math.PI * 2); c.fill(); }
     const falta = e.inicio - VivoComun.reloj('pingpongvivo');
     c.textAlign = 'center';
     if (e.fase === 'jugando' && (falta > 0 || PP.puntoMarcado)) {
-        c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(0, H_PP / 2 - 46, W_PP, 30);
-        c.fillStyle = '#fff'; c.font = 'bold 13px monospace';
         const quien = PP.puntoMarcado || (falta > 0 && e.ultimoPunto);
-        const saca = quienSacaPp(e);
-        c.fillText(quien ? (quien === miIdentidad ? '¡Punto tuyo!' : `Punto de ${nombreJugador(quien)}`) : (saca === miIdentidad ? 'Sacás vos' : `Saca ${nombreJugador(saca)}`), W_PP / 2, H_PP / 2 - 27);
+        if (!quien && falta > 0) {
+            const n = Math.ceil(falta / 1000), k = 1 - (falta % 1000) / 1000, esc = FxVivo.rebote(Math.min(1, k * 3));
+            c.save(); c.translate(W_PP / 2, H_PP / 2 - 30); c.scale(esc, esc); c.font = 'bold 30px monospace'; c.lineWidth = 4; c.strokeStyle = 'rgba(0,0,0,0.5)'; c.fillStyle = '#fff'; c.strokeText(String(n), 0, 0); c.fillText(String(n), 0, 0); c.restore();
+        }
+        c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(0, H_PP / 2 + 12, W_PP, 22);
+        c.fillStyle = '#fff'; c.font = 'bold 11px monospace';
+        c.fillText(quien ? (quien === miIdentidad ? '¡Punto tuyo!' : `Punto de ${nombreJugador(quien)}`) + (e.como && !PP.puntoMarcado ? ` · ${e.como}` : '') : (saca === miIdentidad ? 'Sacás vos' : `Saca ${nombreJugador(saca)}`), W_PP / 2, H_PP / 2 + 27);
     }
     c.textAlign = 'left';
+    if (PP.fx) PP.fx.despues(c);
     VivoComun.estado(c, W_PP, H_PP, PP.enlace, nombreJugador(miRival));
 }
 function buclePp(ts){
@@ -193,6 +262,7 @@ function buclePp(ts){
     PP.loop = requestAnimationFrame(buclePp);
 }
 function arrancarPp(){
+    PP.fx = PP.fx || FxVivo.crear();
     if (!PP.canvas) {
         PP.canvas = document.createElement('canvas');
         PP.canvas.width = W_PP; PP.canvas.height = H_PP;
@@ -216,11 +286,17 @@ function arrancarPp(){
                 if (d.c && d.c !== PP.clave) return;
                 const b = PP.bola;
                 if (t === 'p') {
-                    PP.suyo = { ...(PP.suyo || {}), x: d.mx, y: d.my };
-                    if (d.bx != null && !PP.dueno && b && !PP.puntoMarcado) { b.x += (d.bx - b.x) * 0.5; b.y += (d.by - b.y) * 0.5; b.vx = d.vx; b.vy = d.vy; b.efecto = d.ef; b.enMesa = !!d.em; }
+                    PP.suyo = VivoComun.recibir(PP.suyo, { x: d.mx, y: d.my });
+                    if (d.bx != null && !PP.dueno && b && !PP.puntoMarcado) { VivoComun.adelantar(b, { x: d.bx, y: d.by, vx: d.vx, vy: d.vy, efecto: d.ef }, moverBolaPp); b.enMesa = b.enMesa || !!d.em; }
                 }
-                if (t === 'golpe' && b) { PP.dueno = false; PP.golpes++; Object.assign(b, { x: d.x, y: d.y, vx: d.vx, vy: d.vy, efecto: d.efecto || 0, de: d.de, enMesa: false, sacada: true }); if (window.sfx) window.sfx.toque(); }
-                if (t === 'punto' && b && !PP.puntoMarcado) { PP.puntoMarcado = d.q; Object.assign(b, { x: d.x, y: d.y, vx: 0, vy: 0, efecto: 0 }); if (window.sfx) window.sfx[d.q === miIdentidad ? 'punto' : 'error'](); }
+                if (t === 'golpe' && b) {
+                    PP.dueno = false; PP.golpes++;
+                    VivoComun.adelantar(b, { x: d.x, y: d.y, vx: d.vx, vy: d.vy, efecto: d.efecto || 0, de: d.de, enMesa: false, sacada: true }, moverBolaPp);
+                    if (window.sfx) window.sfx.toque();
+                    PP.golpeVis[d.de] = performance.now();
+                    if (PP.fx) { const [sx, sy] = aPantallaPp(d.x, d.y); PP.fx.chispas(sx, sy, ['#fff', '#ffe58a'], 8); PP.fx.onda(sx, sy, { radio: 12, vida: 240 }); }
+                }
+                if (t === 'punto' && b && !PP.puntoMarcado) { PP.puntoMarcado = d.q; Object.assign(b, { x: d.x, y: d.y, vx: 0, vy: 0, efecto: 0 }); efectoPuntoPp(d.q, b); if (window.sfx) window.sfx[d.q === miIdentidad ? 'punto' : 'error'](); }
             }
         });
     }

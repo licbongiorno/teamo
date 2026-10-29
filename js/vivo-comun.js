@@ -333,7 +333,7 @@
         autitos: 'carrera', aventura: 'aventura', obstaculos: 'aventura', snake2: 'aventura',
         bombitas: 'batalla', tanques: 'batalla', motos: 'neon', pongcoop: 'neon',
         futbolcabezas: 'deporte', hockey: 'deporte', voley: 'deporte', pingpongvivo: 'deporte',
-        natacion: 'agua', pescavivo: 'agua', fuegoagua: 'templo', cocina: 'tranqui', bloques: 'tranqui',
+        natacion: 'agua', pescavivo: 'agua', fuegoagua: 'templo', cocina: 'tranqui', bloques: 'tranqui', pacman: 'neon',
     };
     // Juegos de la misma pantalla que manejan su propia música.
     const MUSICA_PROPIA = ['multiverso', 'astrofutbol'];

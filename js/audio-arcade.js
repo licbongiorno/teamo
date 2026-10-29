@@ -11,6 +11,7 @@
 //       paleta · ladrillo · comer · pisar · choque · gol · silbato · chapuzon
 //       disparo · punto · acierto · error · victoria · derrota · tick · ya
 //       swoosh · motor {vel 0..1}
+//       Pac-Neón: waka · latido · sirena · pildora · comeFantasma · atrapado · rescate · nivel
 //   AudioArcade.musica(tema, modo) → música generativa que no se repite igual:
 //       tema: espacio · aventura · carrera · neon · deporte · templo · batalla
 //             · tranqui · agua · arcade    (null = apagar)
@@ -81,7 +82,7 @@
     // ---------- Efectos ----------
     // Para no saturar: el mismo efecto no suena más de N veces por segundo.
     const ultimoSfx = {};
-    const MINIMO = { laser: 55, explosion: 40, golpe: 70, rebote: 45, paleta: 45, ladrillo: 35, moneda: 40, pisar: 60, choque: 90, motor: 90, tick: 120 };
+    const MINIMO = { waka: 120, sirena: 380, latido: 300, laser: 55, explosion: 40, golpe: 70, rebote: 45, paleta: 45, ladrillo: 35, moneda: 40, pisar: 60, choque: 90, motor: 90, tick: 120 };
     // Un poquito de variación de tono en cada golpe: suena menos a "máquina".
     const vari = () => 1 + (Math.random() - 0.5) * 0.08;
     function sfx(nombre, o = {}) {
@@ -133,6 +134,15 @@
             case 'tick': nota(880, t, 0.06, { tipo: 'square', vol: 0.06, filtro: 3000 }); break;
             case 'ya': nota(1320, t, 0.3, { tipo: 'square', vol: 0.08, filtro: 3500, eco: true }); nota(660, t, 0.3, { tipo: 'triangle', vol: 0.1 }); break;
             case 'swoosh': ruidoCorto(t, 0.22, { tipoFiltro: 'bandpass', desde: 600, hasta: 3500, vol: 0.22 }); break;
+            // ---- Pac-Neón ----
+            case 'waka': { const alto = (sfx._waka = !sfx._waka); nota(alto ? 520 : 390, t, 0.09, { tipo: 'triangle', hasta: alto ? 300 : 560, vol: 0.09, filtro: 2600 }); break; }
+            case 'latido': nota(70, t, 0.16, { tipo: 'sine', hasta: 45, vol: 0.32 }); nota(64, t + 0.2, 0.2, { tipo: 'sine', hasta: 40, vol: 0.24 }); break;
+            case 'sirena': { const sube = (sfx._sirena = !sfx._sirena); nota(sube ? 420 : 560, t, 0.5, { tipo: 'sine', hasta: sube ? 560 : 420, vol: 0.025, filtro: 1400 }); break; }
+            case 'pildora': [392, 523.3, 659.3, 784, 1046.5].forEach((f, i) => nota(f, t + i * 0.04, 0.3, { tipo: 'square', vol: 0.05, filtro: 3000, eco: true })); ruidoCorto(t, 0.4, { tipoFiltro: 'bandpass', desde: 800, hasta: 5000, vol: 0.12, eco: true }); break;
+            case 'comeFantasma': nota(180, t, 0.25, { tipo: 'sawtooth', hasta: 1400, vol: 0.08, filtro: 3200 }); nota(1400, t + 0.2, 0.25, { tipo: 'triangle', vol: 0.09, eco: true }); break;
+            case 'atrapado': nota(660, t, 0.6, { tipo: 'triangle', hasta: 110, vol: 0.14, eco: true }); ruidoCorto(t, 0.3, { desde: 1500, hasta: 200, vol: 0.2 }); break;
+            case 'rescate': [523.3, 659.3, 784, 1046.5, 1318.5].forEach((f, i) => { nota(f, t + i * 0.06, 0.6, { tipo: 'sine', vol: 0.11, eco: true }); nota(f * 1.5, t + i * 0.06 + 0.03, 0.4, { tipo: 'triangle', vol: 0.04, eco: true }); }); break;
+            case 'nivel': [523.3, 784, 1046.5, 784, 1046.5, 1568].forEach((f, i) => nota(f, t + i * 0.09, 0.22, { tipo: 'square', vol: 0.06, filtro: 3500, eco: i > 3 })); break;
             case 'motor': { const vel = Math.max(0, Math.min(1, o.vel || 0)); nota(70 + vel * 110, t, 0.12, { tipo: 'sawtooth', vol: 0.035 + vel * 0.03, filtro: 500 + vel * 700 }); break; }
             default: return false;
         }

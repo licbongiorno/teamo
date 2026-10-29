@@ -174,6 +174,7 @@ window.JUEGOS = [
     { id:'autitos', nombre:'Carrera de Autitos', icono:'🏎️', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Carreras vistas de arriba, en vivo: 3 vueltas, semáforo de largada y 4 circuitos. Con botones o inclinando el celu.' },
     { id:'voley', nombre:'Vóley de Playa', icono:'🏐', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Dos gotitas, una red y la pelota en el aire, en vivo. A 11 con 2 de diferencia.' },
     { id:'snake2', nombre:'Viborita de a Dos', icono:'🐍', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Las dos víboras en la misma grilla, en vivo: comé las manzanas antes que el otro. 2 minutos, gana la más larga.' },
+    { id:'pacman', nombre:'Pac-Neón de a Dos', icono:'🟡', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Un Pac-Man para los dos al mismo tiempo, cada uno desde su celu, con laberintos nuevos cada nivel. Si atrapan a uno, el otro tiene 10 segundos para rescatarlo.' },
     { id:'multiverso', nombre:'Multiverso Arcade', icono:'🌌', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Cuatro minijuegos espaciales para dos en la misma pantalla: aliens, asteroides, carrera unidos por un rayo y defensa de un planeta. Power-ups compartidos y ranking de parejas.' },
     { id:'astrofutbol', nombre:'Astro Fútbol', icono:'⚽', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Duelo de naves en la misma pantalla: empujá la pelota de plasma al arco del otro. Supertiro, power-ups y modo contra la compu.' },
     { id:'futbolcabezas', nombre:'Fútbol de Cabezas', icono:'⚽', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Dos cabezones, una pelota y dos arcos, en vivo: corré, saltá, cabeceá y pateá. A 5 goles o 2 minutos.' },
@@ -211,9 +212,9 @@ window.obtenerCategoria = function(categoriaId){
 (function(){
     const L = (t) => t.split(' ');
     const FIJAS = {
-        vivo: L('futbolcabezas pingpongvivo natacion aventura fuegoagua autitos voley snake2 pongcoop tanques pescavivo obstaculos hockey motos bombitas cocina cifras sopa tabu reflejos tuttifrutti palabras dibujayadivina mente rosco palabradia multiverso astrofutbol truco uno onda codigo generala'),
+        vivo: L('pacman futbolcabezas pingpongvivo natacion aventura fuegoagua autitos voley snake2 pongcoop tanques pescavivo obstaculos hockey motos bombitas cocina cifras sopa tabu reflejos tuttifrutti palabras dibujayadivina mente rosco palabradia multiverso astrofutbol truco uno onda codigo generala'),
         mismaPantalla: L('multiverso astrofutbol'),
-        equipo: L('aventura laberinto cocina faros mente codigo onda emojipelis tabu historia exquisito pesca escaperoom sudoku multiverso'),
+        equipo: L('pacman aventura laberinto cocina faros mente codigo onda emojipelis tabu historia exquisito pesca escaperoom sudoku multiverso'),
         corto: L('natacion futbolcabezas obstaculos fosforos chancho tateti ppt reflejos calculo trivia sopa palabradia cifras hockey motos mastermind astrofutbol'),
         // Los que tienen el botón 🤖 (js/compu.js: CEREBROS + CON_CEREBRO_DIFERIDO, más los que traen su propia compu).
         compu: L('truco escoba chinchon uno ajedrez damas conecta4 tateti reversi generala mentiroso gomoku mancala serpientes parchis domino backgammon guerra blackjack poker damaschinas quoridor cifras mastermind hex fosforos chancho sieteymedio pescar voley hockey pongcoop snake2 futbolcabezas pingpongvivo natacion motos bombitas tanques autitos trivia astrofutbol multiverso'),
@@ -240,7 +241,7 @@ window.obtenerCategoria = function(categoriaId){
     };
     // El sello ✨ Nuevo sólo para lo último que se sumó (y hasta que lo abran):
     // "nuevo:true" lo tienen muchos y lo usa el recomendador, pero en todas las tarjetas se pierde.
-    window.NOVEDADES_JUEGOS = L('astrofutbol multiverso futbolcabezas pingpongvivo natacion tanques pescavivo obstaculos');
+    window.NOVEDADES_JUEGOS = L('pacman astrofutbol multiverso futbolcabezas pingpongvivo natacion tanques pescavivo obstaculos');
     const icono = (j) => j.iconoSvg ? `<svg class="icono-svg"><use href="#${j.iconoSvg}"></use></svg>` : j.icono;
     // La tarjeta de un juego, igual en el menú, el buscador, el recomendador y las categorías.
     //   opciones: { href, destacado, sinEtiquetas }

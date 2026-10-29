@@ -168,14 +168,14 @@ function tomarGemaFa(id){
     if (window.sfx) window.sfx.acierto();
     FA.enlace && FA.enlace.enviar('gema', { id, c: FA.clave }, true);
     const clave = FA.clave;
-    FuegoAgua.accion((e) => e.nivel + '-' + e.inicio !== clave || (e.tomados || []).includes(id) ? null : { tomados: [...(e.tomados || []), id], gemas: (e.gemas || 0) + 1 });
+    FuegoAgua.accionEnCola((e) => e.nivel + '-' + e.inicio !== clave || (e.tomados || []).includes(id) ? null : { tomados: [...(e.tomados || []), id], gemas: (e.gemas || 0) + 1 });
 }
 async function moverPalancaFa(abrir){
     FA.moviendoPalanca = true;
     vibrarJ(10);
     if (window.sfx) window.sfx.click();
     const clave = FA.clave;
-    try { await FuegoAgua.accion((e) => e.nivel + '-' + e.inicio !== clave || !!e.palanca === abrir ? null : { palanca: abrir }); }
+    try { await FuegoAgua.accionEnCola((e) => e.nivel + '-' + e.inicio !== clave || !!e.palanca === abrir ? null : { palanca: abrir }); }
     finally { FA.moviendoPalanca = false; }
 }
 function morirFa(porque){
@@ -185,7 +185,7 @@ function morirFa(porque){
     if (window.sfx) window.sfx.error();
     if (window.animJuegos) window.animJuegos.cartel(porque, { dur: 900, sonido: false });
     const clave = FA.clave;
-    FuegoAgua.accion((e) => e.nivel + '-' + e.inicio !== clave ? null : { muertes: (e.muertes || 0) + 1 });
+    FuegoAgua.accionEnCola((e) => e.nivel + '-' + e.inicio !== clave ? null : { muertes: (e.muertes || 0) + 1 });
     setTimeout(() => { if (FA.yo) Object.assign(FA.yo, { x: FA.salida.x, y: FA.salida.y, vx: 0, vy: 0 }); FA.muriendo = false; }, 700);
 }
 let _completandoFa = false;
@@ -195,7 +195,7 @@ async function completarFa(){
     const clave = FA.clave;
     let paso = null;
     try {
-        await FuegoAgua.accion((e) => {
+        await FuegoAgua.accionEnCola((e) => {
             paso = null;
             if (e.nivel + '-' + e.inicio !== clave) return null;
             paso = e.nivel;
@@ -268,7 +268,7 @@ function bucleFa(ts){
             setTimeout(() => {
                 FA._guardandoCajas = false;
                 const clave = FA.clave, estado = FA.cajas.map(cj => ({ i: cj.id, x: Math.round(cj.x), y: Math.round(cj.y) }));
-                FuegoAgua.accion((e) => e.nivel + '-' + e.inicio !== clave ? null : { cajas: estado });
+                FuegoAgua.accionEnCola((e) => e.nivel + '-' + e.inicio !== clave ? null : { cajas: estado });
             }, 1200);
         }
     }

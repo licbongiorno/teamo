@@ -16,12 +16,12 @@ const JUEGOS_QUE_USAN_ARCADE_COMUN = ['burbujas', 'bombas', 'pinatas', 'carrerag
 
 // Juegos nuevos armados sobre js/juegos/base-turnos.js (listos, turnos,
 // fin de partida, revancha, compu).
-const JUEGOS_QUE_USAN_BASE_TURNOS = ['gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker', 'codigo', 'onda', 'mente', 'palabradia', 'rosco', 'sopa', 'laberinto', 'cocina', 'faros', 'damaschinas', 'quoridor', 'cifras', 'encadenadas', 'exquisito', 'mastermind', 'hex', 'fosforos', 'chancho', 'sieteymedio', 'pescar', 'historia', 'emojipelis', 'tabu', 'aventura', 'hockey', 'motos', 'bombitas', 'fuegoagua'];
+const JUEGOS_QUE_USAN_BASE_TURNOS = ['gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker', 'codigo', 'onda', 'mente', 'palabradia', 'rosco', 'sopa', 'laberinto', 'cocina', 'faros', 'damaschinas', 'quoridor', 'cifras', 'encadenadas', 'exquisito', 'mastermind', 'hex', 'fosforos', 'chancho', 'sieteymedio', 'pescar', 'historia', 'emojipelis', 'tabu', 'aventura', 'hockey', 'motos', 'bombitas', 'fuegoagua', 'autitos'];
 
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 73;
+const VERSION_CACHE = 74;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)

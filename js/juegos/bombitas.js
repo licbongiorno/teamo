@@ -45,7 +45,7 @@ function bloqueaBom(cx, cy, p){
 }
 // Simula explosiones (con cadenas) hasta ahora. Igual en los dos celus.
 function simularBom(){
-    const ahora = window.ahoraSync();
+    const ahora = VivoComun.reloj('bombitas');
     let cambio = true;
     while (cambio) {
         cambio = false;
@@ -72,7 +72,7 @@ function pasoBom(dt){
     const e = BM.estado, p = BM.yo;
     if (!e || e.fase !== 'jugando' || !p || !BM.mapa) return;
     simularBom();
-    if (window.ahoraSync() < e.inicio || BM.muerto) return;
+    if (VivoComun.reloj('bombitas') < e.inicio || BM.muerto) return;
     const k = BM.teclas, v = 1.35 * dt, tam = 12;
     let dx = (k.der ? 1 : 0) - (k.izq ? 1 : 0), dy = dx ? 0 : (k.abajo ? 1 : 0) - (k.arriba ? 1 : 0);
     const mover = (nx, ny) => {
@@ -102,11 +102,11 @@ function pasoBom(dt){
 }
 function ponerBombaBom(){
     const e = BM.estado, p = BM.yo;
-    if (!e || e.fase !== 'jugando' || !p || BM.muerto || window.ahoraSync() < e.inicio) return;
+    if (!e || e.fase !== 'jugando' || !p || BM.muerto || VivoComun.pausa('bombitas') || VivoComun.reloj('bombitas') < e.inicio) return;
     const cx = Math.floor((p.x + 6) / T_BOM), cy = Math.floor((p.y + 6) / T_BOM);
     const mias = BM.bombas.filter(b => !b.exploto && b.duenio === miIdentidad).length;
     if (mias >= BM.maxBombas || BM.bombas.some(b => !b.exploto && b.x === cx && b.y === cy)) return;
-    const b = { id: miIdentidad[0] + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), x: cx, y: cy, t: window.ahoraSync() + MECHA_BOM, alcance: BM.alcance, duenio: miIdentidad, pisando: true };
+    const b = { id: miIdentidad[0] + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), x: cx, y: cy, t: VivoComun.reloj('bombitas') + MECHA_BOM, alcance: BM.alcance, duenio: miIdentidad, pisando: true };
     BM.bombas.push(b); BM.idsBomba.add(b.id);
     vibrarJ(8);
     BM.enlace && BM.enlace.enviar('bomba', { ...b, pisando: false, c: BM.clave }, true);
@@ -123,13 +123,13 @@ async function morirBom(){
         const otro = miIdentidad === 'nico' ? 'carito' : 'nico';
         const rondas = { ...e.rondas, [otro]: e.rondas[otro] + 1 };
         if (rondas[otro] >= RONDAS_BOM) return { rondas, ganador: otro, motivo: `${rondas.nico} a ${rondas.carito} en rondas.` };
-        return { rondas, clave: Math.random().toString(36).slice(2, 7), semilla: Math.floor(Math.random() * 1e9), inicio: window.ahoraSync() + 3000, aviso: `💥 Explotó ${nombreJugador(miIdentidad)}: ronda para ${nombreJugador(otro)}.` };
+        return { rondas, clave: Math.random().toString(36).slice(2, 7), semilla: Math.floor(Math.random() * 1e9), inicio: VivoComun.reloj('bombitas') + 3000, aviso: `💥 Explotó ${nombreJugador(miIdentidad)}: ronda para ${nombreJugador(otro)}.` };
     });
 }
 function dibujarBom(){
     const c = BM.ctx, e = BM.estado;
     if (!c || !e || !BM.mapa) return;
-    const W = COLS_BOM * T_BOM, H = FILAS_BOM * T_BOM, ahora = window.ahoraSync();
+    const W = COLS_BOM * T_BOM, H = FILAS_BOM * T_BOM, ahora = VivoComun.reloj('bombitas');
     c.fillStyle = '#3f8a5c'; c.fillRect(0, 0, W, H);
     for (let y = 0; y < FILAS_BOM; y++) for (let x = 0; x < COLS_BOM; x++) {
         const ch = BM.mapa[y][x], px = x * T_BOM, py = y * T_BOM;
@@ -175,6 +175,7 @@ function dibujarBom(){
 function bucleBom(ts){
     const pantalla = document.getElementById('pantalla-bombitas');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararBom(); return; }
+    if (VivoComun.pausa('bombitas')) { BM.ultimoTs = 0; dibujarBom(); VivoComun.cartelPausa(BM.ctx); BM.loop = requestAnimationFrame(bucleBom); return; }
     const dt = Math.min(2.5, (ts - (BM.ultimoTs || ts)) / 16.67 || 1);
     BM.ultimoTs = ts;
     pasoBom(dt);
@@ -242,6 +243,7 @@ const Bombitas = JuegoTurnos.crear({
         BM.estado = e;
         const host = cont.querySelector('#bombitas-host');
         if (!host) return;
+        VivoComun.montar('bombitas', Bombitas, host, e);
         if (BM.clave !== e.clave) reiniciarBom(e);
         if (e.fase === 'jugando') arrancarBom();
         if (BM.canvas) { host.appendChild(BM.canvas); if (BM.controles && e.fase === 'jugando') host.appendChild(BM.controles); dibujarBom(); }

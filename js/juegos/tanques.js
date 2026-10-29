@@ -58,7 +58,7 @@ function moverBalaTq(b, dt){
 function pasoTq(dt){
     const e = TQ.estado, p = TQ.yo;
     if (!e || e.fase !== 'jugando' || !p) return;
-    const ahora = window.ahoraSync();
+    const ahora = VivoComun.reloj('tanques');
     // Las balas siguen aunque yo esté muerto (las del otro también).
     TQ.balas.forEach(b => moverBalaTq(b, dt));
     TQ.balas = TQ.balas.filter(b => b.rebotes <= 2 && ahora - b.t < 4000);
@@ -82,7 +82,7 @@ function pasoTq(dt){
     }
 }
 function dispararTq(p){
-    const b = { id: miIdentidad[0] + (++TQ.nBala), de: miIdentidad, x: p.x + Math.cos(p.a) * (R_TQ + 4), y: p.y + Math.sin(p.a) * (R_TQ + 4), vx: Math.cos(p.a) * 3, vy: Math.sin(p.a) * 3, t: window.ahoraSync(), rebotes: 0 };
+    const b = { id: miIdentidad[0] + (++TQ.nBala), de: miIdentidad, x: p.x + Math.cos(p.a) * (R_TQ + 4), y: p.y + Math.sin(p.a) * (R_TQ + 4), vx: Math.cos(p.a) * 3, vy: Math.sin(p.a) * 3, t: VivoComun.reloj('tanques'), rebotes: 0 };
     if (muroTq(b.x, b.y)) return;
     TQ.balas.push(b);
     vibrarJ(8);
@@ -103,7 +103,7 @@ async function meDieronTq(b){
         const puntos = { ...e.puntos, [otro]: e.puntos[otro] + 1 };
         const texto = propia ? `¡${nombreJugador(miIdentidad)} se dio con su propia bala! Ronda para ${nombreJugador(otro)}.` : `¡${nombreJugador(otro)} le dio a ${nombreJugador(miIdentidad)}!`;
         if (puntos[otro] >= RONDAS_TQ) return { puntos, ganador: otro, motivo: `${puntos.nico} a ${puntos.carito} en rondas.` };
-        return { puntos, clave: Math.random().toString(36).slice(2, 7), semilla: Math.floor(Math.random() * 1e9), inicio: window.ahoraSync() + 2600, aviso: texto };
+        return { puntos, clave: Math.random().toString(36).slice(2, 7), semilla: Math.floor(Math.random() * 1e9), inicio: VivoComun.reloj('tanques') + 2600, aviso: texto };
     });
 }
 function dibujarTq(){
@@ -135,7 +135,7 @@ function dibujarTq(){
     c.fillStyle = 'rgba(20,16,30,0.55)'; c.fillRect(0, 0, W_TQ, 14);
     c.fillStyle = '#fff'; c.font = 'bold 9px monospace';
     c.fillText(`${nombreJugador(miIdentidad)} ${e.puntos[miIdentidad]} · ${e.puntos[miRival]} ${nombreJugador(miRival)}  (a ${RONDAS_TQ})`, 4, 10);
-    const falta = e.inicio - window.ahoraSync();
+    const falta = e.inicio - VivoComun.reloj('tanques');
     if (e.fase === 'jugando' && falta > 0) {
         c.fillStyle = 'rgba(20,16,30,0.6)'; c.fillRect(0, H_TQ / 2 - 26, W_TQ, 44);
         c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 22px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W_TQ / 2, H_TQ / 2);
@@ -146,6 +146,7 @@ function dibujarTq(){
 function bucleTq(ts){
     const pantalla = document.getElementById('pantalla-tanques');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararTq(); return; }
+    if (VivoComun.pausa('tanques')) { TQ.ultimoTs = 0; dibujarTq(); VivoComun.cartelPausa(TQ.ctx); TQ.loop = requestAnimationFrame(bucleTq); return; }
     const dt = Math.min(2.5, (ts - (TQ.ultimoTs || ts)) / 16.67 || 1);
     TQ.ultimoTs = ts;
     pasoTq(dt);
@@ -175,7 +176,7 @@ function arrancarTq(){
                 if (t === 'bala' && !TQ.balas.some(b => b.id === d.id)) {
                     // La bala salió hace un ratito: la adelanto lo que tardó en llegar.
                     const b = { id: d.id, de: d.de, x: d.x, y: d.y, vx: d.vx, vy: d.vy, t: d.t, rebotes: 0 };
-                    const atraso = Math.min(20, Math.max(0, (window.ahoraSync() - d.t) / 16.67));
+                    const atraso = Math.min(20, Math.max(0, (VivoComun.reloj('tanques') - d.t) / 16.67));
                     for (let i = 0; i < atraso; i++) moverBalaTq(b, 1);
                     TQ.balas.push(b);
                     if (window.sfx) window.sfx.golpe();
@@ -205,6 +206,7 @@ const Tanques = JuegoTurnos.crear({
         TQ.estado = e;
         const host = cont.querySelector('#tanques-host');
         if (!host) return;
+        VivoComun.montar('tanques', Tanques, host, e);
         if (TQ.clave !== e.clave) reiniciarTq(e);
         if (e.fase === 'jugando') { arrancarTq(); host.appendChild(TQ.canvas); host.appendChild(TQ.controles); }
         else if (TQ.canvas) { host.appendChild(TQ.canvas); dibujarTq(); }

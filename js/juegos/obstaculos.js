@@ -47,7 +47,7 @@ const celdaOb = (x, y) => (y < 0 ? '.' : y >= FILAS_OB ? '.' : x < 0 ? '#' : x >
 function caidaOb(x, y){
     const t = OB.caidas[x + ',' + y];
     if (!t) return 0;
-    const d = window.ahoraSync() - t;
+    const d = VivoComun.reloj('obstaculos') - t;
     return d < 500 ? 1 : d < 3000 ? 2 : 0;
 }
 function solidoOb(x, y){
@@ -58,7 +58,7 @@ function solidoOb(x, y){
 }
 // Martillo: baja y sube con el reloj compartido (igual en los dos celus).
 function posMartilloOb(m){
-    const t = (window.ahoraSync() - (OB.estado ? OB.estado.inicio : 0)) / 1000;
+    const t = (VivoComun.reloj('obstaculos') - (OB.estado ? OB.estado.inicio : 0)) / 1000;
     const baja = Math.max(0, Math.sin(t * m.vel + m.fase)) ** 0.6;
     return { x: m.x, y: -2 * T_OB + baja * (PISO_OB * T_OB - 3 * T_OB + 2 * T_OB), w: m.w, h: 3 * T_OB };
 }
@@ -71,7 +71,7 @@ function reiniciarOb(e){
 }
 function pasoOb(dt){
     const e = OB.estado, p = OB.yo;
-    if (!e || e.fase !== 'jugando' || !p || OB.muriendo || OB.llegue || window.ahoraSync() < e.inicio) return;
+    if (!e || e.fase !== 'jugando' || !p || OB.muriendo || OB.llegue || VivoComun.reloj('obstaculos') < e.inicio) return;
     const cajas = OB.martillos.map(posMartilloOb);
     Plataformas.mover(p, dt, OB.teclas, { T: T_OB, ancho: ANCHO_OB, alto: ALTO_OB, esSolido: solidoOb, cajas, otro: null, alEmpujar: () => 0, vel: 2.1 });
     // Martillo encima: te tira para atrás.
@@ -80,7 +80,7 @@ function pasoOb(dt){
     const x0 = Math.floor((p.x + 1) / T_OB), x1 = Math.floor((p.x + ANCHO_OB - 2) / T_OB), yPie = Math.floor((p.y + ALTO_OB + 1) / T_OB);
     if (p.suelo) for (const x of [x0, x1]) {
         const c = celdaOb(x, yPie);
-        if (c === 'Q' && !caidaOb(x, yPie)) OB.caidas[x + ',' + yPie] = window.ahoraSync();
+        if (c === 'Q' && !caidaOb(x, yPie)) OB.caidas[x + ',' + yPie] = VivoComun.reloj('obstaculos');
         if (c === 'R' || celdaOb(x, yPie - 1) === 'R') { p.vy = -10.5; p.suelo = false; if (window.sfx) window.sfx.rebote(); }
     }
     // Resorte también si lo piso (está arriba del piso)
@@ -103,7 +103,7 @@ function caerOb(){
 async function llegarOb(){
     if (OB.llegue) return;
     OB.llegue = true;
-    const clave = OB.clave, quien = miIdentidad, tiempo = window.ahoraSync() - OB.estado.inicio;
+    const clave = OB.clave, quien = miIdentidad, tiempo = VivoComun.reloj('obstaculos') - OB.estado.inicio;
     if (window.sfx) window.sfx.victoria();
     OB.enlace && OB.enlace.enviar('meta', { c: clave }, true);
     await Obstaculos.accionEnCola((e) => e.clave !== clave ? null : { ganador: quien, motivo: `${nombreJugador(quien)} llegó primero en ${(tiempo / 1000).toFixed(1)} s` });
@@ -154,7 +154,7 @@ function dibujarOb(){
     if (OB.yo) marca(OB.yo.x, miIdentidad);
     c.fillStyle = '#fff'; c.font = 'bold 8px monospace'; c.fillText('🏁', W - 36, 9);
     if (OB.yo && OB.el) { c.fillText(OB.yo.x >= OB.el.x ? '1°' : '2°', 6, 9); }
-    const falta = e.inicio - window.ahoraSync();
+    const falta = e.inicio - VivoComun.reloj('obstaculos');
     if (e.fase === 'jugando' && falta > 0) { c.fillStyle = 'rgba(20,16,30,0.5)'; c.fillRect(0, H / 2 - 22, W, 36); c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 20px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W / 2, H / 2 + 2); c.font = '8px monospace'; c.fillText('¡Sólo una de las tres puertas se abre!', W / 2, H / 2 + 11); c.textAlign = 'left'; }
     else if (OB.llegue && e.fase === 'jugando') { c.fillStyle = '#2a1f33'; c.textAlign = 'center'; c.font = 'bold 14px monospace'; c.fillText('🏁 ¡Llegaste!', W / 2, H / 2); c.textAlign = 'left'; }
     VivoComun.estado(c, W, H, OB.enlace, nombreJugador(miRival), e.fase === 'jugando' && falta < -500 && !OB.llegue);
@@ -162,6 +162,7 @@ function dibujarOb(){
 function bucleOb(ts){
     const pantalla = document.getElementById('pantalla-obstaculos');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararOb(); return; }
+    if (VivoComun.pausa('obstaculos')) { OB.ultimoTs = 0; dibujarOb(); VivoComun.cartelPausa(OB.ctx); OB.loop = requestAnimationFrame(bucleOb); return; }
     const dt = Math.min(2.5, (ts - (OB.ultimoTs || ts)) / 16.67 || 1);
     OB.ultimoTs = ts;
     pasoOb(dt);
@@ -212,6 +213,7 @@ const Obstaculos = JuegoTurnos.crear({
         OB.estado = e;
         const host = cont.querySelector('#obstaculos-host');
         if (!host) return;
+        VivoComun.montar('obstaculos', Obstaculos, host, e);
         if (OB.clave !== e.clave) reiniciarOb(e);
         if (e.fase === 'jugando') { arrancarOb(); host.appendChild(OB.canvas); host.appendChild(OB.controles); }
         else if (OB.canvas) { host.appendChild(OB.canvas); dibujarOb(); }

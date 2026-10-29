@@ -54,8 +54,8 @@ function pasoVo(dt){
     const dir = ((VO.teclas.der ? 1 : 0) - (VO.teclas.izq ? 1 : 0)) * (espejoVo() ? -1 : 1);
     moverGotitaVo(s, dir, VO.teclas.salto, miIdentidad, dt, 3.1);
     const compu = compuVo();
-    if (compu && VO.el && window.ahoraSync() >= e.inicio) pensarCompuVo(VO.el, compu.nivel, dt);
-    if (window.ahoraSync() < e.inicio || VO.puntoMarcado) return;
+    if (compu && VO.el && VivoComun.reloj('voley') >= e.inicio) pensarCompuVo(VO.el, compu.nivel, dt);
+    if (VivoComun.reloj('voley') < e.inicio || VO.puntoMarcado) return;
     const b = VO.pelota;
     moverPelotaVo(b, dt);
     if (compu && VO.el && chocarVo(VO.el, b) && Date.now() - VO.ultimoToque > 120) { VO.ultimoToque = Date.now(); if (window.sfx) window.sfx.toque(); }
@@ -104,7 +104,7 @@ async function marcarPuntoVo(quien){
         const puntos = { ...e.puntos, [quien]: e.puntos[quien] + 1 };
         const otro = quien === 'nico' ? 'carito' : 'nico';
         if (puntos[quien] >= PUNTOS_VO && puntos[quien] - puntos[otro] >= 2) return { puntos, ganador: quien, motivo: `¡${puntos.nico} a ${puntos.carito}!` };
-        return { puntos, saque: quien, clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 1400, ultimoPunto: quien, pique: Math.round(VO.pelota.x) };
+        return { puntos, saque: quien, clave: Math.random().toString(36).slice(2, 7), inicio: VivoComun.reloj('voley') + 1400, ultimoPunto: quien, pique: Math.round(VO.pelota.x) };
     });
 }
 function dibujarVo(){
@@ -159,7 +159,7 @@ function dibujarVo(){
     c.fillText(String(yo), W_VO / 2 - 40, 26); c.fillText(String(el), W_VO / 2 + 40, 26);
     c.font = 'bold 9px monospace'; c.fillText('—', W_VO / 2, 23);
     const saco = e.saque === miIdentidad;
-    const falta = e.inicio - window.ahoraSync();
+    const falta = e.inicio - VivoComun.reloj('voley');
     if (e.fase === 'jugando' && (falta > 0 || VO.puntoMarcado)) {
         c.font = 'bold 13px monospace'; c.fillStyle = 'rgba(42,31,51,0.75)';
         const quien = VO.puntoMarcado || (falta > 0 && e.ultimoPunto);
@@ -173,6 +173,7 @@ function dibujarVo(){
 function bucleVo(ts){
     const pantalla = document.getElementById('pantalla-voley');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararVo(); return; }
+    if (VivoComun.pausa('voley')) { VO.ultimoTs = 0; dibujarVo(); VivoComun.cartelPausa(VO.ctx); VO.loop = requestAnimationFrame(bucleVo); return; }
     const dt = Math.min(2.5, (ts - (VO.ultimoTs || ts)) / 16.67 || 1);
     VO.ultimoTs = ts;
     pasoVo(dt);
@@ -231,6 +232,7 @@ const Voley = JuegoTurnos.crear({
         VO.estado = e;
         const host = cont.querySelector('#voley-host');
         if (!host) return;
+        VivoComun.montar('voley', Voley, host, e);
         if (VO.clave !== e.clave) reiniciarVo(e);
         if (e.fase === 'jugando') { arrancarVo(); host.appendChild(VO.canvas); host.appendChild(VO.controles); }
         else if (VO.canvas) { host.appendChild(VO.canvas); dibujarVo(); }

@@ -34,7 +34,7 @@ const envolverSn = (x, y) => [(x + COLS_SN) % COLS_SN, (y + FILAS_SN) % FILAS_SN
 function pasoSn(){
     const e = SN.estado, p = SN.yo;
     if (!e || e.fase !== 'jugando' || !p) return;
-    const ahora = window.ahoraSync();
+    const ahora = VivoComun.reloj('snake2');
     if (ahora < e.inicio) return;
     if (ahora >= e.inicio + DURA_SN) { terminarSn(); return; }
     const debido = Math.floor((ahora - e.inicio) / PASO_SN);
@@ -119,7 +119,7 @@ async function terminarSn(){
     const bot = compuSn() && SN.el ? { [miRival]: SN.el.cuerpo.length } : {};
     await Snake2.accionEnCola((e) => e.clave !== clave ? null : { largos: { ...e.largos, [quien]: largo, ...bot } });
     setTimeout(() => Snake2.accionEnCola((e) => {
-        if (e.clave !== clave || window.ahoraSync() < e.inicio + DURA_SN) return null;
+        if (e.clave !== clave || VivoComun.reloj('snake2') < e.inicio + DURA_SN) return null;
         const l = e.largos, g = l.nico === l.carito ? 'empate' : l.nico > l.carito ? 'nico' : 'carito';
         return { ganador: g, motivo: `Largos: ${nombreJugador('nico')} ${l.nico} · ${nombreJugador('carito')} ${l.carito}` };
     }), 700);
@@ -158,17 +158,18 @@ function dibujarSn(){
     // Tablero
     c.fillStyle = 'rgba(0,0,0,0.5)'; c.fillRect(0, 0, W, 16);
     c.fillStyle = '#fff'; c.font = 'bold 10px monospace';
-    const quedan = Math.max(0, Math.ceil((e.inicio + DURA_SN - window.ahoraSync()) / 1000));
+    const quedan = Math.max(0, Math.ceil((e.inicio + DURA_SN - VivoComun.reloj('snake2')) / 1000));
     const ly = SN.yo.cuerpo.length, le = SN.el ? SN.el.cuerpo.length : 3;
     c.fillText(`🐍 Vos ${ly} · ${nombreJugador(miRival)} ${le}`, 4, 12);
     c.textAlign = 'right'; c.fillText(`⏱ ${Math.floor(quedan / 60)}:${String(quedan % 60).padStart(2, '0')}`, W - 12, 12); c.textAlign = 'left';
-    VivoComun.estado(c, W, H, SN.enlace, nombreJugador(miRival), e.fase === 'jugando' && window.ahoraSync() > e.inicio + 500);
-    const falta = e.inicio - window.ahoraSync();
+    VivoComun.estado(c, W, H, SN.enlace, nombreJugador(miRival), e.fase === 'jugando' && VivoComun.reloj('snake2') > e.inicio + 500);
+    const falta = e.inicio - VivoComun.reloj('snake2');
     if (e.fase === 'jugando' && falta > 0) { c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 30px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W / 2, H / 2); c.font = '10px monospace'; c.fillText('Vos sos la ' + (miIdentidad === 'nico' ? 'azul' : 'rosa'), W / 2, H / 2 + 20); c.textAlign = 'left'; }
 }
 function bucleSn(){
     const pantalla = document.getElementById('pantalla-snake2');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararSn(); return; }
+    if (VivoComun.pausa('snake2')) { SN.ultimoTs = 0; dibujarSn(); VivoComun.cartelPausa(SN.ctx); SN.loop = requestAnimationFrame(bucleSn); return; }
     pasoSn();
     if (SN.enlace && SN.yo && SN.yo.k !== SN.ultimoPaso) {
         SN.ultimoPaso = SN.yo.k;
@@ -236,6 +237,7 @@ const Snake2 = JuegoTurnos.crear({
         SN.estado = e;
         const host = cont.querySelector('#snake2-host');
         if (!host) return;
+        VivoComun.montar('snake2', Snake2, host, e);
         if (SN.clave !== e.clave) reiniciarSn(e);
         if (e.fase === 'jugando') { arrancarSn(); host.appendChild(SN.canvas); host.appendChild(SN.botones); }
         else if (SN.canvas) { host.appendChild(SN.canvas); dibujarSn(); }

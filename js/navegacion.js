@@ -1,4 +1,26 @@
 // ==================== NAVEGACIÓN ENTRE JUEGOS ====================
+// Juegos viejos que arrancan con una función global iniciarX() (los
+// nuevos se registran solos en window.INICIAR_JUEGO).
+const ARRANQUE_JUEGOS = {
+    ahorcado: 'iniciarAhorcado', frutas: 'iniciarFrutas', truco: 'iniciarTruco', letras: 'iniciarLetras', damas: 'iniciarDamas',
+    ajedrez: 'iniciarAjedrez', jardin: 'iniciarJardin', indagacion: 'iniciarIndagacion', ruleta: 'iniciarRuleta', verdadoreto: 'iniciarVerdadOReto',
+    tateti: 'iniciarTateti', conecta4: 'iniciarConecta4', reversi: 'iniciarReversi', mentiroso: 'iniciarMentiroso',
+    dosverdades: 'iniciarDosVerdades', pingpong: 'iniciarPingPong', cajitas: 'iniciarCajitas', generala: 'iniciarGenerala',
+    tuttifrutti: 'iniciarTuttiFrutti', palabras: 'iniciarPalabras', reflejos: 'iniciarReflejos', mascota: 'iniciarMascota', escoba: 'iniciarEscoba',
+    batallanaval: 'iniciarBatallaNaval', espejo: 'iniciarEspejo', mentiraverdad: 'iniciarMentiraVerdad', mentegemela: 'iniciarMenteGemela',
+    adn: 'iniciarAdn', palabraexplosiva: 'iniciarPalabraExplosiva', memoria: 'iniciarMemoria', adivinaquien: 'iniciarAdivinaQuien',
+    tiraafloja: 'iniciarTiraAfloja', arbol: 'iniciarArbol', refugio: 'iniciarRefugio', puntoencuentro: 'iniciarPuntoEncuentro',
+    dibujayadivina: 'iniciarDibujaYAdivina', cartas: 'iniciarCartas', capsula: 'iniciarCapsula', mapa: 'iniciarMapa',
+    escaperoom: 'iniciarEscapeRoom', ruedapremios: 'iniciarRuedaPremios', termometro: 'iniciarTermometro', veinte: 'iniciarVeinte',
+    estadisticas: 'iniciarEstadisticas', ranking: 'iniciarRanking', sudoku: 'iniciarSudoku', uno: 'iniciarUno', chinchon: 'iniciarChinchon',
+    burbujas: 'iniciarBurbujas', bombas: 'iniciarBombas', pinatas: 'iniciarPinatas', carreraglobos: 'iniciarCarreraGlobos', ritmo: 'iniciarRitmo',
+    bloques: 'iniciarBloques', cocodrilos: 'iniciarCocodrilos', pesca: 'iniciarPesca', ladrillos: 'iniciarLadrillos', calculo: 'iniciarCalculo',
+    stroop: 'iniciarStroop', anagramas: 'iniciarAnagramas', tipeo: 'iniciarTipeo', topo: 'iniciarTopo', blancomovil: 'iniciarBlancoMovil',
+    buscaminas: 'iniciarBuscaminas', ppt: 'iniciarPPT', trivia: 'iniciarTrivia', quientienerazon: 'iniciarQuienTieneRazon',
+    menumisterioso: 'iniciarMenuMisterioso', semaforo: 'iniciarSemaforo', serenata: 'iniciarSerenata', debeuna: 'iniciarDebeUna',
+    duelomemes: 'iniciarDueloMemes', traductorenojos: 'iniciarTraductorEnojos', barometro: 'iniciarBarometro', capsulavoz: 'iniciarCapsulaVoz',
+    nostalgia: 'iniciarNostalgia', simon: 'iniciarSimon', memoriarelampago: 'iniciarMemoriaRelampago',
+};
 async function abrirJuego(juego){
     vibrarJ(12);
     if (window.sfx) window.sfx.abrirJuego();
@@ -23,32 +45,9 @@ async function abrirJuego(juego){
         return;
     }
 
-    if (juego === 'ahorcado') iniciarAhorcado();
-    if (juego === 'frutas') iniciarFrutas();
-    if (juego === 'truco') iniciarTruco();
-    if (juego === 'letras') iniciarLetras();
-    if (juego === 'damas') iniciarDamas();
-    if (juego === 'ajedrez') iniciarAjedrez();
-    if (juego === 'jardin') iniciarJardin();
-    if (juego === 'indagacion') iniciarIndagacion();
-    if (juego === 'ruleta') iniciarRuleta();
-    if (juego === 'verdadoreto') iniciarVerdadOReto();
-    if (juego === 'tateti') iniciarTateti();
-    if (juego === 'conecta4') iniciarConecta4();
-    if (juego === 'reversi') iniciarReversi();
-    if (juego === 'mentiroso') iniciarMentiroso();
-    if (juego === 'dosverdades') iniciarDosVerdades();
-    if (juego === 'pingpong') iniciarPingPong();
-    if (juego === 'cajitas') iniciarCajitas();
-    if (juego === 'generala') iniciarGenerala();
-    if (juego === 'tuttifrutti') iniciarTuttiFrutti();
-    if (juego === 'palabras') iniciarPalabras();
-    if (juego === 'reflejos') iniciarReflejos();
-    if (juego === 'mascota') iniciarMascota();
-    if (juego === 'escoba') iniciarEscoba();
-    if (juego === 'batallanaval') iniciarBatallaNaval();
-    if (juego === 'espejo') iniciarEspejo();
-    if (juego === 'mentiraverdad') iniciarMentiraVerdad();
+    // Cada juego arranca con su función (tabla de abajo) o, los nuevos, por el registro.
+    const arranque = ARRANQUE_JUEGOS[juego] && window[ARRANQUE_JUEGOS[juego]];
+    if (typeof arranque === 'function') arranque();
 
     // Los juegos de "responder y revelar" comparten un mismo motor
     // genérico (js/motor-reflexion.js): todos arrancan igual, sólo
@@ -56,58 +55,6 @@ async function abrirJuego(juego){
     const JUEGOS_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones', 'queprefieres', 'masprobable', 'completafrase', 'preguntadia', 'tepreguntoyo', 'treintayseis', 'mapaamor'];
     if (JUEGOS_MOTOR_REFLEXION.includes(juego)) iniciarReflexionGenerico(juego);
 
-    if (juego === 'mentegemela') iniciarMenteGemela();
-    if (juego === 'adn') iniciarAdn();
-    if (juego === 'palabraexplosiva') iniciarPalabraExplosiva();
-    if (juego === 'memoria') iniciarMemoria();
-    if (juego === 'adivinaquien') iniciarAdivinaQuien();
-    if (juego === 'tiraafloja') iniciarTiraAfloja();
-    if (juego === 'arbol') iniciarArbol();
-    if (juego === 'refugio') iniciarRefugio();
-    if (juego === 'puntoencuentro') iniciarPuntoEncuentro();
-    if (juego === 'dibujayadivina') iniciarDibujaYAdivina();
-    if (juego === 'cartas') iniciarCartas();
-    if (juego === 'capsula') iniciarCapsula();
-    if (juego === 'mapa') iniciarMapa();
-    if (juego === 'escaperoom') iniciarEscapeRoom();
-    if (juego === 'ruedapremios') iniciarRuedaPremios();
-    if (juego === 'termometro') iniciarTermometro();
-    if (juego === 'veinte') iniciarVeinte();
-    if (juego === 'estadisticas') iniciarEstadisticas();
-    if (juego === 'ranking') iniciarRanking();
-    if (juego === 'sudoku') iniciarSudoku();
-    if (juego === 'uno') iniciarUno();
-    if (juego === 'chinchon') iniciarChinchon();
-    if (juego === 'burbujas') iniciarBurbujas();
-    if (juego === 'bombas') iniciarBombas();
-    if (juego === 'pinatas') iniciarPinatas();
-    if (juego === 'carreraglobos') iniciarCarreraGlobos();
-    if (juego === 'ritmo') iniciarRitmo();
-    if (juego === 'bloques') iniciarBloques();
-    if (juego === 'cocodrilos') iniciarCocodrilos();
-    if (juego === 'pesca') iniciarPesca();
-    if (juego === 'ladrillos') iniciarLadrillos();
-    if (juego === 'calculo') iniciarCalculo();
-    if (juego === 'stroop') iniciarStroop();
-    if (juego === 'anagramas') iniciarAnagramas();
-    if (juego === 'tipeo') iniciarTipeo();
-    if (juego === 'topo') iniciarTopo();
-    if (juego === 'blancomovil') iniciarBlancoMovil();
-    if (juego === 'buscaminas') iniciarBuscaminas();
-    if (juego === 'ppt') iniciarPPT();
-    if (juego === 'trivia') iniciarTrivia();
-    if (juego === 'quientienerazon') iniciarQuienTieneRazon();
-    if (juego === 'menumisterioso') iniciarMenuMisterioso();
-    if (juego === 'semaforo') iniciarSemaforo();
-    if (juego === 'serenata') iniciarSerenata();
-    if (juego === 'debeuna') iniciarDebeUna();
-    if (juego === 'duelomemes') iniciarDueloMemes();
-    if (juego === 'traductorenojos') iniciarTraductorEnojos();
-    if (juego === 'barometro') iniciarBarometro();
-    if (juego === 'capsulavoz') iniciarCapsulaVoz();
-    if (juego === 'nostalgia') iniciarNostalgia();
-    if (juego === 'simon') iniciarSimon();
-    if (juego === 'memoriarelampago') iniciarMemoriaRelampago();
     // Los juegos nuevos se registran solos (js/juegos/base-turnos.js).
     if (window.INICIAR_JUEGO && window.INICIAR_JUEGO[juego]) window.INICIAR_JUEGO[juego]();
 
@@ -142,6 +89,12 @@ function cerrarJuego(){
 // Escuchas que pertenecen al menú (no a un juego) y tienen que seguir
 // vivas aunque se cierre el juego.
 const _ESCUCHAS_PERMANENTES = ['_unsubDesafioSemanal'];
+const _TEMPORIZADORES_JUEGOS = {
+    _loopFrutas: 'cuadro', _loopBurbujas: 'cuadro', _loopPesca: 'cuadro',
+    _timerFrutas: 'reloj', _intervaloJardin: 'reloj', _intervaloTA: 'reloj', _timerPE: 'reloj', _tickRitmoTimeout: 'reloj', _tickLadrillos: 'reloj',
+    _loopGlobos: 'reloj', _timerPinatas: 'reloj', _timerCocodrilos: 'reloj', _spawnLoopCocodrilos: 'reloj', _timerCaidaBloques: 'reloj',
+    _detenerRondaPinatas: 'funcion', _resizeHandlerPesca: 'resize',
+};
 function detenerListenersActivos(){
     // Antes acá se cortaban sólo 5 escuchas; las de los otros ~70 juegos
     // quedaban abiertas para siempre después de cerrarlos (bajando datos
@@ -155,85 +108,18 @@ function detenerListenersActivos(){
         if (typeof fn === 'function') { try { fn(); } catch (e) { /* ya estaba cortada */ } }
         window[clave] = null;
     });
-    if (window._unsubAhorcado) { window._unsubAhorcado(); window._unsubAhorcado = null; }
-    if (window._unsubFrutas) { window._unsubFrutas(); window._unsubFrutas = null; }
-    if (window._unsubTruco) { window._unsubTruco(); window._unsubTruco = null; }
-    if (window._unsubLetrasLista) { window._unsubLetrasLista(); window._unsubLetrasLista = null; }
-    if (window._unsubEscrituraActual) { window._unsubEscrituraActual(); window._unsubEscrituraActual = null; }
-    if (window._loopFrutas) { cancelAnimationFrame(window._loopFrutas); window._loopFrutas = null; }
-    if (window._timerFrutas) { clearInterval(window._timerFrutas); window._timerFrutas = null; }
-    if (window._unsubDamas) { window._unsubDamas(); window._unsubDamas = null; }
-    if (window._unsubAjedrez) { window._unsubAjedrez(); window._unsubAjedrez = null; }
-    if (window._unsubJardin) { window._unsubJardin(); window._unsubJardin = null; }
-    if (window._intervaloJardin) { clearInterval(window._intervaloJardin); window._intervaloJardin = null; }
-    if (window._unsubIndagacionLista) { window._unsubIndagacionLista(); window._unsubIndagacionLista = null; }
-    if (window._unsubIndagacionActual) { window._unsubIndagacionActual(); window._unsubIndagacionActual = null; }
-    if (window._unsubRuleta) { window._unsubRuleta(); window._unsubRuleta = null; }
-    if (window._unsubVerdadOReto) { window._unsubVerdadOReto(); window._unsubVerdadOReto = null; }
-    if (window._unsubTateti) { window._unsubTateti(); window._unsubTateti = null; }
-    if (window._unsubConecta4) { window._unsubConecta4(); window._unsubConecta4 = null; }
-    if (window._unsubReflejos) { window._unsubReflejos(); window._unsubReflejos = null; }
-    if (window._unsubMascota) { window._unsubMascota(); window._unsubMascota = null; }
-    if (window._unsubEscoba) { window._unsubEscoba(); window._unsubEscoba = null; }
-    if (window._unsubBatallaNaval) { window._unsubBatallaNaval(); window._unsubBatallaNaval = null; }
-    if (window._unsubEspejoLista) { window._unsubEspejoLista(); window._unsubEspejoLista = null; }
-    if (window._unsubEspejoActual) { window._unsubEspejoActual(); window._unsubEspejoActual = null; }
-    if (window._unsubMentiraVerdad) { window._unsubMentiraVerdad(); window._unsubMentiraVerdad = null; }
-
-    // Listeners del motor de reflexión: usan claves dinámicas por
-    // juego (_unsubReflexionLista_<id> / _unsubReflexionActual_<id>),
-    // así que se barren todos juntos en vez de listarlos uno por uno.
-    Object.keys(window).forEach((k) => {
-        if ((k.startsWith('_unsubReflexionLista_') || k.startsWith('_unsubReflexionActual_')) && typeof window[k] === 'function') {
-            window[k](); window[k] = null;
-        }
+    // Bucles y temporizadores de los juegos viejos que no se llaman _unsub*.
+    Object.entries(_TEMPORIZADORES_JUEGOS).forEach(([clave, tipo]) => {
+        const v = window[clave];
+        if (!v) return;
+        try {
+            if (tipo === 'cuadro') cancelAnimationFrame(v);
+            else if (tipo === 'reloj') clearTimeout(v); // sirve igual para setInterval
+            else if (tipo === 'funcion') v();
+            else if (tipo === 'resize') window.removeEventListener('resize', v);
+        } catch (e) { /* ya estaba cortado */ }
+        window[clave] = null;
     });
-
-    if (window._unsubMenteGemela) { window._unsubMenteGemela(); window._unsubMenteGemela = null; }
-    if (window._unsubAdn) { window._unsubAdn(); window._unsubAdn = null; }
-    if (window._unsubPalabraExplosiva) { window._unsubPalabraExplosiva(); window._unsubPalabraExplosiva = null; }
-    if (window._unsubMemoria) { window._unsubMemoria(); window._unsubMemoria = null; }
-    if (window._unsubAdivinaQuien) { window._unsubAdivinaQuien(); window._unsubAdivinaQuien = null; }
-    if (window._unsubTiraAfloja) { window._unsubTiraAfloja(); window._unsubTiraAfloja = null; }
-    if (window._intervaloTA) { clearInterval(window._intervaloTA); window._intervaloTA = null; }
-    if (window._timerPE) { clearInterval(window._timerPE); window._timerPE = null; }
-    if (window._unsubArbol) { window._unsubArbol(); window._unsubArbol = null; }
-    if (window._unsubRefugio) { window._unsubRefugio(); window._unsubRefugio = null; }
-    if (window._unsubPuntosRefugio) { window._unsubPuntosRefugio(); window._unsubPuntosRefugio = null; }
-    if (window._unsubPuntosEncuentro) { window._unsubPuntosEncuentro(); window._unsubPuntosEncuentro = null; }
-    if (window._unsubDibujaYAdivina) { window._unsubDibujaYAdivina(); window._unsubDibujaYAdivina = null; }
-    if (window._unsubCartasLista) { window._unsubCartasLista(); window._unsubCartasLista = null; }
-    if (window._unsubCartasActual) { window._unsubCartasActual(); window._unsubCartasActual = null; }
-    if (window._unsubCapsula) { window._unsubCapsula(); window._unsubCapsula = null; }
-    if (window._unsubMapa) { window._unsubMapa(); window._unsubMapa = null; }
-    if (window._unsubEscapeRoom) { window._unsubEscapeRoom(); window._unsubEscapeRoom = null; }
-    if (window._unsubRuedaPremios) { window._unsubRuedaPremios(); window._unsubRuedaPremios = null; }
-    if (window._unsubTermometro) { window._unsubTermometro(); window._unsubTermometro = null; }
-    if (window._unsubVeinte) { window._unsubVeinte(); window._unsubVeinte = null; }
-    if (window._unsubSudoku) { window._unsubSudoku(); window._unsubSudoku = null; }
-    if (window._unsubUno) { window._unsubUno(); window._unsubUno = null; }
-    if (window._unsubChinchon) { window._unsubChinchon(); window._unsubChinchon = null; }
-    if (window._unsubBurbujas) { window._unsubBurbujas(); window._unsubBurbujas = null; }
-    if (window._unsubBombas) { window._unsubBombas(); window._unsubBombas = null; }
-    if (window._unsubPinatas) { window._unsubPinatas(); window._unsubPinatas = null; }
-    if (window._unsubCarreraGlobos) { window._unsubCarreraGlobos(); window._unsubCarreraGlobos = null; }
-    if (window._unsubRitmo) { window._unsubRitmo(); window._unsubRitmo = null; }
-    if (window._tickRitmoTimeout) { clearTimeout(window._tickRitmoTimeout); window._tickRitmoTimeout = null; }
-    if (window._unsubBloques) { window._unsubBloques(); window._unsubBloques = null; }
-    if (window._unsubCocodrilos) { window._unsubCocodrilos(); window._unsubCocodrilos = null; }
-    if (window._unsubPesca) { window._unsubPesca(); window._unsubPesca = null; }
-    if (window._unsubContadorPesca) { window._unsubContadorPesca(); window._unsubContadorPesca = null; }
-    if (window._resizeHandlerPesca) { window.removeEventListener('resize', window._resizeHandlerPesca); window._resizeHandlerPesca = null; }
-    if (window._unsubLadrillos) { window._unsubLadrillos(); window._unsubLadrillos = null; }
-    if (window._tickLadrillos) { clearInterval(window._tickLadrillos); window._tickLadrillos = null; }
-    if (window._loopBurbujas) { cancelAnimationFrame(window._loopBurbujas); window._loopBurbujas = null; }
-    if (window._loopPesca) { cancelAnimationFrame(window._loopPesca); window._loopPesca = null; }
-    if (window._loopGlobos) { clearInterval(window._loopGlobos); window._loopGlobos = null; }
-    if (window._timerPinatas) { clearTimeout(window._timerPinatas); window._timerPinatas = null; }
-    if (window._detenerRondaPinatas) { window._detenerRondaPinatas(); window._detenerRondaPinatas = null; }
-    if (window._timerCocodrilos) { clearTimeout(window._timerCocodrilos); window._timerCocodrilos = null; }
-    if (window._spawnLoopCocodrilos) { clearTimeout(window._spawnLoopCocodrilos); window._spawnLoopCocodrilos = null; }
-    if (window._timerCaidaBloques) { clearInterval(window._timerCaidaBloques); window._timerCaidaBloques = null; }
 }
 
 function jugarAlAzar(){

@@ -85,8 +85,10 @@
     async function adjudicar(juego, ganador) {
         if (enCompu() || !window.db || (ganador !== 'nico' && ganador !== 'carito')) return;
         if (!(datos.activas || {})[juego]) return;
+        let ganado = null;
         try {
             await window.runTransaction(window.db, async (tx) => {
+                ganado = null;
                 const s = await tx.get(ref());
                 if (!s.exists()) return;
                 const d = s.data(), activas = { ...(d.activas || {}) }, a = activas[juego];
@@ -94,7 +96,9 @@
                 delete activas[juego];
                 const premio = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, juego, premio: a.premio, ganador, perdedor: ganador === 'nico' ? 'carito' : 'nico', fecha: Date.now(), cobrado: null };
                 tx.set(ref(), { ...d, activas, porCobrar: [...(d.porCobrar || []), premio].slice(-40) });
+                ganado = premio;
             });
+            if (ganado && window.guardarMomento) window.guardarMomento({ id: 'ap-' + ganado.id, juego, icono: '💝', titulo: `${nombre(ganador)} se ganó: ${ganado.premio}`, sub: `Apuesta cariñosa · lo paga ${nombre(ganado.perdedor)}`, quien: ganador });
         } catch (e) { console.warn('No se pudo adjudicar la apuesta:', e); }
     }
     function envolverRegistrarVictoria() {

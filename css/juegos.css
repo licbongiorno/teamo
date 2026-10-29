@@ -1510,3 +1510,46 @@ html[data-mesa="noche"] .mesa-bj, html[data-mesa="noche"] .mesa-poker, html[data
 .descarte-faros{ margin-top:10px; font-size:0.78rem; display:flex; flex-wrap:wrap; align-items:center; gap:3px; }
 .descarte-faros .carta-faro{ width:26px; height:36px; box-shadow:none; }
 .descarte-faros .carta-faro b{ font-size:0.8rem; } .descarte-faros .carta-faro i{ font-size:0.55rem; }
+
+/* ==================== Álbum de momentos + nivel de pareja ==================== */
+.momento-tarjeta{ display:flex; align-items:center; gap:12px; padding:10px 12px; margin-bottom:8px; border-radius:16px; background:linear-gradient(135deg, rgba(255,179,198,0.08), rgba(168,216,255,0.06)); border:1px solid rgba(255,255,255,0.1); }
+.momento-icono{ font-size:1.9rem; flex:0 0 auto; }
+.momento-texto{ flex:1; min-width:0; font-size:0.88rem; }
+.momento-texto b{ display:block; }
+.momento-texto span{ display:block; opacity:0.8; font-size:0.8rem; margin-top:2px; }
+.momento-texto small{ display:block; opacity:0.55; font-size:0.72rem; margin-top:3px; }
+.momento-compartir{ flex:0 0 auto; width:38px; height:38px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); font-size:1rem; cursor:pointer; }
+.nivel-tarjeta{ margin-bottom:12px; }
+.nivel-cabeza{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.nivel-icono{ font-size:1.8rem; }
+.nivel-cabeza > div{ flex:1; }
+.nivel-xp{ font-size:0.8rem; padding:4px 10px; border-radius:999px; background:rgba(245,217,160,0.14); color:#f5d9a0; }
+.ajuste-mesa.bloqueada{ opacity:0.55; }
+.ajuste-mesa.bloqueada .ajuste-muestra{ display:flex; align-items:center; justify-content:center; filter:grayscale(0.6); }
+.ajuste-mesa small{ display:block; font-size:0.65rem; opacity:0.75; }
+
+/* Mesas desbloqueables */
+html[data-mesa="playa"] .tablero-juego .casilla-clara{ background:#f3dfb4; }
+html[data-mesa="playa"] .tablero-juego .casilla-oscura{ background:#4fb3c9; }
+html[data-mesa="playa"] .tablero-juego .casilla-reversi{ background:#5cbfcf; }
+html[data-mesa="playa"] .tablero-juego{ border-color:#e8c98a; box-shadow:0 0 0 4px #e8c98a, 0 6px 16px rgba(0,0,0,0.35); }
+html[data-mesa="playa"] .aj-mesa-truco, html[data-mesa="playa"] .mesa-bj, html[data-mesa="playa"] .mesa-poker, html[data-mesa="playa"] .mesa-guerra, html[data-mesa="playa"] .mesa-domino{ background:linear-gradient(180deg, #5cc3d6 0%, #3a9bb3 55%, #e9d3a1 56%, #dcc08a 100%); box-shadow:inset 0 0 0 3px #e8c98a; }
+html[data-mesa="playa"]{ --aj-dorso:#2f8fa6; --aj-dorso-linea:#fff3d6; }
+html[data-mesa="otono"] .tablero-juego .casilla-clara{ background:#efc48a; }
+html[data-mesa="otono"] .tablero-juego .casilla-oscura{ background:#a4492a; }
+html[data-mesa="otono"] .tablero-juego .casilla-reversi{ background:#b35a32; }
+html[data-mesa="otono"] .tablero-juego{ border-color:#5e2a16; box-shadow:0 0 0 4px #5e2a16, 0 6px 16px rgba(0,0,0,0.4); }
+html[data-mesa="otono"] .aj-mesa-truco, html[data-mesa="otono"] .mesa-bj, html[data-mesa="otono"] .mesa-poker, html[data-mesa="otono"] .mesa-guerra, html[data-mesa="otono"] .mesa-domino{ background:radial-gradient(circle at 15% 25%, rgba(233,162,90,0.5) 0 6px, transparent 7px) 0 0/48px 48px, radial-gradient(ellipse at center, #8a3f22 0%, #5e2a16 80%); box-shadow:inset 0 0 0 3px #e9a25a; }
+html[data-mesa="otono"]{ --aj-dorso:#7a3218; --aj-dorso-linea:#f2c08a; }
+html[data-mesa="sanvalentin"] .tablero-juego .casilla-clara{ background:#ffd6e2; }
+html[data-mesa="sanvalentin"] .tablero-juego .casilla-oscura{ background:#c2335f; }
+html[data-mesa="sanvalentin"] .tablero-juego .casilla-reversi{ background:#d0476f; }
+html[data-mesa="sanvalentin"] .tablero-juego{ border-color:#8e1f43; box-shadow:0 0 0 4px #8e1f43, 0 0 18px rgba(255,120,160,0.4); }
+html[data-mesa="sanvalentin"] .aj-mesa-truco, html[data-mesa="sanvalentin"] .mesa-bj, html[data-mesa="sanvalentin"] .mesa-poker, html[data-mesa="sanvalentin"] .mesa-guerra, html[data-mesa="sanvalentin"] .mesa-domino{ background:radial-gradient(circle at 50% 50%, rgba(255,194,212,0.25) 0 5px, transparent 6px) 0 0/36px 36px, radial-gradient(ellipse at center, #b12a55 0%, #6e1533 80%); box-shadow:inset 0 0 0 3px #ffc2d4; }
+html[data-mesa="sanvalentin"]{ --aj-dorso:#a3214b; --aj-dorso-linea:#ffd6e2; }
+html[data-mesa="dorado"] .tablero-juego .casilla-clara{ background:#f7e29a; }
+html[data-mesa="dorado"] .tablero-juego .casilla-oscura{ background:#a8812c; }
+html[data-mesa="dorado"] .tablero-juego .casilla-reversi{ background:#b8913a; }
+html[data-mesa="dorado"] .tablero-juego{ border-color:#6b4e12; box-shadow:0 0 0 4px #d8b45a, 0 0 22px rgba(247,226,154,0.45); }
+html[data-mesa="dorado"] .aj-mesa-truco, html[data-mesa="dorado"] .mesa-bj, html[data-mesa="dorado"] .mesa-poker, html[data-mesa="dorado"] .mesa-guerra, html[data-mesa="dorado"] .mesa-domino{ background:linear-gradient(135deg, #3a2c0e, #1d1606); box-shadow:inset 0 0 0 3px #d8b45a, inset 0 0 24px rgba(247,226,154,0.25); }
+html[data-mesa="dorado"]{ --aj-dorso:#3a2c0e; --aj-dorso-linea:#f7e29a; }

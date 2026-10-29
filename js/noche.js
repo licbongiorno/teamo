@@ -237,6 +237,7 @@ async function terminarNocheDeJuegos(){
 async function nocheRegistrarResultado(juegoId, ganador, manual){
     if (!_estadoNoche || !_estadoNoche.activa) return;
     if (!manual && window.modoCompu && window.modoCompu()) return; // contra la compu no cuenta
+    let terminada = null;
     try {
         await window.runTransaction(window.db, async (tx) => {
             const snap = await tx.get(refNoche());
@@ -249,7 +250,14 @@ async function nocheRegistrarResultado(juegoId, ganador, manual){
             if (ganador) marcador[ganador] = (marcador[ganador] || 0) + 1;
             const fin = resultados.length >= d.juegos.length;
             tx.update(refNoche(), { resultados, marcador, ...(fin ? { activa: false, campeon: ganadorPorPuntos(marcador), terminadaEn: Date.now() } : {}) });
+            if (fin) terminada = { ...d, marcador, campeon: ganadorPorPuntos(marcador) };
         });
+        if (terminada && window.guardarMomento) {
+            const cita = terminada.modo === 'cita', m = terminada.marcador;
+            window.guardarMomento({ id: 'noche-' + terminada.id, icono: cita ? '🕯️' : '🌙',
+                titulo: terminada.campeon ? `${nombreJugador(terminada.campeon)} ganó la ${cita ? 'cita' : 'Noche'} de juegos` : `Una ${cita ? 'cita' : 'Noche'} de juegos juntos`,
+                sub: `${terminada.juegos.map(_juegoNoche).join(' · ')} — ${m.nico || 0} a ${m.carito || 0}`, quien: terminada.campeon || null });
+        }
     } catch (e) { console.warn('No se pudo anotar el resultado en la Noche de juegos:', e); }
 }
 

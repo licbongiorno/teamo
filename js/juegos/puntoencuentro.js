@@ -34,6 +34,7 @@ function renderPuntoEncuentro(){
         </div>
     </div>`;
 
+    if (window.momentos) html += window.momentos.htmlUltimos(4);
     html += `<div class="panel"><div class="texto-tenue" style="margin-bottom:10px;">🕰️ Línea de tiempo</div>`;
     if (eventos.length) {
         eventos.forEach(e => {

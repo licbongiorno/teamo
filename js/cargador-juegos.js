@@ -21,13 +21,13 @@ const JUEGOS_QUE_USAN_BASE_TURNOS = ['gomoku', 'mancala', 'serpientes', 'parchis
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 63;
+const VERSION_CACHE = 64;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)
     // ya se carga siempre de entrada, junto con el resto de la infraestructura
     // compartida — no hay nada más que bajar bajo demanda para esta pantalla.
-    if (juegoId === 'estadisticas') return [];
+    if (juegoId === 'estadisticas' || juegoId === 'momentos') return []; // momentos.js se carga siempre
     const propio = `js/juegos/${juegoId}.js?v=${VERSION_CACHE}`;
     // La Pregunta del Día reusa el banco grande del "Ping Pong de
     // Preguntas" del inicio, así que baja también ese archivo.

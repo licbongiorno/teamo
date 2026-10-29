@@ -92,6 +92,7 @@ function arrancarCuatroMinutos(){
             if (window.fx) window.fx.confeti();
             if (window.sfx) window.sfx.victoria && window.sfx.victoria();
             if (typeof registrarEvento === 'function') registrarEvento('reflexion_completada', 'Terminaron las 36 preguntas y los 4 minutos 💞');
+            if (window.guardarMomento) window.guardarMomento({ id: '36-preguntas', juego: 'treintayseis', icono: '💞', titulo: 'Hicieron las 36 preguntas para enamorarse', sub: 'Y se miraron a los ojos cuatro minutos.' });
         }
     };
     tic();

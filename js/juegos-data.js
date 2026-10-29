@@ -151,6 +151,7 @@ window.JUEGOS = [
     { id:'treintayseis', nombre:'36 Preguntas para Enamorarse', icono:'💞', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Las 36 preguntas del famoso estudio de Arthur Aron, en orden y con el cierre de los 4 minutos.' },
     { id:'mapaamor', nombre:'Mapa del Amor', icono:'🗺️', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Uno cuenta la verdad sobre sí mismo y el otro adivina: ¿cuánto conocés su mundo?' },
     { id:'lenguajes', nombre:'Lenguajes del Amor', icono:'💌', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Un test cortito para cada uno y los resultados comparados, con consejos para cuidarse mejor.' },
+    { id:'momentos', nombre:'Álbum de Momentos', icono:'📸', categoria:'cuidado', disponible:true, nuevo:true, descripcion:'Los momentos épicos que se guardan solos: hazañas, campeonatos, apuestas, misiones cumplidas…' },
     { id:'suenos', nombre:'Lista de Sueños', icono:'🌠', categoria:'cuidado', disponible:true, nuevo:true, descripcion:'La bucket list de los dos: quién se anima, sueños cumplidos con fecha y fotito.' },
     // ---- COOPERATIVOS ----
     { id:'laberinto', nombre:'Laberinto a Ciegas', icono:'🧭', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Uno ve las paredes, el otro mueve la ficha a ciegas. Guíense para salir juntos.' },

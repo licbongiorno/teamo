@@ -1861,3 +1861,6 @@ body.encuadre .pantalla-juego.activa .mv-host{ border-radius:0; }
 .respuestas-burbujas.coinciden .burbuja-resp{ box-shadow:0 0 18px rgba(255,214,120,0.35); border-color:rgba(255,214,120,0.6); }
 @keyframes burbujaEntra{ from{ opacity:0; transform:translateY(10px) scale(0.96); } to{ opacity:1; transform:none; } }
 @media (prefers-reduced-motion: reduce){ .burbuja-resp{ animation:none; } }
+
+/* Pac-Neón de a Dos */
+.lienzo-pacman{ display:block; margin:4px auto 8px; border-radius:12px; box-shadow:0 0 22px rgba(90,110,255,0.35); touch-action:none; background:#05030f; }

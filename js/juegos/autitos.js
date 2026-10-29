@@ -10,6 +10,7 @@ const CIRCUITOS_AU = [
     { nombre: 'Óvalo del Parque', pasto: '#5fa35a', puntos: [[150, 40], [250, 58], [272, 200], [250, 342], [150, 362], [50, 342], [28, 200], [50, 58]] },
     { nombre: 'La Ese', pasto: '#6aa84f', puntos: [[60, 48], [240, 48], [268, 108], [205, 160], [115, 165], [92, 215], [150, 250], [240, 250], [268, 322], [228, 366], [62, 366], [34, 300], [34, 110]] },
     { nombre: 'Curvas de la Sierra', pasto: '#7aa35a', puntos: [[40, 62], [120, 38], [262, 50], [272, 140], [205, 152], [182, 202], [262, 232], [272, 332], [200, 372], [118, 334], [150, 272], [92, 232], [42, 302], [28, 182]] },
+    { nombre: 'Zigzag de la Costanera', pasto: '#8fbf6a', puntos: [[40, 50], [150, 40], [262, 52], [270, 120], [200, 140], [200, 200], [268, 230], [268, 340], [200, 370], [100, 370], [40, 330], [90, 270], [40, 220], [90, 170], [40, 120]] },
 ];
 const AU = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, pista: null, fondo: null, yo: null, el: null, teclas: {}, inclinar: false, giroTilt: 0, ultimoEnvio: 0, ultimoTs: 0, terminado: false };
 
@@ -70,6 +71,18 @@ function dibujarFondoAu(cto){
     }
     return f;
 }
+// El que toca: el que eligieron en la espera, o si no, el siguiente al último.
+function proximoCircuitoAu(e){
+    if (e && e.elegido != null) return e.elegido;
+    return e && e.circuito != null ? (e.circuito + 1) % CIRCUITOS_AU.length : 0;
+}
+function elegirCircuitoAu(i){
+    if (!CIRCUITOS_AU[i]) return;
+    vibrarJ(8);
+    if (window.sfx) window.sfx.click();
+    window.setDoc(Autitos.ref(), { elegido: i }, { merge: true }).catch(() => {});
+}
+window.elegirCircuitoAu = elegirCircuitoAu;
 function cargarCarreraAu(e){
     AU.clave = e.clave;
     const cto = CIRCUITOS_AU[e.circuito || 0];
@@ -257,13 +270,14 @@ const Autitos = JuegoTurnos.crear({
     id: 'autitos',
     sinTurno: true,
     emojiListo: '🏎️',
-    conservar: ['circuito', 'records'],
+    conservar: ['circuito', 'records', 'elegido'],
     intro: `Carrera de autitos vista de arriba, en vivo: ${VUELTAS_AU} vueltas, semáforo de largada y gana el primero en cruzar la meta. Por el pasto se va lento y cortar camino no cuenta. Hay ${CIRCUITOS_AU.length} circuitos que van rotando.`,
-    inicial: (previo) => ({ circuito: previo && previo.circuito != null ? (previo.circuito + 1) % CIRCUITOS_AU.length : 0, records: (previo && previo.records) || {}, clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 4500, turno: null }),
+    inicial: (previo) => ({ circuito: proximoCircuitoAu(previo), elegido: null, records: (previo && previo.records) || {}, clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 4500, turno: null }),
     extraEspera: (e) => {
-        const prox = e && e.circuito != null ? (e.circuito + 1) % CIRCUITOS_AU.length : 0;
+        const prox = proximoCircuitoAu(e);
         const rec = e && e.records && e.records['c' + prox];
-        return `<div class="texto-tenue" style="margin-top:8px;font-size:0.8rem;">Próximo circuito: <b>${CIRCUITOS_AU[prox].nombre}</b>${rec ? ` · récord ${(rec.t / 1000).toFixed(1)} s de ${nombreJugador(rec.q)}` : ''}</div>`;
+        return `<div class="texto-tenue" style="margin-top:8px;font-size:0.8rem;">Circuito: <b>${CIRCUITOS_AU[prox].nombre}</b>${rec ? ` · récord ${(rec.t / 1000).toFixed(1)} s de ${nombreJugador(rec.q)}` : ''}</div>
+            <div class="niveles-av">${CIRCUITOS_AU.map((c, i) => `<button type="button" class="${i === prox ? 'activa' : ''}" title="${c.nombre}" onclick="elegirCircuitoAu(${i})">${i + 1}</button>`).join('')}</div>`;
     },
     render() { return `<div id="autitos-host"></div><div class="texto-centro" style="margin-top:2px;"><button class="btn-secundario" id="btn-inclinar-au" style="font-size:0.78rem;padding:6px 12px;" onclick="activarInclinacionAu()">${AU.inclinar ? '📱 Manejando inclinando (tocá para usar botones)' : '📱 Manejar inclinando el celu'}</button></div>`; },
     alDibujar(cont, e) {

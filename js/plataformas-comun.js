@@ -66,11 +66,17 @@
         return res;
     }
     // Una caja cae sola si no tiene nada abajo (igual en los dos celus).
-    function caerCaja(cj, dt, esSolido, T) {
+    // otras: las demás cajas (una caja puede quedar apoyada arriba de otra).
+    function caerCaja(cj, dt, esSolido, T, otras) {
+        const yAntes = cj.y;
         cj.vy = Math.min(6, (cj.vy || 0) + 0.45 * dt);
         cj.y += cj.vy * dt;
         const yc = Math.floor((cj.y + cj.h) / T), x0 = Math.floor((cj.x + 1) / T), x1 = Math.floor((cj.x + cj.w - 2) / T);
         for (let x = x0; x <= x1; x++) if (esSolido(x, yc)) { cj.y = yc * T - cj.h; cj.vy = 0; return; }
+        for (const o of otras || []) {
+            if (o === cj || cj.x + cj.w <= o.x + 2 || cj.x >= o.x + o.w - 2) continue;
+            if (yAntes + cj.h <= o.y + 1 && cj.y + cj.h >= o.y) { cj.y = o.y - cj.h; cj.vy = 0; return; }
+        }
     }
     window.Plataformas = { mover, caerCaja, solape };
 })();

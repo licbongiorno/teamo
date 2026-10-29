@@ -9,9 +9,12 @@ const NIVELES_PC = [
     ['..........', '.11111111.', '.2222L222.', '.33333333.', '..........'],
     ['1111111111', '2.2.MM.2.2', '3333333333', '.4.4LL4.4.', '5555555555'],
     ['L........L', '.11.11.11.', '.22M22M22.', '3333333333', '4.44.44.44', '5555555555'],
+    ['#..#..#..#', '1111111111', '2.2#22#2.2', '3333LL3333', '.4444444M.'],
+    ['5555555555', '#4#4#4#4#4', '3M33333L33', '2#2#22#2#2', '1111111111', '..######..'],
 ];
-const COLORES_PC = { 1: '#ff6b6b', 2: '#ffb347', 3: '#ffd23a', 4: '#4cd18a', 5: '#3da8ff', L: '#c78bff', M: '#ff8fd8' };
-const PC = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, ladrillos: [], rotos: new Set(), bolas: [], dueno: false, yo: null, el: null, teclas: {}, dedo: null, ultimoEnvio: 0, ultimoTs: 0, perdida: false, lanzada: false };
+// # = ladrillo duro: hay que pegarle dos veces.
+const COLORES_PC = { '#': '#9aa0b4', 1: '#ff6b6b', 2: '#ffb347', 3: '#ffd23a', 4: '#4cd18a', 5: '#3da8ff', L: '#c78bff', M: '#ff8fd8' };
+const PC = { tocados: new Set(), canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, ladrillos: [], rotos: new Set(), bolas: [], dueno: false, yo: null, el: null, teclas: {}, dedo: null, ultimoEnvio: 0, ultimoTs: 0, perdida: false, lanzada: false };
 
 function armarLadrillosPc(nivel){
     const filas = NIVELES_PC[nivel - 1], l = [], bw = W_PC / COLS_PC;
@@ -26,6 +29,7 @@ function reiniciarPc(e){
     PC.clave = e.clave;
     PC.ladrillos = armarLadrillosPc(e.nivel);
     PC.rotos = new Set(e.rotos || []);
+    PC.tocados = new Set(e.tocados || []);
     const [a, b] = limitesPc(miIdentidad);
     PC.yo = PC.yo || { x: (a + b) / 2 };
     PC.yo.x = (a + b) / 2;
@@ -97,6 +101,15 @@ function pasoPc(dt){
 const bolasPlanasPc = () => PC.bolas.flatMap(b => [+b.x.toFixed(1), +b.y.toFixed(1), +b.vx.toFixed(2), +b.vy.toFixed(2)]);
 function desplanarPc(a){ const l = []; for (let i = 0; i + 3 < a.length; i += 4) l.push({ x: a[i], y: a[i + 1], vx: a[i + 2], vy: a[i + 3] }); return l; }
 function romperPc(l, b){
+    if (l.tipo === '#' && !PC.tocados.has(l.id)) {
+        // Primer golpe a un ladrillo duro: queda rajado.
+        PC.tocados.add(l.id);
+        if (window.sfx) window.sfx.golpe();
+        PC.enlace && PC.enlace.enviar('roto', { id: l.id, medio: 1, c: PC.clave }, true);
+        const clave = PC.clave, id = l.id;
+        Rompeladrillos.accionEnCola((e) => e.clave !== clave || (e.tocados || []).includes(id) ? null : { tocados: [...(e.tocados || []), id] });
+        return;
+    }
     PC.rotos.add(l.id);
     vibrarJ(6);
     if (window.sfx) window.sfx[l.tipo === 'L' || l.tipo === 'M' ? 'logro' : 'rebote']();
@@ -113,7 +126,7 @@ function romperPc(l, b){
         if (larga) cambios.larga = window.ahoraSync() + 12000;
         if (rotos.length >= total) {
             if (e.nivel >= NIVELES_PC.length) return { ...cambios, ganador: 'empate', motivo: `🎉 ¡Rompieron todos los ladrillos de los ${NIVELES_PC.length} niveles! ${cambios.puntos} puntos con ${e.vidas} vida${e.vidas === 1 ? '' : 's'} de sobra.` };
-            return { ...cambios, nivel: e.nivel + 1, rotos: [], larga: 0, clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 2500, saque: e.saque === 'nico' ? 'carito' : 'nico', aviso: `✅ ¡Nivel ${e.nivel} completo!` };
+            return { ...cambios, nivel: e.nivel + 1, rotos: [], tocados: [], larga: 0, clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 2500, saque: e.saque === 'nico' ? 'carito' : 'nico', aviso: `✅ ¡Nivel ${e.nivel} completo!` };
         }
         return cambios;
     });
@@ -143,6 +156,7 @@ function dibujarPc(){
         c.fillStyle = COLORES_PC[l.tipo] || '#fff'; c.fillRect(l.x, l.y, l.w, l.h);
         c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(l.x, l.y, l.w, 2);
         c.fillStyle = 'rgba(0,0,0,0.2)'; c.fillRect(l.x, l.y + l.h - 2, l.w, 2);
+        if (l.tipo === '#') { c.strokeStyle = 'rgba(40,40,60,0.6)'; c.lineWidth = 1; c.strokeRect(l.x + 1.5, l.y + 1.5, l.w - 3, l.h - 3); if (PC.tocados.has(l.id)) { c.beginPath(); c.moveTo(l.x + 6, l.y + 1); c.lineTo(l.x + 12, l.y + 7); c.lineTo(l.x + 9, l.y + 11); c.moveTo(l.x + 12, l.y + 7); c.lineTo(l.x + 20, l.y + 5); c.stroke(); } }
         if (l.tipo === 'L' || l.tipo === 'M') { c.fillStyle = '#fff'; c.font = 'bold 9px monospace'; c.textAlign = 'center'; c.fillText(l.tipo === 'L' ? '⬌' : '✦', l.x + l.w / 2, l.y + 9.5); c.textAlign = 'left'; }
     }
     const w = anchoPaletaPc();
@@ -209,7 +223,8 @@ function arrancarPc(){
                     }
                 }
                 if (t === 'toma') { PC.dueno = false; PC.bolas = desplanarPc(d.b); if (window.sfx) window.sfx.toque(); }
-                if (t === 'roto' && !PC.rotos.has(d.id)) { PC.rotos.add(d.id); if (window.sfx) window.sfx.rebote(); }
+                if (t === 'roto' && d.medio) { PC.tocados.add(d.id); if (window.sfx) window.sfx.golpe(); }
+                else if (t === 'roto' && !PC.rotos.has(d.id)) { PC.rotos.add(d.id); if (window.sfx) window.sfx.rebote(); }
             }
         });
     }
@@ -229,7 +244,7 @@ const Rompeladrillos = JuegoTurnos.crear({
     emojiListo: '🧱',
     compu: { paso: () => null }, // la compu juega adentro del bucle (pensarCompuPc)
     intro: `Juntos contra los ladrillos: cada uno tiene su paleta abajo (${nombreJugador('nico')} a la izquierda, ${nombreJugador('carito')} a la derecha). Arrastrá el dedo para moverla. Las 3 vidas son de los dos. ⬌ alarga las paletas y ✦ suma pelotas. ${NIVELES_PC.length} niveles.`,
-    inicial: () => ({ nivel: 1, vidas: VIDAS_PC, puntos: 0, rotos: [], larga: 0, saque: Math.random() < 0.5 ? 'nico' : 'carito', clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 3000, turno: null }),
+    inicial: () => ({ nivel: 1, vidas: VIDAS_PC, puntos: 0, rotos: [], tocados: [], larga: 0, saque: Math.random() < 0.5 ? 'nico' : 'carito', clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 3000, turno: null }),
     tituloFin: (e) => (e.motivo || '').startsWith('🎉') ? '🧱 ¡Lo lograron juntos!' : '💔 Casi…',
     render() { return `<div id="pongcoop-host"></div><div class="texto-centro texto-tenue" style="font-size:0.75rem;">Arrastrá el dedo sobre la cancha (o ◀ ▶ en la compu). Tu mitad es la de tu color.</div>`; },
     alDibujar(cont, e) {
@@ -238,6 +253,7 @@ const Rompeladrillos = JuegoTurnos.crear({
         if (!host) return;
         if (PC.clave !== e.clave) reiniciarPc(e);
         (e.rotos || []).forEach(id => PC.rotos.add(id));
+        (e.tocados || []).forEach(id => PC.tocados && PC.tocados.add(id));
         if (e.fase === 'jugando') arrancarPc();
         if (PC.canvas) { host.appendChild(PC.canvas); dibujarPc(); }
     }

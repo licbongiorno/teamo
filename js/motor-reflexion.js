@@ -15,6 +15,11 @@ function _escaparHtmlReflexion(t){
     return String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// Consignas con {otro}: se muestra el nombre de quien está del otro lado.
+function _textoConsignaReflexion(t){
+    return String(t ?? '').replace(/\{otro\}/g, typeof miRival !== 'undefined' ? nombreJugador(miRival) : 'el otro');
+}
+
 function _colReflexion(){ return window.collection(window.db, 'juegos'); }
 function _refReflexionCarta(id){ return window.doc(window.db, 'juegos', id); }
 
@@ -58,8 +63,19 @@ function mostrarListaReflexion(juegoId){
 function renderListaReflexion(juegoId, cartas){
     const cfg = window.CONFIG_REFLEXION[juegoId];
     const cont = document.getElementById('contenido-' + juegoId);
+    window['_reflexionCartas_' + juegoId] = cartas;
     let botonNuevo = '';
-    if (cfg.unaPorDia) {
+    if (cfg.enOrden) {
+        // Las consignas van en orden (las 36 preguntas): la próxima es la
+        // que sigue a las que ya abrieron, y al final hay un cierre propio.
+        const n = cartas.length, total = cfg.banco.length;
+        const seccion = cfg.secciones ? cfg.secciones.filter(x => x.desde <= n).pop() : null;
+        botonNuevo = `<div class="progreso-orden"><div style="width:${Math.round(n * 100 / total)}%"></div></div>
+            <div class="texto-tenue" style="font-size:0.8rem; margin-bottom:10px;">${n} de ${total}${seccion && n < total ? ` · ${seccion.nombre}` : ''}</div>`
+            + (n < total
+                ? `<button class="btn-principal" onclick="crearCartaReflexion('${juegoId}')">${n ? `Siguiente: pregunta ${n + 1}` : (cfg.botonNuevo || 'Empezar')}</button>`
+                : (cfg.alFinal ? cfg.alFinal(juegoId) : ''));
+    } else if (cfg.unaPorDia) {
         const hoy = cartas.find(c => c.fecha === _fechaLocalReflexion());
         const yaRespondi = hoy && hoy.respuestas?.[miIdentidad];
         botonNuevo = `<button class="btn-principal" onclick="crearCartaReflexion('${juegoId}')">${!hoy ? '☀️ Ver la pregunta de hoy' : (yaRespondi ? '☀️ Abrir la pregunta de hoy' : '☀️ Responder la pregunta de hoy')}</button>`;
@@ -79,6 +95,15 @@ function renderListaReflexion(juegoId, cartas){
             <div id="error-propia-${juegoId}" class="texto-tenue" style="font-size:0.8rem; margin-top:6px;"></div>
         </div>`;
     }
+    // Mapa del amor: cuánto acertó cada uno sobre el mundo del otro.
+    if (cfg.tipo === 'mapa') {
+        const calificadas = cartas.filter(c => c.fase === 'revelado' && c.acierto);
+        if (calificadas.length) {
+            const pts = { si: 1, casi: 0.5, no: 0 };
+            const de = (q) => { const l = calificadas.filter(c => c.sobre !== q); return l.length ? `${nombreJugador(q)} conoce ${Math.round(l.reduce((a, c) => a + (pts[c.acierto] || 0), 0) * 100 / l.length)}% <span class="texto-tenue">(${l.length})</span>` : ''; };
+            html += `<div class="panel texto-centro">🗺️ ${[de('nico'), de('carito')].filter(Boolean).join(' · ')}</div>`;
+        }
+    }
     // Juegos de opciones: marcador de cuántas veces coincidieron.
     if (cfg.tipo === 'opciones') {
         const reveladas = cartas.filter(c => c.fase === 'revelado' && c.respuestas);
@@ -91,7 +116,7 @@ function renderListaReflexion(juegoId, cartas){
         html += `<div class="lista-escrituras">`;
         cartas.forEach(c => {
             const estadoTexto = c.fase === 'revelado' ? 'Revelada' : 'Respondiendo';
-            const preview = typeof c.pregunta === 'string' ? c.pregunta : (c.pregunta?.texto || '');
+            const preview = _textoConsignaReflexion(typeof c.pregunta === 'string' ? c.pregunta : (c.pregunta?.texto || ''));
             html += `<div class="item-escritura" onclick="abrirCartaReflexion('${juegoId}','${c.id}')">
                 <div class="info-escritura"><div class="titulo-escritura">${_escaparHtmlReflexion(preview.length > 60 ? preview.slice(0, 60) + '…' : preview)}</div>
                 <div class="detalle-escritura">${estadoTexto}</div></div>
@@ -129,6 +154,35 @@ async function crearCartaReflexion(juegoId){
             });
         } catch (e) { console.error('No se pudo crear la pregunta del día:', e); return; }
         abrirCartaReflexion(juegoId, id);
+        return;
+    }
+    if (cfg.enOrden) {
+        const idx = (window['_reflexionCartas_' + juegoId] || []).length;
+        if (idx >= cfg.banco.length) return;
+        const id = `reflexion-${juegoId}-${idx + 1}`;
+        const ref = _refReflexionCarta(id);
+        try {
+            await window.runTransaction(window.db, async (tx) => {
+                const snap = await tx.get(ref);
+                if (snap.exists()) return;
+                tx.set(ref, { tipo: 'reflexion-' + juegoId, pregunta: cfg.banco[idx], numero: idx + 1, creadaEn: Date.now(), fase: 'respondiendo', respuestas: { nico: null, carito: null }, sorteo: null });
+            });
+        } catch (e) { console.error('No se pudo crear la pregunta:', e); return; }
+        abrirCartaReflexion(juegoId, id);
+        return;
+    }
+    if (cfg.tipo === 'mapa') {
+        // Se van turnando: una ronda es sobre Nico, la siguiente sobre Carito.
+        const previas = window['_reflexionCartas_' + juegoId] || [];
+        const sobre = previas.length && previas[0].sobre === 'nico' ? 'carito' : 'nico';
+        const usadas = new Set(previas.map(c => c.pregunta && c.pregunta.yo));
+        const libres = cfg.banco.filter(b => !usadas.has(b[0]));
+        const [yo, otro] = (libres.length ? libres : cfg.banco)[Math.floor(Math.random() * (libres.length || cfg.banco.length))];
+        const docRef = await window.addDoc(_colReflexion(), {
+            tipo: 'reflexion-' + juegoId, pregunta: { texto: otro.replace(/\{n\}/g, nombreJugador(sobre)), yo, otro }, sobre, creadaEn: Date.now(), fase: 'respondiendo',
+            respuestas: { nico: null, carito: null }, acierto: null
+        });
+        abrirCartaReflexion(juegoId, docRef.id);
         return;
     }
     const pregunta = cfg.banco[Math.floor(Math.random() * cfg.banco.length)];
@@ -184,9 +238,15 @@ function renderCartaReflexion(juegoId, c){
     const cfg = window.CONFIG_REFLEXION[juegoId];
     window['_reflexionCartaActual_' + juegoId] = c;
     const cont = document.getElementById('contenido-' + juegoId);
-    const preguntaTexto = typeof c.pregunta === 'string' ? c.pregunta : c.pregunta.texto;
+    const esMapa = cfg.tipo === 'mapa', soySujeto = esMapa && c.sobre === miIdentidad;
+    let preguntaTexto = typeof c.pregunta === 'string' ? c.pregunta : c.pregunta.texto;
+    if (esMapa) preguntaTexto = soySujeto ? c.pregunta.yo : c.pregunta.otro.replace(/\{n\}/g, nombreJugador(c.sobre));
+    preguntaTexto = _textoConsignaReflexion(preguntaTexto);
+    const encabezado = c.autor ? `✍️ Pregunta de ${nombreJugador(c.autor)}`
+        : esMapa ? (soySujeto ? `🗺️ Sobre vos · contá la verdad` : `🗺️ Sobre ${nombreJugador(c.sobre)} · adiviná`)
+        : c.numero ? `Pregunta ${c.numero} de ${cfg.banco.length}` : '';
     let html = `<button class="btn-secundario" style="margin-bottom:12px;" onclick="mostrarListaReflexion('${juegoId}')">⬅️ Todas las rondas</button>
-        <div class="panel flip-carta">${c.autor ? `<div class="texto-tenue" style="font-size:0.75rem; margin-bottom:6px;">✍️ Pregunta de ${nombreJugador(c.autor)}</div>` : ''}<p style="font-family:var(--fuente-titulo); font-size:1.2rem; line-height:1.35; margin:0;">${_escaparHtmlReflexion(preguntaTexto)}</p></div>`;
+        <div class="panel flip-carta">${encabezado ? `<div class="texto-tenue" style="font-size:0.75rem; margin-bottom:6px;">${encabezado}</div>` : ''}<p style="font-family:var(--fuente-titulo); font-size:1.2rem; line-height:1.35; margin:0;">${_escaparHtmlReflexion(preguntaTexto)}</p></div>`;
 
     if (c.fase === 'respondiendo') {
         if (!c.respuestas[miIdentidad]) {
@@ -195,7 +255,7 @@ function renderCartaReflexion(juegoId, c){
                 html += `<div class="panel">${opciones.map(op => `<button class="btn-secundario" style="margin-bottom:8px; text-align:left;" onclick="responderReflexion('${juegoId}', this.dataset.valor)" data-valor="${op.replace(/"/g, '&quot;')}">${op}</button>`).join('')}</div>`;
             } else {
                 html += `<div class="panel">
-                    <textarea id="input-reflexion-${juegoId}" rows="4" placeholder="${cfg.placeholder || 'Tu respuesta...'}" maxlength="600"
+                    <textarea id="input-reflexion-${juegoId}" rows="4" placeholder="${esMapa ? (soySujeto ? 'La verdad, sobre vos…' : `Lo que creés que respondió ${nombreJugador(c.sobre)}…`) : (cfg.placeholder || 'Tu respuesta...')}" maxlength="600"
                         style="width:100%; box-sizing:border-box; background:rgba(255,255,255,0.06); border:1px solid var(--borde); border-radius:14px; padding:12px; color:var(--texto); font-family:var(--fuente-texto); font-size:0.92rem; resize:vertical; margin-bottom:10px;"></textarea>
                     <button class="btn-principal" onclick="responderReflexionTexto('${juegoId}')">Enviar</button>
                 </div>`;
@@ -213,6 +273,17 @@ function renderCartaReflexion(juegoId, c){
                 </button>
             </div>`;
         }
+    } else if (c.fase === 'revelado' && esMapa) {
+        const adivino = c.sobre === 'nico' ? 'carito' : 'nico';
+        html += `<div class="panel reflexion-reveal">
+            <span class="texto-tenue" style="font-size:0.75rem;">✅ La verdad de ${nombreJugador(c.sobre)}:</span><p style="margin:4px 0 12px;">${_escaparHtmlReflexion(c.respuestas[c.sobre])}</p>
+            <span class="texto-tenue" style="font-size:0.75rem;">🤔 Lo que adivinó ${nombreJugador(adivino)}:</span><p style="margin:4px 0;">${_escaparHtmlReflexion(c.respuestas[adivino])}</p>
+        </div>`;
+        const textos = { si: '🎯 ¡Acertó!', casi: '🤏 Casi casi', no: '🙈 Ni cerca' };
+        if (c.acierto) html += `<div class="panel texto-centro ${c.acierto === 'si' ? 'logro-animado' : ''}">${textos[c.acierto]}</div>`;
+        else if (soySujeto) html += `<div class="panel texto-centro"><div class="texto-tenue" style="margin-bottom:8px;">¿Qué tan cerca estuvo?</div><div class="btn-fila">
+            ${Object.keys(textos).map(k => `<button class="btn-secundario" onclick="calificarMapaReflexion('${juegoId}','${k}')">${textos[k]}</button>`).join('')}</div></div>`;
+        else html += `<div class="panel texto-centro texto-tenue">${nombreJugador(c.sobre)} está viendo si acertaste…</div>`;
     } else if (c.fase === 'revelado') {
         html += `<div class="panel reflexion-reveal">
             <span class="texto-tenue" style="font-size:0.75rem;">Nico:</span><p style="margin:4px 0 12px;">${_escaparHtmlReflexion(c.respuestas.nico)}</p>
@@ -316,6 +387,19 @@ async function responderReflexion(juegoId, valor){
         const cfg = window.CONFIG_REFLEXION[juegoId];
         registrarEvento('reflexion_completada', `Revelaron una ronda de ${cfg.nombreJuego || juegoId}`);
     }
+}
+
+async function calificarMapaReflexion(juegoId, valor){
+    vibrarJ(12);
+    const id = window['_reflexionActualId_' + juegoId];
+    const ref = _refReflexionCarta(id);
+    await window.runTransaction(window.db, async (tx) => {
+        const snap = await tx.get(ref);
+        const data = snap.exists() ? snap.data() : null;
+        if (!data || data.acierto || data.sobre !== miIdentidad) return;
+        tx.update(ref, { acierto: valor });
+    }).catch(e => console.error('No se pudo calificar:', e));
+    if (valor === 'si') { if (window.fx) window.fx.confeti(); if (window.sfx) window.sfx.acierto(); }
 }
 
 async function sortearReflexion(juegoId){

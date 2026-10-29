@@ -195,6 +195,10 @@
 
         // ---------- REFLEXIÓN ----------
         espejo: { objetivo: 'Responder y adivinar qué respondió el otro.', pasos: ['Los dos responden a solas.', 'Además, cada uno trata de adivinar qué dijo el otro.', 'Se revela todo junto: respuesta, predicción y qué tan cerca estuvieron.'] },
+        treintayseis: { objetivo: 'Conocerse más (y enamorarse más) con las 36 preguntas de Arthur Aron.', pasos: ['Las preguntas van en orden, en tres sets que van ganando en profundidad.', 'Cada uno responde a solas; cuando los dos respondieron, se revela.', 'Al terminar las 36, mírense a los ojos cuatro minutos sin hablar (por videollamada si están lejos).'], tips: ['Sin apuro: un set por noche es ideal.', 'Lo mejor pasa en la charla después de revelar.'] },
+        mapaamor: { objetivo: 'Ver cuánto conocen el mundo del otro.', pasos: ['Cada ronda es sobre uno de los dos (se van turnando).', 'Esa persona escribe la verdad sobre sí misma y la otra escribe lo que cree.', 'Al revelar, quien contó la verdad dice si el otro acertó, casi, o ni cerca.'], tips: ['Arriba se ve el porcentaje de aciertos de cada uno.'] },
+        lenguajes: { objetivo: 'Descubrir cómo siente el amor cada uno.', pasos: ['Respondé 15 preguntas eligiendo lo que más te llega al corazón.', 'Ves tu lenguaje principal al toque; cuando el otro también lo hace, aparecen los dos resultados y consejos.'], tips: ['Pueden repetir el test cada tanto: los lenguajes cambian con el tiempo.'] },
+        suenos: { objetivo: 'Armar juntos la lista de cosas para hacer en la vida.', pasos: ['Escriban sueños por categoría (o pidan una idea 💡).', 'Marquen 🙋 "Me animo" en los que se animan.', 'Cuando lo cumplan, toquen ✅ y súmenle una fotito de recuerdo.'] },
         dilema: { objetivo: 'Elegir entre dos opciones igual de difíciles.', pasos: PASOS_REFLEXION, tips: ['No hay respuesta correcta: lo lindo es charlar por qué eligieron eso.'] },
         quehariassi: { objetivo: 'Imaginar qué haría cada uno.', pasos: PASOS_REFLEXION },
         futuro: { objetivo: 'Imaginar cómo se ven juntos más adelante.', pasos: PASOS_REFLEXION },

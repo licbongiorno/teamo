@@ -7,7 +7,7 @@
 // Estos 11 juegos comparten el motor genérico de "responder y revelar"
 // (js/motor-reflexion.js), así que necesitan ese archivo además del suyo.
 // Esta lista tiene que coincidir con JUEGOS_MOTOR_REFLEXION de navegacion.js.
-const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones', 'queprefieres', 'masprobable', 'completafrase', 'preguntadia', 'tepreguntoyo'];
+const JUEGOS_QUE_USAN_MOTOR_REFLEXION = ['dilema', 'quehariassi', 'futuro', 'maquinatiempo', 'antesdedormir', 'album', 'nuncapregunte', 'conoceme', 'detective', 'destino', 'decisiones', 'trivianosotros', 'batallacanciones', 'queprefieres', 'masprobable', 'completafrase', 'preguntadia', 'tepreguntoyo', 'treintayseis', 'mapaamor'];
 
 // Estos juegos son "en vivo, los dos a la vez" y comparten la
 // bureaucracia de js/arcade-comun.js (esperar a que ambos estén
@@ -21,7 +21,7 @@ const JUEGOS_QUE_USAN_BASE_TURNOS = ['gomoku', 'mancala', 'serpientes', 'parchis
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 61;
+const VERSION_CACHE = 62;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)

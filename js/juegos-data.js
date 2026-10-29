@@ -154,6 +154,12 @@ window.JUEGOS = [
     { id:'momentos', nombre:'Álbum de Momentos', icono:'📸', categoria:'cuidado', disponible:true, nuevo:true, descripcion:'Los momentos épicos que se guardan solos: hazañas, campeonatos, apuestas, misiones cumplidas…' },
     { id:'suenos', nombre:'Lista de Sueños', icono:'🌠', categoria:'cuidado', disponible:true, nuevo:true, descripcion:'La bucket list de los dos: quién se anima, sueños cumplidos con fecha y fotito.' },
     // ---- COOPERATIVOS ----
+    // ---- DUELOS Y CREATIVOS ----
+    { id:'damaschinas', nombre:'Damas Chinas', icono:'⭐', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Tablero estrella: llevá tus 10 fichas a la punta de enfrente saltando en cadena.' },
+    { id:'quoridor', nombre:'Quoridor', icono:'🧱', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Mové tu peón o poné paredes para trabar al otro. Gana quien cruza primero.' },
+    { id:'cifras', nombre:'Cifras', icono:'🔢', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Mismos 6 números y una meta: ¿quién se acerca más en 60 segundos?' },
+    { id:'encadenadas', nombre:'Palabras Encadenadas', icono:'🔗', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Cada palabra empieza con la última sílaba de la anterior, contra reloj.' },
+    { id:'exquisito', nombre:'Dibujo Exquisito', icono:'🖍️', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Dibujen un monstruo en tres partes sin ver lo del otro… y revélenlo juntos.' },
     { id:'laberinto', nombre:'Laberinto a Ciegas', icono:'🧭', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Uno ve las paredes, el otro mueve la ficha a ciegas. Guíense para salir juntos.' },
     { id:'cocina', nombre:'Cocina de a Dos', icono:'👩‍🍳', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Cada uno tiene la mitad de los ingredientes: armen los pedidos juntos antes de que se vayan los clientes.' },
     { id:'faros', nombre:'Faros', icono:'🗼', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Ven las cartas del otro pero no las propias. Con pistas, enciendan los faros en orden (tipo Hanabi).' },

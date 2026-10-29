@@ -149,6 +149,8 @@
             const e = estadoBot;
             const accion = decidir(cerebro, e);
             if (!accion) return;
+            // Juegos en vivo: el cerebro puede pedir "pensar" un rato antes de jugar.
+            if (typeof accion === 'object' && accion.esperar) { timerBot = setTimeout(programar, Math.min(accion.esperar, 4000)); return; }
             // Si la misma jugada sobre el mismo estado no cambió nada dos
             // veces, se frena (no hay que quedarse trabado en un bucle).
             const f = firma(e);
@@ -814,7 +816,7 @@
     const CEREBROS = { truco, escoba, chinchon, uno, ajedrez, damas, conecta4, tateti, reversi, generala, mentiroso };
     // Juegos nuevos: el botón aparece de entrada y el cerebro llega con el
     // archivo del juego (base-turnos.js llama a registrarCerebroCompu).
-    const CON_CEREBRO_DIFERIDO = ['gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker'];
+    const CON_CEREBRO_DIFERIDO = ['gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker', 'damaschinas', 'quoridor', 'cifras'];
     window.registrarCerebroCompu = (id, cerebro) => { CEREBROS[id] = cerebro; ponerBotones(); if (modo && modo.juego === id) programar(); };
 
     window.jugarContraCompu = jugarContraCompu;

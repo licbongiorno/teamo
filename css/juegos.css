@@ -1553,3 +1553,71 @@ html[data-mesa="dorado"] .tablero-juego .casilla-reversi{ background:#b8913a; }
 html[data-mesa="dorado"] .tablero-juego{ border-color:#6b4e12; box-shadow:0 0 0 4px #d8b45a, 0 0 22px rgba(247,226,154,0.45); }
 html[data-mesa="dorado"] .aj-mesa-truco, html[data-mesa="dorado"] .mesa-bj, html[data-mesa="dorado"] .mesa-poker, html[data-mesa="dorado"] .mesa-guerra, html[data-mesa="dorado"] .mesa-domino{ background:linear-gradient(135deg, #3a2c0e, #1d1606); box-shadow:inset 0 0 0 3px #d8b45a, inset 0 0 24px rgba(247,226,154,0.25); }
 html[data-mesa="dorado"]{ --aj-dorso:#3a2c0e; --aj-dorso-linea:#f7e29a; }
+
+/* ==================== Tanda C: damas chinas, quoridor, cifras, encadenadas, exquisito ==================== */
+.estrella-dch{ position:relative; width:min(100%, 380px); aspect-ratio:1; margin:6px auto 8px; }
+.agujero-dch{ position:absolute; width:5.3%; aspect-ratio:1; transform:translate(-50%, -50%); border-radius:50%; border:none; padding:0; background:rgba(255,255,255,0.12); box-shadow:inset 0 1px 3px rgba(0,0,0,0.5); cursor:default; display:flex; align-items:center; justify-content:center; }
+.agujero-dch.zona-n{ background:rgba(168,216,255,0.2); }
+.agujero-dch.zona-c{ background:rgba(255,179,198,0.2); }
+.agujero-dch.destino{ background:rgba(181,232,200,0.55); box-shadow:0 0 0 2px #b5e8c8; cursor:pointer; }
+.agujero-dch.origen{ box-shadow:0 0 0 2px #f5d9a0; }
+.agujero-dch.ultima{ box-shadow:0 0 0 2px rgba(245,217,160,0.6); }
+.ficha-dch{ width:112%; height:112%; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,0.45); cursor:pointer; }
+html[data-mesa="madera"] .estrella-dch, html[data-mesa="pano"] .estrella-dch, html[data-mesa="otono"] .estrella-dch, html[data-mesa="playa"] .estrella-dch, html[data-mesa="sanvalentin"] .estrella-dch, html[data-mesa="dorado"] .estrella-dch, html[data-mesa="noche"] .estrella-dch{ border-radius:24px; background:var(--aj-dorso); }
+.tablero-quo{ display:grid; grid-template-columns:repeat(9, 1fr); gap:3px; padding:6px; width:min(100%, 360px); aspect-ratio:1; margin:6px auto 8px; border-radius:10px; background:#2b2236; }
+.casilla-quo{ position:relative; border:none; border-radius:4px; background:rgba(255,255,255,0.09); padding:0; display:flex; align-items:center; justify-content:center; }
+.casilla-quo.meta-mia{ background:rgba(181,232,200,0.16); }
+.casilla-quo.destino{ background:rgba(181,232,200,0.5); cursor:pointer; }
+.casilla-quo.ultima{ box-shadow:inset 0 0 0 2px rgba(245,217,160,0.6); }
+.casilla-quo.p-abajo::after, .casilla-quo.pv-abajo::after{ content:''; position:absolute; left:-2px; right:-2px; bottom:-4px; height:5px; border-radius:3px; background:#f5d9a0; z-index:2; }
+.casilla-quo.p-arriba::before, .casilla-quo.pv-arriba::before{ content:''; position:absolute; left:-2px; right:-2px; top:-4px; height:5px; border-radius:3px; background:#f5d9a0; z-index:2; }
+.casilla-quo.p-der{ box-shadow:5px 0 0 -1px #f5d9a0; z-index:1; }
+.casilla-quo.p-izq{ box-shadow:-5px 0 0 -1px #f5d9a0; z-index:1; }
+.casilla-quo.pv-abajo::after, .casilla-quo.pv-arriba::before{ background:#ffb3c6; opacity:0.85; }
+.casilla-quo.pv-der{ box-shadow:5px 0 0 -1px #ffb3c6; z-index:1; }
+.casilla-quo.pv-izq{ box-shadow:-5px 0 0 -1px #ffb3c6; z-index:1; }
+.peon-quo{ width:72%; height:72%; border-radius:50%; box-shadow:0 3px 6px rgba(0,0,0,0.5); }
+.modos-quo{ display:flex; gap:6px; margin:8px 0; }
+.modos-quo button{ flex:1; padding:9px; border-radius:12px; border:1px solid rgba(255,255,255,0.14); background:rgba(255,255,255,0.05); color:inherit; font:inherit; cursor:pointer; }
+.modos-quo button.activa{ background:rgba(255,179,198,0.18); border-color:#ffb3c6; }
+.meta-cifras{ display:flex; flex-direction:column; align-items:center; margin:4px 0 6px; }
+.meta-cifras b{ font-family:var(--fuente-titulo); font-size:2.6rem; letter-spacing:2px; color:#f5d9a0; }
+.fichas-cifras{ display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:10px 0; }
+.fichas-cifras button{ min-width:58px; padding:12px 8px; border-radius:14px; border:2px solid rgba(168,216,255,0.4); background:rgba(168,216,255,0.1); color:inherit; font:inherit; font-size:1.25rem; font-weight:700; cursor:pointer; }
+.fichas-cifras button.elegida{ border-color:#f5d9a0; background:rgba(245,217,160,0.2); transform:translateY(-3px); }
+.ops-cifras{ display:flex; justify-content:center; gap:8px; margin-bottom:8px; }
+.ops-cifras button{ width:52px; height:46px; border-radius:12px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:inherit; font:inherit; font-size:1.4rem; cursor:pointer; }
+.ops-cifras button.elegida{ background:rgba(255,179,198,0.25); border-color:#ffb3c6; }
+.pasos-cifras{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; font-size:0.85rem; margin-bottom:8px; min-height:1.4em; }
+.pasos-cifras span{ padding:3px 8px; border-radius:8px; background:rgba(255,255,255,0.06); }
+.entrega-cifras{ padding:8px 12px; margin:6px 0; border-radius:12px; background:rgba(255,255,255,0.05); text-align:center; }
+.entrega-cifras small{ display:block; font-size:0.75rem; opacity:0.75; margin-top:3px; }
+.cadena-enc{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:4px; margin:10px 0; font-size:1rem; }
+.cadena-enc span{ padding:4px 10px; border-radius:999px; background:rgba(255,255,255,0.07); }
+.cadena-enc span.de-nico{ background:rgba(168,216,255,0.18); }
+.cadena-enc span.de-carito{ background:rgba(255,179,198,0.18); }
+.cadena-enc span.ultima{ font-weight:700; box-shadow:0 0 0 2px #f5d9a0; }
+.cadena-enc i{ font-style:normal; opacity:0.5; }
+.silaba-enc{ display:flex; justify-content:space-between; align-items:center; padding:8px 14px; border-radius:14px; background:rgba(245,217,160,0.1); margin-bottom:8px; }
+.silaba-enc > b{ font-size:1.4rem; }
+.silaba-enc b{ color:#f5d9a0; }
+.silaba-enc span.apurado b{ color:#ff8fa3; }
+.entrada-enc{ display:flex; gap:8px; margin-bottom:8px; }
+.entrada-enc input{ flex:1; min-width:0; padding:12px; border-radius:14px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.25); color:inherit; font:inherit; font-size:1.05rem; }
+.entrada-enc .btn-principal{ width:auto; padding:10px 16px; }
+.pasos-exq{ display:flex; justify-content:center; gap:6px; margin:6px 0 10px; font-size:0.8rem; }
+.pasos-exq span{ padding:4px 10px; border-radius:999px; background:rgba(255,255,255,0.05); opacity:0.6; }
+.pasos-exq span.hecho{ opacity:1; background:rgba(181,232,200,0.18); }
+.pasos-exq span.ahora{ opacity:1; background:rgba(255,179,198,0.22); box-shadow:0 0 0 1px #ffb3c6; }
+.lienzo-exq-caja{ display:flex; flex-direction:column; border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(0,0,0,0.35); margin-bottom:6px; }
+.tira-exq{ display:block; width:100%; opacity:0.85; border-bottom:2px dashed #ffb3c6; }
+#lienzo-exq{ display:block; width:100%; aspect-ratio:480/300; touch-action:none; background:#fffdf8; cursor:crosshair; }
+.paleta-exq{ display:flex; justify-content:center; gap:7px; margin:8px 0; }
+.paleta-exq button{ width:32px; height:32px; border-radius:50%; border:2px solid rgba(255,255,255,0.25); cursor:pointer; }
+.paleta-exq button.elegido{ box-shadow:0 0 0 3px #f5d9a0; }
+.paleta-exq button.grosor{ background:rgba(255,255,255,0.08); color:inherit; font-size:0.9rem; }
+.monstruo-exq{ display:flex; flex-direction:column; width:min(100%, 360px); margin:8px auto; border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.4); }
+.monstruo-exq img{ display:block; width:100%; animation:ajEntrarMonstruo .6s ease both; }
+.monstruo-exq img:nth-child(2){ animation-delay:.5s; } .monstruo-exq img:nth-child(3){ animation-delay:1s; }
+@keyframes ajEntrarMonstruo{ from{ opacity:0; transform:translateY(-12px); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce){ .monstruo-exq img{ animation:none; } }

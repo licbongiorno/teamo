@@ -1706,6 +1706,7 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .controles-aventura > div{ display:flex; gap:10px; }
 .controles-aventura button{ width:72px; height:64px; border-radius:18px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.08); color:inherit; font-size:1.6rem; cursor:pointer; touch-action:none; -webkit-tap-highlight-color:transparent; }
 .controles-aventura button.salto{ width:96px; height:72px; border-radius:50%; background:rgba(255,179,198,0.2); border-color:#ffb3c6; }
+@media (min-height: 760px) and (min-width: 410px) { .controles-aventura button{ width:80px; height:72px; } .controles-aventura button.salto{ width:108px; height:80px; } }
 .controles-aventura button.apretado{ background:rgba(255,255,255,0.25); transform:scale(0.95); }
 
 /* ==================== Hockey de aire + motos de luz ==================== */

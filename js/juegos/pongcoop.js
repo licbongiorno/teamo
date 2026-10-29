@@ -19,6 +19,8 @@ function armarLadrillosPc(nivel){
     return l;
 }
 const anchoPaletaPc = () => (PC.estado && PC.estado.larga && window.ahoraSync() < PC.estado.larga ? 84 : 56);
+// Contra la compu: la paleta del otro la mueve la compu en este celu.
+const compuPc = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'pongcoop' ? m : null; };
 const limitesPc = (q) => q === 'nico' ? [0, W_PC / 2] : [W_PC / 2, W_PC];
 function reiniciarPc(e){
     PC.clave = e.clave;
@@ -30,8 +32,18 @@ function reiniciarPc(e){
     PC.el = PC.el || { x: miIdentidad === 'nico' ? W_PC * 0.75 : W_PC * 0.25 };
     const sx = e.saque === 'nico' ? W_PC / 4 : W_PC * 3 / 4;
     PC.bolas = [{ x: sx, y: Y_PALETA - R_BOLA_PC - 2, vx: e.saque === 'nico' ? 1.6 : -1.6, vy: -3.4 }];
-    PC.dueno = e.saque === miIdentidad;
+    PC.dueno = e.saque === miIdentidad || !!compuPc();
     PC.perdida = false;
+}
+function pensarCompuPc(o, nivel, dt){
+    const vel = { facil: 2.2, normal: 3.2, dificil: 4.4 }[nivel] || 3.2;
+    const [a, b] = limitesPc(miRival), w = anchoPaletaPc();
+    const suyas = PC.bolas.filter(x => x.vy > 0 && x.x >= a - 10 && x.x <= b + 10).sort((x, y) => y.y - x.y);
+    // Un poco corrida para no devolverla siempre derecho.
+    const meta = suyas[0] ? suyas[0].x + (o.sesgo || 0) : (a + b) / 2;
+    if (!suyas[0] || Math.random() < 0.01) o.sesgo = (Math.random() - 0.5) * w * 0.6;
+    o.x += Math.max(-vel * dt, Math.min(vel * dt, meta - o.x));
+    o.x = Math.max(a + w / 2, Math.min(b - w / 2, o.x));
 }
 function moverPaletaPc(dt){
     const p = PC.yo, [a, b] = limitesPc(miIdentidad), w = anchoPaletaPc();
@@ -45,6 +57,8 @@ function pasoPc(dt){
     const e = PC.estado;
     if (!e || e.fase !== 'jugando' || !PC.yo) return;
     moverPaletaPc(dt);
+    const compu = compuPc();
+    if (compu && PC.el) pensarCompuPc(PC.el, compu.nivel, dt);
     if (window.ahoraSync() < e.inicio || PC.perdida) return;
     const w = anchoPaletaPc();
     const paletas = [{ x: PC.yo.x, vx: PC.yo.vx || 0, mia: true }, ...(PC.el ? [{ x: PC.el.x, vx: 0, mia: false }] : [])];
@@ -85,7 +99,7 @@ function desplanarPc(a){ const l = []; for (let i = 0; i + 3 < a.length; i += 4)
 function romperPc(l, b){
     PC.rotos.add(l.id);
     vibrarJ(6);
-    if (window.sfx) window.sfx.acierto();
+    if (window.sfx) window.sfx[l.tipo === 'L' || l.tipo === 'M' ? 'logro' : 'rebote']();
     if (l.tipo === 'M') {
         // Multibola: dos pelotas más desde esta.
         PC.bolas.push({ x: b.x, y: b.y, vx: -b.vx - 1, vy: b.vy }, { x: b.x, y: b.y, vx: b.vx + 1, vy: -Math.abs(b.vy) });
@@ -134,7 +148,7 @@ function dibujarPc(){
     const w = anchoPaletaPc();
     const paleta = (x, col) => { c.fillStyle = col; c.beginPath(); c.roundRect ? c.roundRect(x - w / 2, Y_PALETA, w, ALTO_PALETA, 4) : c.rect(x - w / 2, Y_PALETA, w, ALTO_PALETA); c.fill(); c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(x - w / 2 + 3, Y_PALETA + 1, w - 6, 2); };
     const col = (q) => q === 'nico' ? '#3d8bfd' : '#e8496b';
-    if (PC.el) { PC.el.rx = PC.el.rx == null ? PC.el.x : PC.el.rx + (PC.el.x - PC.el.rx) * 0.5; paleta(PC.el.rx, col(miRival)); }
+    if (PC.el) { PC.el.rx = PC.el.rx == null || compuPc() ? PC.el.x : PC.el.rx + (PC.el.x - PC.el.rx) * 0.5; paleta(PC.el.rx, col(miRival)); }
     if (PC.yo) paleta(PC.yo.x, col(miIdentidad));
     c.shadowColor = '#fff'; c.shadowBlur = 8; c.fillStyle = '#fff';
     PC.bolas.forEach(b => { c.beginPath(); c.arc(b.x, b.y, R_BOLA_PC, 0, Math.PI * 2); c.fill(); });
@@ -143,7 +157,7 @@ function dibujarPc(){
     c.fillStyle = 'rgba(0,0,0,0.4)'; c.fillRect(0, 0, W_PC, 18);
     c.fillStyle = '#fff'; c.font = 'bold 10px monospace';
     c.fillText(`Nivel ${e.nivel}/${NIVELES_PC.length} · ${'❤️'.repeat(Math.max(0, e.vidas))} · ${e.puntos || 0} pts`, 5, 13);
-    c.fillStyle = PC.enlace && PC.enlace.estado === 'directo' ? '#4cd18a' : '#f5d36b'; c.fillRect(W_PC - 8, 6, 5, 5);
+    VivoComun.estado(c, W_PC, H_PC, PC.enlace, nombreJugador(miRival));
     if (e.larga && window.ahoraSync() < e.larga) { c.fillStyle = '#c78bff'; c.font = 'bold 9px monospace'; c.textAlign = 'center'; c.fillText(`⬌ paletas largas ${Math.ceil((e.larga - window.ahoraSync()) / 1000)}s`, W_PC / 2, 30); c.textAlign = 'left'; }
     const falta = e.inicio - window.ahoraSync();
     if (e.fase === 'jugando' && falta > 0) { c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 28px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W_PC / 2, 250); c.font = '10px monospace'; c.fillText(e.saque === miIdentidad ? 'Sacás vos' : `Saca ${nombreJugador(e.saque)}`, W_PC / 2, 268); c.textAlign = 'left'; }
@@ -160,6 +174,7 @@ function bucleRl(ts){
         if (PC.dueno) m.b = bolasPlanasPc();
         PC.enlace.enviar('p', m);
     }
+    if (PC.estado && PC.estado.fase === 'jugando') VivoComun.cuenta('PC', PC.estado.inicio);
     dibujarPc();
     PC.loop = requestAnimationFrame(bucleRl);
 }
@@ -180,7 +195,7 @@ function arrancarPc(){
         PC.teclado = (ev) => { const k = mapa[ev.code]; if (!k || !document.getElementById('pantalla-pongcoop')?.classList.contains('activa') || (ev.target && ev.target.tagName === 'INPUT')) return; ev.preventDefault(); PC.teclas[k] = ev.type === 'keydown'; };
         window.addEventListener('keydown', PC.teclado); window.addEventListener('keyup', PC.teclado);
     }
-    if (!PC.enlace) {
+    if (!PC.enlace && !compuPc()) {
         PC.enlace = EnlaceVivo.conectar('pongcoop', {
             alMensaje(t, d) {
                 if (d.c !== PC.clave) return;
@@ -194,7 +209,7 @@ function arrancarPc(){
                     }
                 }
                 if (t === 'toma') { PC.dueno = false; PC.bolas = desplanarPc(d.b); if (window.sfx) window.sfx.toque(); }
-                if (t === 'roto' && !PC.rotos.has(d.id)) { PC.rotos.add(d.id); if (window.sfx) window.sfx.acierto(); }
+                if (t === 'roto' && !PC.rotos.has(d.id)) { PC.rotos.add(d.id); if (window.sfx) window.sfx.rebote(); }
             }
         });
     }
@@ -205,13 +220,14 @@ function pararPc(){
     if (PC.loop) cancelAnimationFrame(PC.loop);
     PC.loop = null;
     if (PC.enlace) PC.enlace.cerrar();
-    PC.enlace = null; PC.teclas = {}; PC.dedo = null;
+    PC.enlace = null; Object.keys(PC.teclas).forEach(k => { PC.teclas[k] = false; }); PC.dedo = null;
 }
 
 const Rompeladrillos = JuegoTurnos.crear({
     id: 'pongcoop',
     sinTurno: true,
     emojiListo: '🧱',
+    compu: { paso: () => null }, // la compu juega adentro del bucle (pensarCompuPc)
     intro: `Juntos contra los ladrillos: cada uno tiene su paleta abajo (${nombreJugador('nico')} a la izquierda, ${nombreJugador('carito')} a la derecha). Arrastrá el dedo para moverla. Las 3 vidas son de los dos. ⬌ alarga las paletas y ✦ suma pelotas. ${NIVELES_PC.length} niveles.`,
     inicial: () => ({ nivel: 1, vidas: VIDAS_PC, puntos: 0, rotos: [], larga: 0, saque: Math.random() < 0.5 ? 'nico' : 'carito', clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 3000, turno: null }),
     tituloFin: (e) => (e.motivo || '').startsWith('🎉') ? '🧱 ¡Lo lograron juntos!' : '💔 Casi…',

@@ -129,6 +129,7 @@ function pasoFa(dt){
         T: T_FA, ancho: ANCHO_FA, alto: ALTO_FA, esSolido: (x, y) => solidoFa(x, y, placa), cajas: FA.cajas, otro,
         alEmpujar: (cj, d) => empujarCajaFa(cj, d, placa),
     });
+    desatascarFa(p, placa);
     FA.cajas.forEach(cj => Plataformas.caerCaja(cj, dt, (x, y) => solidoFa(x, y, placa), T_FA));
     const mio = ELEM_FA[miIdentidad];
     // Lo que piso: lava, agua o verde.
@@ -152,6 +153,13 @@ function pasoFa(dt){
     FA.enPuerta = enPuerta;
     if (enPuerta && FA.el && FA.el.en && Date.now() - FA.el.visto < 1500) completarFa();
     if (p.y > FILAS_FA * T_FA) morirFa('¡Te caíste!');
+}
+// Si una puerta o reja se cerró con alguien adentro, lo saca al costado libre más cercano.
+function desatascarFa(p, placa){
+    const y0 = Math.floor(p.y / T_FA), y1 = Math.floor((p.y + ALTO_FA - 1) / T_FA);
+    const trabado = (x) => { for (let y = y0; y <= y1; y++) for (const cx of [Math.floor(x / T_FA), Math.floor((x + ANCHO_FA - 1) / T_FA)]) if (solidoFa(cx, y, placa)) return true; return false; };
+    if (!trabado(p.x)) return;
+    for (let d = 1; d <= T_FA * 2; d++) for (const s of [-1, 1]) if (!trabado(p.x + s * d)) { p.x += s * d; return; }
 }
 function empujarCajaFa(cj, d, placa){
     // Se mueve si no choca con paredes ni con otra caja.
@@ -240,12 +248,12 @@ function dibujarFa(){
         else { c.beginPath(); c.moveTo(x + 5.5, y - 6); c.lineTo(x + 9, y); c.lineTo(x + 2, y); c.fill(); }
         c.fillStyle = '#2a1f33'; c.fillRect(x + ((p.dir || 1) > 0 ? 6 : 3), y + 3, 1, 2);
     };
-    if (FA.el && Date.now() - FA.el.visto < 4000) { FA.el.rx = FA.el.rx == null ? FA.el.x : FA.el.rx + (FA.el.x - FA.el.rx) * 0.45; FA.el.ry = FA.el.ry == null ? FA.el.y : FA.el.ry + (FA.el.y - FA.el.ry) * 0.45; pj({ x: FA.el.rx, y: FA.el.ry, dir: FA.el.d }, miRival); }
+    if (FA.el && Date.now() - FA.el.visto < 4000) { const [rx, ry] = VivoComun.suave(FA.el); pj({ x: rx, y: ry, dir: FA.el.d }, miRival); }
     if (FA.yo && !FA.muriendo) pj(FA.yo, miIdentidad);
     c.fillStyle = 'rgba(0,0,0,0.5)'; c.fillRect(0, 0, W, 12);
     c.fillStyle = '#fff'; c.font = 'bold 8px monospace';
     c.fillText(`${e.nivel}/${NIVELES_FA.length} ${NIVELES_FA[e.nivel - 1].nombre} · 💎 ${e.gemas || 0} · ⏱ ${Math.max(0, Math.round((window.ahoraSync() - e.inicio) / 1000))}s`, 3, 9);
-    c.fillStyle = FA.enlace && FA.enlace.estado === 'directo' ? '#4cd18a' : '#f5d36b'; c.fillRect(W - 8, 3, 5, 5);
+    VivoComun.estado(c, W, H, FA.enlace, nombreJugador(miRival));
     const falta = e.inicio - window.ahoraSync();
     if (e.fase === 'jugando' && falta > 0) { c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(0, H / 2 - 20, W, 36); c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 18px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W / 2, H / 2 + 2); c.font = '8px monospace'; c.fillText(NIVELES_FA[e.nivel - 1].nombre, W / 2, H / 2 + 12); c.textAlign = 'left'; }
     else if (FA.enPuerta) { c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = '8px monospace'; c.fillText(`¡En tu puerta! Falta ${nombreJugador(miRival)}…`, W / 2, 24); c.textAlign = 'left'; }
@@ -272,6 +280,7 @@ function bucleFa(ts){
             }, 1200);
         }
     }
+    if (FA.estado && FA.estado.fase === 'jugando') VivoComun.cuenta('FA', FA.estado.inicio);
     dibujarFa();
     FA.loop = requestAnimationFrame(bucleFa);
 }
@@ -282,28 +291,15 @@ function arrancarFa(){
         FA.canvas.className = 'lienzo-aventura';
         FA.canvas.style.aspectRatio = `${COLS_FA}/${FILAS_FA}`;
         FA.ctx = FA.canvas.getContext('2d');
-        FA.controles = document.createElement('div');
-        FA.controles.className = 'controles-aventura';
-        FA.controles.innerHTML = `<div><button data-k="izq">◀</button><button data-k="der">▶</button></div><button data-k="salto" class="salto">⤒</button>`;
-        FA.controles.querySelectorAll('button').forEach(b => {
-            const k = b.dataset.k;
-            b.addEventListener('pointerdown', (ev) => { ev.preventDefault(); FA.teclas[k] = true; b.classList.add('apretado'); });
-            const off = (ev) => { ev.preventDefault(); FA.teclas[k] = false; b.classList.remove('apretado'); };
-            b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
-            b.addEventListener('contextmenu', (ev) => ev.preventDefault());
-        });
+        FA.controles = VivoComun.botones([[{ k: 'izq', txt: '◀' }, { k: 'der', txt: '▶' }], { k: 'salto', txt: '⤒', clase: 'salto' }], FA.teclas);
     }
-    if (!FA.teclado) {
-        const mapa = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'salto', KeyW: 'salto', Space: 'salto' };
-        FA.teclado = (ev) => { const k = mapa[ev.code]; if (!k || !document.getElementById('pantalla-fuegoagua')?.classList.contains('activa') || (ev.target && ev.target.tagName === 'INPUT')) return; ev.preventDefault(); FA.teclas[k] = ev.type === 'keydown'; };
-        window.addEventListener('keydown', FA.teclado); window.addEventListener('keyup', FA.teclado);
-    }
+    if (!FA.teclado) FA.teclado = VivoComun.teclado('pantalla-fuegoagua', { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'salto', KeyW: 'salto', Space: 'salto' }, FA.teclas);
     if (!FA.enlace) {
         FA.enlace = EnlaceVivo.conectar('fuegoagua', {
             alMensaje(t, d) {
                 if (d.c !== FA.clave) return;
                 if (t === 'pos') {
-                    FA.el = { ...(FA.el || {}), ...d, visto: Date.now() };
+                    FA.el = VivoComun.recibir(FA.el, d);
                     (d.cj || []).forEach(c => { const cj = FA.cajas[c.i]; if (cj && !(cj.movida && Date.now() - cj.movida < 300)) { cj.x = c.x; cj.y = c.y; } });
                 }
                 if (t === 'gema' && !FA.tomados.has(d.id)) { FA.tomados.add(d.id); const [, x, y] = d.id.split('-'); FA.mapa[+y][+x] = '.'; }
@@ -317,7 +313,7 @@ function pararFa(){
     if (FA.loop) cancelAnimationFrame(FA.loop);
     FA.loop = null;
     if (FA.enlace) FA.enlace.cerrar();
-    FA.enlace = null; FA.teclas = {};
+    FA.enlace = null; Object.keys(FA.teclas).forEach(k => { FA.teclas[k] = false; });
 }
 
 const FuegoAgua = JuegoTurnos.crear({

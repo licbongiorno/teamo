@@ -58,7 +58,7 @@ function verificarIdentidadJuegos(){
     }
 }
 
-function vibrarJ(patron){ if (navigator.vibrate) { try { navigator.vibrate(patron); } catch(e){} } }
+function vibrarJ(patron){ if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return; if (navigator.vibrate) { try { navigator.vibrate(patron); } catch(e){} } }
 
 // Helper compartido para los juegos nuevos (los juegos más viejos
 // tienen su propia versión local con otro nombre, por compatibilidad).

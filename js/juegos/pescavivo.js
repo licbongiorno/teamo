@@ -12,7 +12,7 @@ const TIPOS_PV = [
     { nombre: 'pez globo', art: 'un', pts: 35, col: '#e8d25a', panza: '#fff6c8', tam: 10, tiron: 0.8, prob: 0.12 },
     { nombre: 'pez dorado', art: 'un', pts: 60, col: '#ffd700', panza: '#fff2a8', tam: 9, tiron: 1.1, prob: 0.03, brilla: true },
 ];
-const PV = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, caña: null, el: null, teclas: {}, ultimoEnvio: 0, ultimoTs: 0, tomadosOtro: {}, cerrando: false, burbujas: [] };
+const PV = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, caña: null, el: null, teclas: {}, ultimoEnvio: 0, ultimoTs: 0, tomadosOtro: {}, cerrando: false, burbujas: [], fx: null, prevSt: {}, saltos: [], anillo: {} };
 
 function rngPv(semilla){ let a = semilla >>> 0; return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 // El pez del lugar i en su generación g (cada vez que lo pescan, aparece otro).
@@ -48,6 +48,7 @@ function empezarARecogerPv(){
 function soltarPv(motivo){
     const c = PV.caña;
     if (c.pez) PV.enlace && PV.enlace.enviar('suelta', { i: c.pez.i, c: PV.clave }, true);
+    if (c.pez && PV.fx) { PV.fx.salpicadura(c.x, c.y, undefined, 8); PV.fx.texto(c.x, c.y - 12, motivo && motivo.includes('cortó') ? '¡Se cortó!' : '¡Se fue!', { tam: 10, color: '#ffd0d8' }); }
     Object.assign(c, { st: 'listo', pez: null, x: muelleX(miIdentidad), y: AGUA_PV[1] - 6 });
     if (motivo && window.animJuegos) window.animJuegos.cartel(motivo, { dur: 900, sonido: false });
 }
@@ -88,8 +89,19 @@ function pasoPv(dt){
         else if (c.avance >= 100) pescarPv(c.pez);
     }
 }
+// El pez sale del agua y vuela en un arco hasta el pescador.
+function saltoPezPv(tipo, x, y, q){
+    PV.saltos.push({ tipo, x0: x, y0: y, x1: muelleX(q), y1: AGUA_PV[1] + 4, t: performance.now() });
+    if (!PV.fx) return;
+    PV.fx.salpicadura(x, y, undefined, 16);
+    PV.fx.onda(x, y + 2, { radio: 20, vida: 600, achatar: 0.45 });
+    const tp = TIPOS_PV[tipo];
+    PV.fx.texto(muelleX(q), AGUA_PV[1] - 30, `+${tp.pts}`, { tam: 14, color: tp.brilla ? '#ffd700' : '#fff', vida: 1100 });
+    if (tp.brilla) PV.fx.estrellitas(muelleX(q), AGUA_PV[1] - 10, 14);
+}
 async function pescarPv(f){
     const c = PV.caña, tipo = TIPOS_PV[f.tipo], quien = miIdentidad, clave = PV.clave;
+    saltoPezPv(f.tipo, c.x, c.y, miIdentidad);
     Object.assign(c, { st: 'listo', pez: null, x: muelleX(miIdentidad), y: AGUA_PV[1] - 6 });
     vibrarJ([20, 40, 20]);
     if (window.sfx) window.sfx[tipo.brilla ? 'logro' : 'acierto']();
@@ -106,6 +118,7 @@ async function pescarPv(f){
             ultima: { q: quien, t: ahora }, aviso: `${nombreJugador(quien)} sacó ${tipo.art} ${tipo.nombre} (+${tipo.pts})${equipo ? ' · ¡pesca en equipo! +15' : ''}`,
         };
     });
+    if (res && equipo && PV.fx) PV.fx.confeti(W_PV / 2, AGUA_PV[1] - 20, 40);
     if (res && window.animJuegos) window.animJuegos.cartel(equipo ? `🤝 ¡Pesca en equipo! +${tipo.pts + 15}` : `🐟 ¡${tipo.art === 'una' ? 'Una' : 'Un'} ${tipo.nombre}! +${tipo.pts}`, { dur: 1000, sonido: false });
 }
 async function terminarPv(){
@@ -118,78 +131,156 @@ async function terminarPv(){
         return { record: Math.max(rec, pts), ganador: 'empate', motivo: `🎉 Pescaron ${e.cantidad || 0} peces juntos: ${pts} puntos${nuevo ? ' · ¡nuevo récord de la pareja!' : ` · récord: ${rec}`}` };
     });
 }
-function dibujarPezPv(c, x, y, dir, tipo, alfa){
-    const t = TIPOS_PV[tipo], s = t.tam;
+function dibujarPezPv(c, x, y, dir, tipo, alfa, agitado){
+    const t = TIPOS_PV[tipo], s = t.tam, ahora = performance.now() / 1000;
+    // La cola aletea (más rápido si está enganchado) y el cuerpo ondula.
+    const aleteo = Math.sin(ahora * (agitado ? 28 : 7) + tipo * 2 + x * 0.05) * (agitado ? 0.55 : 0.3);
     c.save(); c.translate(x, y); c.scale(dir, 1); c.globalAlpha = alfa;
-    if (t.brilla) { c.fillStyle = 'rgba(255,230,120,0.35)'; c.beginPath(); c.arc(0, 0, s * 1.8, 0, Math.PI * 2); c.fill(); }
-    c.fillStyle = t.col; c.beginPath(); c.ellipse(0, 0, s, s * 0.55, 0, 0, Math.PI * 2); c.fill();
-    c.beginPath(); c.moveTo(-s * 0.8, 0); c.lineTo(-s * 1.5, -s * 0.5); c.lineTo(-s * 1.5, s * 0.5); c.closePath(); c.fill();
-    c.fillStyle = t.panza; c.beginPath(); c.ellipse(s * 0.1, s * 0.2, s * 0.6, s * 0.25, 0, 0, Math.PI * 2); c.fill();
-    if (tipo === 1) { c.fillStyle = '#fff'; c.fillRect(-s * 0.2, -s * 0.55, 2, s * 1.1); }
-    c.fillStyle = '#1a1a2a'; c.beginPath(); c.arc(s * 0.55, -s * 0.12, 1.4, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(10,40,70,0.25)'; c.beginPath(); c.ellipse(2, 5, s * 1.1, s * 0.35, 0, 0, Math.PI * 2); c.fill();
+    if (t.brilla) { const g = c.createRadialGradient(0, 0, 1, 0, 0, s * 2.2); g.addColorStop(0, 'rgba(255,230,120,0.55)'); g.addColorStop(1, 'rgba(255,230,120,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, s * 2.2, 0, Math.PI * 2); c.fill(); }
+    c.save(); c.translate(-s * 0.8, 0); c.rotate(aleteo);
+    c.fillStyle = t.col; c.beginPath(); c.moveTo(0, 0); c.lineTo(-s * 0.75, -s * 0.55); c.quadraticCurveTo(-s * 0.55, 0, -s * 0.75, s * 0.55); c.closePath(); c.fill();
+    c.restore();
+    const g = c.createLinearGradient(0, -s * 0.55, 0, s * 0.55); g.addColorStop(0, t.col); g.addColorStop(1, t.panza);
+    c.fillStyle = g; c.beginPath(); c.ellipse(0, 0, s, s * 0.55 * (1 + Math.sin(ahora * 3 + x) * 0.04), 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = t.col; c.beginPath(); c.moveTo(-s * 0.2, -s * 0.45); c.quadraticCurveTo(s * 0.1, -s * 0.95, s * 0.35, -s * 0.45); c.fill();
+    if (tipo === 1) { c.fillStyle = '#fff'; c.fillRect(-s * 0.2, -s * 0.55, 2, s * 1.1); c.fillRect(s * 0.35, -s * 0.45, 1.5, s * 0.9); }
+    if (tipo === 2) { c.fillStyle = 'rgba(120,90,20,0.5)'; for (let k = 0; k < 5; k++) c.fillRect(-s * 0.5 + k * s * 0.25, -s * 0.2 + (k % 2) * s * 0.25, 1.4, 1.4); }
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(s * 0.55, -s * 0.12, 2, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#1a1a2a'; c.beginPath(); c.arc(s * 0.6, -s * 0.12, 1.2, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.ellipse(-s * 0.1, -s * 0.25, s * 0.45, s * 0.12, 0, 0, Math.PI * 2); c.fill();
     c.restore();
 }
 function dibujarPv(){
     const c = PV.ctx, e = PV.estado;
     if (!c || !e) return;
+    const fx = PV.fx, pt = performance.now(), t = Date.now() / 1000;
     c.setTransform(2, 0, 0, 2, 0, 0);
-    c.fillStyle = '#9fd47a'; c.fillRect(0, 0, W_PV, H_PV);
-    const g = c.createLinearGradient(0, AGUA_PV[0], 0, AGUA_PV[1]); g.addColorStop(0, '#5ab4d8'); g.addColorStop(1, '#2a78b0');
-    c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(8, AGUA_PV[0], W_PV - 16, AGUA_PV[1] - AGUA_PV[0], 26) : c.rect(8, AGUA_PV[0], W_PV - 16, AGUA_PV[1] - AGUA_PV[0]); c.fill();
-    const t = Date.now() / 1000;
-    c.strokeStyle = 'rgba(255,255,255,0.18)'; c.lineWidth = 1;
-    for (let i = 0; i < 9; i++) { const y = AGUA_PV[0] + 20 + i * 31, x = 30 + ((i * 71 + t * 8) % 220); c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 8, y - 3, x + 16, y); c.stroke(); }
-    [[40, 70], [255, 120], [60, 260]].forEach(([x, y]) => { c.fillStyle = '#4f9a4a'; c.beginPath(); c.arc(x, y, 10, 0.3, Math.PI * 2); c.lineTo(x, y); c.fill(); });
+    if (fx) fx.antes(c);
+    // Pasto con matas y florcitas
+    c.fillStyle = '#93cc6c'; c.fillRect(-10, -10, W_PV + 20, H_PV + 20);
+    c.fillStyle = 'rgba(70,140,60,0.35)'; for (let i = 0; i < 70; i++) { const x = (i * 53) % W_PV, y = (i * 97) % H_PV; if (y > AGUA_PV[0] - 4 && y < AGUA_PV[1] + 4 && x > 4 && x < W_PV - 4) continue; c.fillRect(x, y, 1, 3); c.fillRect(x + 2, y + 1, 1, 2); }
+    ['#fff', '#ffd23a', '#ff9ab8'].forEach((col, k) => { for (let i = 0; i < 6; i++) { const x = (i * 131 + k * 37) % W_PV, y = (i * 61 + k * 23) % 34 + (i % 2 ? 4 : H_PV - 40); c.fillStyle = col; c.beginPath(); c.arc(x, y, 1.6, 0, Math.PI * 2); c.fill(); } });
+    // Laguna con borde de arena, degradé y reflejo del cielo
+    const W0 = 8, Wl = W_PV - 16, H0 = AGUA_PV[0], Hl = AGUA_PV[1] - AGUA_PV[0];
+    c.fillStyle = '#d9c48f'; c.beginPath(); c.roundRect ? c.roundRect(W0 - 4, H0 - 4, Wl + 8, Hl + 8, 30) : c.rect(W0 - 4, H0 - 4, Wl + 8, Hl + 8); c.fill();
+    const g = c.createLinearGradient(0, H0, 0, AGUA_PV[1]); g.addColorStop(0, '#6cc3e3'); g.addColorStop(0.5, '#3d97c8'); g.addColorStop(1, '#2a72a8');
+    c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(W0, H0, Wl, Hl, 26) : c.rect(W0, H0, Wl, Hl); c.fill();
+    c.save(); c.beginPath(); c.roundRect ? c.roundRect(W0, H0, Wl, Hl, 26) : c.rect(W0, H0, Wl, Hl); c.clip();
+    // Nubes reflejadas que pasan
+    c.fillStyle = 'rgba(255,255,255,0.12)'; for (let k = 0; k < 3; k++) { const x = ((t * 6 + k * 120) % (Wl + 120)) - 60, y = H0 + 40 + k * 80; c.beginPath(); c.ellipse(x, y, 40, 10, 0, 0, Math.PI * 2); c.ellipse(x + 25, y - 4, 26, 8, 0, 0, Math.PI * 2); c.fill(); }
+    // Olitas y destellos de sol
+    c.strokeStyle = 'rgba(255,255,255,0.22)'; c.lineWidth = 1;
+    for (let i = 0; i < 12; i++) { const y = H0 + 14 + i * 23, x = 20 + ((i * 71 + t * 9) % 250); c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 8, y - 3, x + 16, y); c.quadraticCurveTo(x + 24, y + 3, x + 32, y); c.stroke(); }
+    for (let i = 0; i < 8; i++) { const a = (Math.sin(t * 3 + i * 1.7) + 1) / 2; c.fillStyle = `rgba(255,255,230,${a * 0.7})`; const x = 30 + (i * 37) % 240, y = H0 + 20 + (i * 53) % 240; c.fillRect(x, y, 2 + a * 2, 1); }
+    c.restore();
+    // Juncos que se mueven con el viento
+    for (const [bx, by] of [[14, H0 + 30], [18, H0 + 200], [W_PV - 16, H0 + 90], [W_PV - 12, H0 + 240]]) for (let k = 0; k < 4; k++) {
+        const vi = Math.sin(t * 1.6 + k + bx) * 2.5; c.strokeStyle = '#4f8a3a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(bx + k * 2 - 3, by + 14); c.quadraticCurveTo(bx + k * 2 - 3 + vi * 0.5, by, bx + k * 2 - 3 + vi, by - 10 - k * 2); c.stroke();
+        if (k === 1) { c.fillStyle = '#8a5a30'; c.fillRect(bx + k * 2 - 4 + vi, by - 16 - k * 2, 3, 7); }
+    }
+    // Hojas de nenúfar que flotan (una con flor)
+    [[42, 72, 1], [255, 122, 0], [62, 262, 0], [230, 230, 1]].forEach(([x, y, flor], k) => {
+        const bob = Math.sin(t * 1.3 + k) * 1.2;
+        c.fillStyle = 'rgba(20,60,40,0.25)'; c.beginPath(); c.ellipse(x + 2, y + 3 + bob, 11, 7, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#4f9a4a'; c.beginPath(); c.ellipse(x, y + bob, 11, 7, 0, 0.35, Math.PI * 2); c.lineTo(x, y + bob); c.fill();
+        c.strokeStyle = '#3d7d3a'; c.lineWidth = 0.6; c.beginPath(); c.moveTo(x, y + bob); c.lineTo(x - 8, y + bob - 2); c.moveTo(x, y + bob); c.lineTo(x - 5, y + bob + 5); c.stroke();
+        if (flor) { for (let p = 0; p < 6; p++) { c.fillStyle = p % 2 ? '#ffb3d1' : '#ffd0e4'; c.beginPath(); c.ellipse(x - 2 + Math.cos(p) * 2.5, y + bob - 2 + Math.sin(p) * 1.6, 2.6, 1.4, p, 0, Math.PI * 2); c.fill(); } c.fillStyle = '#ffd23a'; c.beginPath(); c.arc(x - 2, y + bob - 2, 1.3, 0, Math.PI * 2); c.fill(); }
+    });
+    // Libélula que da vueltas
+    const lx = W_PV / 2 + Math.cos(t * 0.7) * 110, ly = H0 + 60 + Math.sin(t * 1.3) * 40 + Math.sin(t * 9) * 2;
+    c.fillStyle = 'rgba(200,240,255,0.6)'; c.beginPath(); c.ellipse(lx - 3, ly - 1 + Math.sin(t * 40), 3.5, 1.2, -0.4, 0, Math.PI * 2); c.ellipse(lx + 3, ly - 1 - Math.sin(t * 40), 3.5, 1.2, 0.4, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#3aa0a0'; c.fillRect(lx - 0.8, ly - 2, 1.6, 7);
     const ahora = VivoComun.reloj('pescavivo');
     if (e.fase === 'jugando') for (let i = 0; i < PECES_PV; i++) {
         const f = pezPv(e, i);
         const mio = PV.caña && PV.caña.pez && PV.caña.pez.i === i && (PV.caña.st === 'pica' || PV.caña.st === 'recogiendo');
         const delOtro = PV.tomadosOtro[i] === f.g && PV.el && (PV.el.st === 'pica' || PV.el.st === 'recogiendo');
-        if (mio) { dibujarPezPv(c, PV.caña.x + Math.sin(t * 20) * 1.5, PV.caña.y + 5, 1, f.tipo, 1); continue; }
-        if (delOtro) { dibujarPezPv(c, PV.el.x + Math.sin(t * 20) * 1.5, PV.el.y + 5, 1, f.tipo, 1); continue; }
+        if (mio) { dibujarPezPv(c, PV.caña.x + Math.sin(t * 20) * 1.5, PV.caña.y + 5, Math.sin(t * 6) > 0 ? 1 : -1, f.tipo, 1, true); continue; }
+        if (delOtro) { const px = PV.el.rx != null ? PV.el.rx : PV.el.x, py = PV.el.ry != null ? PV.el.ry : PV.el.y; dibujarPezPv(c, px + Math.sin(t * 20) * 1.5, py + 5, Math.sin(t * 6) > 0 ? 1 : -1, f.tipo, 1, true); continue; }
         const p = posPezPv(e, f), alfa = Math.min(1, (ahora - f.nace) / 1500);
         dibujarPezPv(c, p.x, p.y, p.dir, f.tipo, 0.85 * alfa);
+        // Burbujitas que suben de los peces
+        if (fx && Math.random() < 0.006) fx.burbujas(p.x + p.dir * 6, p.y - 3, 1);
     }
-    // Muelle y pescadores
-    c.fillStyle = '#a0703a'; c.fillRect(40, AGUA_PV[1] - 4, 80, 10); c.fillRect(180, AGUA_PV[1] - 4, 80, 10);
-    c.fillStyle = '#7a5028'; for (let x = 44; x < 120; x += 12) c.fillRect(x, AGUA_PV[1] - 4, 1, 10); for (let x = 184; x < 260; x += 12) c.fillRect(x, AGUA_PV[1] - 4, 1, 10);
+    // Peces volando hacia el muelle
+    PV.saltos = PV.saltos.filter(sv => pt - sv.t < 700);
+    PV.saltos.forEach(sv => { const k = (pt - sv.t) / 700, x = sv.x0 + (sv.x1 - sv.x0) * k, y = sv.y0 + (sv.y1 - sv.y0) * k - Math.sin(k * Math.PI) * 60; c.save(); c.translate(x, y); c.rotate(k * Math.PI * 3); dibujarPezPv(c, 0, 0, 1, sv.tipo, 1, true); c.restore(); });
+    // Muelles de madera con sombra
+    for (const mx of [40, 180]) {
+        c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(mx + 3, AGUA_PV[1] + 2, 80, 8);
+        c.fillStyle = '#b27c42'; c.fillRect(mx, AGUA_PV[1] - 4, 80, 10);
+        c.fillStyle = '#8a5a2c'; for (let x = mx + 4; x < mx + 80; x += 12) c.fillRect(x, AGUA_PV[1] - 4, 1, 10);
+        c.fillStyle = '#6a4220'; c.fillRect(mx + 4, AGUA_PV[1] + 6, 4, 8); c.fillRect(mx + 72, AGUA_PV[1] + 6, 4, 8);
+    }
     const pescador = (q, caña) => {
-        const x = muelleX(q), y = AGUA_PV[1] + 22, col = q === 'nico' ? '#3d8bfd' : '#e8496b';
-        c.fillStyle = col; c.fillRect(x - 6, y - 10, 12, 14);
-        c.fillStyle = '#f2c9a0'; c.beginPath(); c.arc(x, y - 15, 6, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#c8a050'; c.fillRect(x - 8, y - 22, 16, 3);
-        const px = x + 4, py = y - 30;
-        c.strokeStyle = '#5a3a1a'; c.lineWidth = 2; c.beginPath(); c.moveTo(x + 4, y - 6); c.lineTo(px, py); c.stroke();
-        if (caña && caña.st !== 'listo') {
-            const tenso = caña.st === 'recogiendo' ? caña.tension / 100 : 0;
-            c.strokeStyle = tenso > 0.75 ? '#ff5a5a' : 'rgba(255,255,255,0.8)'; c.lineWidth = 0.8;
-            c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo((px + caña.x) / 2, Math.min(py, caña.y) - 10 * (1 - tenso), caña.x, caña.y); c.stroke();
-            if (caña.st !== 'lanzando') { const hunde = caña.st === 'pica' ? Math.sin(Date.now() / 40) * 2 + 2 : 0; c.fillStyle = '#fff'; c.beginPath(); c.arc(caña.x, caña.y + hunde, 3, 0, Math.PI * 2); c.fill(); c.fillStyle = '#ff4a4a'; c.beginPath(); c.arc(caña.x, caña.y + hunde, 3, Math.PI, 0); c.fill(); }
+        const x = muelleX(q), y = AGUA_PV[1] + 22, col = q === 'nico' ? '#3d8bfd' : '#e8496b', oscuro = q === 'nico' ? '#1d4f9a' : '#8a1f3a';
+        // Transiciones de la línea (salpica al caer el anzuelo, al picar, etc.)
+        const st = caña ? caña.st : 'listo', prev = PV.prevSt[q];
+        if (caña && prev !== st && fx) {
+            if (st === 'esperando') { fx.salpicadura(caña.x, caña.y, undefined, 6); fx.onda(caña.x, caña.y + 1, { radio: 12, vida: 500, achatar: 0.45 }); }
+            if (st === 'pica') { fx.salpicadura(caña.x, caña.y, undefined, 10); fx.texto(caña.x, caña.y - 16, '!', { tam: 18, color: '#ffd23a', vida: 700 }); }
+        }
+        PV.prevSt[q] = st;
+        const respira = Math.sin(pt / 600 + (q === 'nico' ? 0 : 2)) * 0.8;
+        c.fillStyle = 'rgba(0,0,0,0.2)'; c.beginPath(); c.ellipse(x, y + 5, 9, 2.5, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = oscuro; c.fillRect(x - 5, y, 4, 5); c.fillRect(x + 1, y, 4, 5);
+        c.fillStyle = col; c.beginPath(); c.roundRect ? c.roundRect(x - 6, y - 11 + respira, 12, 13, 3) : c.rect(x - 6, y - 11 + respira, 12, 13); c.fill();
+        c.fillStyle = '#f2c9a0'; c.beginPath(); c.arc(x, y - 16 + respira, 6, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#1a1a2a'; c.fillRect(x - 2.5, y - 17 + respira, 1.4, 1.6); c.fillRect(x + 1.2, y - 17 + respira, 1.4, 1.6);
+        c.fillStyle = '#c8a050'; c.beginPath(); c.ellipse(x, y - 21 + respira, 9, 2.4, 0, 0, Math.PI * 2); c.fill(); c.fillRect(x - 5, y - 26 + respira, 10, 5);
+        c.fillStyle = col; c.fillRect(x - 5, y - 23 + respira, 10, 1.4);
+        // Caña: se dobla al recoger y hace el swing al tirar.
+        const tenso = st === 'recogiendo' ? (caña.tension || 0) / 100 : 0;
+        const swing = st === 'lanzando' ? Math.sin(Math.min(1, (Date.now() - (caña.desde || 0)) / 420) * Math.PI) : 0;
+        const ang = -1.2 + swing * 0.9 + (st === 'pica' ? Math.sin(pt / 40) * 0.08 : 0);
+        const largo = 26, bx = x + 5, by = y - 6;
+        const px = bx + Math.cos(ang) * largo * (1 - tenso * 0.15), py = by + Math.sin(ang) * largo + tenso * 8;
+        c.strokeStyle = '#5a3a1a'; c.lineWidth = 2; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(bx, by); c.quadraticCurveTo(bx + Math.cos(ang) * largo * 0.6, by + Math.sin(ang) * largo * 0.6 + tenso * 2, px, py); c.stroke();
+        c.fillStyle = '#333'; c.beginPath(); c.arc(bx + 2, by - 2, 1.6, 0, Math.PI * 2); c.fill();
+        if (caña && st !== 'listo') {
+            c.strokeStyle = tenso > 0.75 ? '#ff5a5a' : 'rgba(255,255,255,0.85)'; c.lineWidth = tenso > 0.75 ? 1.1 : 0.8;
+            const vib = tenso > 0.75 ? Math.sin(pt / 20) * 1.5 : 0;
+            c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo((px + caña.x) / 2 + vib, Math.min(py, caña.y) - 10 * (1 - tenso), caña.x, caña.y); c.stroke();
+            if (st !== 'lanzando') {
+                const hunde = st === 'pica' ? Math.sin(Date.now() / 40) * 2 + 2 : st === 'esperando' ? Math.sin(pt / 400) * 0.8 : 0;
+                // Anillitos alrededor del corcho mientras espera
+                if (st === 'esperando' && fx && pt - (PV.anillo[q] || 0) > 1400) { PV.anillo[q] = pt; fx.onda(caña.x, caña.y + 2, { radio: 9, vida: 900, achatar: 0.45, color: 'rgba(255,255,255,0.55)', ancho: 1 }); }
+                c.fillStyle = '#fff'; c.beginPath(); c.arc(caña.x, caña.y + hunde, 3, 0, Math.PI * 2); c.fill(); c.fillStyle = '#ff4a4a'; c.beginPath(); c.arc(caña.x, caña.y + hunde, 3, Math.PI, 0); c.fill();
+                c.fillStyle = 'rgba(255,255,255,0.7)'; c.fillRect(caña.x - 1, caña.y + hunde - 2.4, 1, 1);
+            }
+            if (st === 'recogiendo' && fx && Math.random() < 0.25) fx.salpicadura(caña.x, caña.y + 3, undefined, 1);
         }
     };
     if (PV.el) { const pos = VivoComun.suave(PV.el); pescador(miRival, pos ? { ...PV.el, x: pos[0], y: pos[1] } : null); }
     else pescador(miRival, null);
     pescador(miIdentidad, PV.caña);
+    if (fx) fx.dibujar(c);
     // Tablero
-    c.fillStyle = 'rgba(20,16,30,0.55)'; c.fillRect(0, 0, W_PV, 18);
+    c.fillStyle = 'rgba(20,16,30,0.6)'; c.fillRect(0, 0, W_PV, 18);
     c.fillStyle = '#fff'; c.font = 'bold 10px monospace';
     const quedan = Math.max(0, Math.ceil((e.inicio + DURA_PV - ahora) / 1000));
     c.fillText(`🎣 ${e.puntos || 0} pts · ${e.cantidad || 0} peces`, 5, 13);
-    c.textAlign = 'right'; c.fillText(`⏱ ${Math.floor(quedan / 60)}:${String(quedan % 60).padStart(2, '0')}`, W_PV - 12, 13); c.textAlign = 'left';
-    if (e.record) { c.font = '8px monospace'; c.fillStyle = 'rgba(255,255,255,0.8)'; c.fillText(`récord ${e.record}`, 5, 30); }
+    c.textAlign = 'right'; c.fillStyle = quedan <= 15 ? '#ff8fa3' : '#fff'; c.fillText(`⏱ ${Math.floor(quedan / 60)}:${String(quedan % 60).padStart(2, '0')}`, W_PV - 12, 13); c.textAlign = 'left';
+    if (e.record) { c.font = '8px monospace'; c.fillStyle = 'rgba(255,255,255,0.85)'; c.fillText(`récord ${e.record}`, 5, 30); }
     const cn = PV.caña;
     c.textAlign = 'center';
-    if (cn && cn.st === 'pica') { c.fillStyle = '#fff'; c.font = 'bold 16px monospace'; c.fillText('¡PICÓ! Tocá 🎣', W_PV / 2, 70); }
+    if (cn && cn.st === 'pica') { const pop = 1 + Math.sin(pt / 70) * 0.08; c.save(); c.translate(W_PV / 2, 70); c.scale(pop, pop); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(20,16,30,0.6)'; c.lineWidth = 3; c.font = 'bold 16px monospace'; c.strokeText('¡PICÓ! Tocá 🎣', 0, 0); c.fillText('¡PICÓ! Tocá 🎣', 0, 0); c.restore(); }
     if (cn && cn.st === 'recogiendo') {
-        c.fillStyle = 'rgba(20,16,30,0.6)'; c.fillRect(40, 340, 220, 30);
-        c.fillStyle = cn.tension > 75 ? '#ff5a5a' : '#f5d36b'; c.fillRect(44, 344, 212 * cn.tension / 100, 8);
-        c.fillStyle = '#4cd18a'; c.fillRect(44, 357, 212 * cn.avance / 100, 8);
+        const sacude = cn.tension > 75 ? Math.sin(pt / 25) * 1.5 : 0;
+        c.fillStyle = 'rgba(20,16,30,0.65)'; c.beginPath(); c.roundRect ? c.roundRect(38 + sacude, 338, 224, 34, 8) : c.rect(38, 338, 224, 34); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.12)'; c.fillRect(44 + sacude, 344, 212, 8); c.fillRect(44 + sacude, 357, 212, 8);
+        const gt = c.createLinearGradient(44, 0, 256, 0); gt.addColorStop(0, '#4cd18a'); gt.addColorStop(0.6, '#f5d36b'); gt.addColorStop(1, '#ff5a5a');
+        c.fillStyle = gt; c.fillRect(44 + sacude, 344, 212 * cn.tension / 100, 8);
+        c.fillStyle = '#5ab4ff'; c.fillRect(44 + sacude, 357, 212 * cn.avance / 100, 8);
         c.fillStyle = '#fff'; c.font = '8px monospace'; c.fillText('tensión', 20, 351); c.fillText('afuera', 20, 364);
     }
-    if (cn && cn.st === 'listo' && e.fase === 'jugando' && ahora > e.inicio) { c.fillStyle = 'rgba(255,255,255,0.85)'; c.font = '9px monospace'; c.fillText('Tocá el agua para tirar la caña', W_PV / 2, AGUA_PV[0] + 14); }
+    if (cn && cn.st === 'listo' && e.fase === 'jugando' && ahora > e.inicio) { c.fillStyle = `rgba(255,255,255,${0.6 + Math.sin(pt / 300) * 0.25})`; c.font = '9px monospace'; c.fillText('Tocá el agua para tirar la caña', W_PV / 2, AGUA_PV[0] + 14); }
     const falta = e.inicio - ahora;
-    if (e.fase === 'jugando' && falta > 0) { c.fillStyle = '#fff'; c.font = 'bold 28px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W_PV / 2, 190); }
+    if (e.fase === 'jugando' && falta > 0) { const n = Math.ceil(falta / 1000), k = 1 - (falta % 1000) / 1000, esc = FxVivo.rebote(Math.min(1, k * 3)); c.save(); c.translate(W_PV / 2, 180); c.scale(esc, esc); c.fillStyle = '#fff'; c.strokeStyle = 'rgba(20,16,30,0.5)'; c.lineWidth = 4; c.font = 'bold 30px monospace'; c.strokeText(String(n), 0, 0); c.fillText(String(n), 0, 0); c.restore(); }
     c.textAlign = 'left';
+    if (fx) fx.despues(c);
     VivoComun.estado(c, W_PV, H_PV, PV.enlace, nombreJugador(miRival), e.fase === 'jugando' && falta < -500);
 }
 function buclePv(ts){
@@ -208,6 +299,7 @@ function buclePv(ts){
     PV.loop = requestAnimationFrame(buclePv);
 }
 function arrancarPv(){
+    PV.fx = PV.fx || FxVivo.crear();
     if (!PV.canvas) {
         PV.canvas = document.createElement('canvas');
         PV.canvas.width = W_PV * 2; PV.canvas.height = H_PV * 2;
@@ -234,6 +326,8 @@ function arrancarPv(){
                 if (t === 'engancha') { PV.tomadosOtro[d.i] = d.g; if (PV.caña && PV.caña.pez && PV.caña.pez.i === d.i && PV.caña.st === 'pica' && miIdentidad === 'carito') soltarPv(); }
                 if (t === 'suelta' || t === 'pescado') delete PV.tomadosOtro[d.i];
                 if (t === 'pescado' && window.sfx) window.sfx.punto();
+                if (t === 'pescado' && PV.el && PV.el.x != null) { const f = pezPv(PV.estado, d.i); saltoPezPv(f.tipo, PV.el.rx != null ? PV.el.rx : PV.el.x, PV.el.ry != null ? PV.el.ry : PV.el.y, miRival); }
+                if (t === 'suelta' && PV.fx && PV.el && PV.el.x != null) PV.fx.salpicadura(PV.el.x, PV.el.y, undefined, 8);
             }
         });
     }

@@ -17,6 +17,7 @@
 //       compu: { paso(e, bot, yo, nivel){ return () => G.jugar(...) } } });
 //   G.jugar((e) => cambios | null)   → en tu turno; cambios.ganador termina la partida.
 //   G.accion((e) => cambios | null)  → sin chequear turno (juegos simultáneos).
+//   G.accionEnCola(...)              → igual, pero espera a la anterior en vez de descartarla.
 // ============================================================
 (function () {
     const nombre = (q) => typeof nombreJugador === 'function' ? nombreJugador(q) : q;
@@ -50,7 +51,12 @@
                 if (e && e.fase === 'esperando' && e.listos && e.listos[miIdentidad]) return;
                 const listos = { ...((e && e.fase === 'esperando' && e.listos) || {}), [miIdentidad]: true };
                 if (listos.nico && listos.carito) tx.set(ref(), estadoNuevo(e, listos));
-                else tx.set(ref(), { fase: 'esperando', listos, victorias: (e && e.victorias) || { nico: 0, carito: 0 } });
+                else {
+                    // cfg.conservar: datos que pasan de una partida a la otra (récords, circuito...).
+                    const guardar = {};
+                    (cfg.conservar || []).forEach(k => { if (e && e[k] !== undefined) guardar[k] = e[k]; });
+                    tx.set(ref(), { ...guardar, fase: 'esperando', listos, victorias: (e && e.victorias) || { nico: 0, carito: 0 } });
+                }
             });
         }
         // Revancha: quien la pide ya queda listo; contra la compu no se
@@ -94,6 +100,14 @@
             });
             await despues(res);
             return res;
+        }
+        // Como accion, pero en fila: en los juegos en vivo pueden salir dos
+        // seguidas (una gema y la llegada) y el candado descartaría la segunda.
+        let cola = Promise.resolve();
+        function accionEnCola(calcular) {
+            const p = cola.then(() => accion(calcular));
+            cola = p.catch(() => null);
+            return p;
         }
 
         function render(e) {
@@ -148,7 +162,7 @@
             });
         }
 
-        const api = { id, ref, leer, jugar, accion, marcarListo, revancha, iniciar, redibujar: () => render(ultimo), get estado() { return ultimo; } };
+        const api = { id, ref, leer, jugar, accion, accionEnCola, marcarListo, revancha, iniciar, redibujar: () => render(ultimo), get estado() { return ultimo; } };
         JUEGOS_REGISTRADOS[id] = api;
         window.INICIAR_JUEGO = window.INICIAR_JUEGO || {};
         window.INICIAR_JUEGO[id] = iniciar;

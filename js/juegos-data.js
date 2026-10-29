@@ -167,6 +167,7 @@ window.JUEGOS = [
     { id:'fuegoagua', nombre:'Fuego y Agua', icono:'🔥', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Puzzles de plataformas en vivo: Nico es fuego, Carito es agua. Placas, palancas y cajas para que lleguen los dos.' },
     { id:'hockey', nombre:'Hockey de Aire', icono:'🏒', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La mesa del bar en el celu: mové tu mazo con el dedo y meté el disco. Primero a 7.' },
     { id:'motos', nombre:'Motos de Luz', icono:'🏍️', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Tu moto deja una estela de luz: encerrá al otro y no choques. Al mejor de 5.' },
+    { id:'autitos', nombre:'Carrera de Autitos', icono:'🏎️', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Carreras vistas de arriba, en vivo: 3 vueltas, semáforo de largada y 3 circuitos. Con botones o inclinando el celu.' },
     { id:'bombitas', nombre:'Bombitas', icono:'💣', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Laberinto, bombas y mejoras escondidas, en vivo. Encerrá al otro sin volarte vos.' },
     // ---- CREATIVOS Y EN PERSONA ----
     { id:'historia', nombre:'Historia a Dos Voces', icono:'📖', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Escriban un cuento entre los dos, una frase cada uno, con palabras sorpresa.' },

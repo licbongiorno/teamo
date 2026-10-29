@@ -79,6 +79,7 @@ const DETECTORES_TE_TOCA = {
     poker: _porTurno('jugando'),
     codigo: _porTurno('jugando'),
     onda: _porTurno('jugando'),
+    faros: _porTurno('jugando'),
 };
 
 const TEXTO_QUE_TE_TOCA = {

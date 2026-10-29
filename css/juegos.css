@@ -1457,3 +1457,56 @@ html[data-mesa="noche"] .mesa-bj, html[data-mesa="noche"] .mesa-poker, html[data
 .alternativas-sugerencia{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:14px; font-size:0.8rem; }
 .alternativas-sugerencia span{ opacity:0.6; }
 .alternativas-sugerencia button{ padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); color:inherit; font:inherit; font-size:0.8rem; cursor:pointer; }
+
+/* ==================== Cooperativos: laberinto, cocina, faros ==================== */
+.laberinto{ display:grid; grid-template-columns:repeat(var(--n), 1fr); width:min(100%, 340px); aspect-ratio:1; margin:6px auto 10px; background:rgba(255,255,255,0.03); border-radius:8px; }
+.celda-lab{ position:relative; display:flex; align-items:center; justify-content:center; font-size:1.1rem; border:1px dashed rgba(255,255,255,0.05); }
+.laberinto{ --pared:#f5d9a0; }
+.laberinto:not(.guia){ --pared:#ff8fa3; }
+.laberinto .celda-lab.pn{ border-top:3px solid var(--pared); }
+.laberinto .celda-lab.pe{ border-right:3px solid var(--pared); }
+.laberinto .celda-lab.ps{ border-bottom:3px solid var(--pared); }
+.laberinto .celda-lab.po{ border-left:3px solid var(--pared); }
+.ficha-lab{ font-size:1.3rem; filter:drop-shadow(0 0 6px rgba(255,179,198,0.8)); }
+.senal-lab{ text-align:center; margin:4px 0 8px; padding:6px; border-radius:12px; background:rgba(168,216,255,0.1); font-size:0.95rem; }
+.senal-armando{ font-size:1.3rem; min-height:1.6em; margin:4px 0; }
+.pad-lab{ display:grid; grid-template-columns:repeat(3, 56px); gap:6px; justify-content:center; margin:6px 0 10px; }
+.pad-lab button{ height:52px; border-radius:14px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); font-size:1.4rem; cursor:pointer; }
+.pad-lab button:active{ transform:scale(0.92); }
+.pedidos-cocina{ display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin:8px 0; }
+.pedido-cocina{ padding:8px 6px; border-radius:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); text-align:center; }
+.pedido-cocina.encaminado{ border-color:#b5e8c8; background:rgba(181,232,200,0.1); }
+.ing-pedido{ font-size:1.25rem; display:flex; flex-wrap:wrap; justify-content:center; gap:2px; }
+.ing-pedido span{ opacity:0.55; }
+.ing-pedido span.mio{ opacity:1; }
+.ing-pedido span.puesto{ opacity:1; filter:drop-shadow(0 0 4px #b5e8c8); }
+.barra-pedido{ height:5px; border-radius:999px; background:rgba(255,255,255,0.08); margin-top:6px; overflow:hidden; }
+.barra-pedido i{ display:block; height:100%; background:linear-gradient(90deg, #ff8fa3, #f5d9a0); transition:width .4s linear; }
+.plato-cocina{ text-align:center; font-size:1.5rem; padding:10px; margin:6px 0; border-radius:50px; background:radial-gradient(circle, rgba(255,255,255,0.12), rgba(255,255,255,0.03)); }
+.alacena-cocina{ display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin:6px 0 10px; }
+.alacena-cocina button{ padding:8px 2px; border-radius:14px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:inherit; font:inherit; font-size:0.72rem; cursor:pointer; }
+.alacena-cocina button span{ display:block; font-size:1.7rem; }
+.alacena-cocina button:active{ transform:scale(0.92); }
+.faros-fila{ display:flex; justify-content:space-around; margin:6px 0; }
+.faro{ text-align:center; font-size:0.8rem; }
+.faro .torre{ display:flex; flex-direction:column; gap:3px; width:30px; margin:0 auto 4px; }
+.faro .torre i{ height:14px; border-radius:4px; background:rgba(255,255,255,0.08); }
+.faro.c-r .torre i.on{ background:#ff6b6b; box-shadow:0 0 8px #ff6b6b; }
+.faro.c-a .torre i.on{ background:#5fa8ff; box-shadow:0 0 8px #5fa8ff; }
+.faro.c-v .torre i.on{ background:#4cd18a; box-shadow:0 0 8px #4cd18a; }
+.faro.c-m .torre i.on{ background:#f5d36b; box-shadow:0 0 8px #f5d36b; }
+.registro-faros{ text-align:center; font-size:0.82rem; padding:6px 10px; margin-bottom:8px; border-radius:12px; background:rgba(245,217,160,0.08); }
+.mano-faros{ display:flex; justify-content:center; gap:8px; margin:6px 0; }
+.carta-faro{ position:relative; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; width:54px; height:76px; border-radius:10px; background:#f7f1e8; color:#2a1f33; border:2px solid transparent; font:inherit; box-shadow:0 3px 8px rgba(0,0,0,0.3); }
+.carta-faro b{ font-size:1.5rem; line-height:1; }
+.carta-faro i{ font-style:normal; font-size:0.95rem; }
+.carta-faro small{ position:absolute; top:2px; right:4px; font-size:0.6rem; }
+.carta-faro.c-r{ border-color:#ff6b6b; } .carta-faro.c-a{ border-color:#5fa8ff; } .carta-faro.c-v{ border-color:#4cd18a; } .carta-faro.c-m{ border-color:#f5d36b; }
+.carta-faro.oculta{ background:linear-gradient(145deg, #3a2d4d, #251c33); color:#f7f1e8; cursor:pointer; }
+.carta-faro.oculta.elegida{ transform:translateY(-8px); box-shadow:0 0 0 3px #ffb3c6, 0 8px 14px rgba(0,0,0,0.4); }
+.carta-faro.marcada{ animation:ajLatirReglas 1.2s ease-in-out 3; box-shadow:0 0 0 3px #f5d9a0; }
+.pistas-faros{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:3px; margin:6px 0; font-size:0.8rem; }
+.pistas-faros button{ width:33px; height:34px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:inherit; font:inherit; font-weight:700; cursor:pointer; }
+.descarte-faros{ margin-top:10px; font-size:0.78rem; display:flex; flex-wrap:wrap; align-items:center; gap:3px; }
+.descarte-faros .carta-faro{ width:26px; height:36px; box-shadow:none; }
+.descarte-faros .carta-faro b{ font-size:0.8rem; } .descarte-faros .carta-faro i{ font-size:0.55rem; }

@@ -152,6 +152,10 @@ window.JUEGOS = [
     { id:'mapaamor', nombre:'Mapa del Amor', icono:'🗺️', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Uno cuenta la verdad sobre sí mismo y el otro adivina: ¿cuánto conocés su mundo?' },
     { id:'lenguajes', nombre:'Lenguajes del Amor', icono:'💌', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Un test cortito para cada uno y los resultados comparados, con consejos para cuidarse mejor.' },
     { id:'suenos', nombre:'Lista de Sueños', icono:'🌠', categoria:'cuidado', disponible:true, nuevo:true, descripcion:'La bucket list de los dos: quién se anima, sueños cumplidos con fecha y fotito.' },
+    // ---- COOPERATIVOS ----
+    { id:'laberinto', nombre:'Laberinto a Ciegas', icono:'🧭', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Uno ve las paredes, el otro mueve la ficha a ciegas. Guíense para salir juntos.' },
+    { id:'cocina', nombre:'Cocina de a Dos', icono:'👩‍🍳', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Cada uno tiene la mitad de los ingredientes: armen los pedidos juntos antes de que se vayan los clientes.' },
+    { id:'faros', nombre:'Faros', icono:'🗼', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Ven las cartas del otro pero no las propias. Con pistas, enciendan los faros en orden (tipo Hanabi).' },
     { id:'sopa', nombre:'Sopa de Letras en Duelo', icono:'🔎', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La misma sopa para los dos: el primero en encontrar las 8 palabras gana.' },
 ];
 

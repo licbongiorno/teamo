@@ -164,6 +164,7 @@ window.JUEGOS = [
     { id:'pescar', nombre:'¿Tenés…?', icono:'🎣', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Pedile cartas al otro o ¡pescá! Juntá las cuatro de cada número para armar juegos.' },
     // ---- EN VIVO, EN EL MISMO NIVEL ----
     { id:'aventura', nombre:'Aventura de a Dos', icono:'🍄', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Un plataformas como los de antes, de a dos y en vivo: saltá, subite a la cabeza del otro y lleguen juntos a la bandera.' },
+    { id:'fuegoagua', nombre:'Fuego y Agua', icono:'🔥', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Puzzles de plataformas en vivo: Nico es fuego, Carito es agua. Placas, palancas y cajas para que lleguen los dos.' },
     { id:'hockey', nombre:'Hockey de Aire', icono:'🏒', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La mesa del bar en el celu: mové tu mazo con el dedo y meté el disco. Primero a 7.' },
     { id:'motos', nombre:'Motos de Luz', icono:'🏍️', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Tu moto deja una estela de luz: encerrá al otro y no choques. Al mejor de 5.' },
     { id:'bombitas', nombre:'Bombitas', icono:'💣', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Laberinto, bombas y mejoras escondidas, en vivo. Encerrá al otro sin volarte vos.' },

@@ -108,6 +108,7 @@
                     <p class="texto-tenue">${cfg.intro}</p>
                     <div class="texto-tenue" style="margin-bottom:10px;">${nombre(miIdentidad)}: ${ly ? '✅ listo/a' : '⏳ esperando'}<br>${nombre(miRival)}: ${lr ? '✅ listo/a' : '⏳ esperando'}</div>
                     <button class="btn-principal" ${ly ? 'disabled style="opacity:0.5;"' : ''} onclick="JuegoTurnos.listo('${id}')">${ly ? 'Esperando al otro…' : `¡Estoy listo/a! ${cfg.emojiListo || '🎲'}`}</button>
+                    ${cfg.extraEspera ? cfg.extraEspera(e) : ''}
                 </div>`;
                 return;
             }

@@ -4,7 +4,10 @@
 // posiciones viajan por js/enlace-vivo.js, directo entre los celulares).
 // Cooperación: subirse a la cabeza del otro para llegar alto, pisar una
 // placa para abrir puertas o hacer aparecer escaleras, y llegar los dos a
-// la bandera. Vidas compartidas, monedas compartidas, 4 niveles.
+// la bandera. Vidas compartidas, monedas compartidas, 8 niveles: pradera,
+// atardecer, noche, castillo, cueva oscura (sólo se ve alrededor de cada
+// uno), lago (se nada), montaña nevada (hielo, resortes, plataformas que
+// se mueven) y el castillo del jefe (hay que pisarle la cabeza 3 veces).
 //
 // El doc juegos/aventura (base-turnos) guarda lo que tiene que quedar:
 // nivel, vidas, quién llegó a la bandera y qué se tomó (monedas, bloques,
@@ -30,6 +33,9 @@ function armarNivelAv(ancho, piezas){
         if (tipo === 'muro') for (let i = 0; i < a; i++) for (let y = 5; y <= 8; y++) pon(x + i, y, '#'); // muro de 4: hay que subirse al otro
         if (tipo === 'escalera') { for (let k = 0; k < 3; k++) for (let y = 8 - k; y <= 8; y++) pon(x + k, y, 'L'); } // aparece con la placa
         if (tipo === 'placa') pon(x, a == null ? 8 : a, 'b');
+        if (tipo === 'agua') for (let i = 0; i < a; i++) for (let y = b; y <= 8; y++) if (g[y][x + i] === '.') pon(x + i, y, '~'); // ['agua', x, ancho, desdeFila]
+        if (tipo === 'hielo') for (let i = 0; i < a; i++) if (g[9][x + i] === '#') pon(x + i, 9, '_');
+        if (tipo === 'R') pon(x, 8, 'R');
         if (['E', 'C', 'F', 'S'].includes(tipo)) pon(x, tipo === 'F' ? 8 : 8, tipo === 'E' ? 'E' : tipo);
     });
     return g.map(f => f.join(''));
@@ -51,6 +57,23 @@ const NIVELES_AV = [
         ['S', 2], ['fila', 8, 6, '====='], ['monedas', 8, 5, 5], ['pinchos', 9, 3], ['E', 16], ['placa', 22], ['puerta', 26], ['placa', 30], ['C', 32],
         ['hueco', 36, 4], ['fila', 37, 7, '=='], ['escalera', 43], ['muro', 46, 4], ['placa', 48, 4], ['fila', 54, 6, '====='], ['pinchos', 54, 5],
         ['E', 62], ['E', 66], ['E', 70], ['col', 76, 1], ['col', 77, 2], ['col', 78, 3], ['fila', 82, 5, '?=?'], ['F', 90]]) },
+    { nombre: 'La cueva', cielo: ['#0d0a14', '#1c1626'], suelo: '#4a4252', pasto: '#7a6a8a', castillo: true, oscuro: true,
+        moviles: [[18, 7, 2, 3, 'h'], [72, 6, 2, 4, 'h']], mapa: armarNivelAv(92, [
+        ['S', 2], ['monedas', 6, 6, 3], ['E', 12], ['hueco', 18, 6], ['monedas', 19, 5, 4], ['C', 26], ['E', 30], ['pinchos', 34, 3], ['fila', 33, 5, '==='],
+        ['placa', 40], ['puerta', 44], ['placa', 48], ['escalera', 54], ['muro', 57, 4], ['placa', 59, 4], ['monedas', 57, 3, 4], ['E', 64], ['E', 68],
+        ['hueco', 72, 7], ['monedas', 73, 4, 4], ['col', 82, 2], ['F', 87]]) },
+    { nombre: 'El lago', cielo: ['#5ec4e8', '#bdeeff'], suelo: '#a8834e', pasto: '#e8d28a', mapa: armarNivelAv(94, [
+        ['S', 2], ['E', 8], ['col', 13, 2], ['agua', 14, 30, 3], ['col', 20, 4], ['fila', 26, 4, '===='], ['monedas', 16, 5, 4], ['monedas', 27, 3, 4], ['monedas', 36, 6, 5],
+        ['pinchos', 31, 2], ['col', 44, 2], ['C', 47], ['R', 52], ['fila', 53, 3, '====='], ['monedas', 53, 2, 5], ['E', 60],
+        ['placa', 64], ['puerta', 68], ['placa', 72], ['agua', 76, 8, 5], ['monedas', 77, 7, 6], ['col', 84, 2], ['F', 89]]) },
+    { nombre: 'La montaña nevada', cielo: ['#a9c7e8', '#eef6ff'], suelo: '#7a8aa0', pasto: '#ffffff', nieve: true,
+        moviles: [[34, 7, 2, 4, 'v'], [66, 7, 2, 3, 'h']], mapa: armarNivelAv(92, [
+        ['S', 2], ['hielo', 6, 20], ['E', 12], ['hueco', 18, 3], ['R', 25], ['fila', 27, 3, '===='], ['monedas', 27, 2, 4], ['col', 33, 1], ['fila', 36, 3, '==='],
+        ['C', 40], ['escalera', 43], ['muro', 46, 4], ['placa', 48, 4], ['hielo', 50, 16], ['pinchos', 54, 2], ['E', 58], ['hueco', 66, 4], ['monedas', 66, 5, 4],
+        ['R', 74], ['fila', 75, 2, '==='], ['col', 80, 3], ['F', 86]]) },
+    { nombre: 'El castillo del jefe', cielo: ['#1a1024', '#3a1c34'], suelo: '#4a3a48', pasto: '#c25a7a', castillo: true, jefe: { x0: 42, x1: 78 }, mapa: armarNivelAv(90, [
+        ['S', 2], ['pinchos', 8, 2], ['E', 14], ['fila', 18, 6, '?=?'], ['placa', 24], ['puerta', 28], ['placa', 32], ['C', 36], ['monedas', 44, 5, 6],
+        ['fila', 50, 5, '=='], ['fila', 66, 5, '=='], ['F', 85]]) },
 ];
 
 // ---------- Estado local del motor ----------
@@ -58,7 +81,37 @@ const AV = {
     nivelCargado: null, mapa: null, ancho: 0, bichos: [], yo: null, otro: null, enlace: null, loop: null,
     canvas: null, ctx: null, controles: null, teclas: { izq: false, der: false, salto: false }, tomados: new Set(),
     ultimoEnvio: 0, checkpoint: null, invulnerable: 0, estado: null, camara: 0, saltoPrevio: false, llegue: false, monedasLocal: 0, muriendo: false,
+    moviles: [], jefe: null, jefeGolpeLocal: 0, progreso: { max: 0, elegido: 1 }, sombra: null,
 };
+// Hasta qué nivel llegaron (para poder arrancar más adelante): juegos/aventura-progreso.
+const refProgresoAv = () => window.doc(window.db, 'juegos', 'aventura-progreso');
+(function escucharProgresoAv(){
+    if (!window.db || !window.onSnapshot) { setTimeout(escucharProgresoAv, 500); return; }
+    (window._onSnapshotSinCompu || window.onSnapshot)(refProgresoAv(), (s) => {
+        AV.progreso = { max: 0, elegido: 1, ...(s.exists() ? s.data() : {}) };
+        if (Aventura.estado && Aventura.estado.fase !== 'jugando') Aventura.redibujar();
+    }, () => {});
+})();
+function elegirNivelAv(n){
+    if (n > Math.min(NIVELES_AV.length, (AV.progreso.max || 0) + 1)) return;
+    vibrarJ(8);
+    window.setDoc(refProgresoAv(), { elegido: n }, { merge: true }).catch(() => {});
+}
+function posMovilAv(m){
+    const largo = m.rango * T_AV;
+    const t = (window.ahoraSync() - (AV.estado?.inicio || 0)) / 1000 * 26;
+    const q = ((t % (2 * largo)) + 2 * largo) % (2 * largo), off = q < largo ? q : 2 * largo - q;
+    return m.eje === 'h' ? { x: m.x * T_AV + off, y: m.y * T_AV } : { x: m.x * T_AV, y: m.y * T_AV - off };
+}
+function posJefeAv(){
+    const j = AV.jefe, golpes = (AV.estado && AV.estado.jefeGolpes) || 0;
+    const largo = j.x1 - j.x0, t = (window.ahoraSync() - (AV.estado?.inicio || 0)) / 1000 * (42 + golpes * 18);
+    const q = ((t % (2 * largo)) + 2 * largo) % (2 * largo);
+    // Salta cada tanto: más enojado con cada golpe.
+    const salto = Math.max(0, Math.sin((window.ahoraSync() - (AV.estado?.inicio || 0)) / (900 - golpes * 150))) * (golpes ? 26 : 0);
+    return { x: j.x0 + (q < largo ? q : 2 * largo - q), y: j.y - salto };
+}
+const jefeVivoAv = () => AV.jefe && ((AV.estado && AV.estado.jefeGolpes) || 0) < 3;
 
 function cargarNivelAv(e){
     const n = NIVELES_AV[e.nivel - 1];
@@ -80,6 +133,8 @@ function cargarNivelAv(e){
         if (c === 'S') { AV.mapa[y][x] = '.'; AV.inicioX = x * T_AV; AV.inicioY = y * T_AV; }
     }
     AV.tomados.forEach(id => aplicarTomadoAv(id));
+    AV.moviles = (n.moviles || []).map(([x, y, w, rango, eje]) => ({ x, y, w, rango, eje, ultimo: null }));
+    AV.jefe = n.jefe ? { x0: n.jefe.x0 * T_AV, x1: n.jefe.x1 * T_AV - 28, y: 9 * T_AV - 24 } : null;
     const separa = miIdentidad === 'nico' ? 0 : 18;
     AV.checkpoint = { x: AV.inicioX + separa, y: AV.inicioY };
     AV.yo = { x: AV.checkpoint.x, y: AV.checkpoint.y, vx: 0, vy: 0, suelo: false, dir: 1, paso: 0 };
@@ -93,7 +148,7 @@ function aplicarTomadoAv(id){
     if (t === 'q' && AV.mapa[y] && AV.mapa[y][x] === '?') AV.mapa[y][x] = 'X';
 }
 const celdaAv = (x, y) => (y < 0 ? '.' : y >= FILAS_AV || x < 0 || x >= AV.ancho ? (y >= FILAS_AV ? '.' : '#') : AV.mapa[y][x]);
-function esSolidoPatrullaAv(x, y){ const c = celdaAv(x, y); return c === '#' || c === '=' || c === '?' || c === 'X' || c === 'D'; }
+function esSolidoPatrullaAv(x, y){ const c = celdaAv(x, y); return c === '#' || c === '=' || c === '?' || c === 'X' || c === 'D' || c === '_'; }
 function placaApretadaAv(){
     const otroAprieta = AV.otro && AV.otro.p && AV.otro.n === AV.estado?.nivel && Date.now() - AV.otro.visto < 1500;
     return pisoPlacaAv(AV.yo) || !!otroAprieta;
@@ -106,7 +161,7 @@ function pisoPlacaAv(p){
 }
 function esSolidoAv(x, y, placa){
     const c = celdaAv(x, y);
-    if (c === '#' || c === '=' || c === '?' || c === 'X') return true;
+    if (c === '#' || c === '=' || c === '?' || c === 'X' || c === '_') return true;
     if (c === 'D') return !placa;
     if (c === 'L') return placa;
     return false;
@@ -127,11 +182,17 @@ function pasoFisicaAv(dt){
     const k = AV.teclas;
     const objetivo = (k.der ? 1 : 0) - (k.izq ? 1 : 0);
     if (objetivo) p.dir = objetivo;
-    p.vx += (objetivo * VEL_AV - p.vx) * Math.min(1, (p.suelo ? 0.35 : 0.18) * dt);
-    if (k.salto && !AV.saltoPrevio && p.suelo) { p.vy = -SALTO_AV; p.suelo = false; if (window.sfx) window.sfx.click(); }
-    if (!k.salto && p.vy < -2.5) p.vy *= 0.6; // salto variable: soltar antes = saltito
+    const enAgua = celdaAv(Math.floor((p.x + ANCHO_PJ / 2) / T_AV), Math.floor((p.y + ALTO_PJ / 2) / T_AV)) === '~';
+    p.agua = enAgua;
+    // En el hielo cuesta arrancar y frenar; en el agua todo es más lento.
+    const agarre = p.suelo ? (p.hielo ? 0.035 : 0.35) : 0.18;
+    p.vx += (objetivo * VEL_AV * (enAgua ? 0.7 : 1) - p.vx) * Math.min(1, agarre * dt);
+    if (enAgua && k.salto && !AV.saltoPrevio) { p.vy = -3.4; p.suelo = false; if (window.sfx) window.sfx.click(); } // brazada
+    else if (k.salto && !AV.saltoPrevio && p.suelo) { p.vy = -SALTO_AV; p.suelo = false; if (window.sfx) window.sfx.click(); }
+    if (!enAgua && !k.salto && p.vy < -2.5 && !p.resorte) p.vy *= 0.6; // salto variable: soltar antes = saltito
     AV.saltoPrevio = k.salto;
-    p.vy = Math.min(CAIDA_AV, p.vy + GRAV_AV * dt);
+    p.vy = Math.min(enAgua ? 1.6 : CAIDA_AV, p.vy + GRAV_AV * (enAgua ? 0.28 : 1) * dt);
+    if (p.vy >= 0) p.resorte = false;
     // Horizontal
     p.x += p.vx * dt;
     const chocaX = () => { const y0 = Math.floor(p.y / T_AV), y1 = Math.floor((p.y + ALTO_PJ - 1) / T_AV), xc = Math.floor((p.vx > 0 ? p.x + ANCHO_PJ - 1 : p.x) / T_AV); for (let y = y0; y <= y1; y++) if (esSolidoAv(xc, y, placa)) return xc; return null; };
@@ -146,6 +207,16 @@ function pasoFisicaAv(dt){
     if (p.vy > 0) {
         const yc = Math.floor((p.y + ALTO_PJ) / T_AV);
         for (let x = x0; x <= x1; x++) if (esSolidoAv(x, yc, placa)) { p.y = yc * T_AV - ALTO_PJ; p.vy = 0; p.suelo = true; break; }
+        p.hielo = p.suelo && [x0, x1].some(x => celdaAv(x, yc) === '_');
+        // Plataformas que se mueven: me subo y me llevan.
+        if (!p.suelo) for (const m of AV.moviles) {
+            const q = posMovilAv(m);
+            if (p.x + ANCHO_PJ > q.x + 1 && p.x < q.x + m.w * T_AV - 1 && yAntes + ALTO_PJ <= q.y + 4 && p.y + ALTO_PJ >= q.y) {
+                p.y = q.y - ALTO_PJ; p.vy = 0; p.suelo = true; p.hielo = false;
+                if (m.ultimo) p.x += q.x - m.ultimo.x;
+                break;
+            }
+        }
         // ¡Arriba de la cabeza del otro!
         const o = AV.otro;
         if (!p.suelo && o && o.n === e.nivel && Date.now() - o.visto < 1500 && p.x + ANCHO_PJ > o.x + 1 && p.x < o.x + ANCHO_PJ - 1 && yAntes + ALTO_PJ <= o.y + 3 && p.y + ALTO_PJ >= o.y) {
@@ -167,9 +238,18 @@ function pasoFisicaAv(dt){
         if (c === 'o') tomarAv(`c-${x}-${y}`, true);
         if (c === '^' && y === cy1 && AV.invulnerable <= 0) { morirAv('¡Ay, los pinchos!'); return; }
         if (c === 'C' && (AV.checkpoint.x !== x * T_AV)) { AV.checkpoint = { x: x * T_AV, y: 8 * T_AV }; if (window.sfx) window.sfx.acierto(); }
-        if (c === 'F' && !AV.llegue) llegarAv();
+        if (c === 'F' && !AV.llegue && !jefeVivoAv()) llegarAv();
+        if (c === 'R' && p.vy >= 0 && y === cy1) { p.vy = -11.2; p.resorte = true; p.suelo = false; if (window.sfx) window.sfx.acierto(); }
     }
     if (p.y > FILAS_AV * T_AV + 20) { morirAv('¡Al pozo!'); return; }
+    // Jefe
+    if (jefeVivoAv()) {
+        const jp = posJefeAv();
+        if (p.x + ANCHO_PJ > jp.x + 2 && p.x < jp.x + 26 && p.y + ALTO_PJ > jp.y + 2 && p.y < jp.y + 24) {
+            if (p.vy > 0 && yAntes + ALTO_PJ <= jp.y + 9) { p.vy = -7.5; golpearJefeAv(); }
+            else if (AV.invulnerable <= 0) { morirAv('¡El jefe te aplastó!'); return; }
+        }
+    }
     // Bichos
     if (AV.invulnerable > 0) AV.invulnerable -= dt;
     for (const b of AV.bichos) {
@@ -179,6 +259,24 @@ function pasoFisicaAv(dt){
             if (p.vy > 0 && yAntes + ALTO_PJ <= b.y + 6) { tomarAv(b.id, true); p.vy = -5; if (window.sfx) window.sfx.toque(); }
             else if (AV.invulnerable <= 0) { morirAv('¡Te agarró un bichito!'); return; }
         }
+    }
+}
+async function golpearJefeAv(){
+    if (Date.now() - AV.jefeGolpeLocal < 900) return;
+    AV.jefeGolpeLocal = Date.now();
+    vibrarJ([20, 30, 20]);
+    if (window.sfx) window.sfx.toque();
+    const nivel = AV.estado.nivel;
+    let vencido = false;
+    await Aventura.accion((e) => {
+        if (e.nivel !== nivel || (e.jefeGolpes || 0) >= 3 || window.ahoraSync() - (e.jefeT || 0) < 900) return null;
+        const jefeGolpes = (e.jefeGolpes || 0) + 1;
+        vencido = jefeGolpes >= 3;
+        return { jefeGolpes, jefeT: window.ahoraSync() };
+    });
+    if (vencido) {
+        if (window.animJuegos) window.animJuegos.cartel('👑 ¡Vencieron al jefe!', { sub: '¡A la bandera!', dur: 2000 });
+        if (window.fx) window.fx.confeti(60);
     }
 }
 // Algo que se toma una sola vez para los dos (moneda, bloque ?, bicho pisado).
@@ -225,8 +323,9 @@ async function llegarAv(){
         if (!(llegaron.nico && llegaron.carito)) return { llegaron };
         paso = e.nivel;
         if (e.nivel >= NIVELES_AV.length) return { llegaron, ganador: 'empate', motivo: `🎉 ¡Terminaron la aventura con ${e.monedas || 0} monedas y ${e.vidas} vidas!` };
-        return { nivel: e.nivel + 1, inicio: window.ahoraSync() + 3500, llegaron: {}, tomados: [], vidas: Math.min(VIDAS_AV, e.vidas + 1) };
+        return { nivel: e.nivel + 1, inicio: window.ahoraSync() + 3500, llegaron: {}, tomados: [], vidas: Math.min(VIDAS_AV, e.vidas + 1), jefeGolpes: 0, jefeT: 0 };
     });
+    if (paso && paso > (AV.progreso.max || 0)) window.setDoc(refProgresoAv(), { max: paso, elegido: Math.min(NIVELES_AV.length, paso + 1) }, { merge: true }).catch(() => {});
     if (paso && paso < NIVELES_AV.length && window.guardarMomento) window.guardarMomento({ id: `aventura-${paso}-${Date.now().toString(36)}`, juego: 'aventura', icono: '🍄', titulo: `¡Pasaron "${NIVELES_AV[paso - 1].nombre}" juntos!`, sub: `Nivel ${paso} de la Aventura de a Dos` });
 }
 
@@ -262,7 +361,31 @@ function dibujarAv(){
         else if (ch === 'L') { c.fillStyle = placa ? '#5fd3a0' : 'rgba(95,211,160,0.18)'; c.fillRect(px, py, T_AV, T_AV); c.strokeStyle = placa ? '#2f8a62' : 'rgba(95,211,160,0.4)'; c.strokeRect(px + 0.5, py + 0.5, T_AV - 1, T_AV - 1); }
         else if (ch === 'b') { const ap = placa; c.fillStyle = ap ? '#e8496b' : '#ff8fa3'; c.fillRect(px + 2, py + (ap ? 14 : 12), 12, ap ? 2 : 4); c.fillStyle = '#555'; c.fillRect(px + 1, py + 15, 14, 1); }
         else if (ch === 'C') { c.fillStyle = '#ddd'; c.fillRect(px + 7, py + 2, 2, 14); c.fillStyle = AV.checkpoint && AV.checkpoint.x === x * T_AV ? '#4cd18a' : '#aaa'; c.fillRect(px + 9, py + 2, 6, 5); }
+        else if (ch === '~') { c.fillStyle = 'rgba(60,150,230,0.42)'; c.fillRect(px, py, T_AV, T_AV); if (celdaAv(x, y - 1) !== '~') { c.fillStyle = 'rgba(220,245,255,0.7)'; c.fillRect(px, py + Math.round(Math.sin(t / 300 + x) * 1) + 1, T_AV, 2); } }
+        else if (ch === '_') { c.fillStyle = '#bfe6ff'; c.fillRect(px, py, T_AV, T_AV); c.fillStyle = '#ffffff'; c.fillRect(px, py, T_AV, 3); c.fillStyle = 'rgba(255,255,255,0.6)'; c.fillRect(px + 3, py + 6, 6, 1); }
+        else if (ch === 'R') { c.fillStyle = '#ff6b6b'; c.fillRect(px + 2, py + 10, 12, 3); c.fillStyle = '#ccc'; for (let k = 0; k < 3; k++) c.fillRect(px + 4 + k * 3, py + 13, 2, 3); }
+        else if (ch === 'F' && jefeVivoAv()) { /* la bandera aparece al vencer al jefe */ }
         else if (ch === 'F') { c.fillStyle = '#eee'; c.fillRect(px + 7, py - 6 * T_AV, 2, 7 * T_AV); c.fillStyle = '#4cd18a'; c.fillRect(px + 9, py - 6 * T_AV + 2 + Math.round(Math.sin(t / 300) * 1), 10, 7); c.fillStyle = '#ffd93d'; c.fillRect(px + 6, py - 6 * T_AV - 3, 4, 4); }
+    }
+    // Plataformas móviles
+    AV.moviles.forEach(m => {
+        const q = posMovilAv(m), px = q.x - cam;
+        m.ultimo = q;
+        if (px < -40 || px > W + 40) return;
+        c.fillStyle = n.nieve ? '#dcefff' : '#c9a36a'; c.fillRect(px, q.y, m.w * T_AV, 6);
+        c.fillStyle = n.nieve ? '#9bbbd8' : '#7a5a34'; c.fillRect(px, q.y + 6, m.w * T_AV, 2);
+    });
+    // Jefe
+    if (jefeVivoAv()) {
+        const jp = posJefeAv(), jx = jp.x - cam, golpes = e.jefeGolpes || 0, parpadeo = window.ahoraSync() - (e.jefeT || 0) < 900 && Math.floor(Date.now() / 80) % 2;
+        if (!parpadeo) {
+            c.fillStyle = '#7a3aa8'; c.beginPath(); c.arc(jx + 14, jp.y + 14, 14, Math.PI, 0); c.fill(); c.fillRect(jx, jp.y + 14, 28, 10);
+            c.fillStyle = '#f5d36b'; c.fillRect(jx + 6, jp.y - 4, 16, 4); c.fillRect(jx + 6, jp.y - 8, 3, 4); c.fillRect(jx + 12, jp.y - 9, 4, 5); c.fillRect(jx + 19, jp.y - 8, 3, 4);
+            c.fillStyle = '#fff'; c.fillRect(jx + 6, jp.y + 7, 6, 6); c.fillRect(jx + 16, jp.y + 7, 6, 6);
+            c.fillStyle = '#c2335f'; c.fillRect(jx + 8, jp.y + 9, 3, 3); c.fillRect(jx + 17, jp.y + 9, 3, 3);
+            c.fillStyle = '#2a1030'; c.fillRect(jx + 9, jp.y + 17, 10, 2);
+        }
+        c.fillStyle = '#fff'; c.font = 'bold 8px monospace'; c.fillText('JEFE ' + '❤'.repeat(3 - golpes), Math.max(2, Math.min(W - 52, jx - 6)), 22);
     }
     // Bichos
     AV.bichos.forEach(b => {
@@ -286,6 +409,17 @@ function dibujarAv(){
         else pjAv(c, ox, o.ry, miRival, o.d || 1, o.paso || 0, !o.s, false);
     }
     if (AV.yo && !(AV.invulnerable > 0 && Math.floor(Date.now() / 90) % 2)) pjAv(c, AV.yo.x - cam, AV.yo.y, miIdentidad, AV.yo.dir, AV.yo.paso, !AV.yo.suelo, true);
+    // Cueva: sólo se ve alrededor de cada uno.
+    if (n.oscuro) {
+        if (!AV.sombra) { AV.sombra = document.createElement('canvas'); AV.sombra.width = W; AV.sombra.height = H; }
+        const s = AV.sombra.getContext('2d');
+        s.globalCompositeOperation = 'source-over'; s.clearRect(0, 0, W, H); s.fillStyle = 'rgba(4,2,10,0.95)'; s.fillRect(0, 0, W, H);
+        s.globalCompositeOperation = 'destination-out';
+        const luz = (x, y, r) => { const g2 = s.createRadialGradient(x, y, 4, x, y, r); g2.addColorStop(0, 'rgba(0,0,0,1)'); g2.addColorStop(0.7, 'rgba(0,0,0,0.85)'); g2.addColorStop(1, 'rgba(0,0,0,0)'); s.fillStyle = g2; s.beginPath(); s.arc(x, y, r, 0, Math.PI * 2); s.fill(); };
+        if (AV.yo) luz(AV.yo.x - cam + 6, AV.yo.y + 7, 56);
+        if (o && o.n === e.nivel && o.rx != null) luz(o.rx - cam + 6, o.ry + 7, 44);
+        c.drawImage(AV.sombra, 0, 0);
+    }
     // HUD
     c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(0, 0, W, 13);
     c.fillStyle = '#fff'; c.font = 'bold 9px monospace';
@@ -387,8 +521,16 @@ const Aventura = JuegoTurnos.crear({
     id: 'aventura',
     sinTurno: true,
     emojiListo: '🍄',
+    extraEspera: () => {
+        const max = AV.progreso.max || 0, el = AV.progreso.elegido || 1;
+        if (!max) return '';
+        return `<div class="texto-tenue" style="font-size:0.8rem; margin-top:12px;">Arrancar en el nivel:</div><div class="niveles-av">${NIVELES_AV.map((n, i) => {
+            const k = i + 1, abierto = k <= Math.min(NIVELES_AV.length, max + 1);
+            return `<button class="${k === el ? 'activa' : ''}" ${abierto ? `onclick="elegirNivelAv(${k})"` : 'disabled'} title="${n.nombre}">${abierto ? k : '🔒'}</button>`;
+        }).join('')}</div><div class="texto-tenue" style="font-size:0.72rem;">${NIVELES_AV[el - 1].nombre}</div>`;
+    },
     intro: 'Un plataformas de a dos, en vivo y en el mismo nivel. ◀ ▶ para caminar, ⤒ para saltar. Súbanse a la cabeza del otro para llegar alto, pisen las placas para abrir puertas y hacer aparecer escaleras, y lleguen los dos a la bandera 🚩. Las vidas son compartidas.',
-    inicial: (previo) => ({ nivel: 1, inicio: window.ahoraSync() + 3500, vidas: VIDAS_AV, monedas: 0, tomados: [], llegaron: {}, turno: null, mejor: previo.mejor || 0 }),
+    inicial: (previo) => ({ nivel: Math.max(1, Math.min(NIVELES_AV.length, (AV.progreso.max || 0) + 1, AV.progreso.elegido || 1)), inicio: window.ahoraSync() + 3500, jefeGolpes: 0, jefeT: 0, vidas: VIDAS_AV, monedas: 0, tomados: [], llegaron: {}, turno: null, mejor: previo.mejor || 0 }),
     tituloFin: (e) => e.motivo && e.motivo.startsWith('🎉') ? '🏰 ¡Aventura completa!' : '💔 Game over',
     render(e) {
         return `<div id="aventura-host"></div>

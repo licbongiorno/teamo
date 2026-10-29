@@ -1736,3 +1736,7 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .controles-bombitas button{ border-radius:14px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.08); color:inherit; font-size:1.3rem; cursor:pointer; touch-action:none; -webkit-tap-highlight-color:transparent; }
 .controles-bombitas button.salto{ width:96px; height:96px; border-radius:50%; font-size:2.2rem; background:rgba(255,179,198,0.2); border-color:#ffb3c6; }
 .controles-bombitas button.apretado{ background:rgba(255,255,255,0.25); transform:scale(0.95); }
+.niveles-av{ display:flex; flex-wrap:wrap; justify-content:center; gap:5px; margin:6px 0 4px; }
+.niveles-av button{ width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:inherit; font:inherit; font-weight:700; cursor:pointer; }
+.niveles-av button.activa{ border-color:#ffb3c6; background:rgba(255,179,198,0.2); }
+.niveles-av button:disabled{ opacity:0.4; cursor:default; }

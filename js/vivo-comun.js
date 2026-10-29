@@ -334,6 +334,8 @@
         futbolcabezas: 'deporte', hockey: 'deporte', voley: 'deporte', pingpongvivo: 'deporte',
         natacion: 'agua', pescavivo: 'agua', fuegoagua: 'templo', cocina: 'tranqui', bloques: 'tranqui',
     };
+    // Juegos de la misma pantalla que manejan su propia música.
+    const MUSICA_PROPIA = ['multiverso', 'astrofutbol'];
     let musicaAct = '';
     function controlMusica() {
         const A = window.AudioArcade;
@@ -341,14 +343,14 @@
         const p = document.querySelector('.pantalla-juego.activa'), id = p && p.id.replace('pantalla-', '');
         const tema = TEMAS_MUSICA[id], e = estados[id], jugando = !!(tema && e && e.fase === 'jugando' && !document.hidden);
         // Mientras hay un juego en vivo, los sonidos de sfx.js salen por el motor arcade.
-        A.enVivo = jugando || id === 'multiverso';
+        A.enVivo = jugando || MUSICA_PROPIA.includes(id);
         const quiero = jugando ? tema + ':' + (pausa(id) ? 'pausa' : 'juego') : '';
         if (quiero === musicaAct) return;
         // El Multiverso maneja su propia música: si no la puse yo, no la toco.
         if (!quiero && !musicaAct) return;
         musicaAct = quiero;
         if (jugando) A.musica(tema, pausa(id) ? 'pausa' : 'juego');
-        else if (id !== 'multiverso') A.musica(null);
+        else if (!MUSICA_PROPIA.includes(id)) A.musica(null);
     }
     setInterval(controlMusica, 400);
     document.addEventListener('visibilitychange', controlMusica);

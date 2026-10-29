@@ -190,6 +190,8 @@
         const e = estados[actual];
         if (!c || !pausa(actual)) return;
         const W = c.canvas.width, H = c.canvas.height;
+        // Se dibuja en píxeles reales del lienzo (algunos juegos dibujan con escala x2).
+        c.save(); c.setTransform(1, 0, 0, 1, 0, 0);
         const quien = e.pausa.por === miIdentidad ? 'Pausaste vos' : `Pausó ${typeof nombreJugador === 'function' ? nombreJugador(e.pausa.por) : e.pausa.por}`;
         c.save();
         c.fillStyle = 'rgba(14,10,24,0.62)'; c.fillRect(0, 0, W, H);
@@ -197,6 +199,7 @@
         const f = Math.max(12, Math.round(Math.min(W, H) / 11));
         c.font = `bold ${f}px sans-serif`; c.fillText('⏸ Pausa', W / 2, H / 2 - f * 0.3);
         c.font = `${Math.round(f * 0.5)}px sans-serif`; c.fillText(`${quien} · tocá ▶ Seguir`, W / 2, H / 2 + f * 0.6);
+        c.restore();
         c.restore();
     }
 

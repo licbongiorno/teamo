@@ -1713,7 +1713,7 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .lienzo-hockey{ display:block; width:min(100%, 340px); aspect-ratio:240/360; margin:4px auto 8px; border-radius:18px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
 .lienzo-autitos{ display:block; width:min(100%, 330px); aspect-ratio:300/400; margin:4px auto 8px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
 .lienzo-voley{ display:block; width:100%; max-width:560px; aspect-ratio:320/200; margin:4px auto 8px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
-.lienzo-snake2{ display:block; width:min(100%, 320px); aspect-ratio:288/360; margin:4px auto 8px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; image-rendering:pixelated; }
+.lienzo-snake2{ display:block; width:min(100%, 320px); aspect-ratio:288/360; margin:4px auto 8px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
 .cruceta-sn{ display:grid; grid-template-columns:repeat(3, 58px); grid-template-rows:repeat(2, 50px); gap:6px; justify-content:center; margin:0 auto 8px; user-select:none; -webkit-user-select:none; touch-action:none; }
 .cruceta-sn button{ border-radius:14px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.08); color:inherit; font-size:1.3rem; touch-action:none; -webkit-tap-highlight-color:transparent; }
 .cruceta-sn button:active{ background:rgba(255,255,255,0.25); }
@@ -1722,7 +1722,7 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .lienzo-tanques{ display:block; width:min(100%, 320px); aspect-ratio:240/312; margin:4px auto 8px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
 .controles-aventura.compactos{ gap:6px; } .controles-aventura.compactos > div{ gap:6px; }
 .controles-aventura.compactos button{ width:56px; height:58px; font-size:1.3rem; } .controles-aventura.compactos button.salto{ width:76px; height:66px; }
-.lienzo-motos{ display:block; width:min(100%, 330px); aspect-ratio:240/352; margin:4px auto 8px; border-radius:10px; box-shadow:0 0 18px rgba(120,110,255,0.35); touch-action:none; image-rendering:pixelated; }
+.lienzo-motos{ display:block; width:min(100%, 330px); aspect-ratio:240/352; margin:4px auto 8px; border-radius:10px; box-shadow:0 0 18px rgba(120,110,255,0.35); touch-action:none; }
 
 /* ==================== Favoritos, últimos, filtros, cara a cara ==================== */
 .fila-chips{ display:flex; gap:6px; overflow-x:auto; padding:2px 2px 8px; margin-bottom:6px; scrollbar-width:none; }

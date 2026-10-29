@@ -26,7 +26,7 @@
             <div class="compu-selector-titulo">🎮 ¿A qué jugamos ahora?</div>
             <div class="texto-tenue" style="font-size:0.8rem; margin-bottom:6px;">Le llega la invitación al toque y se abre el juego.</div>
             <div class="juntos-grilla">${elegidos.map(id => { const j = info(id); return `<button type="button" onclick="jugarJuntosYa('${id}')"><span>${j.icono}</span>${j.nombre}</button>`; }).join('')}</div>
-            ${typeof window.armarNocheDeJuegos === 'function' ? `<button type="button" class="btn-principal" style="margin-top:10px;" onclick="cerrarJugarJuntos(); armarNocheDeJuegos()">🌙 Mejor una Noche de juegos</button>` : ''}
+            ${typeof window.abrirCitaDeJuegos === 'function' ? `<button type="button" class="btn-principal" style="margin-top:10px;" onclick="cerrarJugarJuntos(); abrirCitaDeJuegos()">🕯️ Mejor armemos una cita de juegos</button>` : ''}
             <button type="button" class="btn-secundario" style="margin-top:8px;" onclick="abrirJugarJuntos()">🎲 Otras opciones</button>
             <button type="button" class="btn-secundario" style="margin-top:8px;" onclick="cerrarJugarJuntos()">Cancelar</button>
         </div>`;
@@ -82,7 +82,7 @@
         const enCurso = ahora >= prox.getTime() - 30 * 60000 && ahora <= prox.getTime() + 3 * 3600000;
         cont.innerHTML = enCurso
             ? `<div class="panel cita-tarjeta hoy"><div style="font-size:1rem; font-weight:700;">🕯️ ¡Es la hora de la cita de juegos!</div>
-                <div class="btn-fila" style="margin-top:8px;">${typeof window.armarNocheDeJuegos === 'function' ? `<button class="btn-principal" onclick="armarNocheDeJuegos()">🌙 Empezar la noche</button>` : ''}
+                <div class="btn-fila" style="margin-top:8px;">${typeof window.abrirCitaDeJuegos === 'function' ? `<button class="btn-principal" onclick="abrirCitaDeJuegos()">🕯️ Armar la cita</button>` : ''}
                 <button class="btn-secundario" onclick="abrirJugarJuntos()">🎮 Elegir juego</button></div></div>`
             : `<button class="cita-tarjeta" onclick="editarCitaJuegos()">🕯️ Cita de juegos: los <b>${DIAS[cita.dia]}</b> a las <b>${cita.hora}</b> · ${textoFalta(prox, ahora)} <span>Cambiar</span></button>`;
     }

@@ -162,6 +162,10 @@ window.JUEGOS = [
     // ---- CARTAS ESPAÑOLAS ----
     { id:'sieteymedio', nombre:'Siete y Medio', icono:'🃏', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Acercate a 7½ sin pasarte. Se turnan la banca y gana quien se lleva 5 manos.' },
     { id:'pescar', nombre:'¿Tenés…?', icono:'🎣', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Pedile cartas al otro o ¡pescá! Juntá las cuatro de cada número para armar juegos.' },
+    // ---- CREATIVOS Y EN PERSONA ----
+    { id:'historia', nombre:'Historia a Dos Voces', icono:'📖', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Escriban un cuento entre los dos, una frase cada uno, con palabras sorpresa.' },
+    { id:'emojipelis', nombre:'Pelis en Emojis', icono:'🎬', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Contá una peli, serie o canción sólo con emojis. ¿La adivina?' },
+    { id:'tabu', nombre:'Tabú y Mímica', icono:'🗣️', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Para cuando están juntos: explicá sin decir las palabras prohibidas, o actuala sin hablar.' },
     // ---- DUELOS Y CREATIVOS ----
     { id:'damaschinas', nombre:'Damas Chinas', icono:'⭐', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Tablero estrella: llevá tus 10 fichas a la punta de enfrente saltando en cadena.' },
     { id:'quoridor', nombre:'Quoridor', icono:'🧱', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Mové tu peón o poné paredes para trabar al otro. Gana quien cruza primero.' },

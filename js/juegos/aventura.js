@@ -4,10 +4,11 @@
 // posiciones viajan por js/enlace-vivo.js, directo entre los celulares).
 // Cooperación: subirse a la cabeza del otro para llegar alto, pisar una
 // placa para abrir puertas o hacer aparecer escaleras, y llegar los dos a
-// la bandera. Vidas compartidas, monedas compartidas, 8 niveles: pradera,
+// la bandera. Vidas compartidas, monedas compartidas, 10 niveles: pradera,
 // atardecer, noche, castillo, cueva oscura (sólo se ve alrededor de cada
 // uno), lago (se nada), montaña nevada (hielo, resortes, plataformas que
-// se mueven) y el castillo del jefe (hay que pisarle la cabeza 3 veces).
+// se mueven), el castillo del jefe (hay que pisarle la cabeza 3 veces),
+// la selva y el volcán (plataformas que se caen al pisarlas).
 //
 // El doc juegos/aventura (base-turnos) guarda lo que tiene que quedar:
 // nivel, vidas, quién llegó a la bandera y qué se tomó (monedas, bloques,
@@ -36,6 +37,7 @@ function armarNivelAv(ancho, piezas){
         if (tipo === 'agua') for (let i = 0; i < a; i++) for (let y = b; y <= 8; y++) if (g[y][x + i] === '.') pon(x + i, y, '~'); // ['agua', x, ancho, desdeFila]
         if (tipo === 'hielo') for (let i = 0; i < a; i++) if (g[9][x + i] === '#') pon(x + i, 9, '_');
         if (tipo === 'R') pon(x, 8, 'R');
+        if (tipo === 'cae') for (let i = 0; i < b; i++) pon(x + i, a, 'Q'); // ['cae', x, y, ancho]: se cae al pisarla
         if (['E', 'C', 'F', 'S'].includes(tipo)) pon(x, tipo === 'F' ? 8 : 8, tipo === 'E' ? 'E' : tipo);
     });
     return g.map(f => f.join(''));
@@ -74,6 +76,16 @@ const NIVELES_AV = [
     { nombre: 'El castillo del jefe', cielo: ['#1a1024', '#3a1c34'], suelo: '#4a3a48', pasto: '#c25a7a', castillo: true, jefe: { x0: 42, x1: 78 }, mapa: armarNivelAv(90, [
         ['S', 2], ['pinchos', 8, 2], ['E', 14], ['fila', 18, 6, '?=?'], ['placa', 24], ['puerta', 28], ['placa', 32], ['C', 36], ['monedas', 44, 5, 6],
         ['fila', 50, 5, '=='], ['fila', 66, 5, '=='], ['F', 85]]) },
+    { nombre: 'La selva', cielo: ['#3f9a5a', '#b8e8a0'], suelo: '#5a3a1e', pasto: '#2f8a3a',
+        moviles: [[16, 7, 2, 3, 'v'], [44, 6, 2, 3, 'h']], mapa: armarNivelAv(94, [
+        ['S', 2], ['monedas', 5, 6, 3], ['E', 10], ['hueco', 15, 6], ['monedas', 16, 3, 2], ['C', 24], ['R', 28], ['fila', 30, 3, '===='], ['monedas', 30, 2, 4],
+        ['E', 36], ['hueco', 42, 7], ['monedas', 44, 4, 4], ['col', 51, 2], ['hueco', 55, 5], ['cae', 55, 7, 5], ['monedas', 55, 6, 5], ['E', 64],
+        ['placa', 68], ['puerta', 72], ['placa', 76], ['hueco', 80, 3], ['monedas', 80, 6, 3], ['col', 86, 1], ['F', 90]]) },
+    { nombre: 'El volcán', cielo: ['#2a0e0a', '#7a2a14'], suelo: '#4a221a', pasto: '#ff6a2a', castillo: true,
+        moviles: [[47, 7, 2, 3, 'h']], mapa: armarNivelAv(96, [
+        ['S', 2], ['pinchos', 7, 2], ['hueco', 12, 4], ['cae', 12, 7, 4], ['monedas', 12, 5, 4], ['E', 20], ['C', 24], ['hueco', 28, 6], ['cae', 28, 6, 2], ['cae', 32, 7, 2],
+        ['R', 37], ['fila', 38, 3, '==='], ['monedas', 38, 2, 3], ['pinchos', 42, 3], ['hueco', 47, 5], ['E', 55], ['E', 59], ['placa', 63], ['puerta', 67], ['placa', 71], ['C', 73],
+        ['hueco', 76, 7], ['cae', 76, 7, 2], ['cae', 79, 6, 2], ['cae', 82, 7, 1], ['col', 86, 2], ['monedas', 85, 3, 3], ['F', 92]]) },
 ];
 
 // ---------- Estado local del motor ----------
@@ -120,6 +132,7 @@ function cargarNivelAv(e){
     AV.ancho = AV.mapa[0].length;
     AV.tomados = new Set(e.tomados || []);
     AV.bichos = [];
+    AV.caidas = {};
     for (let y = 0; y < FILAS_AV; y++) for (let x = 0; x < AV.ancho; x++) {
         const c = AV.mapa[y][x];
         if (c === 'E') {
@@ -159,8 +172,24 @@ function pisoPlacaAv(p){
     for (let x = x0; x <= x1; x++) if (celdaAv(x, y) === 'b') return true;
     return false;
 }
+// Plataformas que se caen: al pisarlas tiemblan, a los 0,65 s desaparecen y a los 3,8 s vuelven.
+// El momento lo marca el reloj compartido y se avisa al otro (evento 'cae').
+function caidaAv(x, y){
+    const t = AV.caidas && AV.caidas[x + ',' + y];
+    if (!t) return 0;
+    const d = window.ahoraSync() - t;
+    return d < 650 ? 1 : d < 3800 ? 2 : 0; // 1 tiembla · 2 no está
+}
+function pisarCaeAv(x, y){
+    const k = x + ',' + y;
+    if (caidaAv(x, y)) return;
+    const t = window.ahoraSync();
+    AV.caidas[k] = t;
+    if (AV.enlace && AV.estado) AV.enlace.enviar('cae', { k, t, n: AV.estado.nivel }, true);
+}
 function esSolidoAv(x, y, placa){
     const c = celdaAv(x, y);
+    if (c === 'Q') return caidaAv(x, y) !== 2;
     if (c === '#' || c === '=' || c === '?' || c === 'X' || c === '_') return true;
     if (c === 'D') return !placa;
     if (c === 'L') return placa;
@@ -208,6 +237,7 @@ function pasoFisicaAv(dt){
         const yc = Math.floor((p.y + ALTO_PJ) / T_AV);
         for (let x = x0; x <= x1; x++) if (esSolidoAv(x, yc, placa)) { p.y = yc * T_AV - ALTO_PJ; p.vy = 0; p.suelo = true; break; }
         p.hielo = p.suelo && [x0, x1].some(x => celdaAv(x, yc) === '_');
+        if (p.suelo) [x0, x1].forEach(x => { if (celdaAv(x, yc) === 'Q') pisarCaeAv(x, yc); });
         // Plataformas que se mueven: me subo y me llevan.
         if (!p.suelo) for (const m of AV.moviles) {
             const q = posMovilAv(m);
@@ -362,6 +392,11 @@ function dibujarAv(){
         else if (ch === 'b') { const ap = placa; c.fillStyle = ap ? '#e8496b' : '#ff8fa3'; c.fillRect(px + 2, py + (ap ? 14 : 12), 12, ap ? 2 : 4); c.fillStyle = '#555'; c.fillRect(px + 1, py + 15, 14, 1); }
         else if (ch === 'C') { c.fillStyle = '#ddd'; c.fillRect(px + 7, py + 2, 2, 14); c.fillStyle = AV.checkpoint && AV.checkpoint.x === x * T_AV ? '#4cd18a' : '#aaa'; c.fillRect(px + 9, py + 2, 6, 5); }
         else if (ch === '~') { c.fillStyle = 'rgba(60,150,230,0.42)'; c.fillRect(px, py, T_AV, T_AV); if (celdaAv(x, y - 1) !== '~') { c.fillStyle = 'rgba(220,245,255,0.7)'; c.fillRect(px, py + Math.round(Math.sin(t / 300 + x) * 1) + 1, T_AV, 2); } }
+        else if (ch === 'Q') {
+            const st = caidaAv(x, y), tiembla = st === 1 ? (Math.random() - 0.5) * 2 : 0;
+            if (st !== 2) { c.fillStyle = '#b07a4a'; c.fillRect(px + tiembla, py, T_AV, 7); c.fillStyle = '#6a4424'; c.fillRect(px + 4 + tiembla, py + 2, 1, 4); c.fillRect(px + 10 + tiembla, py + 1, 1, 3); c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(px + tiembla, py + 6, T_AV, 1); }
+            else { c.strokeStyle = 'rgba(255,255,255,0.15)'; c.setLineDash([2, 2]); c.strokeRect(px + 0.5, py + 0.5, T_AV - 1, 6); c.setLineDash([]); }
+        }
         else if (ch === '_') { c.fillStyle = '#bfe6ff'; c.fillRect(px, py, T_AV, T_AV); c.fillStyle = '#ffffff'; c.fillRect(px, py, T_AV, 3); c.fillStyle = 'rgba(255,255,255,0.6)'; c.fillRect(px + 3, py + 6, 6, 1); }
         else if (ch === 'R') { c.fillStyle = '#ff6b6b'; c.fillRect(px + 2, py + 10, 12, 3); c.fillStyle = '#ccc'; for (let k = 0; k < 3; k++) c.fillRect(px + 4 + k * 3, py + 13, 2, 3); }
         else if (ch === 'F' && jefeVivoAv()) { /* la bandera aparece al vencer al jefe */ }
@@ -501,6 +536,7 @@ function arrancarMotorAv(){
             alMensaje(tipo, d) {
                 if (tipo === 'pos') { AV.otro = { ...(AV.otro || {}), ...d, visto: Date.now() }; }
                 if (tipo === 'tomar' && AV.estado && d.n === AV.estado.nivel) tomarAv(d.id, false);
+                if (tipo === 'cae' && AV.estado && d.n === AV.estado.nivel && AV.caidas && !caidaAv(...d.k.split(',').map(Number))) AV.caidas[d.k] = d.t;
             },
             alEstado() {}
         });

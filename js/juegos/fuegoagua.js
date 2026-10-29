@@ -7,7 +7,8 @@
 // Usa js/plataformas-comun.js (física) y js/enlace-vivo.js (posiciones).
 // Mapas: # pared · = plataforma · r lava · a agua · v verde · b placa · D puerta
 // (placa) · p palanca · G reja (palanca) · R gema roja · B gema azul · X puerta
-// de Fuego · Y puerta de Agua · F/W salidas · K caja.
+// de Fuego · Y puerta de Agua · F/W salidas · K caja · E ascensor (sube
+// mientras alguien pisa una placa e) · T/U portales de a pares.
 const T_FA = 16, COLS_FA = 20, FILAS_FA = 14, ANCHO_FA = 11, ALTO_FA = 14;
 const NIVELES_FA = [
     { nombre: 'Primeros pasos', mapa: [
@@ -85,9 +86,85 @@ const NIVELES_FA = [
         '#....R....G.B..D...#',
         '#FWp......G..b.DXbY#',
         '#####rr#v##aa#######'] },
+    { nombre: 'El ascensor', mapa: [
+        '####################',
+        '#..................#',
+        '#..................#',
+        '#.X..e.......e..Y..#',
+        '#######......#######',
+        '#..................#',
+        '#..................#',
+        '#..................#',
+        '#..................#',
+        '#..................#',
+        '#........R.B.......#',
+        '#..................#',
+        '#F.e.....EE.....e.W#',
+        '#####rr####aa#######'] },
+    { nombre: 'Portales', mapa: [
+        '####################',
+        '#..............#...#',
+        '#..............#...#',
+        '#..............#T.X#',
+        '#..............#####',
+        '#..............#...#',
+        '#..............#U.Y#',
+        '#..............#####',
+        '#..............#####',
+        '#...R......B...#####',
+        '#..............#####',
+        '#..............#####',
+        '#F....T..W....U#####',
+        '##rrrr####aaaa######'] },
+    { nombre: 'Puente de cajas', mapa: [
+        '####################',
+        '#..................#',
+        '#..................#',
+        '#..................#',
+        '#..................#',
+        '#..................#',
+        '#..................#',
+        '#..................#',
+        '#.......RB.........#',
+        '#..................#',
+        '#..................#',
+        '#FW.K.K.........X.Y#',
+        '#######....#rr######',
+        '#######vvvv#########'] },
+    { nombre: 'Reja y ascensor', mapa: [
+        '####################',
+        '#..................#',
+        '#.X.eY.............#',
+        '#######............#',
+        '#...........#......#',
+        '#...........#......#',
+        '#...........#......#',
+        '#...........#......#',
+        '#...........G......#',
+        '#...........G......#',
+        '#.........R.G...B..#',
+        '#...........G......#',
+        '#......EE...GFWp..e#',
+        '#########rr#########'] },
+    { nombre: 'La gran torre', mapa: [
+        '####################',
+        '#...B..............#',
+        '#.Y..b..T.......X..#',
+        '###########rrr######',
+        '#........#.........#',
+        '#........#.........#',
+        '#........#.........#',
+        '#........#.........#',
+        '#........D.........#',
+        '#........D.........#',
+        '#........D.........#',
+        '#........D..R......#',
+        '#F.W.b...D....T....#',
+        '###########aa#######'] },
 ];
 const ELEM_FA = { nico: 'fuego', carito: 'agua' };
-const FA = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, mapa: null, yo: null, el: null, cajas: [], teclas: {}, tomados: new Set(), salida: null, muriendo: false, ultimoEnvio: 0, ultimoTs: 0, enPalanca: false, enPuerta: false };
+const SUBE_FA = 7 * T_FA; // cuánto sube un ascensor
+const FA = { ascensores: [], enPortal: false, canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, mapa: null, yo: null, el: null, cajas: [], teclas: {}, tomados: new Set(), salida: null, muriendo: false, ultimoEnvio: 0, ultimoTs: 0, enPalanca: false, enPuerta: false };
 
 function cargarNivelFa(e){
     FA.clave = e.nivel + '-' + e.inicio;
@@ -100,6 +177,14 @@ function cargarNivelFa(e){
         if (c === 'K') { FA.mapa[y][x] = '.'; FA.cajas.push({ id: FA.cajas.length, x: x * T_FA, y: y * T_FA + 2, w: T_FA, h: T_FA - 2, vy: 0 }); }
         if (c === 'F' || c === 'W') { if (c === yoLetra) FA.salida = { x: x * T_FA + 2, y: y * T_FA + 2 }; FA.mapa[y][x] = '.'; }
     }
+    // Ascensores: cada tira de E en una fila es una plataforma que sube.
+    FA.ascensores = [];
+    for (let y = 0; y < FILAS_FA; y++) for (let x = 0; x < COLS_FA; x++) {
+        if (FA.mapa[y][x] !== 'E') continue;
+        let w = 0; while (FA.mapa[y][x + w] === 'E') { FA.mapa[y][x + w] = '.'; w++; }
+        FA.ascensores.push({ ascensor: true, x: x * T_FA, y: y * T_FA + 8, base: y * T_FA + 8, w: w * T_FA, h: 8 });
+    }
+    FA.enPortal = false;
     // Cajas: donde quedaron (si ya se movieron en esta partida).
     (e.cajas || []).forEach(c => { const cj = FA.cajas[c.i]; if (cj) { cj.x = c.x; cj.y = c.y; } });
     FA.tomados = new Set(e.tomados || []);
@@ -113,6 +198,32 @@ function placaFa(){
     const cajaPisa = FA.cajas.some(cj => celdaFa(Math.floor((cj.x + cj.w / 2) / T_FA), Math.floor((cj.y + cj.h - 2) / T_FA)) === 'b');
     return pisa(FA.yo) || (FA.el && FA.el.p && Date.now() - FA.el.visto < 1500) || cajaPisa;
 }
+// Placas de ascensor (e): la mía, la del otro o una caja encima.
+function placaEFa(){
+    const pisa = (p) => p && [p.x + 2, p.x + ANCHO_FA - 2].some(px => celdaFa(Math.floor(px / T_FA), Math.floor((p.y + ALTO_FA - 2) / T_FA)) === 'e');
+    const cajaPisa = FA.cajas.some(cj => celdaFa(Math.floor((cj.x + cj.w / 2) / T_FA), Math.floor((cj.y + cj.h - 2) / T_FA)) === 'e');
+    return pisa(FA.yo) || (FA.el && FA.el.pe && Date.now() - FA.el.visto < 1500) || cajaPisa;
+}
+function moverAscensoresFa(dt){
+    const sube = placaEFa();
+    FA.ascensores.forEach(a => {
+        const meta = sube ? a.base - SUBE_FA : a.base;
+        const antes = a.y;
+        a.y += Math.max(-1.1 * dt, Math.min(1.6 * dt, meta - a.y));
+        a.dy = a.y - antes;
+    });
+}
+// Portales: pisar el centro de uno te lleva al otro de la misma letra.
+function portalFa(p){
+    const cx = Math.floor((p.x + ANCHO_FA / 2) / T_FA), cy = Math.floor((p.y + ALTO_FA / 2) / T_FA), c = celdaFa(cx, cy);
+    if (c !== 'T' && c !== 'U') { FA.enPortal = false; return; }
+    if (FA.enPortal) return;
+    for (let y = 0; y < FILAS_FA; y++) for (let x = 0; x < COLS_FA; x++) if (FA.mapa[y][x] === c && (x !== cx || y !== cy)) {
+        p.x = x * T_FA + 2; p.y = y * T_FA + 2; p.vx = 0; p.vy = 0;
+        FA.enPortal = true; vibrarJ(10); if (window.sfx) window.sfx.swoosh();
+        return;
+    }
+}
 function solidoFa(x, y, placa){
     const c = celdaFa(x, y);
     if ('#=rav'.includes(c)) return true;
@@ -125,12 +236,17 @@ function pasoFa(dt){
     if (!e || e.fase !== 'jugando' || !p || FA.muriendo || window.ahoraSync() < e.inicio) return;
     const placa = placaFa();
     const otro = FA.el && Date.now() - FA.el.visto < 1500 ? FA.el : null;
+    moverAscensoresFa(dt);
+    // Si estoy parado en un ascensor, me lleva con él.
+    FA.ascensores.forEach(a => { if (p.suelo && Math.abs(p.y + ALTO_FA - (a.y - a.dy)) < 2 && p.x + ANCHO_FA > a.x && p.x < a.x + a.w) p.y += a.dy; });
     Plataformas.mover(p, dt, FA.teclas, {
-        T: T_FA, ancho: ANCHO_FA, alto: ALTO_FA, esSolido: (x, y) => solidoFa(x, y, placa), cajas: FA.cajas, otro,
-        alEmpujar: (cj, d) => empujarCajaFa(cj, d, placa),
+        T: T_FA, ancho: ANCHO_FA, alto: ALTO_FA, esSolido: (x, y) => solidoFa(x, y, placa), cajas: [...FA.cajas, ...FA.ascensores], otro,
+        // Al ascensor (que es bajito) se sube caminando, como a un escalón.
+        alEmpujar: (cj, d) => { if (!cj.ascensor) return empujarCajaFa(cj, d, placa); if (p.y + ALTO_FA - cj.y <= 9) { p.y = cj.y - ALTO_FA; return d; } return 0; },
     });
     desatascarFa(p, placa);
-    FA.cajas.forEach(cj => Plataformas.caerCaja(cj, dt, (x, y) => solidoFa(x, y, placa), T_FA));
+    portalFa(p);
+    FA.cajas.forEach(cj => Plataformas.caerCaja(cj, dt, (x, y) => solidoFa(x, y, placa), T_FA, FA.cajas));
     const mio = ELEM_FA[miIdentidad];
     // Lo que piso: lava, agua o verde.
     const yPie = Math.floor((p.y + ALTO_FA + 1) / T_FA);
@@ -230,11 +346,14 @@ function dibujarFa(){
         else if (ch === 'v') liquido(px, py, '#4cd13a', '#b8ff8a');
         else if (ch === 'D') { if (!placa) { c.fillStyle = '#6b4a8a'; c.fillRect(px + 2, py, 12, T_FA); } else { c.fillStyle = 'rgba(107,74,138,0.25)'; c.fillRect(px + 2, py, 12, T_FA); } }
         else if (ch === 'G') { const ab = e.palanca; c.fillStyle = ab ? 'rgba(245,211,107,0.2)' : '#c9a227'; for (let k = 0; k < 4; k++) c.fillRect(px + 1 + k * 4, py, 2, T_FA); }
+        else if (ch === 'e') { const on = placaEFa(); c.fillStyle = on ? '#3d8bfd' : '#8cc4ff'; c.fillRect(px + 2, py + (on ? 14 : 12), 12, on ? 2 : 4); c.fillStyle = '#fff'; c.fillRect(px + 7, py + (on ? 10 : 8), 2, 3); }
+        else if (ch === 'T' || ch === 'U') { const col = ch === 'T' ? '200,120,255' : '120,230,200'; const g2 = 0.5 + Math.sin(t / 180 + x) * 0.3; c.fillStyle = `rgba(${col},${g2})`; c.beginPath(); c.ellipse(px + 8, py + 8, 6, 8, 0, 0, Math.PI * 2); c.fill(); c.strokeStyle = `rgb(${col})`; c.lineWidth = 1.5; c.stroke(); }
         else if (ch === 'b') { c.fillStyle = placa ? '#e8496b' : '#ff8fa3'; c.fillRect(px + 2, py + (placa ? 14 : 12), 12, placa ? 2 : 4); }
         else if (ch === 'p') { c.fillStyle = '#888'; c.fillRect(px + 4, py + 13, 8, 3); c.save(); c.translate(px + 8, py + 13); c.rotate(e.palanca ? 0.6 : -0.6); c.fillStyle = '#ddd'; c.fillRect(-1, -10, 2, 10); c.fillStyle = e.palanca ? '#4cd18a' : '#ff6b6b'; c.beginPath(); c.arc(0, -10, 3, 0, Math.PI * 2); c.fill(); c.restore(); }
         else if (ch === 'R' || ch === 'B') { const col = ch === 'R' ? '#ff5a4a' : '#4aa8ff'; const s = 1 + Math.sin(t / 200 + x) * 0.1; c.save(); c.translate(px + 8, py + 8); c.scale(s, s); c.fillStyle = col; c.beginPath(); c.moveTo(0, -6); c.lineTo(5, 0); c.lineTo(0, 6); c.lineTo(-5, 0); c.closePath(); c.fill(); c.fillStyle = 'rgba(255,255,255,0.6)'; c.fillRect(-1, -3, 2, 2); c.restore(); }
         else if (ch === 'X' || ch === 'Y') { const col = ch === 'X' ? '#ff6b4a' : '#4aa8ff'; c.fillStyle = 'rgba(0,0,0,0.4)'; c.fillRect(px + 1, py - 10, 14, 26); c.strokeStyle = col; c.lineWidth = 2; c.strokeRect(px + 1, py - 10, 14, 26); c.fillStyle = col; c.font = '9px serif'; c.fillText(ch === 'X' ? '🔥' : '💧', px + 2, py + 2); }
     }
+    FA.ascensores.forEach(a => { c.fillStyle = '#8a8fa0'; c.fillRect(a.x, a.y, a.w, a.h); c.fillStyle = '#f5d36b'; for (let k = 0; k < a.w; k += 8) c.fillRect(a.x + k, a.y, 4, 2); c.fillStyle = 'rgba(255,255,255,0.15)'; c.fillRect(a.x + a.w / 2 - 1, a.y + a.h, 2, a.base - a.y); });
     FA.cajas.forEach(cj => { c.fillStyle = '#b8864e'; c.fillRect(cj.x, cj.y, cj.w, cj.h); c.strokeStyle = '#6b4a2a'; c.lineWidth = 2; c.strokeRect(cj.x + 1, cj.y + 1, cj.w - 2, cj.h - 2); c.beginPath(); c.moveTo(cj.x + 2, cj.y + 2); c.lineTo(cj.x + cj.w - 2, cj.y + cj.h - 2); c.stroke(); });
     const pj = (p, quien) => {
         const x = Math.round(p.x), y = Math.round(p.y), fuego = ELEM_FA[quien] === 'fuego';
@@ -267,10 +386,11 @@ function bucleFa(ts){
     if (FA.enlace && FA.yo && Date.now() - FA.ultimoEnvio > 50) {
         FA.ultimoEnvio = Date.now();
         const p = FA.yo;
-        const pisa = [p.x + 2, p.x + ANCHO_FA - 2].some(px => celdaFa(Math.floor(px / T_FA), Math.floor((p.y + ALTO_FA - 2) / T_FA)) === 'b');
+        const pisaCelda = (ch) => [p.x + 2, p.x + ANCHO_FA - 2].some(px => celdaFa(Math.floor(px / T_FA), Math.floor((p.y + ALTO_FA - 2) / T_FA)) === ch);
+        const pisa = pisaCelda('b'), pisaE = pisaCelda('e');
         // Cajas que movi recién (las mando para que el otro las vea igual).
         const cajas = FA.cajas.filter(cj => cj.movida && Date.now() - cj.movida < 400).map(cj => ({ i: cj.id, x: Math.round(cj.x * 10) / 10, y: Math.round(cj.y) }));
-        FA.enlace.enviar('pos', { x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10, vx: +p.vx.toFixed(2), d: p.dir, p: pisa ? 1 : 0, en: FA.enPuerta ? 1 : 0, cj: cajas, c: FA.clave });
+        FA.enlace.enviar('pos', { x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10, vx: +p.vx.toFixed(2), d: p.dir, p: pisa ? 1 : 0, pe: pisaE ? 1 : 0, en: FA.enPuerta ? 1 : 0, cj: cajas, c: FA.clave });
         if (cajas.length && !FA._guardandoCajas) {
             FA._guardandoCajas = true;
             setTimeout(() => {

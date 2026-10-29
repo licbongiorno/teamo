@@ -99,9 +99,12 @@ function cargarCarreraAu(e){
     AU.pista = armarPistaAu(cto);
     AU.fondo = dibujarFondoAu(cto);
     const pts = AU.pista.pts, a = pts[N_AU - 6], b = pts[N_AU - 5], ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
-    const lado = miIdentidad === 'nico' ? -1 : 1, nx = -Math.sin(ang), ny = Math.cos(ang);
-    AU.yo = { x: a[0] + nx * 9 * lado, y: a[1] + ny * 9 * lado, a: ang, v: 0, vx: 0, vy: 0, i: N_AU - 6, sig: 1, vuelta: 0, tVuelta: null, mejor: null, humo: [] };
-    AU.el = null; AU.terminado = false;
+    const nx = -Math.sin(ang), ny = Math.cos(ang);
+    const auto = (q) => { const lado = q === 'nico' ? -1 : 1; return { x: a[0] + nx * 9 * lado, y: a[1] + ny * 9 * lado, a: ang, v: 0, vx: 0, vy: 0, i: N_AU - 6, sig: 1, vuelta: 0, tVuelta: null, mejor: null, humo: [] }; };
+    AU.yo = auto(miIdentidad);
+    // Contra la compu, el otro auto lo maneja la compu en este celu.
+    AU.el = compuAu() ? Object.assign(auto(miRival), { visto: Date.now(), bot: true }) : null;
+    AU.terminado = false;
     AU.marcas = document.createElement('canvas'); AU.marcas.width = W_AU * 2; AU.marcas.height = H_AU * 2;
     AU.ctxMarcas = AU.marcas.getContext('2d'); AU.ctxMarcas.scale(2, 2);
     if (AU.fx) AU.fx.limpiar();
@@ -129,14 +132,48 @@ function progresoAu(p){
     const ini = ((p.sig - 1 + SECTORES_AU) % SECTORES_AU) * N_AU / SECTORES_AU;
     return pasados * 1000 + ((p.i - ini + N_AU) % N_AU);
 }
+// ---------- Contra la compu ----------
+const compuAu = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'autitos' ? m : null; };
+// Mira un poco adelante en la pista y frena antes de las curvas cerradas.
+function pilotoCompuAu(b, nivel){
+    const N = { facil: { v: 2.5, mira: 9, err: 0.12 }, normal: { v: 3.05, mira: 10, err: 0.06 }, dificil: { v: 3.5, mira: 11, err: 0.03 } }[nivel] || { v: 3.05, mira: 10, err: 0.06 };
+    const pts = AU.pista.pts, t = pts[(b.i + N.mira) % N_AU];
+    let d = Math.atan2(t[1] - b.y, t[0] - b.x) - b.a + (Math.random() - 0.5) * N.err; d = Math.atan2(Math.sin(d), Math.cos(d));
+    const p0 = pts[b.i % N_AU], p1 = pts[(b.i + 8) % N_AU], p2 = pts[(b.i + 16) % N_AU];
+    let curva = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]) - Math.atan2(p1[1] - p0[1], p1[0] - p0[0]); curva = Math.abs(Math.atan2(Math.sin(curva), Math.cos(curva)));
+    const objetivo = N.v - Math.min(1.3, curva * 1.7);
+    return { izq: d < -0.05, der: d > 0.05, gas: b.v < objetivo, freno: b.v > objetivo + 0.7 };
+}
+async function ganaCompuAu(tiempo){
+    if (AU.terminado || !AU.el || AU.el.llego) return;
+    AU.el.llego = true;
+    const clave = AU.clave, quien = miRival;
+    await Autitos.accionEnCola((e) => {
+        if (e.clave !== clave) return null;
+        return { ganador: quien, motivo: `${nombreJugador(quien)} llegó primero en ${(tiempo / 1000).toFixed(1)} s` };
+    });
+}
 function pasoAu(dt){
-    const e = AU.estado, p = AU.yo;
-    if (!e || e.fase !== 'jugando' || !p || AU.terminado) return;
+    const e = AU.estado;
+    if (!e || e.fase !== 'jugando') return;
     const ahora = VivoComun.reloj('autitos');
     if (ahora < e.inicio) return;
+    const compu = compuAu(), b = AU.el;
+    if (compu && b && b.bot && !b.llego) {
+        if (b.tVuelta == null) b.tVuelta = e.inicio;
+        const k = pilotoCompuAu(b, compu.nivel);
+        moverAutoAu(b, k, (k.der ? 1 : 0) - (k.izq ? 1 : 0), dt, AU.yo, false, ahora, e);
+        b.visto = Date.now(); b.pr = progresoAu(b);
+    }
+    const p = AU.yo;
+    if (!p || AU.terminado) return;
     if (p.tVuelta == null) p.tVuelta = e.inicio;
+    p.visto = Date.now();
     const k = AU.teclas;
-    const giro = AU.inclinar ? AU.giroTilt : (k.der ? 1 : 0) - (k.izq ? 1 : 0);
+    moverAutoAu(p, k, AU.inclinar ? AU.giroTilt : (k.der ? 1 : 0) - (k.izq ? 1 : 0), dt, AU.el, true, ahora, e);
+}
+// La física de un auto (el mío o el de la compu) y las vueltas.
+function moverAutoAu(p, k, giro, dt, o, mio, ahora, e){
     const cerca = cercanoAu(p.x, p.y, p.i);
     const enPasto = cerca.d > ANCHO_PISTA + 1;
     const max = enPasto ? 1.5 : 3.6;
@@ -152,15 +189,14 @@ function pasoAu(dt){
     p.x = Math.max(6, Math.min(W_AU - 6, p.x + p.vx * dt));
     p.y = Math.max(6, Math.min(H_AU - 6, p.y + p.vy * dt));
     // Choque con el otro: empujón suave.
-    const o = AU.el;
     if (o && Date.now() - o.visto < 1500) {
         const dx = p.x - o.x, dy = p.y - o.y, d = Math.hypot(dx, dy);
-        if (d < 12 && d > 0) { p.x += dx / d * (12 - d) * 0.6; p.y += dy / d * (12 - d) * 0.6; p.v *= 0.9; if (!AU._choque || Date.now() - AU._choque > 500) { AU._choque = Date.now(); vibrarJ(15); if (!(window.sonarArcade && sonarArcade('choque')) && window.sfx) window.sfx.toque(); if (AU.fx) { AU.fx.chispas((p.x + o.x) / 2, (p.y + o.y) / 2, ['#fff7c2', '#ffd23a', '#ff9f43'], 10); AU.fx.temblor(2, 180); } } }
+        if (d < 12 && d > 0) { p.x += dx / d * (12 - d) * 0.6; p.y += dy / d * (12 - d) * 0.6; p.v *= 0.9; if (mio && (!AU._choque || Date.now() - AU._choque > 500)) { AU._choque = Date.now(); vibrarJ(15); if (!(window.sonarArcade && sonarArcade('choque')) && window.sfx) window.sfx.toque(); if (AU.fx) { AU.fx.chispas((p.x + o.x) / 2, (p.y + o.y) / 2, ['#fff7c2', '#ffd23a', '#ff9f43'], 10); AU.fx.temblor(2, 180); } } }
     }
     const derrapa = Math.abs(Math.atan2(p.vy, p.vx) - p.a) % (Math.PI * 2);
     if (Math.abs(p.v) > 2.4 && (derrapa > 0.35 && derrapa < Math.PI * 2 - 0.35)) p.humo.push({ x: p.x, y: p.y, t: Date.now() });
     p.humo = p.humo.filter(h => Date.now() - h.t < 500);
-    efectosRuedasAu(p, p.x, p.y, p.a, Math.abs(p.v), Math.abs(p.v) > 2.4 && derrapa > 0.35 && derrapa < Math.PI * 2 - 0.35, enPasto);
+    if (mio) efectosRuedasAu(p, p.x, p.y, p.a, Math.abs(p.v), Math.abs(p.v) > 2.4 && derrapa > 0.35 && derrapa < Math.PI * 2 - 0.35, enPasto);
     p.enPasto = enPasto;
     // Sectores en orden: así se cuentan las vueltas y no valen los atajos.
     p.i = cercanoAu(p.x, p.y, p.i).i;
@@ -170,11 +206,14 @@ function pasoAu(dt){
             p.vuelta++;
             const t = ahora - p.tVuelta; p.tVuelta = ahora;
             if (p.mejor == null || t < p.mejor) p.mejor = t;
-            guardarVueltaAu(t);
-            if (p.vuelta >= VUELTAS_AU) llegarAu(ahora - e.inicio);
-            if (AU.fx) { AU.fx.onda(p.x, p.y, { color: 'rgba(255,255,255,0.9)', radio: 22 }); AU.fx.estrellitas(p.x, p.y, 8); }
-            if (p.vuelta >= VUELTAS_AU && AU.fx) { const m = AU.pista.pts[0]; AU.fx.confeti(m[0], m[1], 60); }
-            else { vibrarJ(20); if (window.sfx) window.sfx.punto(); if (window.animJuegos) window.animJuegos.cartel(p.vuelta === VUELTAS_AU - 1 ? '¡Última vuelta!' : `Vuelta ${p.vuelta + 1}`, { dur: 800, sonido: false }); }
+            if (!mio) { if (p.vuelta >= VUELTAS_AU) ganaCompuAu(ahora - e.inicio); }
+            else {
+                guardarVueltaAu(t);
+                if (p.vuelta >= VUELTAS_AU) llegarAu(ahora - e.inicio);
+                if (AU.fx) { AU.fx.onda(p.x, p.y, { color: 'rgba(255,255,255,0.9)', radio: 22 }); AU.fx.estrellitas(p.x, p.y, 8); }
+                if (p.vuelta >= VUELTAS_AU && AU.fx) { const m = AU.pista.pts[0]; AU.fx.confeti(m[0], m[1], 60); }
+                else { vibrarJ(20); if (window.sfx) window.sfx.punto(); if (window.animJuegos) window.animJuegos.cartel(p.vuelta === VUELTAS_AU - 1 ? '¡Última vuelta!' : `Vuelta ${p.vuelta + 1}`, { dur: 800, sonido: false }); }
+            }
         }
         p.sig = (p.sig + 1) % SECTORES_AU;
     }
@@ -327,7 +366,7 @@ function arrancarAu(){
     }
     if (!AU.teclado) AU.teclado = VivoComun.teclado('pantalla-autitos', { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'gas', KeyW: 'gas', Space: 'gas', ArrowDown: 'freno', KeyS: 'freno' }, AU.teclas);
     AU.fx = AU.fx || FxVivo.crear();
-    if (!AU.enlace) {
+    if (!AU.enlace && !compuAu()) {
         AU.enlace = EnlaceVivo.conectar('autitos', {
             alMensaje(t, d) {
                 if (d.c !== AU.clave) return;
@@ -358,6 +397,7 @@ const Autitos = JuegoTurnos.crear({
         return `<div class="texto-tenue" style="margin-top:8px;font-size:0.8rem;">Circuito: <b>${CIRCUITOS_AU[prox].nombre}</b>${rec ? ` · récord ${(rec.t / 1000).toFixed(1)} s de ${nombreJugador(rec.q)}` : ''}</div>
             <div class="niveles-av">${CIRCUITOS_AU.map((c, i) => `<button type="button" class="${i === prox ? 'activa' : ''}" title="${c.nombre}" onclick="elegirCircuitoAu(${i})">${i + 1}</button>`).join('')}</div>`;
     },
+    compu: { paso: () => null }, // la compu maneja su auto adentro del bucle (pilotoCompuAu)
     render() { return `<div id="autitos-host"></div><div class="texto-centro" style="margin-top:2px;"><button class="btn-secundario" id="btn-inclinar-au" style="font-size:0.78rem;padding:6px 12px;" onclick="activarInclinacionAu()">${AU.inclinar ? '📱 Manejando inclinando (tocá para usar botones)' : '📱 Manejar inclinando el celu'}</button></div>`; },
     alDibujar(cont, e) {
         AU.estado = e;

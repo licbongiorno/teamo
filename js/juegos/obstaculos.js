@@ -119,6 +119,7 @@ async function llegarOb(){
 function dibujarOb(){
     const c = OB.ctx, e = OB.estado;
     if (!c || !e || !OB.mapa) return;
+    c.setTransform(3, 0, 0, 3, 0, 0);
     const W = VISTA_OB * T_OB, H = FILAS_OB * T_OB, t = Date.now();
     if (OB.yo) OB.camara += (Math.max(0, Math.min(OB.ancho * T_OB - W, OB.yo.x - W * 0.35)) - OB.camara) * 0.2;
     const cam = Math.round(OB.camara), pt = performance.now();
@@ -241,10 +242,11 @@ function arrancarOb(){
     OB.fx = OB.fx || FxVivo.crear();
     if (!OB.canvas) {
         OB.canvas = document.createElement('canvas');
-        OB.canvas.width = VISTA_OB * T_OB; OB.canvas.height = FILAS_OB * T_OB;
+        OB.canvas.width = VISTA_OB * T_OB * 3; OB.canvas.height = FILAS_OB * T_OB * 3; // a 3x: nítido en celus
         OB.canvas.className = 'lienzo-aventura';
         OB.canvas.style.aspectRatio = `${VISTA_OB}/${FILAS_OB}`;
         OB.ctx = OB.canvas.getContext('2d');
+        OB.ctx.imageSmoothingEnabled = false;
         OB.controles = VivoComun.botones([[{ k: 'izq', txt: '◀' }, { k: 'der', txt: '▶' }], { k: 'salto', txt: '⤒', clase: 'salto' }], OB.teclas);
     }
     if (!OB.teclado) OB.teclado = VivoComun.teclado('pantalla-obstaculos', { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'salto', KeyW: 'salto', Space: 'salto' }, OB.teclas);

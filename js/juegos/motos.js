@@ -10,6 +10,52 @@ const DIR_MOTO = { arriba: [0, -1], abajo: [0, 1], izq: [-1, 0], der: [1, 0] };
 const MT = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, yo: null, el: null, ocupado: null, choque: false, pendiente: null, ultimoPaso: 0, fx: null, rondaT: 0 };
 
 const girarMoto = () => miIdentidad === 'carito';
+// Contra la compu: la otra moto la maneja la compu en este celu, al mismo paso que la mía.
+const compuMoto = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'motos' ? m : null; };
+const libreMoto = (x, y) => x >= 0 && y >= 0 && x < COLS_MOTO && y < FILAS_MOTO && !MT.ocupado.has(x + ',' + y);
+// Cuánto lugar libre queda desde (x, y), contando hasta `tope` celdas (más lugar = menos encerrada).
+function espacioMoto(x, y, tope){
+    const visto = new Set([x + ',' + y]), cola = [[x, y]];
+    while (cola.length && visto.size < tope) {
+        const [cx, cy] = cola.shift();
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy, k = nx + ',' + ny; if (!visto.has(k) && libreMoto(nx, ny) && !(MT.yo.x === nx && MT.yo.y === ny)) { visto.add(k); cola.push([nx, ny]); } }
+    }
+    return visto.size;
+}
+function pasoBotMoto(nivel){
+    const b = MT.el;
+    if (!b || b.choco) return;
+    const orden = ['arriba', 'der', 'abajo', 'izq'], i = orden.indexOf(b.dir);
+    const tope = { facil: 25, normal: 140, dificil: 420 }[nivel] || 140;
+    const opciones = [b.dir, orden[(i + 1) % 4], orden[(i + 3) % 4]].map(d => {
+        const [dx, dy] = DIR_MOTO[d], x = b.x + dx, y = b.y + dy, ok = libreMoto(x, y) && !(MT.yo.x === x && MT.yo.y === y);
+        // En difícil, además, no se mete en la celda donde va a estar mi punta.
+        const [mx, my] = DIR_MOTO[MT.yo.dir], peligro = nivel === 'dificil' && MT.yo.x + mx === x && MT.yo.y + my === y;
+        return { d, ok, puntos: ok ? espacioMoto(x, y, tope) + (d === b.dir ? 3 : 0) + Math.random() * 2 - (peligro ? 60 : 0) : -1 };
+    });
+    let elegida = opciones.filter(o => o.ok).sort((p, q) => q.puntos - p.puntos)[0] || opciones[0];
+    // En fácil a veces se distrae y dobla porque sí.
+    if (nivel === 'facil' && Math.random() < 0.05) { const libres = opciones.filter(o => o.ok); if (libres.length) elegida = libres[Math.floor(Math.random() * libres.length)]; }
+    b.dir = elegida.d;
+    MT.ocupado.add(celdaMoto(b.x, b.y)); b.estela.push([b.x, b.y]);
+    const [dx, dy] = DIR_MOTO[b.dir];
+    b.dx = dx; b.dy = dy; b.x += dx; b.y += dy; b.k++; b.tPos = performance.now();
+    if (!libreMoto(b.x, b.y) || (MT.yo.x === b.x && MT.yo.y === b.y)) choqueCompuMoto();
+}
+// Chocó la compu: la ronda es mía.
+async function choqueCompuMoto(){
+    if (MT.el.choco || MT.choque) return;
+    MT.el.choco = true;
+    efectoChoqueMoto(MT.el, false);
+    if (window.sonarArcade) sonarArcade('explosion', { tam: 0.6 });
+    const clave = MT.clave, gana = miIdentidad;
+    await Motos.accion((e) => {
+        if (e.clave !== clave) return null;
+        const rondas = { ...e.rondas, [gana]: e.rondas[gana] + 1 };
+        if (rondas[gana] >= RONDAS_MOTO) return { rondas, ganador: gana, motivo: `${rondas.nico} a ${rondas.carito} en rondas.` };
+        return { rondas, clave: Math.random().toString(36).slice(2, 7), inicio: VivoComun.reloj('motos') + 2500, aviso: `Chocó ${nombreJugador(miRival)}: ronda para ${nombreJugador(gana)}.` };
+    });
+}
 function reiniciarMoto(e){
     MT.clave = e.clave;
     const salida = (q) => q === 'nico' ? { x: Math.floor(COLS_MOTO / 2), y: FILAS_MOTO - 4, dir: 'arriba' } : { x: Math.floor(COLS_MOTO / 2) - 1, y: 3, dir: 'abajo' };
@@ -39,7 +85,9 @@ function pasoMoto(){
     if (ahora < e.inicio) return;
     const debido = Math.floor((ahora - e.inicio) / PASO_MOTO);
     let n = 0;
+    const compu = compuMoto();
     while (p.k < debido && n++ < 4 && !MT.choque) {
+        if (compu && MT.el.k <= p.k) pasoBotMoto(compu.nivel);
         if (MT.pendiente) {
             const [ax, ay] = DIR_MOTO[p.dir], [bx, by] = DIR_MOTO[MT.pendiente];
             if (ax + bx !== 0 || ay + by !== 0) { p.dir = MT.pendiente; MT.enlace && MT.enlace.enviar('giro', { k: p.k, x: p.x, y: p.y, dir: p.dir, c: MT.clave }, true); }
@@ -191,7 +239,7 @@ function arrancarMoto(){
         MT.teclado = (ev) => { const d = mapa[ev.code]; if (!d || !document.getElementById('pantalla-motos')?.classList.contains('activa')) return; ev.preventDefault(); girarHacia(girarMoto() ? { der: 'izq', izq: 'der', arriba: 'abajo', abajo: 'arriba' }[d] : d); };
         window.addEventListener('keydown', MT.teclado);
     }
-    if (!MT.enlace) {
+    if (!MT.enlace && !compuMoto()) {
         MT.enlace = EnlaceVivo.conectar('motos', {
             alMensaje(t, d) {
                 if (!MT.el || d.c !== MT.clave) return;
@@ -216,6 +264,7 @@ const Motos = JuegoTurnos.crear({
     emojiListo: '🏍️',
     intro: `Manejá tu moto de luz y no choques contra las paredes ni contra ninguna estela. Girá con ⟲ ⟳ o deslizando el dedo. ¡Gana el primero en llevarse ${RONDAS_MOTO} rondas!`,
     inicial: () => ({ rondas: { nico: 0, carito: 0 }, clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 3000, turno: null }),
+    compu: { paso: () => null }, // la compu maneja su moto adentro del paso (pasoBotMoto)
     render(e) { return `<div id="motos-host"></div><div class="texto-centro texto-tenue" style="font-size:0.75rem;">Rondas: ${nombreJugador('nico')} ${e.rondas.nico} — ${e.rondas.carito} ${nombreJugador('carito')}</div>`; },
     alDibujar(cont, e) {
         MT.estado = e;

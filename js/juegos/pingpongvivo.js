@@ -153,6 +153,7 @@ async function marcarPuntoPp(quien, como){
 function dibujarPp(){
     const c = PP.ctx, e = PP.estado;
     if (!c || !e) return;
+    c.setTransform(2, 0, 0, 2, 0, 0);
     const ahora = performance.now();
     if (PP.fx) PP.fx.antes(c);
     // Piso del gimnasio con reflejo de luz
@@ -265,7 +266,7 @@ function arrancarPp(){
     PP.fx = PP.fx || FxVivo.crear();
     if (!PP.canvas) {
         PP.canvas = document.createElement('canvas');
-        PP.canvas.width = W_PP; PP.canvas.height = H_PP;
+        PP.canvas.width = W_PP * 2; PP.canvas.height = H_PP * 2; // a 2x: nítido en celus
         PP.canvas.className = 'lienzo-hockey';
         PP.ctx = PP.canvas.getContext('2d');
         const dedo = (ev) => {

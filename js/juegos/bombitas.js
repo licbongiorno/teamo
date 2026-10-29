@@ -36,6 +36,132 @@ function reiniciarBom(e){
     BM.yo = { x: s.x * T_BOM + 2, y: s.y * T_BOM + 2 };
     BM.el = { x: o.x * T_BOM + 2, y: o.y * T_BOM + 2 };
     BM.muerto = false; BM.alcance = 2; BM.maxBombas = 1;
+    BM.bot = { alcance: 2, maxBombas: 1, camino: [], piensa: 0 };
+}
+// ---------- Contra la compu: el otro personaje lo maneja la compu en este celu ----------
+const compuBom = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'bombitas' ? m : null; };
+const celdaDeBom = (p) => [Math.floor((p.x + 6) / T_BOM), Math.floor((p.y + 6) / T_BOM)];
+// Celdas que va a alcanzar el fuego (bombas puestas + fuego que ya está), con una bomba extra opcional.
+function peligroBom(extra){
+    const peligro = new Set();
+    BM.fuegos.forEach(f => f.celdas.forEach(([x, y]) => peligro.add(x + ',' + y)));
+    [...BM.bombas.filter(b => !b.exploto), ...(extra ? [extra] : [])].forEach(b => {
+        peligro.add(b.x + ',' + b.y);
+        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+            for (let k = 1; k <= b.alcance; k++) { const x = b.x + dx * k, y = b.y + dy * k, c = celdaBom(x, y); if (c === '#') break; peligro.add(x + ',' + y); if (c === '=') break; }
+        });
+    });
+    return peligro;
+}
+// Lo mismo pero con cuándo: casilla → [desde, hasta] en que hay fuego (cuenta las cadenas).
+function tiemposPeligroBom(extra){
+    const ahora = VivoComun.reloj('bombitas'), t = new Map();
+    const marcar = (k, a, b) => { const v = t.get(k); if (!v) t.set(k, [a, b]); else t.set(k, [Math.min(v[0], a), Math.max(v[1], b)]); };
+    BM.fuegos.forEach(f => f.celdas.forEach(([x, y]) => marcar(x + ',' + y, ahora, f.hasta)));
+    const bombas = [...BM.bombas.filter(b => !b.exploto), ...(extra ? [extra] : [])].map(b => ({ ...b, te: b.t }));
+    // Cadenas: una bomba alcanzada por otra explota con ella.
+    for (let vuelta = 0; vuelta < 4; vuelta++) bombas.forEach(a => bombas.forEach(b => { if (b.te > a.te && cruzBom(a).has(b.x + ',' + b.y)) b.te = a.te; }));
+    bombas.forEach(b => cruzBom(b).forEach(k => marcar(k, b.te, b.te + FUEGO_BOM)));
+    return t;
+}
+function cruzBom(b){
+    const c = new Set([b.x + ',' + b.y]);
+    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { for (let k = 1; k <= b.alcance; k++) { const x = b.x + dx * k, y = b.y + dy * k, ch = celdaBom(x, y); if (ch === '#') break; c.add(x + ',' + y); if (ch === '=') break; } });
+    return c;
+}
+// ¿Puedo estar en esa casilla en ese momento sin quemarme?
+const seguraEnBom = (tiempos, k, cuando) => { const v = tiempos.get(k); return !v || cuando < v[0] - 180 || cuando > v[1] + 120; };
+const MS_CELDA_BOM = 270; // lo que tarda la compu en cruzar una casilla (con margen)
+const pisableBom = (x, y, desde) => celdaBom(x, y) === '.' && !BM.bombas.some(b => !b.exploto && b.x === x && b.y === y && !(desde && desde[0] === x && desde[1] === y));
+// Búsqueda por la grilla desde `ini` hasta la primera celda que cumpla `meta`, evitando `evitar`.
+function buscarBom(ini, meta, evitar, max = 60, tiempos = null){
+    const previo = { [ini.join()]: null }, cola = [ini], dist = { [ini.join()]: 0 }, t0 = VivoComun.reloj('bombitas');
+    while (cola.length) {
+        const c = cola.shift();
+        if (meta(c[0], c[1])) { const camino = []; let k = c.join(); while (previo[k]) { camino.unshift(k.split(',').map(Number)); k = previo[k].join(); } return camino.length || !(c[0] === ini[0] && c[1] === ini[1]) ? camino : []; }
+        if (Object.keys(previo).length > max) break;
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const x = c[0] + dx, y = c[1] + dy, k = x + ',' + y;
+            if (k in previo || !pisableBom(x, y, ini) || (evitar && evitar.has(k))) continue;
+            const d = dist[c.join()] + 1;
+            // Con tiempos: no pasa por una casilla que va a estar prendida justo cuando llegue (ni quedándose ahí un ratito).
+            if (tiempos && !(seguraEnBom(tiempos, k, t0 + d * MS_CELDA_BOM) && seguraEnBom(tiempos, k, t0 + (d + 0.8) * MS_CELDA_BOM))) continue;
+            previo[k] = c; dist[k] = d; cola.push([x, y]);
+        }
+    }
+    return null;
+}
+function pensarCompuBom(nivel){
+    const b = BM.el, bot = BM.bot, yo = BM.yo, ahora = VivoComun.reloj('bombitas');
+    const aqui = celdaDeBom(b), peligro = peligroBom(), tiempos = tiemposPeligroBom();
+    const N = { facil: { espera: 520, ataca: 0.25, lejos: 0.4 }, normal: { espera: 300, ataca: 0.55, lejos: 0.7 }, dificil: { espera: 160, ataca: 0.85, lejos: 0.95 } }[nivel] || { espera: 300, ataca: 0.55, lejos: 0.7 };
+    // 1) En peligro: a la celda segura más cercana
+    if (peligro.has(aqui.join())) {
+        // Si ya tiene un camino seguro, lo sigue; si no, busca uno (primero respetando los tiempos del fuego).
+        const sig = bot.camino[0];
+        if (bot.escapando && sig && seguraEnBom(tiempos, sig.join(), ahora + MS_CELDA_BOM)) return;
+        bot.camino = buscarBom(aqui, (x, y) => !peligro.has(x + ',' + y), null, 80, tiempos) || buscarBom(aqui, (x, y) => !peligro.has(x + ',' + y)) || [];
+        bot.escapando = true;
+        return;
+    }
+    bot.escapando = false;
+    // No entra a una casilla que se va a prender
+    if (bot.camino[0] && peligro.has(bot.camino[0].join())) bot.camino = [];
+    if (ahora < bot.piensa) return;
+    bot.piensa = ahora + N.espera;
+    const yoC = celdaDeBom(yo), mias = BM.bombas.filter(x => !x.exploto && x.duenio === miRival).length;
+    // ¿Vale la pena una bomba acá? (ladrillo al lado, o yo en la línea de fuego)
+    const ladrilloCerca = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => celdaBom(aqui[0] + dx, aqui[1] + dy) === '=');
+    const meAlcanza = !BM.muerto && ((yoC[0] === aqui[0] && Math.abs(yoC[1] - aqui[1]) <= bot.alcance) || (yoC[1] === aqui[1] && Math.abs(yoC[0] - aqui[0]) <= bot.alcance));
+    if (mias < bot.maxBombas && (ladrilloCerca || (meAlcanza && Math.random() < N.ataca)) && !BM.bombas.some(x => !x.exploto && x.x === aqui[0] && x.y === aqui[1])) {
+        const nueva = { x: aqui[0], y: aqui[1], alcance: bot.alcance, t: ahora + MECHA_BOM };
+        const conBomba = peligroBom(nueva), escape = buscarBom(aqui, (x, y) => !conBomba.has(x + ',' + y), null, 80, tiemposPeligroBom(nueva));
+        if (escape && escape.length && escape.length <= 6) { ponerBombaCompuBom(aqui); bot.camino = escape; bot.escapando = true; return; }
+    }
+    // 2) Mejora cerca → a buscarla; si no, hacia un ladrillo o hacia mí
+    const mejora = buscarBom(aqui, (x, y) => !!BM.mejoras[x + ',' + y] && celdaBom(x, y) === '.', peligro, 40);
+    if (mejora && mejora.length && mejora.length < 7) { bot.camino = mejora; return; }
+    const haciaMi = Math.random() < N.lejos && !BM.muerto ? buscarBom(aqui, (x, y) => (x === yoC[0] && Math.abs(y - yoC[1]) <= bot.alcance) || (y === yoC[1] && Math.abs(x - yoC[0]) <= bot.alcance), peligro, 140) : null;
+    const haciaLadrillo = buscarBom(aqui, (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => celdaBom(x + dx, y + dy) === '='), peligro, 140);
+    bot.camino = (haciaMi && haciaMi.length && (!haciaLadrillo || haciaMi.length <= haciaLadrillo.length + 4) ? haciaMi : haciaLadrillo) || [];
+}
+function ponerBombaCompuBom([cx, cy]){
+    const b = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4), x: cx, y: cy, t: VivoComun.reloj('bombitas') + MECHA_BOM, alcance: BM.bot.alcance, duenio: miRival, pisando: !!pisaBom(BM.yo, { x: cx, y: cy }) };
+    BM.bombas.push(b); BM.idsBomba.add(b.id);
+    if (BM.fx) BM.fx.polvo(cx * T_BOM + 8, cy * T_BOM + 13, 'rgba(230,230,210,0.6)', 4);
+}
+function moverCompuBom(dt, nivel){
+    const b = BM.el, bot = BM.bot;
+    pensarCompuBom(nivel);
+    const sig = bot.camino[0];
+    if (!sig) { b.camina = false; return; }
+    const v = 1.35 * dt * ({ facil: 0.75, normal: 0.9, dificil: 1 }[nivel] || 0.9);
+    const tx = sig[0] * T_BOM + 2, ty = sig[1] * T_BOM + 2;
+    // Primero se alinea con el pasillo y después avanza (como el personaje propio).
+    const dx = tx - b.x, dy = ty - b.y;
+    if (Math.abs(dx) > 0.01 && Math.abs(dy) > 0.01) { if (Math.abs(dx) < Math.abs(dy)) b.x += Math.sign(dx) * Math.min(v, Math.abs(dx)); else b.y += Math.sign(dy) * Math.min(v, Math.abs(dy)); }
+    else if (Math.abs(dx) > 0.01) b.x += Math.sign(dx) * Math.min(v, Math.abs(dx));
+    else if (Math.abs(dy) > 0.01) b.y += Math.sign(dy) * Math.min(v, Math.abs(dy));
+    if (Math.abs(tx - b.x) < 0.02 && Math.abs(ty - b.y) < 0.02) { b.x = tx; b.y = ty; bot.camino.shift(); }
+    b.camina = true;
+    // Mejoras
+    const [cx, cy] = celdaDeBom(b), k = cx + ',' + cy, mej = BM.mejoras[k];
+    if (mej && celdaBom(cx, cy) === '.') { delete BM.mejoras[k]; if (mej === 'fuego') bot.alcance++; else bot.maxBombas++; efectoMejoraBom(cx, cy, mej, false); }
+}
+// A la compu la alcanzó el fuego: la ronda es mía.
+async function muereCompuBom(){
+    const o = BM.el;
+    if (!o || o.muerto) return;
+    o.muerto = true; o.tMuerte = performance.now();
+    efectoMuerteBom(o, miRival);
+    if (window.sonarArcade) sonarArcade('explosion', { tam: 0.6 });
+    const clave = BM.clave, gana = miIdentidad;
+    await Bombitas.accion((e) => {
+        if (e.clave !== clave) return null;
+        const rondas = { ...e.rondas, [gana]: e.rondas[gana] + 1 };
+        if (rondas[gana] >= RONDAS_BOM) return { rondas, ganador: gana, motivo: `${rondas.nico} a ${rondas.carito} en rondas.` };
+        return { rondas, clave: Math.random().toString(36).slice(2, 7), semilla: Math.floor(Math.random() * 1e9), inicio: VivoComun.reloj('bombitas') + 3000, aviso: `💥 Explotó ${nombreJugador(miRival)}: ronda para ${nombreJugador(gana)}.` };
+    });
 }
 const celdaBom = (x, y) => (BM.mapa[y] && BM.mapa[y][x]) || '#';
 // Bomba sólida, salvo la que todavía tengo abajo (recién puesta, mía o del otro), para poder salir.
@@ -78,6 +204,12 @@ function pasoBom(dt){
     const e = BM.estado, p = BM.yo;
     if (!e || e.fase !== 'jugando' || !p || !BM.mapa) return;
     simularBom();
+    const compu = compuBom();
+    if (compu && BM.el && !BM.el.muerto && VivoComun.reloj('bombitas') >= e.inicio) {
+        moverCompuBom(dt, compu.nivel);
+        const [bx, by] = celdaDeBom(BM.el);
+        if (BM.fuegos.some(f => f.celdas.some(([x, y]) => x === bx && y === by))) muereCompuBom();
+    }
     if (VivoComun.reloj('bombitas') < e.inicio || BM.muerto) return;
     const k = BM.teclas, v = 1.35 * dt, tam = 12;
     let dx = (k.der ? 1 : 0) - (k.izq ? 1 : 0), dy = dx ? 0 : (k.abajo ? 1 : 0) - (k.arriba ? 1 : 0);
@@ -346,7 +478,7 @@ function arrancarBom(){
         window.addEventListener('keydown', BM.teclado); window.addEventListener('keyup', BM.teclado);
     }
     BM.fx = BM.fx || FxVivo.crear();
-    if (!BM.enlace) {
+    if (!BM.enlace && !compuBom()) {
         BM.enlace = EnlaceVivo.conectar('bombitas', {
             alMensaje(t, d) {
                 if (d.c !== BM.clave || !BM.el) return;
@@ -371,6 +503,7 @@ const Bombitas = JuegoTurnos.crear({
     id: 'bombitas',
     sinTurno: true,
     emojiListo: '💣',
+    compu: { paso: () => null }, // la compu juega adentro del bucle (moverCompuBom)
     intro: `Poné bombas 💣 para romper bloques y encerrar al otro: explotan a los 2 segundos en cruz. Si el fuego te toca, perdés la ronda. Buscá mejoras escondidas (🔥 más alcance, 💣 una bomba más). ¡Gana el primero en llevarse ${RONDAS_BOM} rondas!`,
     inicial: () => ({ rondas: { nico: 0, carito: 0 }, clave: Math.random().toString(36).slice(2, 7), semilla: Math.floor(Math.random() * 1e9), inicio: window.ahoraSync() + 3000, turno: null }),
     render(e) { return `<div id="bombitas-host"></div><div class="texto-centro texto-tenue" style="font-size:0.75rem;">${nombreJugador('nico')} 🔵 arranca arriba a la izquierda · ${nombreJugador('carito')} 🩷 abajo a la derecha</div>`; },

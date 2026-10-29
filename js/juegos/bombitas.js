@@ -38,11 +38,14 @@ function reiniciarBom(e){
     BM.muerto = false; BM.alcance = 2; BM.maxBombas = 1;
 }
 const celdaBom = (x, y) => (BM.mapa[y] && BM.mapa[y][x]) || '#';
-// Bomba sólida, salvo la que tengo abajo recién puesta (para poder salir).
+// Bomba sólida, salvo la que todavía tengo abajo (recién puesta, mía o del otro), para poder salir.
+// Se cuenta toda la caja del personaje: si se miraba sólo el centro, al salir a medias quedaba trabado.
+// (Mismas celdas que mira el movimiento: de x a x + 11.)
+const pisaBom = (p, b) => !!p && Math.floor(p.x / T_BOM) <= b.x && Math.floor((p.x + 11) / T_BOM) >= b.x && Math.floor(p.y / T_BOM) <= b.y && Math.floor((p.y + 11) / T_BOM) >= b.y;
 function bloqueaBom(cx, cy, p){
     const c = celdaBom(cx, cy);
     if (c === '#' || c === '=') return true;
-    return BM.bombas.some(b => !b.exploto && b.x === cx && b.y === cy && !(p && b.duenio === miIdentidad && b.pisando));
+    return BM.bombas.some(b => !b.exploto && b.x === cx && b.y === cy && !(p && b.pisando));
 }
 // Simula explosiones (con cadenas) hasta ahora. Igual en los dos celus.
 function simularBom(){
@@ -94,7 +97,7 @@ function pasoBom(dt){
     }
     p.camina = Math.abs(p.x - x0) + Math.abs(p.y - y0) > 0.05;
     const cx = Math.floor((p.x + tam / 2) / T_BOM), cy = Math.floor((p.y + tam / 2) / T_BOM);
-    BM.bombas.forEach(b => { if (b.pisando && (b.x !== cx || b.y !== cy)) b.pisando = false; });
+    BM.bombas.forEach(b => { if (b.pisando && !pisaBom(p, b)) b.pisando = false; });
     // Mejoras
     const mej = BM.mejoras[cx + ',' + cy];
     if (mej && celdaBom(cx, cy) === '.') {
@@ -348,7 +351,7 @@ function arrancarBom(){
             alMensaje(t, d) {
                 if (d.c !== BM.clave || !BM.el) return;
                 if (t === 'pos') VivoComun.recibir(BM.el, { x: d.x, y: d.y });
-                if (t === 'bomba' && !BM.idsBomba.has(d.id)) { BM.idsBomba.add(d.id); BM.bombas.push({ id: d.id, x: d.x, y: d.y, t: d.t, alcance: d.alcance, duenio: d.duenio, pisando: false }); if (BM.fx) BM.fx.polvo(d.x * T_BOM + 8, d.y * T_BOM + 13, 'rgba(230,230,210,0.6)', 4); }
+                if (t === 'bomba' && !BM.idsBomba.has(d.id)) { BM.idsBomba.add(d.id); BM.bombas.push({ id: d.id, x: d.x, y: d.y, t: d.t, alcance: d.alcance, duenio: d.duenio, pisando: !!pisaBom(BM.yo, d) }); if (BM.fx) BM.fx.polvo(d.x * T_BOM + 8, d.y * T_BOM + 13, 'rgba(230,230,210,0.6)', 4); }
                 if (t === 'mejora' && BM.mejoras[d.k]) { const [mx, my] = d.k.split(',').map(Number); efectoMejoraBom(mx, my, BM.mejoras[d.k], false); delete BM.mejoras[d.k]; }
                 if (t === 'muerto' && !BM.el.muerto) { BM.el.muerto = true; BM.el.tMuerte = performance.now(); efectoMuerteBom({ x: BM.el.rx != null ? BM.el.rx : BM.el.x, y: BM.el.ry != null ? BM.el.ry : BM.el.y }, miRival); }
             }

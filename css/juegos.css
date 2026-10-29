@@ -1712,6 +1712,11 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .lienzo-hockey{ display:block; width:min(100%, 340px); aspect-ratio:240/360; margin:4px auto 8px; border-radius:18px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
 .lienzo-autitos{ display:block; width:min(100%, 330px); aspect-ratio:300/400; margin:4px auto 8px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
 .lienzo-voley{ display:block; width:100%; max-width:560px; aspect-ratio:320/200; margin:4px auto 8px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
+.lienzo-snake2{ display:block; width:min(100%, 320px); aspect-ratio:288/360; margin:4px auto 8px; border-radius:10px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; image-rendering:pixelated; }
+.cruceta-sn{ display:grid; grid-template-columns:repeat(3, 58px); grid-template-rows:repeat(2, 50px); gap:6px; justify-content:center; margin:0 auto 8px; user-select:none; -webkit-user-select:none; touch-action:none; }
+.cruceta-sn button{ border-radius:14px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.08); color:inherit; font-size:1.3rem; touch-action:none; -webkit-tap-highlight-color:transparent; }
+.cruceta-sn button:active{ background:rgba(255,255,255,0.25); }
+.cruceta-sn .sn-arriba{ grid-column:2; grid-row:1; } .cruceta-sn .sn-izq{ grid-column:1; grid-row:2; } .cruceta-sn .sn-abajo{ grid-column:2; grid-row:2; } .cruceta-sn .sn-der{ grid-column:3; grid-row:2; }
 .lienzo-motos{ display:block; width:min(100%, 330px); aspect-ratio:240/352; margin:4px auto 8px; border-radius:10px; box-shadow:0 0 18px rgba(120,110,255,0.35); touch-action:none; image-rendering:pixelated; }
 
 /* ==================== Favoritos, últimos, filtros, cara a cara ==================== */

@@ -8,7 +8,7 @@
 // ============================================================
 (function () {
     const CLAVE = 'juegosFavoritos';
-    const EN_VIVO = ['aventura', 'fuegoagua', 'autitos', 'voley', 'hockey', 'motos', 'bombitas', 'cocina', 'cifras', 'sopa', 'tabu', 'reflejos', 'tuttifrutti', 'palabras', 'dibujayadivina', 'mente', 'rosco', 'palabradia'];
+    const EN_VIVO = ['aventura', 'fuegoagua', 'autitos', 'voley', 'snake2', 'pongcoop', 'hockey', 'motos', 'bombitas', 'cocina', 'cifras', 'sopa', 'tabu', 'reflejos', 'tuttifrutti', 'palabras', 'dibujayadivina', 'mente', 'rosco', 'palabradia'];
     const EQUIPO = ['aventura', 'laberinto', 'cocina', 'faros', 'mente', 'codigo', 'onda', 'emojipelis', 'tabu', 'historia', 'exquisito', 'pesca', 'escaperoom', 'sudoku'];
     const CORTOS = ['fosforos', 'chancho', 'tateti', 'ppt', 'reflejos', 'calculo', 'trivia', 'sopa', 'palabradia', 'cifras', 'hockey', 'motos', 'mastermind'];
     const FILTROS = {

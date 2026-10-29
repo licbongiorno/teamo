@@ -20,7 +20,9 @@
     const JUEGOS = ['truco', 'escoba', 'chinchon', 'uno', 'ajedrez', 'damas', 'conecta4', 'tateti', 'reversi', 'generala', 'mentiroso',
         'batallanaval', 'ahorcado', 'cajitas', 'memoria', 'buscaminas', 'sudoku',
         'gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker',
-        'codigo', 'onda', 'mente', 'palabradia', 'rosco', 'sopa', 'sieteymedio', 'pescar'];
+        'codigo', 'onda', 'mente', 'palabradia', 'rosco', 'sopa', 'sieteymedio', 'pescar',
+        // Estos ya marcaban sus fichas con data-aj-id pero no estaban enganchados:
+        'damaschinas', 'hex', 'quoridor', 'fosforos', 'laberinto', 'exquisito', 'chancho', 'cifras', 'encadenadas', 'faros', 'tabu', 'suenos', 'mastermind'];
     // Juegos donde se compara casilla por casilla (qué cambió desde el dibujo anterior).
     const JUEGOS_CASILLAS = ['batallanaval', 'cajitas', 'buscaminas', 'sudoku'];
     const SEL_CARTAS = '.naipe-chinchon, div.naipe-uno, .naipe-frances';

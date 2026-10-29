@@ -87,6 +87,8 @@ const DETECTORES_TE_TOCA = {
     hex: _porTurno('jugando'),
     fosforos: _porTurno('jugando'),
     chancho: _porTurno('jugando'),
+    sieteymedio: _porTurno('jugando'),
+    pescar: _porTurno('jugando'),
 };
 
 const TEXTO_QUE_TE_TOCA = {

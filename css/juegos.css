@@ -1663,3 +1663,17 @@ html[data-mesa="pano"] .mesa-fosforos{ background:radial-gradient(ellipse at cen
 @keyframes rodarDado{ 0%{ transform:rotate(-200deg) scale(0.6); } 100%{ transform:none; } }
 .tiradas-chancho{ text-align:center; font-size:1.2rem; min-height:1.5em; opacity:0.75; margin-bottom:8px; }
 @media (prefers-reduced-motion: reduce){ .dado-chancho, .fosforo.recien{ animation:none; } }
+
+/* ==================== Cartas españolas: siete y medio, pescar ==================== */
+.mesa-sym{ display:flex; flex-direction:column; gap:10px; padding:12px; margin:8px 0; border-radius:18px; background:radial-gradient(ellipse at center, #2f6b47 0%, #1f4a32 80%); box-shadow:inset 0 0 0 3px #6b4a2a; }
+html[data-mesa="madera"] .mesa-sym, html[data-mesa="otono"] .mesa-sym{ background:repeating-linear-gradient(95deg, #9a6640 0 14px, #8a5a36 14px 22px, #a46e46 22px 34px); }
+html[data-mesa="noche"] .mesa-sym{ background:radial-gradient(ellipse at center, #2e2c5e 0%, #1a1838 75%); box-shadow:inset 0 0 0 3px #6b64b8; }
+html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at center, #3a2f45, #241c2e); box-shadow:inset 0 0 0 2px rgba(255,255,255,0.1); }
+.lugar-sym{ padding:6px; border-radius:12px; }
+.lugar-sym.turno{ box-shadow:0 0 0 2px #f5d9a0; }
+.lugar-sym .texto-tenue{ font-size:0.8rem; margin-bottom:4px; }
+.mano-sym{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; min-height:66px; }
+.mazo-sym{ display:flex; align-items:center; justify-content:center; gap:8px; margin:6px 0; }
+.boton-naipe-pes{ padding:0; border:none; background:none; cursor:pointer; }
+.boton-naipe-pes:active .naipe-chinchon{ transform:translateY(-6px); }
+.juego-pes{ display:inline-block; margin-left:3px; padding:1px 7px; border-radius:999px; background:rgba(245,217,160,0.18); color:#f5d9a0; font-size:0.72rem; }

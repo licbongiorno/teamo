@@ -37,6 +37,19 @@
         .barra-en-vivo button.destacado{ background:linear-gradient(135deg,#ffb3c6,#c9b6ff); color:#22182b; border:none; font-weight:700; }
         .selector-reacciones{ display:flex; gap:4px; width:100%; justify-content:center; }
         .selector-reacciones button{ font-size:1.3rem; padding:4px 8px; }
+        .selector-frases{ display:flex; gap:5px; width:100%; flex-wrap:wrap; justify-content:center; }
+        .selector-frases button{ font-size:0.75rem; padding:5px 9px; border-radius:999px; }
+        .frase-flotante{ position:fixed; left:50%; top:18%; z-index:16500; pointer-events:none; transform:translateX(-50%);
+            max-width:80vw; padding:12px 18px; border-radius:22px 22px 22px 6px; font-weight:700; font-size:1.05rem; text-align:center;
+            background:linear-gradient(135deg,#ffb3c6,#c9b6ff); color:#22182b; box-shadow:0 10px 30px rgba(0,0,0,0.45);
+            animation:entrarFrase 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+        .frase-flotante.propia{ top:auto; bottom:16%; border-radius:22px 22px 6px 22px; font-size:0.9rem; opacity:0.9; }
+        .frase-flotante small{ display:block; font-size:0.7rem; font-weight:600; opacity:0.75; }
+        @keyframes entrarFrase{ from{ opacity:0; transform:translate(-50%,10px) scale(0.6); } to{ opacity:1; transform:translate(-50%,0) scale(1); } }
+        .aviso-juntos-ahora{ display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; margin-bottom:12px; padding:12px 14px;
+            border-radius:16px; border:1px solid rgba(120,220,140,0.6); background:linear-gradient(135deg, rgba(95,220,122,0.18), rgba(201,182,255,0.18));
+            color:inherit; font-family:inherit; font-size:0.85rem; cursor:pointer; text-align:left; }
+        .aviso-juntos-ahora b{ white-space:nowrap; padding:7px 12px; border-radius:12px; background:linear-gradient(135deg,#ffb3c6,#c9b6ff); color:#22182b; }
         .reaccion-flotante{ position:fixed; bottom:12%; z-index:16000; pointer-events:none; font-size:2.6rem;
             animation:subirReaccion 2.4s ease-out forwards; will-change:transform, opacity; }
         @keyframes subirReaccion{ 0%{ transform:translateY(0) scale(0.6); opacity:0; } 15%{ opacity:1; transform:translateY(-8vh) scale(1.1); }
@@ -164,7 +177,14 @@ function _avisarCambioPresencia(){
 function renderAvisoPresencia(juegoId){
     const cont = document.getElementById('aviso-presencia');
     if (!cont) return;
-    if (!juegoId) { cont.innerHTML = ''; return; }
+    if (!juegoId) {
+        // Conectado/a pero en el menú: invitación grande a jugar juntos ya.
+        const est = estadoRivalEnVivo();
+        cont.innerHTML = est.conectado && typeof abrirJugarJuntos === 'function'
+            ? `<button class="aviso-juntos-ahora" onclick="abrirJugarJuntos()"><span>💚 ${_nombreEv(_evOtro)} está ${_evOtro === 'carito' ? 'conectada' : 'conectado'} ahora</span><b>🎮 ¡Juguemos juntos!</b></button>`
+            : '';
+        return;
+    }
     const j = _juegoEv(juegoId);
     cont.innerHTML = `<div class="aviso-presencia-activo" onclick="abrirJuego('${juegoId}')">
         ${_nombreEv(_evOtro)} está jugando ${j.icono} ${j.nombre} ahora — tocá para sumarte
@@ -206,7 +226,8 @@ function renderBarraEnVivo(){
         ? `<button onclick="abandonarPartida('${_evJuego}')" aria-label="Abandonar la partida">🏳️</button>` : '';
     barra.innerHTML = `<span class="estado-en-vivo">${estado}</span>${invitar}${abandonar}
         <button onclick="alternarReaccionesEnVivo()" aria-label="Mandar una reacción">😊</button>
-        ${_evReaccionesAbiertas ? `<div class="selector-reacciones">${REACCIONES_EN_VIVO.map(e => `<button onclick="enviarReaccionEnVivo('${e}')">${e}</button>`).join('')}</div>` : ''}`;
+        ${_evReaccionesAbiertas ? `<div class="selector-reacciones">${REACCIONES_EN_VIVO.map(e => `<button onclick="enviarReaccionEnVivo('${e}')">${e}</button>`).join('')}</div>
+        <div class="selector-frases">${FRASES_EN_VIVO.map((f, i) => `<button onclick="enviarFraseEnVivo(${i})">${f}</button>`).join('')}</div>` : ''}`;
 }
 function alternarReaccionesEnVivo(){
     _evReaccionesAbiertas = !_evReaccionesAbiertas;
@@ -410,6 +431,29 @@ function enviarReaccionEnVivo(emoji){
     window.setDoc(_refReaccion(), { id: _idEv(), de: _evYo, emoji, juego: _evJuego || null }).catch(() => {});
 }
 
+// Provocaciones y mimos: frases fijas (se manda sólo el número, así
+// nunca viaja texto libre al HTML del otro).
+const FRASES_EN_VIVO = ['¡Te voy a ganar! 😏', '¡Jugaste bárbaro! 💖', 'Dale que te toca 👀', '¡Revancha! 🔥', 'Estoy pensando… 🤔', 'No puede ser 😂', 'Te amo igual 😘', '¡Qué suerte tenés! 🍀'];
+function enviarFraseEnVivo(i){
+    if (!_evYo || !FRASES_EN_VIVO[i]) return;
+    const ahora = Date.now();
+    if (ahora - _evUltimaReaccion < 700) return;
+    _evUltimaReaccion = ahora;
+    _vibrarEv(8);
+    _lanzarFrase(FRASES_EN_VIVO[i], true);
+    _evReaccionesAbiertas = false;
+    renderBarraEnVivo();
+    window.setDoc(_refReaccion(), { id: _idEv(), de: _evYo, frase: i, juego: _evJuego || null }).catch(() => {});
+}
+function _lanzarFrase(texto, propia){
+    document.querySelectorAll('.frase-flotante').forEach(x => x.remove());
+    const el = document.createElement('div');
+    el.className = 'frase-flotante' + (propia ? ' propia' : '');
+    el.innerHTML = `${propia ? '' : `<small>${_escEv(_nombreEv(_evOtro))}</small>`}${_escEv(texto)}`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), propia ? 1800 : 3200);
+}
+
 // Mismo criterio que el zumbido del chat: lo que ya estaba guardado al
 // conectar no dispara nada; de ahí en más, cada id nuevo del otro sí.
 function _escucharReacciones(){
@@ -420,7 +464,9 @@ function _escucharReacciones(){
         if (!sincronizado) { ultimoId = id; if (!snap.metadata.fromCache) sincronizado = true; return; }
         if (!d || id === ultimoId) return;
         ultimoId = id;
-        if (d.de === _evYo || !REACCIONES_EN_VIVO.includes(d.emoji)) return;
+        if (d.de === _evYo) return;
+        if (typeof d.frase === 'number' && FRASES_EN_VIVO[d.frase]) { _lanzarFrase(FRASES_EN_VIVO[d.frase], false); _vibrarEv([10, 30, 10]); return; }
+        if (!REACCIONES_EN_VIVO.includes(d.emoji)) return;
         _lanzarReaccion(d.emoji, false);
         _vibrarEv(15);
     }, (err) => console.warn('Error escuchando reacciones:', err));
@@ -467,6 +513,7 @@ window.invitarAJugar = invitarAJugar;
 window.responderInvitacion = responderInvitacion;
 window.mostrarCartelEnVivo = mostrarCartelEnVivo;
 window.enviarReaccionEnVivo = enviarReaccionEnVivo;
+window.enviarFraseEnVivo = enviarFraseEnVivo;
 window.alternarReaccionesEnVivo = alternarReaccionesEnVivo;
 window.renderBarraEnVivo = renderBarraEnVivo;
 window.pedirPantallaPrendida = pedirPantallaPrendida;

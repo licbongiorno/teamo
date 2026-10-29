@@ -1392,3 +1392,27 @@ html[data-mesa="noche"] .mesa-bj, html[data-mesa="noche"] .mesa-poker, html[data
 .lista-sopa span{ padding:3px 8px; border-radius:999px; background:rgba(255,255,255,0.08); }
 .lista-sopa span.tachada{ text-decoration:line-through; opacity:0.55; }
 .lista-sopa span.del-otro::after{ content:' •'; color:var(--rosa); }
+
+/* ==================== Juntos a distancia + apuestas cariñosas ==================== */
+.juntos-grilla, .apuestas-grilla{ display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+.juntos-grilla button, .apuestas-grilla button{ padding:10px 8px; border-radius:12px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:inherit; font:inherit; font-size:0.86rem; cursor:pointer; text-align:center; }
+.juntos-grilla button span{ display:block; font-size:1.5rem; margin-bottom:2px; }
+.juntos-grilla button:active, .apuestas-grilla button:active{ transform:scale(0.96); }
+.cita-tarjeta{ display:block; width:100%; margin-bottom:12px; padding:12px 14px; border-radius:14px; border:1px solid rgba(245,217,160,0.25); background:rgba(245,217,160,0.07); color:inherit; font:inherit; font-size:0.9rem; text-align:left; cursor:pointer; box-sizing:border-box; }
+.cita-tarjeta span{ float:right; font-size:0.78rem; opacity:0.7; text-decoration:underline; }
+.cita-tarjeta.vacia{ border-style:dashed; opacity:0.85; }
+.cita-tarjeta.hoy{ border-color:#f5d9a0; background:linear-gradient(135deg, rgba(245,217,160,0.18), rgba(255,179,198,0.14)); animation:ajLatirReglas 2.4s ease-in-out infinite; cursor:default; }
+.cita-form{ display:flex; gap:8px; }
+.cita-form select, .cita-form input, .apuesta-propia input{ flex:1; padding:8px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(0,0,0,0.25); color:inherit; font:inherit; min-width:0; }
+.apuesta-propia{ display:flex; gap:8px; margin-top:8px; }
+.apuesta-propia .btn-principal{ width:auto; padding:8px 14px; }
+.apuesta-actual{ margin-bottom:8px; padding:8px 10px; border-radius:10px; background:rgba(255,179,198,0.12); font-size:0.88rem; }
+.apuesta-actual small{ opacity:0.7; }
+.btn-apuesta.activa{ border-color:#ffb3c6; box-shadow:0 0 0 2px rgba(255,179,198,0.35); }
+.apuesta-tira{ margin:-4px 0 10px; padding:6px 12px; border-radius:999px; background:rgba(255,179,198,0.13); border:1px solid rgba(255,179,198,0.3); font-size:0.82rem; text-align:center; }
+.premios-tarjeta{ margin-bottom:12px; }
+.premios-titulo{ font-weight:700; margin-bottom:6px; }
+.premio-fila{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px solid rgba(255,255,255,0.07); font-size:0.88rem; }
+.premio-fila small{ display:block; opacity:0.65; font-size:0.75rem; }
+.premio-fila .btn-secundario{ width:auto; padding:6px 10px; font-size:0.78rem; white-space:nowrap; margin:0; }
+@media (prefers-reduced-motion: reduce){ .cita-tarjeta.hoy{ animation:none; } }

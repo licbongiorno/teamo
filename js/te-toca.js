@@ -83,6 +83,10 @@ const DETECTORES_TE_TOCA = {
     damaschinas: _porTurno('jugando'),
     quoridor: _porTurno('jugando'),
     exquisito: _porTurno('jugando'),
+    mastermind: _porTurno('jugando'),
+    hex: _porTurno('jugando'),
+    fosforos: _porTurno('jugando'),
+    chancho: _porTurno('jugando'),
 };
 
 const TEXTO_QUE_TE_TOCA = {

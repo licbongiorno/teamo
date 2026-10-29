@@ -154,6 +154,11 @@ window.JUEGOS = [
     { id:'momentos', nombre:'Álbum de Momentos', icono:'📸', categoria:'cuidado', disponible:true, nuevo:true, descripcion:'Los momentos épicos que se guardan solos: hazañas, campeonatos, apuestas, misiones cumplidas…' },
     { id:'suenos', nombre:'Lista de Sueños', icono:'🌠', categoria:'cuidado', disponible:true, nuevo:true, descripcion:'La bucket list de los dos: quién se anima, sueños cumplidos con fecha y fotito.' },
     // ---- COOPERATIVOS ----
+    // ---- MESA RÁPIDA ----
+    { id:'mastermind', nombre:'Descifrá el Código', icono:'🎯', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Mastermind en duelo: cada uno esconde 4 colores y gana quien descifra antes el del otro.' },
+    { id:'hex', nombre:'Hex', icono:'⬡', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Uní tus dos bordes con un camino de fichas. Nunca hay empate.' },
+    { id:'fosforos', nombre:'El Último Fósforo', icono:'🔥', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Sacá fósforos de una fila por turno. El que se lleva el último, pierde.' },
+    { id:'chancho', nombre:'El Chancho', icono:'🐷', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Tirá el dado y sumá… hasta que sale el 1. ¿Te plantás o seguís? Primero a 100.' },
     // ---- DUELOS Y CREATIVOS ----
     { id:'damaschinas', nombre:'Damas Chinas', icono:'⭐', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Tablero estrella: llevá tus 10 fichas a la punta de enfrente saltando en cadena.' },
     { id:'quoridor', nombre:'Quoridor', icono:'🧱', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Mové tu peón o poné paredes para trabar al otro. Gana quien cruza primero.' },

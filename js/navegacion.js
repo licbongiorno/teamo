@@ -267,7 +267,9 @@ function renderMenuPrincipal(){
     // pensada como punto de partida ("¿a qué jugamos hoy?") y no como
     // otro catálogo repetido.
     const destacadoEl = document.getElementById('destacado-hoy');
-    if (destacadoEl && window.JUEGOS) {
+    if (destacadoEl && typeof window.renderRecomendador === 'function') {
+        window.renderRecomendador(); // js/recomendador.js: elige según el momento
+    } else if (destacadoEl && window.JUEGOS) {
         const disponibles = window.JUEGOS.filter(j => j.disponible);
         if (disponibles.length) {
             const hoy = new Date();

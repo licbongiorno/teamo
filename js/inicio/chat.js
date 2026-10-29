@@ -30,46 +30,9 @@ function abrirChatInterno() {
         }
 
 function renderMensajesChatIndex(mensajes, hayMas) {
-    const contenedor = document.getElementById('mensajes-chat');
-    if (!contenedor) return;
-    const alturaAntes = contenedor.scrollHeight;
-    const scrollAntes = contenedor.scrollTop;
-    const estabaAbajo = alturaAntes - scrollAntes - contenedor.clientHeight < 80;
-    if (!mensajes.length) {
-        contenedor.innerHTML = '<p class="sin-mensajes">Este espacio está esperando nuestras primeras palabras... escribí vos 💌</p>';
-        return;
-    }
-    contenedor.innerHTML = '';
-    if (hayMas) contenedor.appendChild(crearBotonAnterioresChat());
-    let ultimaEtiqueta = null;
-    let ultimoDivPropio = null;
-    let ultimaFechaPropia = null;
-    mensajes.forEach((msg) => {
-        const fecha = msg.timestamp && msg.timestamp.toDate ? msg.timestamp.toDate() : new Date();
-        const etiqueta = etiquetaFechaChat(fecha);
-        if (etiqueta !== ultimaEtiqueta) {
-            const sep = document.createElement('div');
-            sep.className = 'separador-fecha-chat';
-            sep.innerText = etiqueta;
-            contenedor.appendChild(sep);
-            ultimaEtiqueta = etiqueta;
-        }
-        const div = document.createElement('div');
-        div.className = `burbuja-msg ${msg.autor === 'carito' ? 'msg-carito' : 'msg-nico'} ${msg.autor === miIdentidad ? 'msg-propio' : 'msg-otro'}`;
-        div.innerText = msg.texto;
-        contenedor.appendChild(div);
-        if (msg.autor === miIdentidad) { ultimoDivPropio = div; ultimaFechaPropia = fecha.getTime(); }
-    });
-    // El "visto" sólo se muestra en el último mensaje propio (como
-    // WhatsApp), no en todos.
-    if (ultimoDivPropio) {
-        const marca = document.createElement('div');
-        marca.className = 'marca-visto-chat';
-        marca.innerText = (ultimaFechaPropia && ultimaFechaPropia <= window._vistoRivalChat) ? 'Visto ✓✓' : 'Enviado ✓';
-        ultimoDivPropio.appendChild(marca);
-    }
-    const ultimo = mensajes[mensajes.length - 1];
-    ajustarScrollChat(contenedor, alturaAntes, scrollAntes, estabaAbajo, ultimo && ultimo.autor === miIdentidad);
+    // Se dibuja igual que en juegos (js/chat-plus.js): fotos, audios,
+    // respuestas, reacciones e invitaciones a jugar.
+    window.renderListaChatComun(document.getElementById('mensajes-chat'), mensajes, hayMas, etiquetaFechaChat);
 }
 
 // Enganchado desde chat-comun.js cuando cambia el recibo de lectura
@@ -86,9 +49,7 @@ async function enviarMensajeChat() {
             input.value = '';
 
             try {
-                await window.addDoc(window.collection(window.db, "chat"), {
-                    autor: miIdentidad, texto: texto, timestamp: window.serverTimestamp()
-                });
+                await window.enviarChatComun({ texto });
             } catch (e) {
                 console.error("Error chat:", e);
                 input.value = texto; // devolvemos el texto para que no se pierda

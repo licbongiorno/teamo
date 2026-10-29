@@ -65,6 +65,7 @@
         if (filtro) {
             const ids = [...new Set(FILTROS[filtro].ids())];
             const lista = ids.map(info).filter(Boolean).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+            if (filtro === 'vivo' && typeof window.armarTorneoEnVivo === 'function') h += `<button class="btn-secundario btn-torneo-vivo" onclick="armarTorneoEnVivo()">🏆 Armar un torneo en vivo (5 juegos, podio y premio)</button>`;
             h += `<div class="fila-chips envolver">${lista.map(chip).join('') || '<span class="texto-tenue">Nada por acá.</span>'}</div>`;
         }
         cont.innerHTML = h;

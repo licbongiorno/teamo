@@ -180,6 +180,7 @@ function bucleBom(ts){
     pasoBom(dt);
     if (BM.enlace && BM.yo && Date.now() - BM.ultimoEnvio > 50) { BM.ultimoEnvio = Date.now(); BM.enlace.enviar('pos', { x: Math.round(BM.yo.x), y: Math.round(BM.yo.y), c: BM.clave }); }
     dibujarBom();
+    VivoComun.estado(BM.ctx, COLS_BOM * T_BOM, FILAS_BOM * T_BOM, BM.enlace, nombreJugador(miRival));
     BM.loop = requestAnimationFrame(bucleBom);
 }
 function arrancarBom(){

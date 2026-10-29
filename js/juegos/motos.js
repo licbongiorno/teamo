@@ -106,6 +106,7 @@ function bucleMoto(){
     pasoMoto();
     if (MT.enlace && MT.yo && MT.yo.k !== MT.ultimoPaso) { MT.ultimoPaso = MT.yo.k; MT.enlace.enviar('pos', { k: MT.yo.k, x: MT.yo.x, y: MT.yo.y, c: MT.clave }); }
     dibujarMoto();
+    VivoComun.estado(MT.ctx, COLS_MOTO * CEL_MOTO, FILAS_MOTO * CEL_MOTO, MT.enlace, nombreJugador(miRival), !!(MT.estado && MT.estado.fase === 'jugando' && window.ahoraSync() > MT.estado.inicio + 500 && !MT.choque && !(MT.el && MT.el.choco)));
     MT.loop = requestAnimationFrame(bucleMoto);
 }
 function arrancarMoto(){

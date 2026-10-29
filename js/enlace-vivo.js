@@ -12,6 +12,7 @@
 //   enlace.enviar('pos', {...});            // rápido, se puede perder (lo nuevo pisa a lo viejo)
 //   enlace.enviar('moneda', {...}, true);   // confiable: llega sí o sí, una vez
 //   enlace.estado → 'conectando' | 'directo' | 'respaldo' | 'cerrado'
+//   enlace.ultimo → Date.now() del último mensaje del otro (0 si todavía nada)
 //   enlace.cerrar();
 // ============================================================
 (function () {
@@ -36,6 +37,7 @@
             let m; try { m = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return; }
             if (!m || !m.t) return;
             if (m.id) { if (vistosEv.has(m.id)) return; vistosEv.add(m.id); }
+            api.ultimo = Date.now();
             try { cb.alMensaje && cb.alMensaje(m.t, m.d); } catch (err) { console.warn('enlace-vivo:', err); }
         };
 
@@ -154,6 +156,8 @@
 
         const api = {
             estado,
+            creado: Date.now(), ultimo: 0, // ultimo: cuándo llegó el último mensaje del otro
+
             enviar(tipo, datos, confiable) {
                 if (cerrado) return;
                 const m = { t: tipo, d: datos };

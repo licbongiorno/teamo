@@ -8,6 +8,8 @@ const W_VO = 320, H_VO = 200, PISO_VO = 178, RED_X = 160, RED_ALTO = 108, R_SLIM
 const VO = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, yo: null, el: null, pelota: null, dueno: false, teclas: {}, ultimoEnvio: 0, ultimoTs: 0, puntoMarcado: null, ultimoToque: 0 };
 
 const espejoVo = () => miIdentidad === 'carito';
+// Contra la compu: la gotita del otro la maneja la compu en este mismo celu.
+const compuVo = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'voley' ? m : null; };
 const aPantallaVo = (x) => espejoVo() ? W_VO - x : x;
 const ladoVo = (q) => q === 'nico' ? [R_SLIME, RED_X - 3 - R_SLIME] : [RED_X + 3 + R_SLIME, W_VO - R_SLIME];
 function reiniciarVo(e){
@@ -15,8 +17,9 @@ function reiniciarVo(e){
     const [a, b] = ladoVo(miIdentidad);
     VO.yo = { x: (a + b) / 2, y: PISO_VO, vx: 0, vy: 0 };
     VO.pelota = { x: e.saque === 'nico' ? 80 : 240, y: 60, vx: 0, vy: 0 };
-    VO.dueno = e.saque === miIdentidad;
+    VO.dueno = e.saque === miIdentidad || !!compuVo();
     VO.puntoMarcado = null;
+    if (compuVo()) { const [c0, c1] = ladoVo(miRival); VO.el = { x: (c0 + c1) / 2, y: PISO_VO, vx: 0, vy: 0, bot: true }; }
 }
 function moverPelotaVo(b, dt){
     b.vy += 0.24 * dt;
@@ -49,16 +52,13 @@ function pasoVo(dt){
     if (!e || e.fase !== 'jugando' || !s) return;
     // Mi gotita: se mueve aunque la pelota esté quieta (antes del saque).
     const dir = ((VO.teclas.der ? 1 : 0) - (VO.teclas.izq ? 1 : 0)) * (espejoVo() ? -1 : 1);
-    s.vx = dir * 3.1;
-    if (VO.teclas.salto && s.y >= PISO_VO) s.vy = -6.6;
-    s.vy += 0.42 * dt;
-    s.x += s.vx * dt; s.y = Math.min(PISO_VO, s.y + s.vy * dt);
-    if (s.y >= PISO_VO) s.vy = 0;
-    const [a, b2] = ladoVo(miIdentidad);
-    s.x = Math.max(a, Math.min(b2, s.x));
+    moverGotitaVo(s, dir, VO.teclas.salto, miIdentidad, dt, 3.1);
+    const compu = compuVo();
+    if (compu && VO.el && window.ahoraSync() >= e.inicio) pensarCompuVo(VO.el, compu.nivel, dt);
     if (window.ahoraSync() < e.inicio || VO.puntoMarcado) return;
     const b = VO.pelota;
     moverPelotaVo(b, dt);
+    if (compu && VO.el && chocarVo(VO.el, b) && Date.now() - VO.ultimoToque > 120) { VO.ultimoToque = Date.now(); if (window.sfx) window.sfx.toque(); }
     if (chocarVo(s, b)) {
         if (Date.now() - VO.ultimoToque > 120 && window.sfx) window.sfx.toque();
         VO.ultimoToque = Date.now();
@@ -67,12 +67,37 @@ function pasoVo(dt){
     if (VO.dueno && b.y + R_PELOTA >= PISO_VO) marcarPuntoVo(b.x < RED_X ? 'carito' : 'nico');
     else if (b.y + R_PELOTA >= PISO_VO) { b.y = PISO_VO - R_PELOTA; b.vy = 0; b.vx = 0; }
 }
+function moverGotitaVo(s, dir, salto, quien, dt, vel){
+    s.vx = dir * vel;
+    if (salto && s.y >= PISO_VO) s.vy = -6.6;
+    s.vy = (s.vy || 0) + 0.42 * dt;
+    s.x += s.vx * dt; s.y = Math.min(PISO_VO, s.y + s.vy * dt);
+    if (s.y >= PISO_VO) s.vy = 0;
+    const [a, b] = ladoVo(quien);
+    s.x = Math.max(a, Math.min(b, s.x));
+}
+// La compu: se para un poco detrás de donde va a caer la pelota (así la
+// devuelve hacia la red) y salta cuando la tiene encima. Según el nivel es
+// más lenta y se equivoca más.
+function pensarCompuVo(s, nivel, dt){
+    const n = { facil: { vel: 1.9, error: 26, reaccion: 0.08 }, normal: { vel: 2.6, error: 12, reaccion: 0.2 }, dificil: { vel: 3.1, error: 3, reaccion: 0.5 } }[nivel] || { vel: 2.6, error: 12, reaccion: 0.2 };
+    const b = VO.pelota, atras = miRival === 'nico' ? -1 : 1;
+    // Dónde va a estar la pelota cuando baje a la altura de la cabeza (simulación corta).
+    let px = b.x, py = b.y, vx = b.vx, vy = b.vy;
+    for (let k = 0; k < 120 && py < PISO_VO - R_SLIME; k++) { vy += 0.24; px += vx; py += vy; if (px < R_PELOTA || px > W_VO - R_PELOTA) vx = -vx; }
+    const deMiLado = miRival === 'nico' ? px < RED_X : px > RED_X;
+    if (s.meta == null || Math.random() < n.reaccion) s.meta = (deMiLado ? px + atras * 8 : (miRival === 'nico' ? 80 : 240)) + (Math.random() - 0.5) * n.error;
+    const dir = Math.abs(s.meta - s.x) < 3 ? 0 : Math.sign(s.meta - s.x);
+    const salto = deMiLado && Math.abs(b.x - s.x) < 26 && b.y > 100 && b.vy > 0 && Math.random() < 0.6;
+    moverGotitaVo(s, dir, salto, miRival, dt, n.vel);
+}
 async function marcarPuntoVo(quien){
     if (VO.puntoMarcado) return;
     VO.puntoMarcado = quien;
     VO.pelota.y = PISO_VO - R_PELOTA; VO.pelota.vx = 0; VO.pelota.vy = 0;
     VO.enlace && VO.enlace.enviar('pique', { x: VO.pelota.x, c: VO.clave }, true);
     vibrarJ([20, 40, 20]);
+    if (window.sfx) window.sfx[quien === miIdentidad ? 'punto' : 'error']();
     const clave = VO.clave;
     await Voley.accionEnCola((e) => {
         if (e.clave !== clave) return null;
@@ -116,7 +141,7 @@ function dibujarVo(){
     const colYo = miIdentidad === 'nico' ? ['#3d8bfd', '#a8d8ff'] : ['#e8496b', '#ffc2d4'];
     const colEl = miIdentidad === 'nico' ? ['#e8496b', '#ffc2d4'] : ['#3d8bfd', '#a8d8ff'];
     const o = VO.el;
-    if (o) { o.rx = o.rx == null ? o.x : o.rx + (o.x - o.rx) * 0.5; o.ry = o.ry == null ? o.y : o.ry + (o.y - o.ry) * 0.5; gotita({ x: o.rx, y: o.ry }, colEl[0], colEl[1]); }
+    if (o) { const [rx, ry] = o.bot ? [o.x, o.y] : VivoComun.suave(o); gotita({ x: rx, y: Math.min(PISO_VO, ry) }, colEl[0], colEl[1]); }
     gotita(VO.yo, colYo[0], colYo[1]);
     if (b) {
         const x = aPantallaVo(b.x);
@@ -143,7 +168,7 @@ function dibujarVo(){
         if (mp) { c.font = 'bold 9px monospace'; c.fillStyle = '#e8496b'; c.fillText(yo > el ? '¡Punto para ganar!' : '¡Salvá el partido!', W_VO / 2, 66); }
     }
     c.textAlign = 'left';
-    c.fillStyle = VO.enlace && VO.enlace.estado === 'directo' ? '#4cd18a' : '#f5d36b'; c.fillRect(W_VO - 8, 3, 5, 5);
+    VivoComun.estado(c, W_VO, H_VO, VO.enlace, nombreJugador(miRival));
 }
 function bucleVo(ts){
     const pantalla = document.getElementById('pantalla-voley');
@@ -157,6 +182,7 @@ function bucleVo(ts){
         if (VO.dueno && VO.pelota) Object.assign(m, { bx: +VO.pelota.x.toFixed(1), by: +VO.pelota.y.toFixed(1), bvx: +VO.pelota.vx.toFixed(2), bvy: +VO.pelota.vy.toFixed(2) });
         VO.enlace.enviar('p', m);
     }
+    if (VO.estado && VO.estado.fase === 'jugando') VivoComun.cuenta('VO', VO.estado.inicio);
     dibujarVo();
     VO.loop = requestAnimationFrame(bucleVo);
 }
@@ -166,33 +192,20 @@ function arrancarVo(){
         VO.canvas.width = W_VO * 2; VO.canvas.height = H_VO * 2;
         VO.canvas.className = 'lienzo-voley';
         VO.ctx = VO.canvas.getContext('2d');
-        VO.controles = document.createElement('div');
-        VO.controles.className = 'controles-aventura';
-        VO.controles.innerHTML = `<div><button data-k="izq">◀</button><button data-k="der">▶</button></div><button data-k="salto" class="salto">⤒</button>`;
-        VO.controles.querySelectorAll('button').forEach(b => {
-            const k = b.dataset.k;
-            b.addEventListener('pointerdown', (ev) => { ev.preventDefault(); VO.teclas[k] = true; b.classList.add('apretado'); });
-            const off = (ev) => { ev.preventDefault(); VO.teclas[k] = false; b.classList.remove('apretado'); };
-            b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
-            b.addEventListener('contextmenu', (ev) => ev.preventDefault());
-        });
+        VO.controles = VivoComun.botones([[{ k: 'izq', txt: '◀' }, { k: 'der', txt: '▶' }], { k: 'salto', txt: '⤒', clase: 'salto' }], VO.teclas);
     }
-    if (!VO.teclado) {
-        const mapa = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'salto', KeyW: 'salto', Space: 'salto' };
-        VO.teclado = (ev) => { const k = mapa[ev.code]; if (!k || !document.getElementById('pantalla-voley')?.classList.contains('activa') || (ev.target && ev.target.tagName === 'INPUT')) return; ev.preventDefault(); VO.teclas[k] = ev.type === 'keydown'; };
-        window.addEventListener('keydown', VO.teclado); window.addEventListener('keyup', VO.teclado);
-    }
-    if (!VO.enlace) {
+    if (!VO.teclado) VO.teclado = VivoComun.teclado('pantalla-voley', { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'salto', KeyW: 'salto', Space: 'salto' }, VO.teclas);
+    if (!VO.enlace && !compuVo()) {
         VO.enlace = EnlaceVivo.conectar('voley', {
             alMensaje(t, d) {
                 if (d.c !== VO.clave) return;
                 const b = VO.pelota;
                 if (t === 'p') {
-                    VO.el = { ...(VO.el || {}), x: d.x, y: d.y };
+                    VO.el = VivoComun.recibir(VO.el, { x: d.x, y: d.y });
                     if (d.bx != null && !VO.dueno && b && !VO.puntoMarcado) { b.x += (d.bx - b.x) * 0.5; b.y += (d.by - b.y) * 0.5; b.vx = d.bvx; b.vy = d.bvy; }
                 }
                 if (t === 'golpe' && b) { VO.dueno = false; Object.assign(b, { x: d.x, y: d.y, vx: d.vx, vy: d.vy }); if (window.sfx) window.sfx.toque(); }
-                if (t === 'pique' && b) { VO.puntoMarcado = VO.puntoMarcado || (d.x < RED_X ? 'carito' : 'nico'); Object.assign(b, { x: d.x, y: PISO_VO - R_PELOTA, vx: 0, vy: 0 }); }
+                if (t === 'pique' && b) { VO.puntoMarcado = VO.puntoMarcado || (d.x < RED_X ? 'carito' : 'nico'); if (window.sfx) window.sfx[VO.puntoMarcado === miIdentidad ? 'punto' : 'error'](); Object.assign(b, { x: d.x, y: PISO_VO - R_PELOTA, vx: 0, vy: 0 }); }
             }
         });
     }
@@ -203,13 +216,14 @@ function pararVo(){
     if (VO.loop) cancelAnimationFrame(VO.loop);
     VO.loop = null;
     if (VO.enlace) VO.enlace.cerrar();
-    VO.enlace = null; VO.teclas = {};
+    VO.enlace = null; Object.keys(VO.teclas).forEach(k => { VO.teclas[k] = false; });
 }
 
 const Voley = JuegoTurnos.crear({
     id: 'voley',
     sinTurno: true,
     emojiListo: '🏐',
+    compu: { paso: () => null }, // la compu juega adentro del bucle (pensarCompuVo)
     intro: `Vóley de playa en vivo: cada uno es una gotita en su mitad. Movete con ◀ ▶, saltá con ⤒ y pegale con la cabeza para pasarla por arriba de la red. Punto si pica en la arena del otro. ¡A ${PUNTOS_VO}, con 2 de diferencia!`,
     inicial: () => ({ puntos: { nico: 0, carito: 0 }, saque: Math.random() < 0.5 ? 'nico' : 'carito', clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 3000, turno: null }),
     render(e) { return `<div id="voley-host"></div><div class="texto-centro texto-tenue" style="font-size:0.75rem;">Vos sos la gotita de la izquierda. ${nombreJugador('nico')} ${e.puntos.nico} — ${e.puntos.carito} ${nombreJugador('carito')}</div>`; },

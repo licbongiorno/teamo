@@ -8,6 +8,8 @@ const W_HOC = 240, H_HOC = 360, ARCO_HOC = 84, R_MAZO = 17, R_DISCO = 10, GOLES_
 const HC = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, mio: null, suyo: null, disco: null, dueno: false, dedo: null, ultimoEnvio: 0, golMarcado: null, ultimoTs: 0 };
 
 const girarHoc = () => miIdentidad === 'carito';
+// Contra la compu: el mazo del otro lo mueve la compu en este celu (y el disco lo simulo yo).
+const compuHoc = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'hockey' ? m : null; };
 const aPantallaHoc = (x, y) => girarHoc() ? [W_HOC - x, H_HOC - y] : [x, y];
 function reiniciarHoc(e){
     HC.clave = e.clave;
@@ -16,8 +18,9 @@ function reiniciarHoc(e){
     HC.suyo = HC.suyo || { x: W_HOC / 2, y: abajo ? 50 : H_HOC - 50 };
     // Saca quien recibió el gol: el disco arranca quieto en su mitad.
     HC.disco = { x: W_HOC / 2, y: e.saque === 'nico' ? H_HOC * 0.62 : H_HOC * 0.38, vx: 0, vy: 0 };
-    HC.dueno = e.saque === miIdentidad;
+    HC.dueno = e.saque === miIdentidad || !!compuHoc();
     HC.golMarcado = null;
+    if (compuHoc()) HC.suyo = { x: W_HOC / 2, y: abajo ? 50 : H_HOC - 50, vx: 0, vy: 0 };
 }
 function moverDiscoHoc(d, dt){
     d.x += d.vx * dt; d.y += d.vy * dt;
@@ -57,20 +60,46 @@ function pasoHoc(dt){
     const d = HC.disco;
     if (HC.golMarcado) return;
     moverDiscoHoc(d, dt);
+    const compu = compuHoc();
+    if (compu && HC.suyo) { pensarCompuHoc(HC.suyo, d, compu.nivel, dt); if (chocarHoc(HC.suyo, d) && window.sfx) window.sfx.toque(); }
     if (chocarHoc(m, d)) {
         if (window.sfx) window.sfx.toque();
         if (!HC.dueno) { HC.dueno = true; HC.enlace && HC.enlace.enviar('golpe', { x: d.x, y: d.y, vx: d.vx, vy: d.vy, c: HC.clave }, true); }
     }
+    // Un mazo no puede meter el disco adentro de la baranda (se quedaba trabado en las esquinas).
+    d.x = Math.max(R_DISCO, Math.min(W_HOC - R_DISCO, d.x));
+    if (Math.abs(d.x - W_HOC / 2) >= ARCO_HOC / 2) d.y = Math.max(R_DISCO, Math.min(H_HOC - R_DISCO, d.y));
     if (HC.dueno) {
         // ¿Gol? Sólo lo decide el dueño del disco.
         if (d.y < -R_DISCO) marcarGolHoc('nico');
         else if (d.y > H_HOC + R_DISCO) marcarGolHoc('carito');
     }
 }
+// La compu: si el disco está en su mitad va a pegarle (desde atrás, para
+// mandarlo al arco de enfrente); si no, cuida su arco.
+function pensarCompuHoc(m, d, nivel, dt){
+    const n = { facil: 2.2, normal: 3.4, dificil: 4.6 }[nivel] || 3.4;
+    const arriba = miRival === 'carito'; // la mitad de la compu en el mundo
+    const enSuMitad = arriba ? d.y < H_HOC / 2 : d.y > H_HOC / 2;
+    let tx, ty;
+    const atras = arriba ? -1 : 1, lento = Math.hypot(d.vx, d.vy) < 1.5;
+    // Si el disco quedó quieto pegado, retrocede un poco para tomar envión (y apunta un poco al costado).
+    if (enSuMitad && lento && Math.hypot(d.x - m.x, d.y - m.y) < R_MAZO + R_DISCO + 1.5 && !(m.retro > Date.now()) && !(m.golpeo > Date.now())) { m.retro = Date.now() + 350; m.lado = (Math.random() - 0.5) * 16; }
+    if (m.retro > Date.now()) { tx = d.x + (m.lado || 0); ty = d.y + atras * (R_MAZO + 34); m.golpeo = m.retro + 700; }
+    // Va a través del disco (apuntando un poco más allá) para pegarle con fuerza hacia el arco de enfrente.
+    else if (enSuMitad) { tx = d.x + (m.lado || 0) * 0.5; ty = d.y - atras * 6; }
+    else { tx = W_HOC / 2 + (d.x - W_HOC / 2) * 0.5; ty = arriba ? 45 : H_HOC - 45; }
+    const dx = tx - m.x, dy = ty - m.y, dist = Math.hypot(dx, dy) || 1, paso = Math.min(dist, n * dt);
+    const nx = m.x + dx / dist * paso, ny = m.y + dy / dist * paso;
+    const yMin = arriba ? R_MAZO : H_HOC / 2 + R_MAZO, yMax = arriba ? H_HOC / 2 - R_MAZO : H_HOC - R_MAZO;
+    const fx = Math.max(R_MAZO, Math.min(W_HOC - R_MAZO, nx)), fy = Math.max(yMin, Math.min(yMax, ny));
+    m.vx = (fx - m.x) / dt; m.vy = (fy - m.y) / dt; m.x = fx; m.y = fy;
+}
 async function marcarGolHoc(quien){
     if (HC.golMarcado) return;
     HC.golMarcado = quien;
     vibrarJ([20, 40, 20]);
+    if (window.sfx) window.sfx[quien === miIdentidad ? 'punto' : 'error']();
     const clave = HC.clave;
     await Hockey.accion((e) => {
         if (e.clave !== clave) return null;
@@ -120,7 +149,9 @@ function bucleHoc(ts){
         if (HC.dueno && HC.disco) Object.assign(m, { dx: +HC.disco.x.toFixed(1), dy: +HC.disco.y.toFixed(1), vx: +HC.disco.vx.toFixed(2), vy: +HC.disco.vy.toFixed(2) });
         HC.enlace.enviar('p', m);
     }
+    if (HC.estado && HC.estado.fase === 'jugando') VivoComun.cuenta('HC', HC.estado.inicio);
     dibujarHoc();
+    VivoComun.estado(HC.ctx, W_HOC, H_HOC, HC.enlace, nombreJugador(miRival));
     HC.loop = requestAnimationFrame(bucleHoc);
 }
 function arrancarHoc(){
@@ -140,7 +171,7 @@ function arrancarHoc(){
         HC.canvas.addEventListener('pointermove', (ev) => { if (HC.dedo || ev.pointerType === 'mouse') dedo(ev); });
         HC.canvas.addEventListener('pointerup', () => { HC.dedo = null; });
     }
-    if (!HC.enlace) {
+    if (!HC.enlace && !compuHoc()) {
         HC.enlace = EnlaceVivo.conectar('hockey', {
             alMensaje(t, d) {
                 if (d.c && d.c !== HC.clave) return;
@@ -170,6 +201,7 @@ const Hockey = JuegoTurnos.crear({
     id: 'hockey',
     sinTurno: true,
     emojiListo: '🏒',
+    compu: { paso: () => null }, // la compu juega adentro del bucle (pensarCompuHoc)
     intro: `La mesa de hockey de aire, en vivo: mové tu mazo con el dedo en tu mitad y meté el disco en el arco del otro. ¡Gana el primero en hacer ${GOLES_HOC}!`,
     inicial: () => ({ goles: { nico: 0, carito: 0 }, saque: Math.random() < 0.5 ? 'nico' : 'carito', clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 3000, turno: null }),
     render(e) { return `<div id="hockey-host"></div><div class="texto-centro texto-tenue" style="font-size:0.75rem;">Tu arco es el de abajo. ${nombreJugador('nico')} ${e.goles.nico} — ${e.goles.carito} ${nombreJugador('carito')}</div>`; },

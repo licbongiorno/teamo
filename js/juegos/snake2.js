@@ -25,8 +25,11 @@ function reiniciarSn(e){
     SN.yo = { cuerpo: [0, 1, 2].map(i => [s.x - dx * i, s.y - dy * i]), dir: s.dir, k: 0, crecer: 0 };
     const o = salidaSn(miRival), [ox, oy] = DIR_SN[o.dir];
     SN.el = { cuerpo: [0, 1, 2].map(i => [o.x - ox * i, o.y - oy * i]), visto: 0 };
+    if (compuSn()) Object.assign(SN.el, { bot: true, dir: o.dir, crecer: 0, hasta: 0, visto: Date.now() });
     SN.pendiente = []; SN.comiendo = null; SN.ultimoPaso = -1; SN.fantasma = 0; SN.cerrando = false;
 }
+// Contra la compu: la otra víbora la maneja la compu en este celu.
+const compuSn = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'snake2' ? m : null; };
 const envolverSn = (x, y) => [(x + COLS_SN) % COLS_SN, (y + FILAS_SN) % FILAS_SN];
 function pasoSn(){
     const e = SN.estado, p = SN.yo;
@@ -57,6 +60,35 @@ function pasoSn(){
             const otro = SN.el && Date.now() - SN.el.visto < 2000 && !SN.el.fantasma ? SN.el.cuerpo.slice(0, -1) : [];
             if (contra(p.cuerpo, 1) || contra(otro, 0)) cortarSn();
         }
+        const compu = compuSn();
+        if (compu && SN.el && SN.el.bot) pasoBotSn(e, SN.el, compu.nivel);
+    }
+}
+// La compu: va hacia la manzana por las celdas libres; en fácil a veces se distrae.
+function pasoBotSn(e, b, nivel){
+    const ocupada = (c) => b.cuerpo.slice(0, -1).some(x => x[0] === c[0] && x[1] === c[1]) || SN.yo.cuerpo.some(x => x[0] === c[0] && x[1] === c[1]);
+    const [mx, my] = manzanaSn(e, e.manzana || 0), cab = b.cuerpo[0];
+    const opciones = Object.keys(DIR_SN).filter(d => { const [a, c] = DIR_SN[d], [x, y] = DIR_SN[b.dir]; return a + x !== 0 || c + y !== 0; })
+        .map(d => { const [a, c] = DIR_SN[d], n = envolverSn(cab[0] + a, cab[1] + c); return { d, n, libre: !ocupada(n), dist: Math.abs(n[0] - mx) + Math.abs(n[1] - my) }; });
+    const libres = opciones.filter(o => o.libre).sort((a, c) => a.dist - c.dist);
+    const distraida = { facil: 0.3, normal: 0.1, dificil: 0 }[nivel] ?? 0.1;
+    let elegida = libres[0] || opciones[0];
+    if (libres.length > 1 && Math.random() < distraida) elegida = libres[1 + Math.floor(Math.random() * (libres.length - 1))];
+    b.dir = elegida.d;
+    b.cuerpo.unshift(elegida.n);
+    if (b.crecer > 0) b.crecer--; else b.cuerpo.pop();
+    b.visto = Date.now(); b.fantasma = Date.now() < b.hasta;
+    const n = e.manzana || 0;
+    if (elegida.n[0] === mx && elegida.n[1] === my && b.comiendo !== n) {
+        b.comiendo = n;
+        const clave = SN.clave, bot = miRival;
+        Snake2.accionEnCola((st) => st.clave !== clave || (st.manzana || 0) !== n ? null : { manzana: n + 1, largos: { ...st.largos, [bot]: b.cuerpo.length + 2 } })
+            .then(res => { if (res) b.crecer += 2; });
+    } else if (!b.fantasma && !elegida.libre) {
+        b.hasta = Date.now() + 1200;
+        b.cuerpo = b.cuerpo.slice(0, Math.max(3, Math.ceil(b.cuerpo.length / 2))); b.crecer = 0;
+        const clave = SN.clave, bot = miRival, largo = b.cuerpo.length;
+        Snake2.accionEnCola((st) => st.clave !== clave ? null : { largos: { ...st.largos, [bot]: largo } });
     }
 }
 async function comerSn(n){
@@ -84,7 +116,8 @@ async function terminarSn(){
     SN.cerrando = true;
     const clave = SN.clave, quien = miIdentidad, largo = SN.yo.cuerpo.length;
     // Primero dejo mi largo final; el que cierra compara los dos.
-    await Snake2.accionEnCola((e) => e.clave !== clave ? null : { largos: { ...e.largos, [quien]: largo } });
+    const bot = compuSn() && SN.el ? { [miRival]: SN.el.cuerpo.length } : {};
+    await Snake2.accionEnCola((e) => e.clave !== clave ? null : { largos: { ...e.largos, [quien]: largo, ...bot } });
     setTimeout(() => Snake2.accionEnCola((e) => {
         if (e.clave !== clave || window.ahoraSync() < e.inicio + DURA_SN) return null;
         const l = e.largos, g = l.nico === l.carito ? 'empate' : l.nico > l.carito ? 'nico' : 'carito';
@@ -129,7 +162,7 @@ function dibujarSn(){
     const ly = SN.yo.cuerpo.length, le = SN.el ? SN.el.cuerpo.length : 3;
     c.fillText(`🐍 Vos ${ly} · ${nombreJugador(miRival)} ${le}`, 4, 12);
     c.textAlign = 'right'; c.fillText(`⏱ ${Math.floor(quedan / 60)}:${String(quedan % 60).padStart(2, '0')}`, W - 12, 12); c.textAlign = 'left';
-    c.fillStyle = SN.enlace && SN.enlace.estado === 'directo' ? '#4cd18a' : '#f5d36b'; c.fillRect(W - 8, 5, 5, 5);
+    VivoComun.estado(c, W, H, SN.enlace, nombreJugador(miRival), e.fase === 'jugando' && window.ahoraSync() > e.inicio + 500);
     const falta = e.inicio - window.ahoraSync();
     if (e.fase === 'jugando' && falta > 0) { c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 30px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W / 2, H / 2); c.font = '10px monospace'; c.fillText('Vos sos la ' + (miIdentidad === 'nico' ? 'azul' : 'rosa'), W / 2, H / 2 + 20); c.textAlign = 'left'; }
 }
@@ -141,6 +174,7 @@ function bucleSn(){
         SN.ultimoPaso = SN.yo.k;
         SN.enlace.enviar('cuerpo', { k: SN.yo.k, b: SN.yo.cuerpo.flat(), f: Date.now() < SN.fantasma ? 1 : 0, c: SN.clave });
     }
+    if (SN.estado && SN.estado.fase === 'jugando') VivoComun.cuenta('SN', SN.estado.inicio);
     dibujarSn();
     SN.loop = requestAnimationFrame(bucleSn);
 }
@@ -170,7 +204,7 @@ function arrancarSn(){
         SN.teclado = (ev) => { const d = mapa[ev.code]; if (!d || !document.getElementById('pantalla-snake2')?.classList.contains('activa') || (ev.target && ev.target.tagName === 'INPUT')) return; ev.preventDefault(); girarSn(d); };
         window.addEventListener('keydown', SN.teclado);
     }
-    if (!SN.enlace) {
+    if (!SN.enlace && !compuSn()) {
         SN.enlace = EnlaceVivo.conectar('snake2', {
             alMensaje(t, d) {
                 if (d.c !== SN.clave || t !== 'cuerpo' || !Array.isArray(d.b)) return;
@@ -194,6 +228,7 @@ const Snake2 = JuegoTurnos.crear({
     id: 'snake2',
     sinTurno: true,
     emojiListo: '🐍',
+    compu: { paso: () => null }, // la compu juega adentro del bucle (pasoBotSn)
     intro: `Las dos víboras en la misma grilla, en vivo, durante 2 minutos. Comé las manzanas antes que el otro 🍎 y no choques con ningún cuerpo, que te corta a la mitad. Los bordes son pasadizos. ¡Gana la más larga!`,
     inicial: () => ({ semilla: Math.floor(Math.random() * 1e9), manzana: 0, largos: { nico: 3, carito: 3 }, clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 3000, turno: null }),
     render(e) { return `<div id="snake2-host"></div><div class="texto-centro texto-tenue" style="font-size:0.75rem;">${nombreJugador('nico')} es la azul · ${nombreJugador('carito')} la rosa · deslizá el dedo o usá las flechas</div>`; },

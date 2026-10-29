@@ -424,8 +424,7 @@ function dibujarAv(){
     c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(0, 0, W, 13);
     c.fillStyle = '#fff'; c.font = 'bold 9px monospace';
     c.fillText(`🪙 ${e.monedas || 0}`, 4, 10); c.fillText(`❤ ${e.vidas}`, 52, 10); c.fillText(`${e.nivel}/${NIVELES_AV.length} ${n.nombre}`, 92, 10);
-    c.fillStyle = AV.enlace && AV.enlace.estado === 'directo' ? '#4cd18a' : AV.enlace && AV.enlace.estado === 'respaldo' ? '#f5d36b' : '#ff6b6b';
-    c.fillRect(W - 9, 3, 6, 6);
+    VivoComun.estado(c, W, H, AV.enlace, nombreJugador(miRival));
     // Cuenta regresiva o espera en la bandera
     const falta = e.inicio - window.ahoraSync();
     if (e.fase === 'jugando' && falta > 0) { textoGrandeAv(c, W, H, falta > 1000 ? String(Math.ceil(falta / 1000) - 0) : '¡YA!', `Nivel ${e.nivel}: ${n.nombre}`); }

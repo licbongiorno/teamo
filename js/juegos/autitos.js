@@ -126,7 +126,7 @@ function pasoAu(dt){
             if (p.mejor == null || t < p.mejor) p.mejor = t;
             guardarVueltaAu(t);
             if (p.vuelta >= VUELTAS_AU) llegarAu(ahora - e.inicio);
-            else { vibrarJ(20); if (window.sfx) window.sfx.acierto(); if (window.animJuegos) window.animJuegos.cartel(p.vuelta === VUELTAS_AU - 1 ? '¡Última vuelta!' : `Vuelta ${p.vuelta + 1}`, { dur: 800, sonido: false }); }
+            else { vibrarJ(20); if (window.sfx) window.sfx.punto(); if (window.animJuegos) window.animJuegos.cartel(p.vuelta === VUELTAS_AU - 1 ? '¡Última vuelta!' : `Vuelta ${p.vuelta + 1}`, { dur: 800, sonido: false }); }
         }
         p.sig = (p.sig + 1) % SECTORES_AU;
     }
@@ -138,7 +138,7 @@ function guardarVueltaAu(t){
         const r = (e.records || {})['c' + e.circuito];
         if (r && r.t <= t) return null;
         return { records: { ...(e.records || {}), ['c' + e.circuito]: { t: Math.round(t), q: quien } } };
-    });
+    }).then(res => { if (res && window.animJuegos) window.animJuegos.cartel(`⏱ ¡Récord del circuito! ${(t / 1000).toFixed(1)} s`, { dur: 1100, sonido: false }); });
 }
 async function llegarAu(tiempo){
     AU.terminado = true;
@@ -167,7 +167,7 @@ function dibujarAu(){
     if (p) p.humo.forEach(h => { const v = 1 - (Date.now() - h.t) / 500; c.fillStyle = `rgba(230,230,230,${v * 0.5})`; c.beginPath(); c.arc(h.x, h.y, 3 + (1 - v) * 3, 0, Math.PI * 2); c.fill(); });
     const o = AU.el;
     if (o && Date.now() - o.visto < 4000) {
-        o.rx = o.rx == null ? o.x : o.rx + (o.x - o.rx) * 0.45; o.ry = o.ry == null ? o.y : o.ry + (o.y - o.ry) * 0.45;
+        VivoComun.suave(o);
         let da = o.a - (o.ra == null ? o.a : o.ra); da = Math.atan2(Math.sin(da), Math.cos(da)); o.ra = (o.ra == null ? o.a : o.ra + da * 0.45);
         dibujarAutoAu(c, o.rx, o.ry, o.ra, colEl[0], colEl[1]);
     }
@@ -184,7 +184,7 @@ function dibujarAu(){
     c.textAlign = 'right';
     c.fillText(rec ? `⏱ ${(rec.t / 1000).toFixed(1)}s ${nombreJugador(rec.q)}` : '', W_AU - 12, 11);
     c.textAlign = 'left';
-    c.fillStyle = AU.enlace && AU.enlace.estado === 'directo' ? '#4cd18a' : '#f5d36b'; c.fillRect(W_AU - 8, 5, 5, 5);
+    VivoComun.estado(c, W_AU, H_AU, AU.enlace, nombreJugador(miRival));
     // Semáforo
     const falta = e.inicio - window.ahoraSync();
     if (e.fase === 'jugando' && falta > -900) {
@@ -207,6 +207,7 @@ function bucleAu(ts){
         const p = AU.yo;
         AU.enlace.enviar('p', { x: +p.x.toFixed(1), y: +p.y.toFixed(1), a: +p.a.toFixed(3), pr: progresoAu(p), v: p.vuelta, c: AU.clave });
     }
+    if (AU.estado && AU.estado.fase === 'jugando') VivoComun.cuenta('AU', AU.estado.inicio);
     dibujarAu();
     AU.loop = requestAnimationFrame(bucleAu);
 }
@@ -231,27 +232,14 @@ function arrancarAu(){
         AU.canvas.width = W_AU * 2; AU.canvas.height = H_AU * 2;
         AU.canvas.className = 'lienzo-autitos';
         AU.ctx = AU.canvas.getContext('2d');
-        AU.controles = document.createElement('div');
-        AU.controles.className = 'controles-aventura';
-        AU.controles.innerHTML = `<div><button data-k="izq">◀</button><button data-k="der">▶</button></div><div><button data-k="freno" aria-label="Frenar">🛑</button><button data-k="gas" class="salto" aria-label="Acelerar">⏩</button></div>`;
-        AU.controles.querySelectorAll('button').forEach(b => {
-            const k = b.dataset.k;
-            b.addEventListener('pointerdown', (ev) => { ev.preventDefault(); AU.teclas[k] = true; b.classList.add('apretado'); });
-            const off = (ev) => { ev.preventDefault(); AU.teclas[k] = false; b.classList.remove('apretado'); };
-            b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off);
-            b.addEventListener('contextmenu', (ev) => ev.preventDefault());
-        });
+        AU.controles = VivoComun.botones([[{ k: 'izq', txt: '◀' }, { k: 'der', txt: '▶' }], [{ k: 'freno', txt: '🛑', aria: 'Frenar' }, { k: 'gas', txt: '⏩', clase: 'salto', aria: 'Acelerar' }]], AU.teclas);
     }
-    if (!AU.teclado) {
-        const mapa = { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'gas', KeyW: 'gas', Space: 'gas', ArrowDown: 'freno', KeyS: 'freno' };
-        AU.teclado = (ev) => { const k = mapa[ev.code]; if (!k || !document.getElementById('pantalla-autitos')?.classList.contains('activa') || (ev.target && ev.target.tagName === 'INPUT')) return; ev.preventDefault(); AU.teclas[k] = ev.type === 'keydown'; };
-        window.addEventListener('keydown', AU.teclado); window.addEventListener('keyup', AU.teclado);
-    }
+    if (!AU.teclado) AU.teclado = VivoComun.teclado('pantalla-autitos', { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'gas', KeyW: 'gas', Space: 'gas', ArrowDown: 'freno', KeyS: 'freno' }, AU.teclas);
     if (!AU.enlace) {
         AU.enlace = EnlaceVivo.conectar('autitos', {
             alMensaje(t, d) {
                 if (d.c !== AU.clave) return;
-                if (t === 'p') AU.el = { ...(AU.el || {}), ...d, visto: Date.now() };
+                if (t === 'p') AU.el = VivoComun.recibir(AU.el, d);
             }
         });
     }
@@ -262,7 +250,7 @@ function pararAu(){
     if (AU.loop) cancelAnimationFrame(AU.loop);
     AU.loop = null;
     if (AU.enlace) AU.enlace.cerrar();
-    AU.enlace = null; AU.teclas = {};
+    AU.enlace = null; Object.keys(AU.teclas).forEach(k => { AU.teclas[k] = false; });
 }
 
 const Autitos = JuegoTurnos.crear({

@@ -816,7 +816,7 @@
     const CEREBROS = { truco, escoba, chinchon, uno, ajedrez, damas, conecta4, tateti, reversi, generala, mentiroso };
     // Juegos nuevos: el botón aparece de entrada y el cerebro llega con el
     // archivo del juego (base-turnos.js llama a registrarCerebroCompu).
-    const CON_CEREBRO_DIFERIDO = ['gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker', 'damaschinas', 'quoridor', 'cifras', 'mastermind', 'hex', 'fosforos', 'chancho', 'sieteymedio', 'pescar', 'voley', 'hockey', 'pongcoop', 'snake2', 'futbolcabezas', 'pingpongvivo', 'natacion'];
+    const CON_CEREBRO_DIFERIDO = ['gomoku', 'mancala', 'serpientes', 'parchis', 'domino', 'backgammon', 'guerra', 'blackjack', 'poker', 'damaschinas', 'quoridor', 'cifras', 'mastermind', 'hex', 'fosforos', 'chancho', 'sieteymedio', 'pescar', 'voley', 'hockey', 'pongcoop', 'snake2', 'futbolcabezas', 'pingpongvivo', 'natacion', 'motos', 'bombitas', 'tanques', 'autitos'];
     window.registrarCerebroCompu = (id, cerebro) => { CEREBROS[id] = cerebro; ponerBotones(); if (modo && modo.juego === id) programar(); };
 
     window.jugarContraCompu = jugarContraCompu;

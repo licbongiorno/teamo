@@ -137,6 +137,7 @@ async function marcarGolHoc(quien){
 function dibujarHoc(){
     const c = HC.ctx, e = HC.estado;
     if (!c || !e) return;
+    c.setTransform(2, 0, 0, 2, 0, 0);
     const ahora = performance.now();
     if (HC.fx) HC.fx.antes(c);
     // Mesa: hielo con agujeritos de aire, luz arriba y bordes con brillo
@@ -226,7 +227,7 @@ function arrancarHoc(){
     HC.fx = HC.fx || FxVivo.crear();
     if (!HC.canvas) {
         HC.canvas = document.createElement('canvas');
-        HC.canvas.width = W_HOC; HC.canvas.height = H_HOC;
+        HC.canvas.width = W_HOC * 2; HC.canvas.height = H_HOC * 2; // a 2x: nítido en celus
         HC.canvas.className = 'lienzo-hockey';
         HC.ctx = HC.canvas.getContext('2d');
         const dedo = (ev) => {

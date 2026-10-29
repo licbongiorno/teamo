@@ -22,13 +22,30 @@ function armarMurosTq(semilla){
         }
         // Libres las salidas
         [salidaTq('nico'), salidaTq('carito')].forEach(s => { const cx = Math.floor(s.x / CEL_TQ), cy = Math.floor(s.y / CEL_TQ); for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const y = cy + dy, x = cx + dx; if (x > 0 && y > 0 && x < COLS_TQ - 1 && y < FILAS_TQ - 1) m[y][x] = false; } });
-        // ¿Se puede ir de una salida a la otra?
-        const ini = [Math.floor(salidaTq('nico').x / CEL_TQ), Math.floor(salidaTq('nico').y / CEL_TQ)], fin = [Math.floor(salidaTq('carito').x / CEL_TQ), Math.floor(salidaTq('carito').y / CEL_TQ)];
-        const visto = new Set([ini.join()]), cola = [ini];
-        while (cola.length) { const [x, y] = cola.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const k = (x + dx) + ',' + (y + dy); if (!m[y + dy][x + dx] && !visto.has(k)) { visto.add(k); cola.push([x + dx, y + dy]); } }); }
-        if (visto.has(fin.join())) return m;
+        // ¿Se puede ir de una salida a la otra CON EL TANQUE? (no alcanza con que haya un pasillo
+        // de una casilla: el tanque es más ancho). Se mira la grilla de lugares donde entra (bloques de 2×2).
+        if (caminoTanqueTq(m, nodoDeTq(m, salidaTq('nico')), nodoDeTq(m, salidaTq('carito')))) return m;
     }
     return Array.from({ length: FILAS_TQ }, (_, y) => Array.from({ length: COLS_TQ }, (_, x) => x === 0 || y === 0 || x === COLS_TQ - 1 || y === FILAS_TQ - 1));
+}
+// Lugares donde entra un tanque: bloques de 2×2 casillas libres (el centro del tanque en la esquina común).
+const nodoOkTq = (m, x, y) => [[0, 0], [1, 0], [0, 1], [1, 1]].every(([dx, dy]) => m[y + dy] && m[y + dy][x + dx] === false);
+function nodoDeTq(m, p){
+    const bx = Math.round(p.x / CEL_TQ) - 1, by = Math.round(p.y / CEL_TQ) - 1;
+    let mejor = null, md = Infinity;
+    for (let y = by - 1; y <= by + 1; y++) for (let x = bx - 1; x <= bx + 1; x++) if (nodoOkTq(m, x, y)) { const d = ((x + 1) * CEL_TQ - p.x) ** 2 + ((y + 1) * CEL_TQ - p.y) ** 2; if (d < md) { md = d; mejor = [x, y]; } }
+    return mejor;
+}
+// Camino de nodo a nodo (devuelve la lista de nodos, sin el de partida) o null.
+function caminoTanqueTq(m, ini, fin){
+    if (!ini || !fin) return null;
+    const previo = { [ini.join()]: null }, cola = [ini];
+    while (cola.length) {
+        const c = cola.shift();
+        if (c[0] === fin[0] && c[1] === fin[1]) { const camino = []; let k = c.join(); while (previo[k]) { camino.unshift(k.split(',').map(Number)); k = previo[k].join(); } return camino; }
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const x = c[0] + dx, y = c[1] + dy, k = x + ',' + y; if (!(k in previo) && nodoOkTq(m, x, y)) { previo[k] = c; cola.push([x, y]); } }
+    }
+    return null;
 }
 const muroTq = (x, y) => { const cx = Math.floor(x / CEL_TQ), cy = Math.floor(y / CEL_TQ); return !TQ.muros || !TQ.muros[cy] || TQ.muros[cy][cx] !== false; };
 function chocaTq(x, y, r){
@@ -49,6 +66,101 @@ function reiniciarTq(e){
     TQ.balas = []; TQ.chispas = []; TQ.muerto = false; TQ.fuegoPrevio = false;
     TQ.marcas = []; TQ.quemadas = []; TQ.fondo = null; if (TQ.fx) TQ.fx.limpiar();
 }
+// ---------- Contra la compu: el otro tanque lo maneja la compu en este celu ----------
+const compuTq = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'tanques' ? m : null; };
+// ¿Se ven? (ninguna pared en la línea entre los dos)
+function seVenTq(a, b){
+    const d = Math.hypot(b.x - a.x, b.y - a.y), pasos = Math.ceil(d / 4);
+    for (let i = 1; i < pasos; i++) { const k = i / pasos; if (muroTq(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k)) return false; }
+    return true;
+}
+// La próxima parada (centro de un nodo) en el camino del tanque hasta el objetivo.
+function proximaCeldaTq(desde, hasta){
+    const ini = nodoDeTq(TQ.muros, desde), fin = nodoDeTq(TQ.muros, hasta), camino = caminoTanqueTq(TQ.muros, ini, fin);
+    if (!camino) return null;
+    const centro = (n) => ({ x: (n[0] + 1) * CEL_TQ, y: (n[1] + 1) * CEL_TQ });
+    // Si todavía no llegó al nodo donde está, primero ahí.
+    const c0 = centro(ini);
+    if (Math.hypot(c0.x - desde.x, c0.y - desde.y) > 7 || !camino.length) return camino.length ? Object.assign(c0, { siguiente: centro(camino[0]) }) : c0;
+    return Object.assign(centro(camino[0]), { desde: c0 });
+}
+// Tiro de rebote: prueba ángulos simulando la bala (hasta 2 rebotes) y se queda con el que
+// me pega antes sin volver a pegarle a ella. Devuelve el ángulo o null.
+function tiroReboteTq(b, yo, cantidad){
+    let mejor = null, mejorPasos = Infinity;
+    for (let i = 0; i < cantidad; i++) {
+        const a = (i / cantidad) * Math.PI * 2;
+        const sim = { x: b.x + Math.cos(a) * (R_TQ + 4), y: b.y + Math.sin(a) * (R_TQ + 4), vx: Math.cos(a) * 3, vy: Math.sin(a) * 3, rebotes: 0, adelantando: true };
+        if (muroTq(sim.x, sim.y)) continue;
+        for (let paso = 0; paso < 230; paso++) {
+            moverBalaTq(sim, 1);
+            if (sim.rebotes > 2) break;
+            if ((sim.x - yo.x) ** 2 + (sim.y - yo.y) ** 2 < (R_TQ + 2) ** 2) { if (paso < mejorPasos) { mejorPasos = paso; mejor = a; } break; }
+            if (paso > 14 && (sim.x - b.x) ** 2 + (sim.y - b.y) ** 2 < (R_TQ + 5) ** 2) break; // se daría a sí misma
+        }
+    }
+    return mejor;
+}
+function pensarCompuTq(dt, nivel){
+    const b = TQ.el, yo = TQ.yo, ahora = VivoComun.reloj('tanques');
+    if (!b || b.muerto || !yo) return;
+    const N = { facil: { giro: 0.045, vel: 1.0, punteria: 0.22, cada: 1300, esquiva: 0.3 }, normal: { giro: 0.065, vel: 1.2, punteria: 0.12, cada: 850, esquiva: 0.7 }, dificil: { giro: 0.08, vel: 1.35, punteria: 0.06, cada: 600, esquiva: 1 } }[nivel] || { giro: 0.065, vel: 1.2, punteria: 0.12, cada: 850, esquiva: 0.7 };
+    const girarHacia = (ang) => { let d = ang - b.a; d = Math.atan2(Math.sin(d), Math.cos(d)); b.a += Math.max(-N.giro * dt, Math.min(N.giro * dt, d)); return Math.abs(d); };
+    const avanzar = (v) => { const nx = b.x + Math.cos(b.a) * v * dt, ny = b.y + Math.sin(b.a) * v * dt; if (!chocaTq(nx, b.y, R_TQ)) b.x = nx; if (!chocaTq(b.x, ny, R_TQ)) b.y = ny; };
+    // 1) Esquivar una bala que viene derecho
+    const peligro = TQ.balas.find(x => !(x.de === miRival && ahora - x.t < 400) && Math.hypot(x.x - b.x, x.y - b.y) < 55 && ((b.x - x.x) * x.vx + (b.y - x.y) * x.vy) > 0);
+    if (peligro && Math.random() < N.esquiva) { girarHacia(Math.atan2(peligro.vy, peligro.vx) + Math.PI / 2); avanzar(N.vel); return; }
+    // 2) Si me ve, apunta y dispara
+    if (!TQ.muerto && seVenTq(b, yo)) {
+        const err = girarHacia(Math.atan2(yo.y - b.y, yo.x - b.x) + (b.desvio || 0));
+        if (err < N.punteria && ahora - (b.ultimoTiro || 0) > N.cada && TQ.balas.filter(x => x.de === miRival).length < 3) { b.ultimoTiro = ahora; b.desvio = (Math.random() - 0.5) * N.punteria * 2; dispararCompuTq(b); }
+        if (Math.hypot(yo.x - b.x, yo.y - b.y) > 90) avanzar(N.vel * 0.6);
+        return;
+    }
+    // 3) Si no, lo busca por el laberinto
+    let prox = proximaCeldaTq(b, yo);
+    // Sin camino hasta mí (los pasillos de una casilla no se pueden cruzar): tiro de rebote.
+    if (!prox || Math.random() < 0.01) {
+        if (ahora - (b.calculo || 0) > 700) { b.calculo = ahora; b.angRebote = TQ.muerto ? null : tiroReboteTq(b, yo, { facil: 24, normal: 48, dificil: 90 }[nivel] || 48); }
+        if (b.angRebote != null) {
+            const err = girarHacia(b.angRebote);
+            if (err < N.punteria * 0.5 && ahora - (b.ultimoTiro || 0) > N.cada * 1.3 && TQ.balas.filter(x => x.de === miRival).length < 2) { b.ultimoTiro = ahora; dispararCompuTq(b); b.calculo = 0; }
+            return;
+        }
+        if (!prox) return;
+    }
+    // Va de nodo en nodo por la línea entre los dos (así no roza las esquinas ni zigzaguea).
+    if (prox.desde) { const horizontal = Math.abs(prox.x - prox.desde.x) > Math.abs(prox.y - prox.desde.y); prox = horizontal ? { x: prox.x, y: prox.desde.y } : { x: prox.desde.x, y: prox.y }; }
+    // Si quedó trabado igual, retrocede un poquito
+    if (b.trabado > 30) { b.trabado = 0; b.retro = 14; }
+    if (b.retro > 0) { b.retro -= dt; avanzar(-N.vel * 0.7); return; }
+    const x0 = b.x, y0 = b.y;
+    if (girarHacia(Math.atan2(prox.y - b.y, prox.x - b.x)) < 0.6) { avanzar(N.vel); b.trabado = Math.hypot(b.x - x0, b.y - y0) < 0.05 ? (b.trabado || 0) + dt : 0; }
+}
+function dispararCompuTq(p){
+    const b = { id: 'c' + (++TQ.nBala), de: miRival, x: p.x + Math.cos(p.a) * (R_TQ + 4), y: p.y + Math.sin(p.a) * (R_TQ + 4), vx: Math.cos(p.a) * 3, vy: Math.sin(p.a) * 3, t: VivoComun.reloj('tanques'), rebotes: 0 };
+    if (muroTq(b.x, b.y)) return;
+    TQ.balas.push(b);
+    efectoDisparoTq(miRival, b.x, b.y, p.a);
+    if (window.sonarArcade) sonarArcade('disparo');
+}
+// A la compu le dieron: la ronda es mía (o se la dio sola).
+async function leDieronCompuTq(b){
+    const o = TQ.el;
+    if (!o || o.muerto) return;
+    o.muerto = true;
+    TQ.balas = TQ.balas.filter(x => x !== b);
+    efectoBoomTq(o.x, o.y, false);
+    if (window.sonarArcade) sonarArcade('explosion', { tam: 0.8 });
+    const clave = TQ.clave, gana = miIdentidad, propia = b.de === miRival;
+    await Tanques.accionEnCola((e) => {
+        if (e.clave !== clave) return null;
+        const puntos = { ...e.puntos, [gana]: e.puntos[gana] + 1 };
+        const texto = propia ? `¡${nombreJugador(miRival)} se dio con su propia bala! Ronda para ${nombreJugador(gana)}.` : `¡${nombreJugador(gana)} le dio a ${nombreJugador(miRival)}!`;
+        if (puntos[gana] >= RONDAS_TQ) return { puntos, ganador: gana, motivo: `${puntos.nico} a ${puntos.carito} en rondas.` };
+        return { puntos, clave: Math.random().toString(36).slice(2, 7), semilla: Math.floor(Math.random() * 1e9), inicio: VivoComun.reloj('tanques') + 2600, aviso: texto };
+    });
+}
 function moverBalaTq(b, dt){
     for (const eje of ['x', 'y']) {
         const v = eje === 'x' ? 'vx' : 'vy';
@@ -64,6 +176,15 @@ function pasoTq(dt){
     TQ.balas.forEach(b => moverBalaTq(b, dt));
     TQ.balas = TQ.balas.filter(b => b.rebotes <= 2 && ahora - b.t < 4000);
     TQ.chispas = TQ.chispas.filter(c => Date.now() - c.t < 500);
+    // La compu (si estamos contra ella): piensa, se mueve y le pueden dar.
+    const compu = compuTq();
+    if (compu && ahora >= e.inicio && TQ.el && !TQ.el.muerto) {
+        pensarCompuTq(dt, compu.nivel);
+        for (const b of TQ.balas) {
+            if (b.de === miRival && ahora - b.t < 250) continue;
+            if ((b.x - TQ.el.x) ** 2 + (b.y - TQ.el.y) ** 2 < (R_TQ + R_BALA_TQ) ** 2) { leDieronCompuTq(b); break; }
+        }
+    }
     if (ahora < e.inicio || TQ.muerto) return;
     const k = TQ.teclas;
     p.a += ((k.der ? 1 : 0) - (k.izq ? 1 : 0)) * 0.075 * dt;
@@ -247,7 +368,7 @@ function arrancarTq(){
         TQ.controles.classList.add('compactos');
     }
     if (!TQ.teclado) TQ.teclado = VivoComun.teclado('pantalla-tanques', { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'gas', KeyW: 'gas', ArrowDown: 'atras', KeyS: 'atras', Space: 'fuego', Enter: 'fuego' }, TQ.teclas);
-    if (!TQ.enlace) {
+    if (!TQ.enlace && !compuTq()) {
         TQ.enlace = EnlaceVivo.conectar('tanques', {
             alMensaje(t, d) {
                 if (d.c !== TQ.clave) return;
@@ -283,6 +404,7 @@ const Tanques = JuegoTurnos.crear({
     emojiListo: '🎯',
     intro: `Un tanque para cada uno en un laberinto, en vivo. ⟲ ⟳ para girar, ▲ ▼ para moverte y 💥 para disparar. Las balas rebotan en las paredes… ¡y te pueden dar a vos! Gana el primero en ganar ${RONDAS_TQ} rondas.`,
     inicial: () => ({ puntos: { nico: 0, carito: 0 }, semilla: Math.floor(Math.random() * 1e9), clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 3000, turno: null }),
+    compu: { paso: () => null }, // la compu maneja su tanque adentro del bucle (pensarCompuTq)
     render(e) { return `<div id="tanques-host"></div><div class="texto-centro texto-tenue" style="font-size:0.75rem;">Vos sos el ${miIdentidad === 'nico' ? 'azul (abajo)' : 'rosa (arriba)'}. Rondas: ${nombreJugador('nico')} ${e.puntos.nico} — ${e.puntos.carito} ${nombreJugador('carito')}</div>`; },
     alDibujar(cont, e) {
         TQ.estado = e;

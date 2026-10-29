@@ -216,7 +216,7 @@ window.obtenerCategoria = function(categoriaId){
         equipo: L('aventura laberinto cocina faros mente codigo onda emojipelis tabu historia exquisito pesca escaperoom sudoku multiverso'),
         corto: L('natacion futbolcabezas obstaculos fosforos chancho tateti ppt reflejos calculo trivia sopa palabradia cifras hockey motos mastermind astrofutbol'),
         // Los que tienen el botón 🤖 (js/compu.js: CEREBROS + CON_CEREBRO_DIFERIDO, más los que traen su propia compu).
-        compu: L('truco escoba chinchon uno ajedrez damas conecta4 tateti reversi generala mentiroso gomoku mancala serpientes parchis domino backgammon guerra blackjack poker damaschinas quoridor cifras mastermind hex fosforos chancho sieteymedio pescar voley hockey pongcoop snake2 futbolcabezas pingpongvivo natacion trivia astrofutbol multiverso'),
+        compu: L('truco escoba chinchon uno ajedrez damas conecta4 tateti reversi generala mentiroso gomoku mancala serpientes parchis domino backgammon guerra blackjack poker damaschinas quoridor cifras mastermind hex fosforos chancho sieteymedio pescar voley hockey pongcoop snake2 futbolcabezas pingpongvivo natacion motos bombitas tanques autitos trivia astrofutbol multiverso'),
     };
     const POR_CATEGORIA = { duelos: ['vivo'], rapidos: ['vivo', 'corto'], cooperativosvivo: ['equipo'], clasicos: ['turnos'], reflexion: ['charla'], conexion: ['charla'] };
     const cache = {};

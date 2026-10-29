@@ -53,7 +53,7 @@ function pasoNt(dt){
         const ahora = !!NT.teclas[k];
         if (ahora && !NT.antes[k] && !NT.llegue) {
             if (k === 'vuelta') { if (vueltaNt(n, t) && window.sfx) window.sfx.acierto(); }
-            else { const r = brazadaNt(n, k, t); vibrarJ(r === 'mal' ? 25 : 6); if (window.sfx) window.sfx[r === 'mal' ? 'error' : 'toque'](); }
+            else { const r = brazadaNt(n, k, t); vibrarJ(r === 'mal' ? 25 : 6); if (!(r !== 'mal' && window.sonarArcade && sonarArcade('chapuzon')) && window.sfx) window.sfx[r === 'mal' ? 'error' : 'toque'](); }
         }
         NT.antes[k] = ahora;
     }
@@ -91,6 +91,7 @@ const yNt = (d) => d <= LARGO_NT ? Y0_NT - (d / LARGO_NT) * (Y0_NT - Y1_NT) : Y1
 function dibujarNt(){
     const c = NT.ctx, e = NT.estado;
     if (!c || !e) return;
+    c.setTransform(2, 0, 0, 2, 0, 0);
     const t = Date.now(), pt = performance.now(), fx = NT.fx;
     if (fx) fx.antes(c);
     // Borde de la pileta con baldosas
@@ -229,7 +230,7 @@ function arrancarNt(){
     NT.fx = NT.fx || FxVivo.crear();
     if (!NT.canvas) {
         NT.canvas = document.createElement('canvas');
-        NT.canvas.width = W_NT; NT.canvas.height = H_NT;
+        NT.canvas.width = W_NT * 2; NT.canvas.height = H_NT * 2; // a 2x: nítido en celus
         NT.canvas.className = 'lienzo-natacion';
         NT.ctx = NT.canvas.getContext('2d');
         NT.controles = VivoComun.botones([[{ k: 'izq', txt: '◀', aria: 'Brazo izquierdo' }, { k: 'der', txt: '▶', aria: 'Brazo derecho' }], { k: 'vuelta', txt: '🔄', clase: 'salto', aria: 'Dar la vuelta' }], NT.teclas);

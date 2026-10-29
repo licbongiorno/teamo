@@ -1850,3 +1850,14 @@ body.encuadre .pantalla-juego.activa .mv-host{ border-radius:0; }
 /* Cronómetro de turno en los juegos por turnos (js/juegos/base-turnos.js) */
 .crono-turno{ font-size:0.75em; opacity:0.6; margin-left:6px; font-variant-numeric:tabular-nums; }
 .crono-turno:empty{ display:none; }
+
+/* Reflexión: las dos respuestas como burbujas (js/motor-reflexion.js) */
+.respuestas-burbujas{ display:flex; flex-direction:column; gap:10px; }
+.burbuja-resp{ border-radius:18px; padding:10px 14px; max-width:92%; animation:burbujaEntra 0.5s cubic-bezier(0.22,1,0.36,1) both; animation-delay:calc(var(--i, 0) * 0.35s); }
+.burbuja-resp b{ font-size:0.72rem; opacity:0.8; display:block; margin-bottom:2px; }
+.burbuja-resp p{ margin:0; line-height:1.4; white-space:pre-wrap; }
+.burbuja-resp.de-nico{ align-self:flex-start; background:rgba(168,216,255,0.14); border:1px solid rgba(168,216,255,0.35); border-bottom-left-radius:6px; }
+.burbuja-resp.de-carito{ align-self:flex-end; background:rgba(255,179,198,0.14); border:1px solid rgba(255,179,198,0.35); border-bottom-right-radius:6px; text-align:right; }
+.respuestas-burbujas.coinciden .burbuja-resp{ box-shadow:0 0 18px rgba(255,214,120,0.35); border-color:rgba(255,214,120,0.6); }
+@keyframes burbujaEntra{ from{ opacity:0; transform:translateY(10px) scale(0.96); } to{ opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce){ .burbuja-resp{ animation:none; } }

@@ -94,7 +94,9 @@ const AV = {
     canvas: null, ctx: null, controles: null, teclas: { izq: false, der: false, salto: false }, tomados: new Set(),
     ultimoEnvio: 0, checkpoint: null, invulnerable: 0, estado: null, camara: 0, saltoPrevio: false, llegue: false, monedasLocal: 0, muriendo: false,
     moviles: [], jefe: null, jefeGolpeLocal: 0, progreso: { max: 0, elegido: 1 }, sombra: null,
+    fx: null, golpes: {}, aplastados: [],
 };
+const ESC_AV = 3; // el lienzo se dibuja a 3x: el pixel art queda nítido y los efectos, suaves
 // Hasta qué nivel llegaron (para poder arrancar más adelante): juegos/aventura-progreso.
 const refProgresoAv = () => window.doc(window.db, 'juegos', 'aventura-progreso');
 (function escucharProgresoAv(){
@@ -154,6 +156,19 @@ function cargarNivelAv(e){
     AV.otro = AV.otro || null;
     AV.llegue = !!(e.llegaron && e.llegaron[miIdentidad]);
     AV.invulnerable = 0;
+    AV.golpes = {}; AV.aplastados = [];
+    if (AV.fx) AV.fx.limpiar();
+}
+// Efectos de lo que se toma (también cuando lo toma el otro).
+function efectoTomadoAv(id, mio){
+    const fx = AV.fx; if (!fx) return;
+    const [t, xs, ys] = id.split('-'), x = +xs, y = +ys, cx = x * T_AV + 8, cy = y * T_AV + 8;
+    if (t === 'c') { fx.estrellitas(cx, cy, 6, ['#ffd93d', '#fff3a0']); if (mio) fx.texto(cx, cy - 4, '+1', { tam: 8, color: '#ffd93d' }); }
+    if (t === 'q') { AV.golpes[x + ',' + y] = performance.now(); fx.particulas({ x: cx, y: cy - 10, n: 1, color: '#ffd93d', vel: 0.1, vida: 450, grav: -0.02, tam: 4, forma: 'cuadro' }); fx.estrellitas(cx, cy - 12, 6, ['#ffd93d', '#fff']); if (mio) fx.texto(cx, cy - 14, '+1', { tam: 8, color: '#ffd93d' }); }
+    if (t === 'e') {
+        const b = AV.bichos.find(q => q.id === id);
+        if (b) { const bx = posBichoAv(b); AV.aplastados.push({ x: bx, y: b.y, t: performance.now() }); fx.polvo(bx + 7, b.y + 11, 'rgba(240,230,210,0.8)', 6); fx.texto(bx + 7, b.y - 2, '¡Plop!', { tam: 7, color: '#fff' }); }
+    }
 }
 function aplicarTomadoAv(id){
     const [t, xs, ys] = id.split('-'), x = +xs, y = +ys;
@@ -217,7 +232,8 @@ function pasoFisicaAv(dt){
     const agarre = p.suelo ? (p.hielo ? 0.035 : 0.35) : 0.18;
     p.vx += (objetivo * VEL_AV * (enAgua ? 0.7 : 1) - p.vx) * Math.min(1, agarre * dt);
     if (enAgua && k.salto && !AV.saltoPrevio) { p.vy = -3.4; p.suelo = false; if (window.sfx) window.sfx.click(); } // brazada
-    else if (k.salto && !AV.saltoPrevio && p.suelo) { p.vy = -SALTO_AV; p.suelo = false; if (window.sfx) window.sfx.click(); }
+    else if (k.salto && !AV.saltoPrevio && p.suelo) { p.vy = -SALTO_AV; p.suelo = false; if (window.sfx) window.sfx.click(); if (AV.fx) AV.fx.polvo(p.x + ANCHO_PJ / 2, p.y + ALTO_PJ, 'rgba(240,235,220,0.7)', 4); p.estira = 1; }
+    if (enAgua && AV.fx && Math.random() < 0.04) AV.fx.burbujas(p.x + ANCHO_PJ / 2, p.y + 3, 1);
     if (!enAgua && !k.salto && p.vy < -2.5 && !p.resorte) p.vy *= 0.6; // salto variable: soltar antes = saltito
     AV.saltoPrevio = k.salto;
     p.vy = Math.min(enAgua ? 1.6 : CAIDA_AV, p.vy + GRAV_AV * (enAgua ? 0.28 : 1) * dt);
@@ -261,15 +277,20 @@ function pasoFisicaAv(dt){
         }
     }
     p.paso += Math.abs(p.vx) * dt;
+    // Aterrizar fuerte levanta polvo y aplasta un poquito al personaje.
+    if (p.suelo && !p.sueloAntes && p.vyAntes > 3.5) { if (AV.fx) AV.fx.polvo(p.x + ANCHO_PJ / 2, p.y + ALTO_PJ, 'rgba(240,235,220,0.7)', 5); p.aplasta = 1; }
+    if (p.suelo && Math.abs(p.vx) > 1.2 && Math.sign(p.vx) !== objetivo && objetivo && AV.fx && Math.random() < 0.3) AV.fx.polvo(p.x + ANCHO_PJ / 2, p.y + ALTO_PJ, 'rgba(240,235,220,0.6)', 1);
+    p.sueloAntes = p.suelo; p.vyAntes = p.vy;
+    p.aplasta = Math.max(0, (p.aplasta || 0) - 0.12 * dt); p.estira = Math.max(0, (p.estira || 0) - 0.08 * dt);
     // Monedas, pinchos, bandera, checkpoint
     const cx0 = Math.floor((p.x + 2) / T_AV), cx1 = Math.floor((p.x + ANCHO_PJ - 2) / T_AV), cy0 = Math.floor((p.y + 2) / T_AV), cy1 = Math.floor((p.y + ALTO_PJ - 1) / T_AV);
     for (let y = cy0; y <= cy1; y++) for (let x = cx0; x <= cx1; x++) {
         const c = celdaAv(x, y);
         if (c === 'o') tomarAv(`c-${x}-${y}`, true);
         if (c === '^' && y === cy1 && AV.invulnerable <= 0) { morirAv('¡Ay, los pinchos!'); return; }
-        if (c === 'C' && (AV.checkpoint.x !== x * T_AV)) { AV.checkpoint = { x: x * T_AV, y: 8 * T_AV }; if (window.sfx) window.sfx.acierto(); }
+        if (c === 'C' && (AV.checkpoint.x !== x * T_AV)) { AV.checkpoint = { x: x * T_AV, y: 8 * T_AV }; if (window.sfx) window.sfx.acierto(); if (AV.fx) { AV.fx.onda(x * T_AV + 12, y * T_AV + 5, { color: 'rgba(76,209,138,0.9)', radio: 16 }); AV.fx.estrellitas(x * T_AV + 12, y * T_AV + 5, 8, ['#4cd18a', '#fff']); } }
         if (c === 'F' && !AV.llegue && !jefeVivoAv()) llegarAv();
-        if (c === 'R' && p.vy >= 0 && y === cy1) { p.vy = -11.2; p.resorte = true; p.suelo = false; if (window.sfx) window.sfx.acierto(); }
+        if (c === 'R' && p.vy >= 0 && y === cy1) { p.vy = -11.2; p.resorte = true; p.suelo = false; if (window.sfx) window.sfx.acierto(); AV.golpes['r' + x + ',' + y] = performance.now(); p.estira = 1; if (AV.fx) AV.fx.onda(x * T_AV + 8, y * T_AV + 12, { color: 'rgba(255,255,255,0.8)', radio: 12, achatar: 0.4 }); }
     }
     if (p.y > FILAS_AV * T_AV + 20) { morirAv('¡Al pozo!'); return; }
     // Jefe
@@ -296,6 +317,7 @@ async function golpearJefeAv(){
     AV.jefeGolpeLocal = Date.now();
     vibrarJ([20, 30, 20]);
     if (window.sfx) window.sfx.toque();
+    if (AV.fx) { const jp = posJefeAv(); AV.fx.chispas(jp.x + 14, jp.y + 2, ['#fff', '#f5d36b', '#c78bff'], 14); AV.fx.temblor(3, 260); AV.fx.texto(jp.x + 14, jp.y - 10, '¡Pum!', { tam: 10, color: '#f5d36b' }); }
     const nivel = AV.estado.nivel;
     let vencido = false;
     await Aventura.accion((e) => {
@@ -313,6 +335,7 @@ async function golpearJefeAv(){
 function tomarAv(id, mio){
     if (AV.tomados.has(id)) return;
     AV.tomados.add(id);
+    efectoTomadoAv(id, mio);
     aplicarTomadoAv(id);
     if (id[0] !== 'e') AV.monedasLocal++;
     if (!mio) return;
@@ -325,6 +348,7 @@ async function morirAv(porque){
     if (AV.muriendo) return;
     AV.muriendo = true;
     vibrarJ([30, 40, 30]);
+    if (AV.fx && AV.yo) { AV.fx.estrellitas(AV.yo.x + 6, AV.yo.y + 6, 10, ['#fff', '#ffd23a']); AV.fx.temblor(3, 300); }
     if (window.sfx) window.sfx.error();
     if (window.animJuegos) window.animJuegos.cartel(porque, { dur: 900, sonido: false });
     const nivel = AV.estado.nivel;
@@ -344,6 +368,7 @@ async function morirAv(porque){
 async function llegarAv(){
     AV.llegue = true;
     if (window.sfx) window.sfx.acierto();
+    if (AV.fx && AV.yo) AV.fx.confeti(AV.yo.x + 6, AV.yo.y, 40);
     const nivel = AV.estado.nivel;
     let paso = null;
     await Aventura.accion((e) => {
@@ -368,7 +393,9 @@ function dibujarAv(){
     // Cámara: sigue a mi personaje.
     const objetivo = Math.max(0, Math.min(AV.ancho * T_AV - W, (AV.yo ? AV.yo.x : 0) - W * 0.42));
     AV.camara += (objetivo - AV.camara) * 0.15;
-    const cam = Math.round(AV.camara);
+    const cam = Math.round(AV.camara * ESC_AV) / ESC_AV, fx = AV.fx;
+    c.setTransform(ESC_AV, 0, 0, ESC_AV, 0, 0);
+    fx && fx.antes(c);
     const g = c.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, n.cielo[0]); g.addColorStop(1, n.cielo[1]);
     c.fillStyle = g; c.fillRect(0, 0, W, H);
@@ -380,12 +407,12 @@ function dibujarAv(){
     // Tiles visibles
     const x0 = Math.floor(cam / T_AV), x1 = Math.min(AV.ancho - 1, x0 + VISTA_AV + 1), t = Date.now();
     for (let y = 0; y < FILAS_AV; y++) for (let x = x0; x <= x1; x++) {
-        const ch = AV.mapa[y][x], px = x * T_AV - cam, py = y * T_AV;
+        const ch = AV.mapa[y][x], px = x * T_AV - cam; let py = y * T_AV;
         if (ch === '#') { c.fillStyle = n.suelo; c.fillRect(px, py, T_AV, T_AV); if (celdaAv(x, y - 1) !== '#') { c.fillStyle = n.pasto; c.fillRect(px, py, T_AV, 4); } c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(px + 3, py + 8, 3, 3); c.fillRect(px + 10, py + 12, 2, 2); }
         else if (ch === '=') { c.fillStyle = '#c0693a'; c.fillRect(px, py, T_AV, T_AV); c.fillStyle = '#7a3a1c'; c.fillRect(px, py + 7, T_AV, 1); c.fillRect(px + 7, py, 1, 7); c.fillRect(px + 3, py + 8, 1, 8); c.fillRect(px + 12, py + 8, 1, 8); }
-        else if (ch === '?') { c.fillStyle = '#f2b134'; c.fillRect(px, py, T_AV, T_AV); c.fillStyle = '#a8651a'; c.fillRect(px, py + 15, T_AV, 1); c.fillStyle = '#fff6d8'; c.font = 'bold 12px monospace'; c.fillText('?', px + 4, py + 12 + Math.round(Math.sin(t / 200) * 1)); }
-        else if (ch === 'X') { c.fillStyle = '#8a6a4a'; c.fillRect(px, py, T_AV, T_AV); c.fillStyle = '#5a4430'; c.fillRect(px + 2, py + 2, 12, 12); }
-        else if (ch === 'o') { const w = 6 + Math.round(Math.abs(Math.sin(t / 220 + x)) * 4); c.fillStyle = '#ffd93d'; c.fillRect(px + 8 - w / 2, py + 3, w, 10); c.fillStyle = '#fff3a0'; c.fillRect(px + 8 - w / 4, py + 5, Math.max(1, w / 4), 6); }
+        else if (ch === '?') { c.fillStyle = '#f2b134'; c.fillRect(px, py, T_AV, T_AV); c.fillStyle = '#ffd27a'; c.fillRect(px, py, T_AV, 1); c.fillRect(px, py, 1, T_AV); c.fillStyle = '#a8651a'; c.fillRect(px, py + 15, T_AV, 1); c.fillStyle = '#fff6d8'; c.font = 'bold 12px monospace'; c.fillText('?', px + 4, py + 12 + Math.round(Math.sin(t / 200) * 1)); }
+        else if (ch === 'X') { const gb = AV.golpes[x + ',' + y], sube = gb ? Math.max(0, Math.sin(Math.min(1, (performance.now() - gb) / 220) * Math.PI)) * 5 : 0; py -= sube; c.fillStyle = '#8a6a4a'; c.fillRect(px, py, T_AV, T_AV); c.fillStyle = '#5a4430'; c.fillRect(px + 2, py + 2, 12, 12); }
+        else if (ch === 'o') { const w = 2 + Math.abs(Math.sin(t / 220 + x)) * 8, fl = Math.sin(t / 300 + x * 0.7) * 1; c.fillStyle = '#c99a1a'; c.fillRect(px + 8 - w / 2, py + 3 + fl, w, 10); c.fillStyle = '#ffd93d'; c.fillRect(px + 8 - w / 2 + 0.5, py + 3 + fl, Math.max(0.5, w - 1.5), 9.5); c.fillStyle = '#fff3a0'; c.fillRect(px + 8 - w / 4, py + 5 + fl, Math.max(0.6, w / 4), 6); if ((t / 90 + x * 7) % 40 < 2) { c.fillStyle = '#fff'; c.fillRect(px + 10, py + 2 + fl, 1, 3); c.fillRect(px + 9, py + 3 + fl, 3, 1); } }
         else if (ch === '^') { c.fillStyle = '#d9d9e8'; for (let k = 0; k < 3; k++) { c.beginPath(); c.moveTo(px + k * 5 + 1, py + 16); c.lineTo(px + k * 5 + 3.5, py + 8); c.lineTo(px + k * 5 + 6, py + 16); c.fill(); } }
         else if (ch === 'D') { if (!placa) { c.fillStyle = '#6b4a8a'; c.fillRect(px + 1, py, 14, T_AV); c.fillStyle = '#f5d9a0'; c.fillRect(px + 10, py + 7, 2, 2); } else { c.fillStyle = 'rgba(107,74,138,0.25)'; c.fillRect(px + 1, py, 14, T_AV); } }
         else if (ch === 'L') { c.fillStyle = placa ? '#5fd3a0' : 'rgba(95,211,160,0.18)'; c.fillRect(px, py, T_AV, T_AV); c.strokeStyle = placa ? '#2f8a62' : 'rgba(95,211,160,0.4)'; c.strokeRect(px + 0.5, py + 0.5, T_AV - 1, T_AV - 1); }
@@ -398,7 +425,7 @@ function dibujarAv(){
             else { c.strokeStyle = 'rgba(255,255,255,0.15)'; c.setLineDash([2, 2]); c.strokeRect(px + 0.5, py + 0.5, T_AV - 1, 6); c.setLineDash([]); }
         }
         else if (ch === '_') { c.fillStyle = '#bfe6ff'; c.fillRect(px, py, T_AV, T_AV); c.fillStyle = '#ffffff'; c.fillRect(px, py, T_AV, 3); c.fillStyle = 'rgba(255,255,255,0.6)'; c.fillRect(px + 3, py + 6, 6, 1); }
-        else if (ch === 'R') { c.fillStyle = '#ff6b6b'; c.fillRect(px + 2, py + 10, 12, 3); c.fillStyle = '#ccc'; for (let k = 0; k < 3; k++) c.fillRect(px + 4 + k * 3, py + 13, 2, 3); }
+        else if (ch === 'R') { const gr = AV.golpes['r' + x + ',' + y], comp = gr && performance.now() - gr < 200 ? 3 : 0; c.fillStyle = '#ff6b6b'; c.fillRect(px + 2, py + 10 - comp, 12, 3); c.fillStyle = '#ccc'; for (let k = 0; k < 3; k++) c.fillRect(px + 4 + k * 3, py + 13, 2, 3); }
         else if (ch === 'F' && jefeVivoAv()) { /* la bandera aparece al vencer al jefe */ }
         else if (ch === 'F') { c.fillStyle = '#eee'; c.fillRect(px + 7, py - 6 * T_AV, 2, 7 * T_AV); c.fillStyle = '#4cd18a'; c.fillRect(px + 9, py - 6 * T_AV + 2 + Math.round(Math.sin(t / 300) * 1), 10, 7); c.fillStyle = '#ffd93d'; c.fillRect(px + 6, py - 6 * T_AV - 3, 4, 4); }
     }
@@ -434,19 +461,26 @@ function dibujarAv(){
         c.fillStyle = '#000'; c.fillRect(bx + 4, b.y + 4, 1, 2); c.fillRect(bx + 9, b.y + 4, 1, 2);
         c.fillStyle = '#3a2214'; c.fillRect(bx + (pie ? 1 : 3), b.y + 12, 4, 2); c.fillRect(bx + (pie ? 9 : 7), b.y + 12, 4, 2);
     });
+    AV.aplastados = AV.aplastados.filter(a => performance.now() - a.t < 400);
+    AV.aplastados.forEach(a => { const k = (performance.now() - a.t) / 400, bx = a.x - cam; c.globalAlpha = 1 - k; c.fillStyle = '#8a4b2a'; c.fillRect(bx, a.y + 10, 14, 4); c.fillStyle = '#f3d9b0'; c.fillRect(bx + 3, a.y + 12, 8, 2); c.fillStyle = '#000'; c.fillRect(bx + 3, a.y + 10, 3, 1); c.fillRect(bx + 8, a.y + 10, 3, 1); c.globalAlpha = 1; });
     // Personajes: primero el otro (suavizado), después yo.
     const o = AV.otro;
     if (o && o.n === e.nivel && Date.now() - o.visto < 4000) {
-        o.rx = o.rx == null ? o.x : o.rx + (o.x - o.rx) * 0.4;
-        o.ry = o.ry == null ? o.y : o.ry + (o.y - o.ry) * 0.4;
+        VivoComun.suave(o);
+        // Polvo cuando el otro salta o cae (se ve igual que el propio).
+        if (o.sAntes != null && o.sAntes !== o.s && fx) { fx.polvo(o.rx + ANCHO_PJ / 2, o.ry + ALTO_PJ, 'rgba(240,235,220,0.6)', 3); if (o.s) o.aplasta = 1; else o.estira = 1; }
+        o.sAntes = o.s;
+        o.aplasta = Math.max(0, (o.aplasta || 0) - 0.12); o.estira = Math.max(0, (o.estira || 0) - 0.08);
         const ox = o.rx - cam;
         if (ox < -ANCHO_PJ) flechaAv(c, 4, o.ry, '◀', miRival); else if (ox > W) flechaAv(c, W - 12, o.ry, '▶', miRival);
-        else pjAv(c, ox, o.ry, miRival, o.d || 1, o.paso || 0, !o.s, false);
+        else pjAv(c, ox, o.ry, miRival, o.d || 1, o.paso || 0, !o.s, false, o.aplasta - o.estira);
     }
-    if (AV.yo && !(AV.invulnerable > 0 && Math.floor(Date.now() / 90) % 2)) pjAv(c, AV.yo.x - cam, AV.yo.y, miIdentidad, AV.yo.dir, AV.yo.paso, !AV.yo.suelo, true);
+    if (AV.yo && !(AV.invulnerable > 0 && Math.floor(Date.now() / 90) % 2)) pjAv(c, AV.yo.x - cam, AV.yo.y, miIdentidad, AV.yo.dir, AV.yo.paso, !AV.yo.suelo, true, (AV.yo.aplasta || 0) - (AV.yo.estira || 0));
+    if (fx) { c.save(); c.translate(-cam, 0); fx.dibujar(c); c.restore(); }
     // Cueva: sólo se ve alrededor de cada uno.
     if (n.oscuro) {
         if (!AV.sombra) { AV.sombra = document.createElement('canvas'); AV.sombra.width = W; AV.sombra.height = H; }
+        c.imageSmoothingEnabled = true;
         const s = AV.sombra.getContext('2d');
         s.globalCompositeOperation = 'source-over'; s.clearRect(0, 0, W, H); s.fillStyle = 'rgba(4,2,10,0.95)'; s.fillRect(0, 0, W, H);
         s.globalCompositeOperation = 'destination-out';
@@ -454,7 +488,9 @@ function dibujarAv(){
         if (AV.yo) luz(AV.yo.x - cam + 6, AV.yo.y + 7, 56);
         if (o && o.n === e.nivel && o.rx != null) luz(o.rx - cam + 6, o.ry + 7, 44);
         c.drawImage(AV.sombra, 0, 0);
+        c.imageSmoothingEnabled = false;
     }
+    fx && fx.despues(c);
     // HUD
     c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(0, 0, W, 13);
     c.fillStyle = '#fff'; c.font = 'bold 9px monospace';
@@ -462,18 +498,24 @@ function dibujarAv(){
     VivoComun.estado(c, W, H, AV.enlace, nombreJugador(miRival));
     // Cuenta regresiva o espera en la bandera
     const falta = e.inicio - VivoComun.reloj('aventura');
-    if (e.fase === 'jugando' && falta > 0) { textoGrandeAv(c, W, H, falta > 1000 ? String(Math.ceil(falta / 1000) - 0) : '¡YA!', `Nivel ${e.nivel}: ${n.nombre}`); }
+    if (e.fase === 'jugando' && falta > 0) { textoGrandeAv(c, W, H, falta > 1000 ? String(Math.ceil(falta / 1000) - 0) : '¡YA!', `Nivel ${e.nivel}: ${n.nombre}`, 1 - (falta % 1000) / 1000); }
     else if (AV.llegue && e.fase === 'jugando') textoGrandeAv(c, W, H, '🚩', `¡Llegaste! Esperando a ${nombreJugador(miRival)}…`);
 }
-function textoGrandeAv(c, W, H, grande, chico){
+function textoGrandeAv(c, W, H, grande, chico, k = 1){
     c.fillStyle = 'rgba(0,0,0,0.35)'; c.fillRect(0, H / 2 - 28, W, 48);
-    c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 22px monospace'; c.fillText(grande, W / 2, H / 2);
+    const esc = FxVivo.rebote(Math.min(1, k * 2.5));
+    c.save(); c.translate(W / 2, H / 2 - 7); c.scale(esc, esc); c.textAlign = 'center'; c.font = 'bold 22px monospace'; c.lineWidth = 3; c.strokeStyle = '#1a1424'; c.strokeText(grande, 0, 7); c.fillStyle = '#fff'; c.fillText(grande, 0, 7); c.restore();
+    c.fillStyle = '#fff'; c.textAlign = 'center';
     c.font = '9px monospace'; c.fillText(chico, W / 2, H / 2 + 14); c.textAlign = 'left';
 }
 function flechaAv(c, x, y, s, quien){ c.fillStyle = quien === 'nico' ? '#a8d8ff' : '#ffb3c6'; c.font = 'bold 12px monospace'; c.fillText(s, x, Math.max(24, Math.min(160, y + 10))); }
 // Pixel art: Nico con gorra celeste, Carito con moño rosa.
-function pjAv(c, x, y, quien, dir, paso, aire, soyYo){
-    x = Math.round(x); y = Math.round(y);
+function pjAv(c, x, y, quien, dir, paso, aire, soyYo, aplasta = 0){
+    x = Math.round(x * ESC_AV) / ESC_AV; y = Math.round(y * ESC_AV) / ESC_AV;
+    // Aplastar (al caer) o estirar (al saltar), con los pies en el piso.
+    const sy = 1 - aplasta * 0.22, sx = 1 + aplasta * 0.18;
+    c.save(); c.translate(x + 5.5, y + 15); c.scale(sx, sy); c.translate(-(x + 5.5), -(y + 15));
+    if (!aire) { c.fillStyle = 'rgba(0,0,0,0.18)'; c.fillRect(x, y + 14.5, 11, 1); }
     const nico = quien === 'nico';
     const ropa = nico ? '#3d8bfd' : '#ff6f9a', detalle = nico ? '#1f4fa8' : '#c2335f', pelo = nico ? '#4a2f1c' : '#6b3a1e';
     const pierna = aire ? 0 : Math.floor(paso / 5) % 2;
@@ -490,6 +532,7 @@ function pjAv(c, x, y, quien, dir, paso, aire, soyYo){
     if (nico) { c.fillStyle = ropa; c.fillRect(x + 1, y, 9, 3); c.fillRect(x + (dir > 0 ? 7 : -1), y + 2, 5, 1); c.fillStyle = pelo; c.fillRect(x + (dir > 0 ? 2 : 8), y + 3, 1, 3); }
     else { c.fillStyle = pelo; c.fillRect(x + 1, y + 1, 9, 2); c.fillRect(x + (dir > 0 ? 1 : 9), y + 2, 1, 6); c.fillStyle = ropa; c.fillRect(x + (dir > 0 ? 0 : 7), y - 1, 4, 3); }
     if (soyYo) { c.fillStyle = 'rgba(255,255,255,0.8)'; c.fillRect(x + 5, y - 5, 1, 2); }
+    c.restore();
 }
 
 // ---------- Bucle, red y controles ----------
@@ -512,7 +555,7 @@ function bucleAv(ts){
 function arrancarMotorAv(){
     if (!AV.canvas) {
         AV.canvas = document.createElement('canvas');
-        AV.canvas.width = VISTA_AV * T_AV; AV.canvas.height = FILAS_AV * T_AV;
+        AV.canvas.width = VISTA_AV * T_AV * ESC_AV; AV.canvas.height = FILAS_AV * T_AV * ESC_AV;
         AV.canvas.className = 'lienzo-aventura';
         AV.ctx = AV.canvas.getContext('2d');
         AV.ctx.imageSmoothingEnabled = false;
@@ -532,10 +575,11 @@ function arrancarMotorAv(){
         AV.teclado = (ev) => { const k = mapa[ev.code]; if (!k || !document.getElementById('pantalla-aventura')?.classList.contains('activa')) return; if (ev.target && ev.target.tagName === 'INPUT') return; ev.preventDefault(); AV.teclas[k] = ev.type === 'keydown'; };
         window.addEventListener('keydown', AV.teclado); window.addEventListener('keyup', AV.teclado);
     }
+    AV.fx = AV.fx || FxVivo.crear();
     if (!AV.enlace) {
         AV.enlace = EnlaceVivo.conectar('aventura', {
             alMensaje(tipo, d) {
-                if (tipo === 'pos') { AV.otro = { ...(AV.otro || {}), ...d, visto: Date.now() }; }
+                if (tipo === 'pos') AV.otro = VivoComun.recibir(AV.otro, d);
                 if (tipo === 'tomar' && AV.estado && d.n === AV.estado.nivel) tomarAv(d.id, false);
                 if (tipo === 'cae' && AV.estado && d.n === AV.estado.nivel && AV.caidas && !caidaAv(...d.k.split(',').map(Number))) AV.caidas[d.k] = d.t;
             },

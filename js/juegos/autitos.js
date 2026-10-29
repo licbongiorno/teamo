@@ -12,7 +12,7 @@ const CIRCUITOS_AU = [
     { nombre: 'Curvas de la Sierra', pasto: '#7aa35a', puntos: [[40, 62], [120, 38], [262, 50], [272, 140], [205, 152], [182, 202], [262, 232], [272, 332], [200, 372], [118, 334], [150, 272], [92, 232], [42, 302], [28, 182]] },
     { nombre: 'Zigzag de la Costanera', pasto: '#8fbf6a', puntos: [[40, 50], [150, 40], [262, 52], [270, 120], [200, 140], [200, 200], [268, 230], [268, 340], [200, 370], [100, 370], [40, 330], [90, 270], [40, 220], [90, 170], [40, 120]] },
 ];
-const AU = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, pista: null, fondo: null, yo: null, el: null, teclas: {}, inclinar: false, giroTilt: 0, ultimoEnvio: 0, ultimoTs: 0, terminado: false };
+const AU = { canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, pista: null, fondo: null, yo: null, el: null, teclas: {}, inclinar: false, giroTilt: 0, ultimoEnvio: 0, ultimoTs: 0, terminado: false, fx: null, marcas: null };
 
 // Spline cerrada (Catmull-Rom) y después puntos a la misma distancia.
 function armarPistaAu(cto){
@@ -67,7 +67,17 @@ function dibujarFondoAu(cto){
     c.restore();
     for (let i = 0; i < 14; i++) {
         const x = (i * 137 + 23) % W_AU, y = (i * 89 + 41) % H_AU;
-        if (cercanoAu(x, y).d > ANCHO_PISTA + 14) { c.fillStyle = '#2f6b34'; c.beginPath(); c.arc(x, y, 7, 0, Math.PI * 2); c.fill(); c.fillStyle = '#3f8a44'; c.beginPath(); c.arc(x - 2, y - 2, 4, 0, Math.PI * 2); c.fill(); }
+        if (cercanoAu(x, y).d > ANCHO_PISTA + 14) {
+            c.fillStyle = 'rgba(0,0,0,0.22)'; c.beginPath(); c.ellipse(x + 3, y + 4, 8, 6, 0.3, 0, Math.PI * 2); c.fill();
+            c.fillStyle = '#2f6b34'; c.beginPath(); c.arc(x, y, 7, 0, Math.PI * 2); c.fill();
+            c.fillStyle = '#3f8a44'; c.beginPath(); c.arc(x - 2, y - 2, 4.5, 0, Math.PI * 2); c.fill();
+            c.fillStyle = 'rgba(255,255,255,0.18)'; c.beginPath(); c.arc(x - 3, y - 3.5, 1.8, 0, Math.PI * 2); c.fill();
+        }
+    }
+    // Florcitas en el pasto
+    for (let i = 0; i < 40; i++) {
+        const x = (i * 53 + 11) % W_AU, y = (i * 131 + 7) % H_AU;
+        if (cercanoAu(x, y).d > ANCHO_PISTA + 6) { c.fillStyle = ['#fff6a8', '#ffd0e0', '#ffffff'][i % 3]; c.fillRect(x, y, 1.6, 1.6); }
     }
     return f;
 }
@@ -92,6 +102,27 @@ function cargarCarreraAu(e){
     const lado = miIdentidad === 'nico' ? -1 : 1, nx = -Math.sin(ang), ny = Math.cos(ang);
     AU.yo = { x: a[0] + nx * 9 * lado, y: a[1] + ny * 9 * lado, a: ang, v: 0, vx: 0, vy: 0, i: N_AU - 6, sig: 1, vuelta: 0, tVuelta: null, mejor: null, humo: [] };
     AU.el = null; AU.terminado = false;
+    AU.marcas = document.createElement('canvas'); AU.marcas.width = W_AU * 2; AU.marcas.height = H_AU * 2;
+    AU.ctxMarcas = AU.marcas.getContext('2d'); AU.ctxMarcas.scale(2, 2);
+    if (AU.fx) AU.fx.limpiar();
+}
+// Marcas de goma en el asfalto (quedan en una capa aparte y se van borrando de a poco).
+function marcaAu(x, y, a, ant){
+    const m = AU.ctxMarcas; if (!m || !ant) return;
+    m.strokeStyle = 'rgba(25,22,30,0.35)'; m.lineWidth = 1.3; m.lineCap = 'round';
+    for (const lado of [-3.6, 3.6]) {
+        const ox = -Math.cos(a) * 5 - Math.sin(a) * lado, oy = -Math.sin(a) * 5 + Math.cos(a) * lado;
+        const pox = -Math.cos(ant.a) * 5 - Math.sin(ant.a) * lado, poy = -Math.sin(ant.a) * 5 + Math.cos(ant.a) * lado;
+        m.beginPath(); m.moveTo(ant.x + pox, ant.y + poy); m.lineTo(x + ox, y + oy); m.stroke();
+    }
+}
+// Humo al derrapar, tierra por el pasto (para los dos autos).
+function efectosRuedasAu(q, x, y, a, vel, derrapa, enPasto){
+    const fx = AU.fx; if (!fx) return;
+    q.antMarca = q.antMarca || null;
+    if (derrapa && !enPasto) { marcaAu(x, y, a, q.antMarca); if (Math.random() < 0.5) fx.polvo(x - Math.cos(a) * 6, y - Math.sin(a) * 6, 'rgba(235,235,240,0.55)', 1); }
+    if (enPasto && vel > 0.8 && Math.random() < 0.35) fx.particulas({ x: x - Math.cos(a) * 6, y: y - Math.sin(a) * 6, n: 1, color: ['#8a6a3a', '#6b8f3a', '#a5844e'], vel: 1, vida: 420, grav: 0, tam: 1.6, roce: 0.9 });
+    q.antMarca = derrapa && !enPasto ? { x, y, a } : null;
 }
 function progresoAu(p){
     const pasados = p.vuelta * SECTORES_AU + ((p.sig - 1 + SECTORES_AU) % SECTORES_AU);
@@ -124,11 +155,13 @@ function pasoAu(dt){
     const o = AU.el;
     if (o && Date.now() - o.visto < 1500) {
         const dx = p.x - o.x, dy = p.y - o.y, d = Math.hypot(dx, dy);
-        if (d < 12 && d > 0) { p.x += dx / d * (12 - d) * 0.6; p.y += dy / d * (12 - d) * 0.6; p.v *= 0.9; if (!AU._choque || Date.now() - AU._choque > 500) { AU._choque = Date.now(); vibrarJ(15); if (window.sfx) window.sfx.toque(); } }
+        if (d < 12 && d > 0) { p.x += dx / d * (12 - d) * 0.6; p.y += dy / d * (12 - d) * 0.6; p.v *= 0.9; if (!AU._choque || Date.now() - AU._choque > 500) { AU._choque = Date.now(); vibrarJ(15); if (window.sfx) window.sfx.toque(); if (AU.fx) { AU.fx.chispas((p.x + o.x) / 2, (p.y + o.y) / 2, ['#fff7c2', '#ffd23a', '#ff9f43'], 10); AU.fx.temblor(2, 180); } } }
     }
     const derrapa = Math.abs(Math.atan2(p.vy, p.vx) - p.a) % (Math.PI * 2);
     if (Math.abs(p.v) > 2.4 && (derrapa > 0.35 && derrapa < Math.PI * 2 - 0.35)) p.humo.push({ x: p.x, y: p.y, t: Date.now() });
     p.humo = p.humo.filter(h => Date.now() - h.t < 500);
+    efectosRuedasAu(p, p.x, p.y, p.a, Math.abs(p.v), Math.abs(p.v) > 2.4 && derrapa > 0.35 && derrapa < Math.PI * 2 - 0.35, enPasto);
+    p.enPasto = enPasto;
     // Sectores en orden: así se cuentan las vueltas y no valen los atajos.
     p.i = cercanoAu(p.x, p.y, p.i).i;
     const sector = Math.floor(p.i / (N_AU / SECTORES_AU));
@@ -139,6 +172,8 @@ function pasoAu(dt){
             if (p.mejor == null || t < p.mejor) p.mejor = t;
             guardarVueltaAu(t);
             if (p.vuelta >= VUELTAS_AU) llegarAu(ahora - e.inicio);
+            if (AU.fx) { AU.fx.onda(p.x, p.y, { color: 'rgba(255,255,255,0.9)', radio: 22 }); AU.fx.estrellitas(p.x, p.y, 8); }
+            if (p.vuelta >= VUELTAS_AU && AU.fx) { const m = AU.pista.pts[0]; AU.fx.confeti(m[0], m[1], 60); }
             else { vibrarJ(20); if (window.sfx) window.sfx.punto(); if (window.animJuegos) window.animJuegos.cartel(p.vuelta === VUELTAS_AU - 1 ? '¡Última vuelta!' : `Vuelta ${p.vuelta + 1}`, { dur: 800, sonido: false }); }
         }
         p.sig = (p.sig + 1) % SECTORES_AU;
@@ -161,30 +196,65 @@ async function llegarAu(tiempo){
         return { ganador: quien, motivo: `${nombreJugador(quien)} llegó primero en ${(tiempo / 1000).toFixed(1)} s · mejor vuelta ${(mejor / 1000).toFixed(1)} s` };
     });
 }
-function dibujarAutoAu(c, x, y, a, col, techo){
+function dibujarAutoAu(c, x, y, a, col, techo, giro = 0, frena = false){
+    c.save(); c.translate(x + 1.5, y + 2); c.rotate(a);
+    c.fillStyle = 'rgba(0,0,0,0.28)'; c.beginPath(); c.roundRect ? c.roundRect(-8, -5, 16, 10, 4) : c.rect(-8, -5, 16, 10); c.fill();
+    c.restore();
     c.save(); c.translate(x, y); c.rotate(a);
-    c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(-7, -3.5, 15, 9);
-    c.fillStyle = '#222'; c.fillRect(-6, -5.5, 4, 2); c.fillRect(-6, 3.5, 4, 2); c.fillRect(3, -5.5, 4, 2); c.fillRect(3, 3.5, 4, 2);
-    c.fillStyle = col; c.beginPath(); c.roundRect ? c.roundRect(-7.5, -4.5, 15, 9, 3) : c.rect(-7.5, -4.5, 15, 9); c.fill();
-    c.fillStyle = techo; c.fillRect(-3, -3, 5, 6);
-    c.fillStyle = 'rgba(200,235,255,0.9)'; c.fillRect(2, -3, 2, 6);
+    // ruedas (las de adelante doblan)
+    c.fillStyle = '#1a1a20';
+    c.fillRect(-6.5, -6, 4, 2.2); c.fillRect(-6.5, 3.8, 4, 2.2);
+    for (const ly of [-4.9, 4.9]) { c.save(); c.translate(4.5, ly); c.rotate(giro * 0.45); c.fillRect(-2, -1.1, 4, 2.2); c.restore(); }
+    // carrocería con brillo
+    const g = c.createLinearGradient(0, -5, 0, 5); g.addColorStop(0, techo); g.addColorStop(0.35, col); g.addColorStop(1, col);
+    c.fillStyle = g; c.beginPath(); c.roundRect ? c.roundRect(-8, -4.6, 16, 9.2, [2.5, 4.5, 4.5, 2.5]) : c.rect(-8, -4.6, 16, 9.2); c.fill();
+    c.strokeStyle = 'rgba(0,0,0,0.35)'; c.lineWidth = 0.6; c.stroke();
+    // alerón
+    c.fillStyle = '#222'; c.fillRect(-8.8, -4.8, 1.6, 9.6);
+    // cabina
+    c.fillStyle = 'rgba(25,30,45,0.85)'; c.beginPath(); c.roundRect ? c.roundRect(-3.5, -3, 6, 6, 2) : c.rect(-3.5, -3, 6, 6); c.fill();
+    c.fillStyle = 'rgba(200,235,255,0.75)'; c.fillRect(1.2, -2.4, 1.2, 4.8);
+    // raya
+    c.fillStyle = 'rgba(255,255,255,0.8)'; c.fillRect(3.4, -0.7, 4, 1.4);
+    // luces
+    c.fillStyle = '#fff6c0'; c.fillRect(7, -3.8, 1, 1.6); c.fillRect(7, 2.2, 1, 1.6);
+    c.fillStyle = frena ? '#ff3a3a' : '#8a2030'; c.fillRect(-8, -3.8, 0.9, 1.6); c.fillRect(-8, 2.2, 0.9, 1.6);
+    if (frena) { c.fillStyle = 'rgba(255,60,60,0.35)'; c.beginPath(); c.arc(-9, 0, 4, 0, Math.PI * 2); c.fill(); }
     c.restore();
 }
 function dibujarAu(){
     const c = AU.ctx, e = AU.estado;
     if (!c || !e || !AU.fondo) return;
-    c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(AU.fondo, 0, 0); c.setTransform(2, 0, 0, 2, 0, 0);
+    c.setTransform(1, 0, 0, 1, 0, 0); c.drawImage(AU.fondo, 0, 0);
+    if (AU.marcas) c.drawImage(AU.marcas, 0, 0);
+    c.setTransform(2, 0, 0, 2, 0, 0);
+    // Las marcas de goma se borran de a poco
+    if (AU.ctxMarcas && Math.random() < 0.05) { const m = AU.ctxMarcas; m.save(); m.setTransform(1, 0, 0, 1, 0, 0); m.globalCompositeOperation = 'destination-out'; m.fillStyle = 'rgba(0,0,0,0.04)'; m.fillRect(0, 0, W_AU * 2, H_AU * 2); m.restore(); }
+    const fx = AU.fx;
+    fx && fx.antes(c);
     const colYo = miIdentidad === 'nico' ? ['#3d8bfd', '#a8d8ff'] : ['#e8496b', '#ffc2d4'];
     const colEl = miIdentidad === 'nico' ? ['#e8496b', '#ffc2d4'] : ['#3d8bfd', '#a8d8ff'];
     const p = AU.yo;
-    if (p) p.humo.forEach(h => { const v = 1 - (Date.now() - h.t) / 500; c.fillStyle = `rgba(230,230,230,${v * 0.5})`; c.beginPath(); c.arc(h.x, h.y, 3 + (1 - v) * 3, 0, Math.PI * 2); c.fill(); });
     const o = AU.el;
     if (o && Date.now() - o.visto < 4000) {
+        const ax = o.rx, ay = o.ry, aa = o.ra;
         VivoComun.suave(o);
-        let da = o.a - (o.ra == null ? o.a : o.ra); da = Math.atan2(Math.sin(da), Math.cos(da)); o.ra = (o.ra == null ? o.a : o.ra + da * 0.45);
-        dibujarAutoAu(c, o.rx, o.ry, o.ra, colEl[0], colEl[1]);
+        if (ax != null) {
+            // Del movimiento suavizado se sacan la velocidad y el derrape del otro, para sus efectos.
+            const vx = o.rx - ax, vy = o.ry - ay, vel = Math.hypot(vx, vy);
+            let dif = Math.abs(Math.atan2(vy, vx) - o.ra) % (Math.PI * 2);
+            const enPasto = AU.pista && cercanoAu(o.rx, o.ry, o.ip).d > ANCHO_PISTA + 1;
+            o.ip = cercanoAu(o.rx, o.ry, o.ip).i;
+            let dg = (o.ra - (aa == null ? o.ra : aa)); dg = Math.atan2(Math.sin(dg), Math.cos(dg));
+            o.giro = (o.giro || 0) * 0.8 + Math.max(-1, Math.min(1, dg * 12)) * 0.2;
+            o.frena = vel < (o.vel || 0) - 0.05; o.vel = vel;
+            efectosRuedasAu(o, o.rx, o.ry, o.ra, vel, vel > 2.2 && dif > 0.35 && dif < Math.PI * 2 - 0.35, enPasto);
+        }
+        dibujarAutoAu(c, o.rx, o.ry, o.ra, colEl[0], colEl[1], o.giro || 0, o.frena);
     }
-    if (p) dibujarAutoAu(c, p.x, p.y, p.a, colYo[0], colYo[1]);
+    if (p) { const k = AU.teclas; dibujarAutoAu(c, p.x, p.y, p.a, colYo[0], colYo[1], AU.inclinar ? AU.giroTilt : (k.der ? 1 : 0) - (k.izq ? 1 : 0), !!k.freno); }
+    fx && fx.dibujar(c);
+    fx && fx.despues(c);
     // Tablero
     const cto = CIRCUITOS_AU[e.circuito || 0];
     c.fillStyle = 'rgba(20,16,30,0.6)'; c.fillRect(0, 0, W_AU, 16);
@@ -203,8 +273,15 @@ function dibujarAu(){
     if (e.fase === 'jugando' && falta > -900) {
         const prendidas = falta > 0 ? Math.min(3, 4 - Math.ceil(falta / 1000)) : 0;
         c.fillStyle = 'rgba(20,16,30,0.85)'; c.fillRect(W_AU / 2 - 44, 150, 88, 34);
-        for (let k = 0; k < 3; k++) { c.fillStyle = falta <= 0 ? '#4cd18a' : k < prendidas ? '#ff4a4a' : '#442'; c.beginPath(); c.arc(W_AU / 2 - 26 + k * 26, 167, 10, 0, Math.PI * 2); c.fill(); }
-        if (falta <= 0) { c.fillStyle = '#fff'; c.font = 'bold 22px monospace'; c.textAlign = 'center'; c.fillText('¡YA!', W_AU / 2, 210); c.textAlign = 'left'; }
+        const kk = falta > 0 ? 1 - (falta % 1000) / 1000 : Math.min(1, -falta / 300);
+        for (let k = 0; k < 3; k++) {
+            const prendida = falta <= 0 || k < prendidas, col = falta <= 0 ? '#4cd18a' : '#ff4a4a', cx = W_AU / 2 - 26 + k * 26;
+            if (prendida) { const g = c.createRadialGradient(cx, 167, 2, cx, 167, 20); g.addColorStop(0, col + 'aa'); g.addColorStop(1, col + '00'); c.fillStyle = g; c.fillRect(cx - 20, 147, 40, 40); }
+            const r = 10 * (prendida && (k === prendidas - 1 || falta <= 0) ? FxVivo.rebote(Math.min(1, kk * 3)) : 1);
+            c.fillStyle = prendida ? col : '#3a3428'; c.beginPath(); c.arc(cx, 167, r, 0, Math.PI * 2); c.fill();
+            c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.arc(cx - 3, 163, r * 0.3, 0, Math.PI * 2); c.fill();
+        }
+        if (falta <= 0) { const esc = FxVivo.rebote(kk); c.save(); c.translate(W_AU / 2, 206); c.scale(esc, esc); c.font = 'bold 24px monospace'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineWidth = 4; c.strokeStyle = '#1a1424'; c.strokeText('¡YA!', 0, 0); c.fillStyle = '#fff'; c.fillText('¡YA!', 0, 0); c.restore(); }
     } else if (AU.terminado && e.fase === 'jugando') {
         c.fillStyle = 'rgba(20,16,30,0.7)'; c.fillRect(0, 180, W_AU, 30); c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 13px monospace'; c.fillText('🏁 ¡Llegaste!', W_AU / 2, 200); c.textAlign = 'left';
     }
@@ -249,6 +326,7 @@ function arrancarAu(){
         AU.controles = VivoComun.botones([[{ k: 'izq', txt: '◀' }, { k: 'der', txt: '▶' }], [{ k: 'freno', txt: '🛑', aria: 'Frenar' }, { k: 'gas', txt: '⏩', clase: 'salto', aria: 'Acelerar' }]], AU.teclas);
     }
     if (!AU.teclado) AU.teclado = VivoComun.teclado('pantalla-autitos', { ArrowLeft: 'izq', KeyA: 'izq', ArrowRight: 'der', KeyD: 'der', ArrowUp: 'gas', KeyW: 'gas', Space: 'gas', ArrowDown: 'freno', KeyS: 'freno' }, AU.teclas);
+    AU.fx = AU.fx || FxVivo.crear();
     if (!AU.enlace) {
         AU.enlace = EnlaceVivo.conectar('autitos', {
             alMensaje(t, d) {

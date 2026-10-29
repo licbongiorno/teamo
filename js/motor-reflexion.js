@@ -80,7 +80,11 @@ function renderListaReflexion(juegoId, cartas){
         const yaRespondi = hoy && hoy.respuestas?.[miIdentidad];
         botonNuevo = `<button class="btn-principal" onclick="crearCartaReflexion('${juegoId}')">${!hoy ? '☀️ Ver la pregunta de hoy' : (yaRespondi ? '☀️ Abrir la pregunta de hoy' : '☀️ Responder la pregunta de hoy')}</button>`;
     } else if (cfg.banco && cfg.banco.length) {
-        botonNuevo = `<button class="btn-principal" onclick="crearCartaReflexion('${juegoId}')">${cfg.botonNuevo || 'Nueva ronda'}</button>`;
+        // Cuánto del mazo ya jugaron (las preguntas no se repiten hasta terminarlo).
+        const delMazo = new Set(cfg.banco.map(p => JSON.stringify(p)));
+        const jugadas = new Set(cartas.map(c => JSON.stringify(c.pregunta)).filter(k => delMazo.has(k))).size, total = cfg.banco.length;
+        const progreso = jugadas ? `<div class="progreso-orden"><div style="width:${Math.min(100, Math.round(jugadas * 100 / total))}%"></div></div><div class="texto-tenue" style="font-size:0.78rem; margin-bottom:10px;">Jugaron ${jugadas} de ${total} preguntas</div>` : '';
+        botonNuevo = progreso + `<button class="btn-principal" onclick="crearCartaReflexion('${juegoId}')">${cfg.botonNuevo || 'Nueva ronda'}</button>`;
     }
     let html = `<div class="panel texto-centro">
         <p class="texto-tenue">${cfg.instrucciones}</p>
@@ -185,7 +189,11 @@ async function crearCartaReflexion(juegoId){
         abrirCartaReflexion(juegoId, docRef.id);
         return;
     }
-    const pregunta = cfg.banco[Math.floor(Math.random() * cfg.banco.length)];
+    // Al azar, pero sin repetir hasta que salgan todas las del mazo.
+    const usadas = new Set((window['_reflexionCartas_' + juegoId] || []).map(c => JSON.stringify(c.pregunta)));
+    const libres = cfg.banco.filter(p => !usadas.has(JSON.stringify(p)));
+    const mazo = libres.length ? libres : cfg.banco;
+    const pregunta = mazo[Math.floor(Math.random() * mazo.length)];
     const docRef = await window.addDoc(_colReflexion(), {
         tipo: 'reflexion-' + juegoId, pregunta, creadaEn: Date.now(), fase: 'respondiendo',
         respuestas: { nico: null, carito: null }, sorteo: null
@@ -285,9 +293,10 @@ function renderCartaReflexion(juegoId, c){
             ${Object.keys(textos).map(k => `<button class="btn-secundario" onclick="calificarMapaReflexion('${juegoId}','${k}')">${textos[k]}</button>`).join('')}</div></div>`;
         else html += `<div class="panel texto-centro texto-tenue">${nombreJugador(c.sobre)} está viendo si acertaste…</div>`;
     } else if (c.fase === 'revelado') {
-        html += `<div class="panel reflexion-reveal">
-            <span class="texto-tenue" style="font-size:0.75rem;">Nico:</span><p style="margin:4px 0 12px;">${_escaparHtmlReflexion(c.respuestas.nico)}</p>
-            <span class="texto-tenue" style="font-size:0.75rem;">Carito:</span><p style="margin:4px 0;">${_escaparHtmlReflexion(c.respuestas.carito)}</p>
+        // Las dos respuestas como burbujas, cada una con su color, una después de la otra.
+        const coincide = cfg.tipo === 'opciones' && c.respuestas.nico === c.respuestas.carito;
+        html += `<div class="panel reflexion-reveal respuestas-burbujas${coincide ? ' coinciden' : ''}">
+            ${['nico', 'carito'].map((q, i) => `<div class="burbuja-resp de-${q}" style="--i:${i}"><b>${nombreJugador(q)}</b><p>${_escaparHtmlReflexion(c.respuestas[q])}</p></div>`).join('')}
         </div>`;
         if (cfg.tipo === 'opciones') {
             const coincide = c.respuestas.nico === c.respuestas.carito;
@@ -302,6 +311,7 @@ function renderCartaReflexion(juegoId, c){
         } else if (cfg.mensajePostRevelado) {
             html += `<div class="panel texto-centro texto-tenue">${cfg.mensajePostRevelado}</div>`;
         }
+        if (window.generarTarjetaImagen) html += `<div class="texto-centro" style="margin:-4px 0 12px;"><button class="btn-secundario" style="width:auto; padding:8px 16px;" onclick="tarjetaReflexion('${juegoId}')">📸 Guardar como tarjeta</button></div>`;
         if (cfg.compartirWhatsApp && cfg.numerosWhatsApp) {
             html += `<div class="panel texto-centro">
                 <button class="btn-secundario" style="display:flex; align-items:center; justify-content:center; gap:8px;" onclick="compartirReflexionWhatsApp('${juegoId}', miRival)">
@@ -313,6 +323,21 @@ function renderCartaReflexion(juegoId, c){
     }
     cont.innerHTML = html;
 }
+
+// La ronda revelada como imagen (para guardarla o mandarla).
+function tarjetaReflexion(juegoId){
+    const c = window['_reflexionCartaActual_' + juegoId], j = (window.JUEGOS || []).find(x => x.id === juegoId);
+    if (!c || !c.respuestas) return;
+    const pregunta = _textoConsignaReflexion(typeof c.pregunta === 'string' ? c.pregunta : (c.pregunta.texto || ''));
+    if (window.sfx) window.sfx.click();
+    window.generarTarjetaImagen({
+        titulo: pregunta,
+        respuestas: ['nico', 'carito'].map(q => ({ quien: nombreJugador(q), texto: String(c.respuestas[q] || ''), color: q === 'nico' ? '#a8d8ff' : '#ffb3c6' })),
+        pie: `${j ? j.icono + ' ' + j.nombre : 'Nuestros Juegos'} · ${new Date().toLocaleDateString('es-AR')}`,
+        nombreArchivo: `${juegoId}-${c.id || 'ronda'}`,
+    });
+}
+window.tarjetaReflexion = tarjetaReflexion;
 
 // Números para los botones de WhatsApp de todos los juegos de este
 // motor (los mismos que usan js/inicio/preguntas.js y el ticket).

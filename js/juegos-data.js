@@ -164,6 +164,8 @@ window.JUEGOS = [
     { id:'pescar', nombre:'¿Tenés…?', icono:'🎣', categoria:'clasicos', disponible:true, nuevo:true, descripcion:'Pedile cartas al otro o ¡pescá! Juntá las cuatro de cada número para armar juegos.' },
     // ---- EN VIVO, EN EL MISMO NIVEL ----
     { id:'aventura', nombre:'Aventura de a Dos', icono:'🍄', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Un plataformas como los de antes, de a dos y en vivo: saltá, subite a la cabeza del otro y lleguen juntos a la bandera.' },
+    { id:'hockey', nombre:'Hockey de Aire', icono:'🏒', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La mesa del bar en el celu: mové tu mazo con el dedo y meté el disco. Primero a 7.' },
+    { id:'motos', nombre:'Motos de Luz', icono:'🏍️', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Tu moto deja una estela de luz: encerrá al otro y no choques. Al mejor de 5.' },
     // ---- CREATIVOS Y EN PERSONA ----
     { id:'historia', nombre:'Historia a Dos Voces', icono:'📖', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Escriban un cuento entre los dos, una frase cada uno, con palabras sorpresa.' },
     { id:'emojipelis', nombre:'Pelis en Emojis', icono:'🎬', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Contá una peli, serie o canción sólo con emojis. ¿La adivina?' },

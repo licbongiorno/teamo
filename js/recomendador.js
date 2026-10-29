@@ -68,15 +68,10 @@
         const extras = (window.JUEGOS || []).filter(x => x.disponible && existe(x.id) && !c.some(y => y.id === x.id));
         const alt = [...resto.map(x => x.id)];
         while (alt.length < 2 && extras.length) alt.push(extras.splice(Math.floor(semillaAlt * extras.length) % extras.length, 1)[0].id);
-        const icono = (x) => x.iconoSvg ? `<svg class="icono-svg"><use href="#${x.iconoSvg}"></use></svg>` : x.icono;
-        cont.innerHTML = `<div class="tarjeta-juego-cat disponible destacado" onclick="abrirJuego('${j.id}')">
-                <div class="icono-juego">${icono(j)}</div>
-                <div class="info-juego"><h3>${j.nombre}</h3><p>${j.descripcion}</p></div>
-                <span class="badge-disponible">Jugar</span>
-            </div>
+        cont.innerHTML = `${window.tarjetaJuegoHTML(j, { destacado: true })}
             <div class="motivo-sugerencia">${p.por}</div>
             <div class="alternativas-sugerencia"><span>O si no:</span>${alt.slice(0, 2).map(id => { const x = info(id); return `<button onclick="abrirJuego('${id}')">${x.icono} ${x.nombre}</button>`; }).join('')}
-                <button title="Otras ideas" onclick="otraSugerencia()">🔄</button></div>`;
+                <button title="Otras ideas" onclick="otraSugerencia()">🔄</button><button title="Uno al azar" onclick="jugarAlAzar()">🎲 Al azar</button></div>`;
     }
 
     function escucharTermometro() {
@@ -106,8 +101,9 @@
         render();
         let n = 0;
         if (!escucharTermometro()) { const t = setInterval(() => { if (escucharTermometro() || ++n > 60) clearInterval(t); }, 500); }
-        // La presencia cambia sola: se revisa cada tanto si hay que actualizar.
-        setInterval(() => { if (document.getElementById('pantalla-menu')?.classList.contains('activa')) render(); }, 15000);
+        // Al volver al menú se actualiza; la presencia cambia sola, así que también se revisa cada tanto.
+        document.addEventListener('juego-cerrado', () => setTimeout(render, 30));
+        setInterval(() => { if (!document.hidden && document.getElementById('pantalla-menu')?.classList.contains('activa')) render(); }, 60000);
     }
 
     window.otraSugerencia = () => { semillaAlt = Math.random(); if (window.sfx) window.sfx.click(); render(); };

@@ -12,12 +12,14 @@
 // iconoSvg: id de <symbol> en js/icon-sprite.js (ver renderMenuPrincipal
 // en navegacion.js y categorias/*.html, que arman el <svg><use> con esto).
 window.CATEGORIAS = [
-    { id: 'clasicos',     nombre: 'Clásicos',     icono: '🃏', iconoSvg: 'icono-cartas',    color: '#a8d8ff' },
-    { id: 'competencia',  nombre: 'Competencia',  icono: '⚡', iconoSvg: 'icono-rayo',      color: '#ffb3c6' },
-    { id: 'conexion',     nombre: 'Conexión',     icono: '💬', iconoSvg: 'icono-chat',      color: '#c9b6ff' },
-    { id: 'reflexion',    nombre: 'Reflexión',    icono: '🌙', iconoSvg: 'icono-luna',      color: '#a8edea' },
-    { id: 'cuidado',          nombre: 'Cuidado Compartido', icono: '🌱', iconoSvg: 'icono-brote',    color: '#b8e8c9' },
-    { id: 'cooperativosvivo', nombre: 'Cooperativos en Vivo', icono: '🤝', iconoSvg: 'icono-personas', color: '#f5d9a0' },
+    { id: 'duelos',       nombre: 'Duelos en Vivo', icono: '🎮', iconoSvg: 'icono-gamepad', color: '#ff9fb8', desc: 'Uno contra el otro y en vivo: fútbol, hockey, motos, autitos, tanques y más.' },
+    { id: 'rapidos',      nombre: 'Rápidos',      icono: '⏱️', iconoSvg: 'icono-reloj',     color: '#ffd59a', desc: 'Rondas cortitas de reflejos y puntería: se juegan en un minuto.' },
+    { id: 'clasicos',     nombre: 'Clásicos',     icono: '🃏', iconoSvg: 'icono-cartas',    color: '#a8d8ff', desc: 'Los juegos de mesa de toda la vida, para jugar en vivo entre los dos.' },
+    { id: 'competencia',  nombre: 'Ingenio y Palabras', icono: '🧠', iconoSvg: 'icono-rayo-pregunta', color: '#ffb3c6', desc: 'Palabras, números, memoria y picardía: a ver quién piensa más rápido.' },
+    { id: 'cooperativosvivo', nombre: 'Cooperativos en Vivo', icono: '🤝', iconoSvg: 'icono-personas', color: '#f5d9a0', desc: 'Cooperan en el momento: se entienden mejor si los dos están conectados a la vez.' },
+    { id: 'conexion',     nombre: 'Conexión',     icono: '💬', iconoSvg: 'icono-chat',      color: '#c9b6ff', desc: 'Para conocerse mejor, preguntarse cosas y comparar qué tanto coinciden.' },
+    { id: 'reflexion',    nombre: 'Reflexión',    icono: '🌙', iconoSvg: 'icono-luna',      color: '#a8edea', desc: 'Preguntas más profundas, para pensar y compartir lo que sienten.' },
+    { id: 'cuidado',          nombre: 'Cuidado Compartido', icono: '🌱', iconoSvg: 'icono-brote',    color: '#b8e8c9', desc: 'Algo que van armando o cuidando de a poco, sin apuro: no hace falta estar los dos a la vez.' },
 ];
 
 window.JUEGOS = [
@@ -41,9 +43,9 @@ window.JUEGOS = [
     { id:'batallanaval', nombre:'Batalla Naval',      icono:'🚢', iconoSvg:'icono-barco', categoria:'clasicos',    disponible:true, descripcion:'Ubicá tu flota y hundí la del otro por turnos.' },
 
     // ---- COMPETENCIA ----
-    { id:'frutas',     nombre:'Atrapar Frutas',       icono:'🍓', iconoSvg:'icono-manzana', categoria:'competencia', disponible:true,  descripcion:'30 segundos atrapando frutas. Se compara el mejor puntaje.' },
-    { id:'reflejos',   nombre:'Duelo de Reflejos',    icono:'💥', iconoSvg:'icono-rayo', categoria:'competencia', disponible:true, descripcion:'Esperá la señal y tocá lo más rápido posible.' },
-    { id:'tiraafloja', nombre:'Tira y Afloja',        icono:'❤️', iconoSvg:'icono-soga', categoria:'competencia', disponible:true, descripcion:'Toques rápidos para llevar el corazón a tu lado.' },
+    { id:'frutas',     nombre:'Atrapar Frutas',       icono:'🍓', iconoSvg:'icono-manzana', categoria:'rapidos', disponible:true,  descripcion:'30 segundos atrapando frutas. Se compara el mejor puntaje.' },
+    { id:'reflejos',   nombre:'Duelo de Reflejos',    icono:'💥', iconoSvg:'icono-rayo', categoria:'rapidos', disponible:true, descripcion:'Esperá la señal y tocá lo más rápido posible.' },
+    { id:'tiraafloja', nombre:'Tira y Afloja',        icono:'❤️', iconoSvg:'icono-soga', categoria:'rapidos', disponible:true, descripcion:'Toques rápidos para llevar el corazón a tu lado.' },
     { id:'palabraexplosiva', nombre:'Palabra Explosiva', icono:'💣', iconoSvg:'icono-bomba', categoria:'competencia', disponible:true, descripcion:'Una letra, una categoría, 30 segundos para anotar palabras.' },
     { id:'memoria',    nombre:'Memoria de Emojis',    icono:'🧠', iconoSvg:'icono-mosaico', categoria:'competencia', disponible:true, descripcion:'Memorizá la secuencia antes de que desaparezca.' },
     { id:'adivinaquien', nombre:'Adivina Quién',      icono:'❓', iconoSvg:'icono-rostro-interrogante', categoria:'competencia', disponible:true, descripcion:'Personaje secreto en emojis: preguntá y arriesgá.' },
@@ -87,7 +89,7 @@ window.JUEGOS = [
     { id:'puntoencuentro', nombre:'Punto de Encuentro', icono:'📍', iconoSvg:'icono-pin-mapa', categoria:'cuidado', disponible:true, descripcion:'La línea de tiempo viva de todo lo que construyeron acá.' },
     { id:'dibujayadivina', nombre:'Dibuja y Adivina',  icono:'🎨', iconoSvg:'icono-paleta', categoria:'cooperativosvivo', disponible:true, descripcion:'Uno dibuja con el dedo, el otro adivina la palabra.' },
     { id:'menumisterioso', nombre:'Menú Misterioso',  icono:'🍳', iconoSvg:'icono-olla', categoria:'cooperativosvivo', disponible:true, descripcion:'3 ingredientes al azar para cada uno: inventen un plato imaginario y revélenlo a la vez.' },
-    { id:'semaforo',       nombre:'El Semáforo',       icono:'🚦', iconoSvg:'icono-semaforo', categoria:'competencia', disponible:true, descripcion:'5 semáforos: esperen el verde y toquen. Al final vemos qué tan sincronizados están sus reflejos.' },
+    { id:'semaforo',       nombre:'El Semáforo',       icono:'🚦', iconoSvg:'icono-semaforo', categoria:'rapidos', disponible:true, descripcion:'5 semáforos: esperen el verde y toquen. Al final vemos qué tan sincronizados están sus reflejos.' },
     { id:'cartas',     nombre:'Carta para abrir después', icono:'💌', iconoSvg:'icono-sobre', categoria:'cuidado', disponible:true, descripcion:'Escribí una carta que se abre recién en la fecha que elijas.' },
     { id:'capsula',    nombre:'Cápsula del Tiempo',    icono:'📦', iconoSvg:'icono-capsula', categoria:'cuidado', disponible:true, descripcion:'Vayan agregando notas y predicciones a una cápsula que se abre sola en la fecha que elijan.' },
     { id:'mapa',       nombre:'Mapa de Nuestros Lugares', icono:'🗺️', iconoSvg:'icono-mapa-doblado', categoria:'cuidado', disponible:true, descripcion:'Guarden lugares importantes: recuerdos, lugares para visitar y sitios clave.' },
@@ -100,32 +102,32 @@ window.JUEGOS = [
     { id:'sudoku',     nombre:'Sudoku de a Dos',       icono:'🧩', iconoSvg:'icono-sudoku', categoria:'cooperativosvivo', disponible:true, descripcion:'Sudoku colaborativo: los dos completan celdas a la vez, sin esperar turnos.' },
     { id:'uno',        nombre:'UNO',                   icono:'🎴', iconoSvg:'icono-piezas-uno', categoria:'clasicos',    disponible:true, descripcion:'El clásico juego de cartas, de a dos.' },
     { id:'chinchon',   nombre:'Chinchón',               icono:'🃑', iconoSvg:'icono-baraja-espanola', categoria:'clasicos',    disponible:true, descripcion:'El clásico juego de cartas español: armá grupos y escaleras para cerrar la mano.' },
-    { id:'burbujas',   nombre:'Rompe Burbujas',        icono:'🫧', iconoSvg:'icono-burbujas', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: tocá las burbujas, evitá los pinches. Gana quien tenga más puntos en 30 segundos.' },
-    { id:'bombas',     nombre:'Esquivá las Bombas',    icono:'💣', iconoSvg:'icono-bomba', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: atrapá corazones, evitá las bombas.' },
-    { id:'pinatas',    nombre:'Derribá Piñatas',       icono:'🎯', iconoSvg:'icono-pinata', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: tocá las piñatas antes de que se vayan. Los combos multiplican los puntos.' },
-    { id:'carreraglobos', nombre:'Carrera de Globos',  icono:'🎈', iconoSvg:'icono-globo-carrera', categoria:'competencia', disponible:true, descripcion:'Tocá lo más rápido posible para inflar tu globo. El primero en llegar a la meta gana.' },
-    { id:'ritmo',      nombre:'Ritmo a Dúo',           icono:'🥁', iconoSvg:'icono-tambor', categoria:'competencia', disponible:true, descripcion:'Tocá al compás de un pulso que se repite. Gana quien tenga mejor puntería.' },
-    { id:'bloques',    nombre:'Batalla de Bloques',    icono:'🧱', iconoSvg:'icono-bloques-tetris', categoria:'competencia', disponible:true, descripcion:'Tipo Tetris de a dos: cada uno en su propia grilla, mandándose líneas de basura entre sí.' },
+    { id:'burbujas',   nombre:'Rompe Burbujas',        icono:'🫧', iconoSvg:'icono-burbujas', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: tocá las burbujas, evitá los pinches. Gana quien tenga más puntos en 30 segundos.' },
+    { id:'bombas',     nombre:'Esquivá las Bombas',    icono:'💣', iconoSvg:'icono-bomba', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: atrapá corazones, evitá las bombas.' },
+    { id:'pinatas',    nombre:'Derribá Piñatas',       icono:'🎯', iconoSvg:'icono-pinata', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: tocá las piñatas antes de que se vayan. Los combos multiplican los puntos.' },
+    { id:'carreraglobos', nombre:'Carrera de Globos',  icono:'🎈', iconoSvg:'icono-globo-carrera', categoria:'rapidos', disponible:true, descripcion:'Tocá lo más rápido posible para inflar tu globo. El primero en llegar a la meta gana.' },
+    { id:'ritmo',      nombre:'Ritmo a Dúo',           icono:'🥁', iconoSvg:'icono-tambor', categoria:'rapidos', disponible:true, descripcion:'Tocá al compás de un pulso que se repite. Gana quien tenga mejor puntería.' },
+    { id:'bloques',    nombre:'Batalla de Bloques',    icono:'🧱', iconoSvg:'icono-bloques-tetris', categoria:'rapidos', disponible:true, descripcion:'Tipo Tetris de a dos: cada uno en su propia grilla, mandándose líneas de basura entre sí.' },
     { id:'cocodrilos', nombre:'Martillo de Cocodrilos', icono:'🐊', iconoSvg:'icono-cocodrilo', categoria:'cooperativosvivo', disponible:true, descripcion:'Cooperativo en vivo: los dos martillan el mismo tablero. ¿Llegan a la meta juntos?' },
     { id:'pesca',      nombre:'Pesca Cooperativa',     icono:'🎣', iconoSvg:'icono-anzuelo', categoria:'cooperativosvivo', disponible:true, descripcion:'Cooperativo en vivo: entre los dos, pesquen los peces que cruzan la pantalla.' },
     { id:'ladrillos',  nombre:'Rompe Ladrillos a Dúo', icono:'🧱', iconoSvg:'icono-ladrillos', categoria:'cooperativosvivo', disponible:true, descripcion:'Cooperativo: una pared compartida, ¿cuánto tardan los dos en dejarla limpia?' },
 
     // ---- DUELOS EN TIEMPO REAL (tanda 1) ----
-    { id:'calculo',    nombre:'Cálculo Mental Rayo',   icono:'🧮', iconoSvg:'icono-calculadora', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: la misma cuenta para los dos, el primero en tocar la respuesta correcta suma el punto.' },
-    { id:'stroop',     nombre:'Stroop a Dos',          icono:'🎨', iconoSvg:'icono-gotas-color', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: tocá el color de la tinta, no el que dice la palabra. Más difícil de lo que parece.' },
-    { id:'anagramas',  nombre:'Carrera de Anagramas',  icono:'🔤', iconoSvg:'icono-letras-caoticas', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: letras desordenadas, el primero en escribir la palabra correcta gana la ronda.' },
-    { id:'tipeo',      nombre:'Tipeo Relámpago',       icono:'⌨️', iconoSvg:'icono-teclado', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: la misma frase para los dos, el primero en escribirla igual suma el punto.' },
+    { id:'calculo',    nombre:'Cálculo Mental Rayo',   icono:'🧮', iconoSvg:'icono-calculadora', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: la misma cuenta para los dos, el primero en tocar la respuesta correcta suma el punto.' },
+    { id:'stroop',     nombre:'Stroop a Dos',          icono:'🎨', iconoSvg:'icono-gotas-color', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: tocá el color de la tinta, no el que dice la palabra. Más difícil de lo que parece.' },
+    { id:'anagramas',  nombre:'Carrera de Anagramas',  icono:'🔤', iconoSvg:'icono-letras-caoticas', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: letras desordenadas, el primero en escribir la palabra correcta gana la ronda.' },
+    { id:'tipeo',      nombre:'Tipeo Relámpago',       icono:'⌨️', iconoSvg:'icono-teclado', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: la misma frase para los dos, el primero en escribirla igual suma el punto.' },
 
     // ---- DUELOS EN TIEMPO REAL (tanda 2) ----
-    { id:'topo',        nombre:'Topo Veloz',           icono:'🐹', iconoSvg:'icono-topo', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: el topo aparece en un pozo al azar, tocalo antes de que se esconda.' },
-    { id:'blancomovil', nombre:'Blanco Móvil',         icono:'🎯', iconoSvg:'icono-diana', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: un anillo se cierra sobre el blanco, tocalo lo más cerca posible del centro.' },
-    { id:'buscaminas',  nombre:'Buscaminas Relámpago', icono:'💣', iconoSvg:'icono-mina', categoria:'competencia', disponible:true, descripcion:'Mismo tablero para los dos: el primero que pisa una mina pierde la ronda.' },
+    { id:'topo',        nombre:'Topo Veloz',           icono:'🐹', iconoSvg:'icono-topo', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: el topo aparece en un pozo al azar, tocalo antes de que se esconda.' },
+    { id:'blancomovil', nombre:'Blanco Móvil',         icono:'🎯', iconoSvg:'icono-diana', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: un anillo se cierra sobre el blanco, tocalo lo más cerca posible del centro.' },
+    { id:'buscaminas',  nombre:'Buscaminas Relámpago', icono:'💣', iconoSvg:'icono-mina', categoria:'rapidos', disponible:true, descripcion:'Mismo tablero para los dos: el primero que pisa una mina pierde la ronda.' },
 
     // ---- DUELOS EN TIEMPO REAL (tanda 3) ----
-    { id:'ppt',              nombre:'Piedra, Papel o Tijera', icono:'✊', iconoSvg:'icono-puno', categoria:'competencia', disponible:true, descripcion:'El clásico de toda la vida, pero llevando la cuenta. Mejor de 5.' },
-    { id:'trivia',           nombre:'Trivia Relámpago',       icono:'🧠', iconoSvg:'icono-rayo-pregunta', categoria:'competencia', disponible:true, descripcion:'Duelo en vivo: la misma pregunta para los dos, el primero en acertar suma el punto.' },
-    { id:'simon',            nombre:'Simón Dice a Dos',       icono:'🔴', iconoSvg:'icono-cuatro-colores', categoria:'competencia', disponible:true, descripcion:'Miren la secuencia de colores y repitanla cada uno en su pantalla. Crece un color por nivel.' },
-    { id:'memoriarelampago', nombre:'Memoria Relámpago',      icono:'🍓', iconoSvg:'icono-cartas-rayo', categoria:'competencia', disponible:true, descripcion:'Un mismo mazo para los dos: el que arma una pareja se la lleva. Gana quien junte más.' },
+    { id:'ppt',              nombre:'Piedra, Papel o Tijera', icono:'✊', iconoSvg:'icono-puno', categoria:'rapidos', disponible:true, descripcion:'El clásico de toda la vida, pero llevando la cuenta. Mejor de 5.' },
+    { id:'trivia',           nombre:'Trivia Relámpago',       icono:'🧠', iconoSvg:'icono-rayo-pregunta', categoria:'rapidos', disponible:true, descripcion:'Duelo en vivo: la misma pregunta para los dos, el primero en acertar suma el punto.' },
+    { id:'simon',            nombre:'Simón Dice a Dos',       icono:'🔴', iconoSvg:'icono-cuatro-colores', categoria:'rapidos', disponible:true, descripcion:'Miren la secuencia de colores y repitanla cada uno en su pantalla. Crece un color por nivel.' },
+    { id:'memoriarelampago', nombre:'Memoria Relámpago',      icono:'🍓', iconoSvg:'icono-cartas-rayo', categoria:'rapidos', disponible:true, descripcion:'Un mismo mazo para los dos: el que arma una pareja se la lleva. Gana quien junte más.' },
     // ---- JUEGOS DE PREGUNTAS (fase 2) ----
     { id:'queprefieres', nombre:'¿Qué Preferís?', icono:'🤔', iconoSvg:'icono-balanza', categoria:'conexion', disponible:true, descripcion:'Dos opciones, cada uno elige a solas. Lleva la cuenta de cuántas veces coinciden.' },
     { id:'masprobable', nombre:'¿Quién es más probable que…?', icono:'👉', iconoSvg:'icono-pregunta', categoria:'conexion', disponible:true, descripcion:'Voten a solas quién de los dos haría cada cosa. ¿Piensan lo mismo?' },
@@ -167,19 +169,19 @@ window.JUEGOS = [
     { id:'pongcoop', nombre:'Rompeladrillos de a Dos', icono:'🧱', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Una paleta para cada uno y los ladrillos arriba. 3 vidas compartidas, 5 niveles y mejoras.' },
     { id:'pescavivo', nombre:'Pesca en Vivo', icono:'🎣', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Un lago para los dos: tiren la caña, saquen peces sin que se corte la línea y superen su récord.' },
     { id:'fuegoagua', nombre:'Fuego y Agua', icono:'🔥', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Puzzles de plataformas en vivo: Nico es fuego, Carito es agua. Placas, palancas y cajas para que lleguen los dos.' },
-    { id:'hockey', nombre:'Hockey de Aire', icono:'🏒', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La mesa del bar en el celu: mové tu mazo con el dedo y meté el disco. Primero a 7.' },
-    { id:'motos', nombre:'Motos de Luz', icono:'🏍️', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Tu moto deja una estela de luz: encerrá al otro y no choques. Al mejor de 5.' },
-    { id:'autitos', nombre:'Carrera de Autitos', icono:'🏎️', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Carreras vistas de arriba, en vivo: 3 vueltas, semáforo de largada y 4 circuitos. Con botones o inclinando el celu.' },
-    { id:'voley', nombre:'Vóley de Playa', icono:'🏐', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Dos gotitas, una red y la pelota en el aire, en vivo. A 11 con 2 de diferencia.' },
-    { id:'snake2', nombre:'Viborita de a Dos', icono:'🐍', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Las dos víboras en la misma grilla, en vivo: comé las manzanas antes que el otro. 2 minutos, gana la más larga.' },
+    { id:'hockey', nombre:'Hockey de Aire', icono:'🏒', categoria:'duelos', disponible:true, nuevo:true, descripcion:'La mesa del bar en el celu: mové tu mazo con el dedo y meté el disco. Primero a 7.' },
+    { id:'motos', nombre:'Motos de Luz', icono:'🏍️', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Tu moto deja una estela de luz: encerrá al otro y no choques. Al mejor de 5.' },
+    { id:'autitos', nombre:'Carrera de Autitos', icono:'🏎️', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Carreras vistas de arriba, en vivo: 3 vueltas, semáforo de largada y 4 circuitos. Con botones o inclinando el celu.' },
+    { id:'voley', nombre:'Vóley de Playa', icono:'🏐', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Dos gotitas, una red y la pelota en el aire, en vivo. A 11 con 2 de diferencia.' },
+    { id:'snake2', nombre:'Viborita de a Dos', icono:'🐍', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Las dos víboras en la misma grilla, en vivo: comé las manzanas antes que el otro. 2 minutos, gana la más larga.' },
     { id:'multiverso', nombre:'Multiverso Arcade', icono:'🌌', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Cuatro minijuegos espaciales para dos en la misma pantalla: aliens, asteroides, carrera unidos por un rayo y defensa de un planeta. Power-ups compartidos y ranking de parejas.' },
-    { id:'astrofutbol', nombre:'Astro Fútbol', icono:'⚽', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Duelo de naves en la misma pantalla: empujá la pelota de plasma al arco del otro. Supertiro, power-ups y modo contra la compu.' },
-    { id:'futbolcabezas', nombre:'Fútbol de Cabezas', icono:'⚽', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Dos cabezones, una pelota y dos arcos, en vivo: corré, saltá, cabeceá y pateá. A 5 goles o 2 minutos.' },
-    { id:'pingpongvivo', nombre:'Ping-Pong en Vivo', icono:'🏓', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La mesa desde arriba, en vivo: mové la paleta con el dedo y meté efecto. A 11 con 2 de diferencia.' },
-    { id:'natacion', nombre:'Carrera de Natación', icono:'🏊', categoria:'competencia', disponible:true, nuevo:true, descripcion:'50 m ida y vuelta, en vivo: brazadas alternadas con ritmo y la vuelta justo en la pared.' },
-    { id:'tanques', nombre:'Tanques', icono:'🎯', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Un laberinto, dos tanques y balas que rebotan, en vivo. ¡Cuidado con las tuyas! Al mejor de 5.' },
-    { id:'obstaculos', nombre:'Carrera de Obstáculos', icono:'🏃', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Estilo Fall Guys, de costado y en vivo: martillos, plataformas que se caen y puertas falsas. Cada pista es distinta.' },
-    { id:'bombitas', nombre:'Bombitas', icono:'💣', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Laberinto, bombas y mejoras escondidas, en vivo. Encerrá al otro sin volarte vos.' },
+    { id:'astrofutbol', nombre:'Astro Fútbol', icono:'⚽', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Duelo de naves en la misma pantalla: empujá la pelota de plasma al arco del otro. Supertiro, power-ups y modo contra la compu.' },
+    { id:'futbolcabezas', nombre:'Fútbol de Cabezas', icono:'⚽', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Dos cabezones, una pelota y dos arcos, en vivo: corré, saltá, cabeceá y pateá. A 5 goles o 2 minutos.' },
+    { id:'pingpongvivo', nombre:'Ping-Pong en Vivo', icono:'🏓', categoria:'duelos', disponible:true, nuevo:true, descripcion:'La mesa desde arriba, en vivo: mové la paleta con el dedo y meté efecto. A 11 con 2 de diferencia.' },
+    { id:'natacion', nombre:'Carrera de Natación', icono:'🏊', categoria:'duelos', disponible:true, nuevo:true, descripcion:'50 m ida y vuelta, en vivo: brazadas alternadas con ritmo y la vuelta justo en la pared.' },
+    { id:'tanques', nombre:'Tanques', icono:'🎯', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Un laberinto, dos tanques y balas que rebotan, en vivo. ¡Cuidado con las tuyas! Al mejor de 5.' },
+    { id:'obstaculos', nombre:'Carrera de Obstáculos', icono:'🏃', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Estilo Fall Guys, de costado y en vivo: martillos, plataformas que se caen y puertas falsas. Cada pista es distinta.' },
+    { id:'bombitas', nombre:'Bombitas', icono:'💣', categoria:'duelos', disponible:true, nuevo:true, descripcion:'Laberinto, bombas y mejoras escondidas, en vivo. Encerrá al otro sin volarte vos.' },
     // ---- CREATIVOS Y EN PERSONA ----
     { id:'historia', nombre:'Historia a Dos Voces', icono:'📖', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Escriban un cuento entre los dos, una frase cada uno, con palabras sorpresa.' },
     { id:'emojipelis', nombre:'Pelis en Emojis', icono:'🎬', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Contá una peli, serie o canción sólo con emojis. ¿La adivina?' },
@@ -202,3 +204,58 @@ window.obtenerJuegosDeCategoria = function(categoriaId){
 window.obtenerCategoria = function(categoriaId){
     return window.CATEGORIAS.find(c => c.id === categoriaId);
 };
+
+// ---------- Etiquetas de cada juego ----------
+// Una sola fuente para los filtros rápidos, las tarjetas y el recomendador
+// (antes cada archivo tenía su propia lista de ids).
+(function(){
+    const L = (t) => t.split(' ');
+    const FIJAS = {
+        vivo: L('futbolcabezas pingpongvivo natacion aventura fuegoagua autitos voley snake2 pongcoop tanques pescavivo obstaculos hockey motos bombitas cocina cifras sopa tabu reflejos tuttifrutti palabras dibujayadivina mente rosco palabradia multiverso astrofutbol truco uno onda codigo generala'),
+        mismaPantalla: L('multiverso astrofutbol'),
+        equipo: L('aventura laberinto cocina faros mente codigo onda emojipelis tabu historia exquisito pesca escaperoom sudoku multiverso'),
+        corto: L('natacion futbolcabezas obstaculos fosforos chancho tateti ppt reflejos calculo trivia sopa palabradia cifras hockey motos mastermind astrofutbol'),
+        // Los que tienen el botón 🤖 (js/compu.js: CEREBROS + CON_CEREBRO_DIFERIDO, más los que traen su propia compu).
+        compu: L('truco escoba chinchon uno ajedrez damas conecta4 tateti reversi generala mentiroso gomoku mancala serpientes parchis domino backgammon guerra blackjack poker damaschinas quoridor cifras mastermind hex fosforos chancho sieteymedio pescar voley hockey pongcoop snake2 futbolcabezas pingpongvivo natacion trivia astrofutbol multiverso'),
+    };
+    const POR_CATEGORIA = { duelos: ['vivo'], rapidos: ['vivo', 'corto'], cooperativosvivo: ['equipo'], clasicos: ['turnos'], reflexion: ['charla'], conexion: ['charla'] };
+    const cache = {};
+    window.etiquetasJuego = function(id){
+        if (cache[id]) return cache[id];
+        const j = window.JUEGOS.find(x => x.id === id), t = new Set(POR_CATEGORIA[j && j.categoria] || []);
+        Object.entries(FIJAS).forEach(([k, ids]) => { if (ids.includes(id)) t.add(k); });
+        return (cache[id] = t);
+    };
+    window.ETIQUETAS_JUEGO = {
+        vivo: { t: '⚡ En vivo', corto: '⚡' }, compu: { t: '🤖 Contra la compu', corto: '🤖' }, mismaPantalla: { t: '📱 Misma pantalla', corto: '📱' },
+        equipo: { t: '🤝 En equipo', corto: '🤝' }, corto: { t: '⏱️ Cortitos', corto: '⏱️' }, turnos: { t: '🎲 Por turnos', corto: '🎲' }, charla: { t: '💬 Para charlar', corto: '💬' },
+    };
+    window.juegosConEtiqueta = (k) => window.JUEGOS.filter(j => j.disponible && window.etiquetasJuego(j.id).has(k));
+
+    // Cuándo lo abrieron por última vez en este celu (lo anota js/recomendador.js).
+    window.juegosAbiertosEn = function(){ try { return JSON.parse(localStorage.getItem('juegosAbiertosEn') || '{}'); } catch (e) { return {}; } };
+    const hace = (ts) => {
+        const d = Math.floor((Date.now() - ts) / 86400000);
+        return d <= 0 ? 'hoy' : d === 1 ? 'ayer' : d < 30 ? `hace ${d} días` : d < 60 ? 'hace un mes' : `hace ${Math.floor(d / 30)} meses`;
+    };
+    // El sello ✨ Nuevo sólo para lo último que se sumó (y hasta que lo abran):
+    // "nuevo:true" lo tienen muchos y lo usa el recomendador, pero en todas las tarjetas se pierde.
+    window.NOVEDADES_JUEGOS = L('astrofutbol multiverso futbolcabezas pingpongvivo natacion tanques pescavivo obstaculos');
+    const icono = (j) => j.iconoSvg ? `<svg class="icono-svg"><use href="#${j.iconoSvg}"></use></svg>` : j.icono;
+    // La tarjeta de un juego, igual en el menú, el buscador, el recomendador y las categorías.
+    //   opciones: { href, destacado, sinEtiquetas }
+    window.tarjetaJuegoHTML = function(j, o = {}){
+        if (!j) return '';
+        const ab = window.juegosAbiertosEn()[j.id], tags = window.etiquetasJuego(j.id);
+        const etiquetas = o.sinEtiquetas ? '' : ['compu', 'mismaPantalla', 'vivo', 'equipo'].filter(k => tags.has(k)).slice(0, 3).map(k => `<span>${window.ETIQUETAS_JUEGO[k].t}</span>`).join('')
+            + (ab ? `<span class="tenue">🕘 ${hace(ab)}</span>` : '');
+        const nuevo = window.NOVEDADES_JUEGOS.includes(j.id) && !ab ? '<span class="sello-nuevo">✨ Nuevo</span>' : '';
+        const cuerpo = `<div class="icono-juego">${icono(j)}</div>
+            <div class="info-juego"><h3>${j.nombre}${nuevo}</h3><p>${j.descripcion}</p>${etiquetas ? `<div class="etiquetas-juego">${etiquetas}</div>` : ''}</div>
+            <span class="badge-disponible">Jugar</span>`;
+        const clase = `tarjeta-juego-cat disponible${o.destacado ? ' destacado' : ''}`;
+        return o.href ? `<a class="${clase}" href="${o.href}${j.id}" data-id="${j.id}">${cuerpo}</a>`
+            : `<div class="${clase}" role="button" tabindex="0" data-id="${j.id}" onclick="abrirJuego('${j.id}')">${cuerpo}</div>`;
+    };
+    window.iconoJuegoHTML = icono;
+})();

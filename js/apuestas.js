@@ -10,7 +10,7 @@
 // ============================================================
 (function () {
     const PREMIOS = ['💆 Un masajito', '🎬 Elegir la peli', '🍽️ Lavar los platos', '💋 Un beso a domicilio', '☕ Un desayuno en la cama', '🍫 Un antojo dulce', '🎶 Elegir la música del auto', '🤗 Un abrazo de 20 segundos'];
-    const CATEGORIAS = ['clasicos', 'competencia'];
+    const CATEGORIAS = ['clasicos', 'competencia', 'duelos', 'rapidos'];
     const ref = () => window.doc(window.db, 'juegos', 'apuestas');
     const nombre = (q) => typeof nombreJugador === 'function' ? nombreJugador(q) : (q === 'nico' ? 'Nico' : 'Carito');
     const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));

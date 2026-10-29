@@ -122,6 +122,7 @@ async function abrirJuego(juego){
     const params = new URLSearchParams(window.location.search);
     params.set('juego', juego);
     history.replaceState(null, '', '?' + params.toString());
+    document.dispatchEvent(new CustomEvent('juego-abierto', { detail: juego }));
 }
 function cerrarJuego(){
     vibrarJ(12);
@@ -135,6 +136,8 @@ function cerrarJuego(){
     params.delete('juego');
     const query = params.toString();
     history.replaceState(null, '', query ? '?' + query : window.location.pathname);
+    // El menú (favoritos, seguir jugando, sugerencia) se actualiza al volver.
+    document.dispatchEvent(new CustomEvent('juego-cerrado'));
 }
 // Escuchas que pertenecen al menú (no a un juego) y tienen que seguir
 // vivas aunque se cierre el juego.
@@ -253,7 +256,7 @@ function renderMenuPrincipal(){
     if (gridCat && window.CATEGORIAS) {
         gridCat.innerHTML = window.CATEGORIAS.map(c => {
             const cantidad = window.obtenerJuegosDeCategoria(c.id).filter(j => j.disponible).length;
-            return `<a class="tarjeta-categoria" href="categorias/${c.id}.html" style="--color-cat:${c.color};">
+            return `<a class="tarjeta-categoria" href="categorias/index.html?c=${c.id}" style="--color-cat:${c.color};">
                 <svg class="icono-svg icono-categoria"><use href="#${c.iconoSvg}"></use></svg>
                 <span class="nombre-categoria">${c.nombre}</span>
                 <span class="cantidad-categoria">${cantidad} disponible${cantidad === 1 ? '' : 's'}</span>
@@ -275,15 +278,7 @@ function renderMenuPrincipal(){
             const hoy = new Date();
             const semilla = hoy.getFullYear() * 372 + (hoy.getMonth() + 1) * 31 + hoy.getDate();
             const elegido = disponibles[semilla % disponibles.length];
-            destacadoEl.innerHTML = `
-                <div class="tarjeta-juego-cat disponible destacado" onclick="abrirJuego('${elegido.id}')">
-                    <div class="icono-juego">${elegido.iconoSvg ? `<svg class="icono-svg"><use href="#${elegido.iconoSvg}"></use></svg>` : elegido.icono}</div>
-                    <div class="info-juego">
-                        <h3>${elegido.nombre}</h3>
-                        <p>${elegido.descripcion}</p>
-                    </div>
-                    <span class="badge-disponible">Jugar</span>
-                </div>`;
+            destacadoEl.innerHTML = window.tarjetaJuegoHTML(elegido, { destacado: true });
         }
     }
 }
@@ -310,22 +305,26 @@ function buscarJuegos(){
     }
     if (seccionesNormales) seccionesNormales.style.display = 'none';
     resultados.style.display = '';
-    const encontrados = (window.JUEGOS || []).filter(j => j.disponible && _normalizarBusquedaJuegos(j.nombre).includes(q));
+    // Por nombre primero; después los que lo dicen en la descripción (ej. "cartas", "fútbol").
+    const disponibles = (window.JUEGOS || []).filter(j => j.disponible);
+    const porNombre = disponibles.filter(j => _normalizarBusquedaJuegos(j.nombre).includes(q));
+    const encontrados = [...porNombre, ...disponibles.filter(j => !porNombre.includes(j) && _normalizarBusquedaJuegos(j.descripcion).includes(q))];
     if (!encontrados.length) {
         resultados.innerHTML = '<p class="texto-tenue texto-centro">No encontramos ningún juego con ese nombre.</p>';
         return;
     }
-    resultados.innerHTML = encontrados.map(j => `
-        <div class="tarjeta-juego-cat disponible" onclick="abrirJuego('${j.id}')" style="cursor:pointer;">
-            <div class="icono-juego">${j.iconoSvg ? `<svg class="icono-svg"><use href="#${j.iconoSvg}"></use></svg>` : j.icono}</div>
-            <div class="info-juego"><h3>${j.nombre}</h3><p>${j.descripcion}</p></div>
-            <span class="badge-disponible">Jugar</span>
-        </div>`).join('');
+    resultados.innerHTML = encontrados.slice(0, 30).map(j => window.tarjetaJuegoHTML(j)).join('');
 }
 window.buscarJuegos = buscarJuegos;
 
 function iniciarJuegos(){
     renderMenuPrincipal();
+    // "Nuestro progreso" recuerda si lo dejaron abierto
+    const progreso = document.getElementById('nuestro-progreso');
+    if (progreso) {
+        try { progreso.open = localStorage.getItem('progresoAbierto') === '1'; } catch (e) { /* nada */ }
+        progreso.addEventListener('toggle', () => { try { localStorage.setItem('progresoAbierto', progreso.open ? '1' : '0'); } catch (e) { /* nada */ } });
+    }
     if (typeof aplicarTemaGuardado === 'function') aplicarTemaGuardado();
     if (typeof registrarActividadRacha === 'function') registrarActividadRacha();
     if (typeof iniciarDesafioSemanal === 'function') iniciarDesafioSemanal();

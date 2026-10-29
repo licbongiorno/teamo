@@ -21,7 +21,7 @@ const JUEGOS_QUE_USAN_BASE_TURNOS = ['gomoku', 'mancala', 'serpientes', 'parchis
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 82;
+const VERSION_CACHE = 83;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)
@@ -40,6 +40,9 @@ function scriptsNecesariosPara(juegoId) {
         return [`js/juegos/chokurei-rig.js?v=${VERSION_CACHE}`, propio,
             `js/juegos/chokurei-tienda.js?v=${VERSION_CACHE}`, `js/juegos/chokurei-juegos.js?v=${VERSION_CACHE}`, `js/juegos/chokurei-mundo.js?v=${VERSION_CACHE}`,
             `js/juegos/chokurei-crecer.js?v=${VERSION_CACHE}`, `js/juegos/chokurei-casa.js?v=${VERSION_CACHE}`, `js/juegos/chokurei-conexion.js?v=${VERSION_CACHE}`];
+    }
+    if (juegoId === 'anagramas') {
+        return [`js/arcade-comun.js?v=${VERSION_CACHE}`, `js/juegos/anagramas-banco.js?v=${VERSION_CACHE}`, propio];
     }
     if (juegoId === 'pingpong') {
         return [`js/juegos/pingpong-banco.js?v=${VERSION_CACHE}`, propio];

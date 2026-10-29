@@ -141,7 +141,7 @@
         bloques: { objetivo: 'Aguantar más que el otro sin que se te llene la grilla.', pasos: [VIVO, 'Cada uno tiene su grilla. Tocá una columna para mandar ahí el bloque que cae.', 'Al completar una fila, se limpia. Cada 2 filas, le mandás una fila de basura al otro.', 'Pierde quien se llena hasta arriba.'] },
         calculo: { objetivo: 'Llegar primero a 5 puntos.', pasos: [VIVO, 'Los dos ven la misma cuenta.', 'El primero en tocar la respuesta correcta suma el punto.'] },
         stroop: { objetivo: 'Llegar primero a los puntos de la partida.', pasos: [VIVO, 'Aparece el nombre de un color escrito con otra tinta (ROJO en azul).', 'Tocá el color de la TINTA, no el que dice la palabra.'] },
-        anagramas: { objetivo: 'Llegar primero a los puntos de la partida.', pasos: [VIVO, 'Aparecen las letras de una palabra desordenadas.', 'El primero en escribirla bien suma el punto.'] },
+        anagramas: { objetivo: 'Llegar primero a los puntos de la partida.', pasos: [VIVO, 'Aparecen las letras de una palabra desordenadas.', 'El primero en escribirla bien suma el punto.'], tips: ['Hay más de 2400 palabras y no se repiten hasta que salgan todas; si alguna vuelve, trae las letras en otro orden.'] },
         tipeo: { objetivo: 'Llegar primero a 4 puntos.', pasos: [VIVO, 'Aparece una frase: escribila igualita.', 'El primero en terminarla bien suma el punto.'] },
         topo: { objetivo: 'Pegarle a más topos en 25 segundos.', pasos: [VIVO, 'El topo asoma en un pozo al azar: tocalo antes de que se esconda.'] },
         blancomovil: { objetivo: 'Sumar más puntos de precisión en 25 segundos.', pasos: [VIVO, 'Un anillo se va cerrando sobre el blanco.', 'Cuanto más cerca del centro lo toques, más puntos.'] },

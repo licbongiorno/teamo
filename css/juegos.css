@@ -1416,3 +1416,30 @@ html[data-mesa="noche"] .mesa-bj, html[data-mesa="noche"] .mesa-poker, html[data
 .premio-fila small{ display:block; opacity:0.65; font-size:0.75rem; }
 .premio-fila .btn-secundario{ width:auto; padding:6px 10px; font-size:0.78rem; white-space:nowrap; margin:0; }
 @media (prefers-reduced-motion: reduce){ .cita-tarjeta.hoy{ animation:none; } }
+
+/* ==================== Conocerse: 36 preguntas, lenguajes, sueños ==================== */
+.progreso-orden{ height:8px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; margin:6px 0 4px; }
+.progreso-orden > div{ height:100%; border-radius:inherit; background:linear-gradient(90deg, #ffb3c6, #d7b8ff); transition:width .5s ease; }
+.reloj-cuatro{ font-family:var(--fuente-titulo); font-size:3.4rem; margin:14px 0; letter-spacing:2px; }
+.opcion-lenguaje{ display:block; width:100%; margin-bottom:10px; padding:14px; border-radius:16px; border:1px solid rgba(255,255,255,0.14); background:rgba(255,255,255,0.05); color:inherit; font:inherit; font-size:0.95rem; cursor:pointer; }
+.opcion-lenguaje:active{ transform:scale(0.97); background:rgba(255,179,198,0.15); }
+.barra-lenguaje{ display:grid; grid-template-columns:1fr 1fr 22px; align-items:center; gap:8px; font-size:0.82rem; margin:6px 0; }
+.barra-lenguaje > div{ height:10px; border-radius:999px; background:rgba(255,255,255,0.07); overflow:hidden; }
+.barra-lenguaje i{ display:block; height:100%; border-radius:inherit; }
+.barra-lenguaje b{ text-align:right; }
+.sueno-nuevo{ display:flex; gap:8px; margin-top:10px; }
+.sueno-nuevo input, .sueno-nuevo select{ padding:9px; border-radius:12px; border:1px solid rgba(255,255,255,0.15); background:rgba(0,0,0,0.25); color:inherit; font:inherit; min-width:0; }
+.sueno-nuevo input{ flex:1; }
+.pestanas-suenos, .filtro-suenos{ display:flex; gap:6px; margin-bottom:10px; overflow-x:auto; }
+.pestanas-suenos button, .filtro-suenos button{ flex:1; padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); color:inherit; font:inherit; font-size:0.82rem; white-space:nowrap; cursor:pointer; }
+.filtro-suenos button{ flex:0 0 auto; font-size:1rem; padding:6px 12px; }
+.pestanas-suenos button.activa, .filtro-suenos button.activa{ background:rgba(255,179,198,0.18); border-color:#ffb3c6; }
+.sueno-item .sueno-cat{ font-size:0.75rem; opacity:0.7; }
+.sueno-item .sueno-texto{ font-family:var(--fuente-titulo); font-size:1.1rem; margin:4px 0 8px; }
+.sueno-item.cumplido{ border-color:rgba(181,232,200,0.4); }
+.sueno-item.cumplido .sueno-texto::before{ content:'✨ '; }
+.sueno-animan{ font-size:0.8rem; margin-bottom:6px; color:#ffb3c6; min-height:0; }
+.sueno-foto{ display:block; max-width:100%; border-radius:12px; margin-top:8px; }
+.sueno-foto:not([src]){ display:none; }
+.sueno-btn-foto{ display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+.sueno-item .btn-fila .btn-principal, .sueno-item .btn-fila .btn-secundario{ margin:0; }

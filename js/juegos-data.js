@@ -147,6 +147,11 @@ window.JUEGOS = [
     { id:'mente', nombre:'Mente Sincronizada', icono:'🧠', categoria:'cooperativosvivo', disponible:true, nuevo:true, descripcion:'Tiren los números de menor a mayor sin hablar, sólo sintiendo el momento.' },
     { id:'palabradia', nombre:'Palabra del Día', icono:'🟩', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La misma palabra de 5 letras para los dos: ¿quién la saca en menos intentos?' },
     { id:'rosco', nombre:'El Rosco', icono:'🅰️', categoria:'competencia', disponible:true, nuevo:true, descripcion:'Una palabra por cada letra del abecedario, contra reloj. ¡Pasapalabra!' },
+    // ---- CONOCERSE ----
+    { id:'treintayseis', nombre:'36 Preguntas para Enamorarse', icono:'💞', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Las 36 preguntas del famoso estudio de Arthur Aron, en orden y con el cierre de los 4 minutos.' },
+    { id:'mapaamor', nombre:'Mapa del Amor', icono:'🗺️', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Uno cuenta la verdad sobre sí mismo y el otro adivina: ¿cuánto conocés su mundo?' },
+    { id:'lenguajes', nombre:'Lenguajes del Amor', icono:'💌', categoria:'conexion', disponible:true, nuevo:true, descripcion:'Un test cortito para cada uno y los resultados comparados, con consejos para cuidarse mejor.' },
+    { id:'suenos', nombre:'Lista de Sueños', icono:'🌠', categoria:'cuidado', disponible:true, nuevo:true, descripcion:'La bucket list de los dos: quién se anima, sueños cumplidos con fecha y fotito.' },
     { id:'sopa', nombre:'Sopa de Letras en Duelo', icono:'🔎', categoria:'competencia', disponible:true, nuevo:true, descripcion:'La misma sopa para los dos: el primero en encontrar las 8 palabras gana.' },
 ];
 

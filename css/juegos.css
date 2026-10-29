@@ -1729,3 +1729,10 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .cara-a-cara small{ opacity:0.7; }
 .barra-cara{ height:6px; margin-top:6px; border-radius:999px; background:#ffb3c6; overflow:hidden; }
 .barra-cara i{ display:block; height:100%; background:#a8d8ff; }
+
+/* ==================== Bombitas ==================== */
+.controles-bombitas{ display:flex; justify-content:space-between; align-items:center; max-width:560px; margin:0 auto 8px; user-select:none; -webkit-user-select:none; touch-action:none; }
+.cruz-bom{ display:grid; grid-template-columns:repeat(3, 54px); grid-template-rows:repeat(3, 50px); gap:4px; }
+.controles-bombitas button{ border-radius:14px; border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.08); color:inherit; font-size:1.3rem; cursor:pointer; touch-action:none; -webkit-tap-highlight-color:transparent; }
+.controles-bombitas button.salto{ width:96px; height:96px; border-radius:50%; font-size:2.2rem; background:rgba(255,179,198,0.2); border-color:#ffb3c6; }
+.controles-bombitas button.apretado{ background:rgba(255,255,255,0.25); transform:scale(0.95); }

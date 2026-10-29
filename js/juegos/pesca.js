@@ -108,7 +108,9 @@ function arrancarCanvasPesca(horaFin){
     if (!canvas) return;
     const area = document.getElementById('area-pesca');
     const ctx = canvas.getContext('2d');
-    function ajustar(){ canvas.width = area.clientWidth; canvas.height = area.clientHeight; }
+    // A la resolución real de la pantalla (nítido en celus con 2x/3x); la lógica usa anchoL × altoL en px de CSS.
+    let anchoL = 0, altoL = 0;
+    function ajustar(){ const d = Math.min(2, window.devicePixelRatio || 1); anchoL = area.clientWidth; altoL = area.clientHeight; canvas.width = Math.round(anchoL * d); canvas.height = Math.round(altoL * d); ctx.setTransform(d, 0, 0, d, 0, 0); }
     ajustar();
     window.addEventListener('resize', ajustar);
     // Guardados en window para que detenerListenersActivos() (navegacion.js)
@@ -128,8 +130,8 @@ function arrancarCanvasPesca(horaFin){
     function spawnPez(){
         const deIzqADer = Math.random() < 0.5;
         objetos.push({
-            x: deIzqADer ? -20 : canvas.width + 20,
-            y: 20 + Math.random() * (canvas.height - 40),
+            x: deIzqADer ? -20 : anchoL + 20,
+            y: 20 + Math.random() * (altoL - 40),
             vel: (1.2 + Math.random() * 1.8) * (deIzqADer ? 1 : -1),
             emoji: EMOJI_PECES[Math.floor(Math.random() * EMOJI_PECES.length)],
             r: 18
@@ -180,7 +182,7 @@ function arrancarCanvasPesca(horaFin){
 
     function loop(){
         if (terminando) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, anchoL, altoL);
         spawnAcumulado++;
         if (spawnAcumulado > 40) { spawnPez(); spawnAcumulado = 0; }
         ctx.font = '30px sans-serif';
@@ -192,7 +194,7 @@ function arrancarCanvasPesca(horaFin){
             if (o.vel < 0) { ctx.translate(o.x, o.y); ctx.scale(-1, 1); ctx.fillText(o.emoji, 0, 8); }
             else ctx.fillText(o.emoji, o.x, o.y + 8);
             ctx.restore();
-            if (o.x < -30 || o.x > canvas.width + 30) objetos.splice(i, 1);
+            if (o.x < -30 || o.x > anchoL + 30) objetos.splice(i, 1);
         }
         const el = document.getElementById('tiempo-pesca');
         const seg = Math.max(0, Math.ceil((horaFin - ahoraSync()) / 1000));

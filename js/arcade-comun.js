@@ -381,3 +381,76 @@ function pausaDueloSiCorresponde(estado, juegoId, refDoc, renderFn, textoEvento)
 window.calcularPuntoDuelo = calcularPuntoDuelo;
 window.cerrarDueloSiCorresponde = cerrarDueloSiCorresponde;
 window.pausaDueloSiCorresponde = pausaDueloSiCorresponde;
+
+// ============================================================
+// Capa de efectos para los juegos rápidos (todos los que cargan este
+// archivo): un lienzo transparente arriba del juego, del tamaño de la
+// pantalla, con FxVivo. Sin tocar cada juego:
+//  - cada toque en la ronda deja una onda del color de quien toca,
+//  - los aciertos (pop, moneda, punto, acierto, golpe…) estallan donde
+//    fue el último toque, los errores en rojo y con un sacudón,
+//  - la victoria tira confeti.
+// Además avisa a VivoComun que se está jugando (para la música arcade).
+// ============================================================
+(function(){
+    const ARCADE = (typeof JUEGOS_QUE_USAN_ARCADE_COMUN !== 'undefined') ? JUEGOS_QUE_USAN_ARCADE_COMUN : [];
+    let lienzo = null, ctx = null, fx = null, loop = null, ultimoToque = null;
+    const colorMio = () => (typeof miIdentidad !== 'undefined' && miIdentidad === 'carito') ? ['#ff9fc6', '#ffd0e4', '#fff'] : ['#7cc4ff', '#cfe8ff', '#fff'];
+    const pantallaArcade = () => { const p = document.querySelector('.pantalla-juego.activa'); const id = p && p.id.replace('pantalla-', ''); return ARCADE.includes(id) ? id : null; };
+    function asegurar(){
+        if (lienzo || !window.FxVivo) return !!lienzo;
+        lienzo = document.createElement('canvas');
+        lienzo.className = 'capa-fx-arcade';
+        lienzo.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(lienzo);
+        ctx = lienzo.getContext('2d');
+        fx = FxVivo.crear({ max: 220 });
+        medir(); window.addEventListener('resize', medir);
+        return true;
+    }
+    function medir(){ if (!lienzo) return; const d = Math.min(2, window.devicePixelRatio || 1); lienzo.width = Math.round(innerWidth * d); lienzo.height = Math.round(innerHeight * d); lienzo._d = d; }
+    function cuadro(){
+        loop = null;
+        if (!ctx) return;
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, lienzo.width, lienzo.height);
+        ctx.setTransform(lienzo._d, 0, 0, lienzo._d, 0, 0);
+        fx.dibujar(ctx);
+        if (fx.hay()) loop = requestAnimationFrame(cuadro);
+        else { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, lienzo.width, lienzo.height); }
+    }
+    const animar = () => { if (!loop) loop = requestAnimationFrame(cuadro); };
+    const reducido = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function dondeEfecto(){
+        if (ultimoToque && performance.now() - ultimoToque.t < 900) return ultimoToque;
+        const c = document.querySelector('.pantalla-juego.activa [id^="contenido-"]'), r = c && c.getBoundingClientRect();
+        return r ? { x: r.left + r.width / 2, y: r.top + Math.min(r.height, innerHeight) * 0.4 } : { x: innerWidth / 2, y: innerHeight / 2 };
+    }
+    // Toques: onda chiquita + aviso de actividad (música)
+    document.addEventListener('pointerdown', (ev) => {
+        const id = pantallaArcade();
+        if (!id || !ev.target.closest || !ev.target.closest('#contenido-' + id)) return;
+        if (ev.target.closest('button.btn-secundario, .barra-vivo, input, select')) return;
+        ultimoToque = { x: ev.clientX, y: ev.clientY, t: performance.now() };
+        if (window.VivoComun && VivoComun.actividad) VivoComun.actividad(id);
+        if (reducido() || !asegurar()) return;
+        fx.onda(ev.clientX, ev.clientY, { color: colorMio()[0], radio: 22, vida: 320, ancho: 2 });
+        animar();
+    }, { capture: true, passive: true });
+    // Los sonidos de los juegos dicen qué pasó: se suma el efecto visual.
+    const BIEN = ['pop', 'acierto', 'punto', 'moneda', 'logro', 'revelar', 'golpe', 'rebote'];
+    function envolverSfx(){
+        if (!window.sfx || window.sfx._arcadeFx) return;
+        const s = window.sfx;
+        const con = (nombre, efecto) => { const orig = s[nombre]; if (typeof orig !== 'function') return; s[nombre] = function(){ try { if (pantallaArcade() && !reducido() && asegurar()) { efecto(); animar(); } } catch (e) { /* el efecto nunca frena al juego */ } return orig.apply(this, arguments); }; };
+        BIEN.forEach(n => con(n, () => {
+            const p = dondeEfecto(), col = colorMio();
+            fx.chispas(p.x, p.y, col, n === 'logro' ? 18 : 10);
+            if (n === 'logro' || n === 'revelar') fx.estrellitas(p.x, p.y, 10, ['#ffd23a', '#fff']);
+        }));
+        con('explosion', () => { const p = dondeEfecto(); fx.explosion(p.x, p.y, 22); });
+        con('error', () => { const p = dondeEfecto(); fx.onda(p.x, p.y, { color: 'rgba(255,90,90,0.9)', radio: 30, vida: 380, ancho: 3 }); fx.particulas({ x: p.x, y: p.y, n: 8, color: ['#ff6b6b', '#ffb0b0'], vel: 2, vida: 380, grav: 0.1, tam: 2 }); if (window.fx && window.fx.sacudirJuego) window.fx.sacudirJuego(); });
+        con('victoria', () => { const p = { x: innerWidth / 2, y: innerHeight * 0.35 }; fx.confeti(p.x, p.y, 70); fx.estrellitas(p.x, p.y, 14, ['#ffd23a', '#fff']); });
+        s._arcadeFx = true;
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', envolverSfx); else envolverSfx();
+})();

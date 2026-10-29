@@ -115,7 +115,9 @@ function arrancarCanvasBurbujas(horaFin){
     if (!canvas) return;
     const area = document.getElementById('area-burbujas');
     const ctx = canvas.getContext('2d');
-    function ajustar(){ canvas.width = area.clientWidth; canvas.height = area.clientHeight; }
+    // A la resolución real de la pantalla (nítido en celus con 2x/3x); la lógica usa anchoL × altoL en px de CSS.
+    let anchoL = 0, altoL = 0;
+    function ajustar(){ const d = Math.min(2, window.devicePixelRatio || 1); anchoL = area.clientWidth; altoL = area.clientHeight; canvas.width = Math.round(anchoL * d); canvas.height = Math.round(altoL * d); ctx.setTransform(d, 0, 0, d, 0, 0); }
     ajustar();
     window.addEventListener('resize', ajustar);
 
@@ -134,8 +136,8 @@ function arrancarCanvasBurbujas(horaFin){
     function spawnBurbuja(){
         const esPinche = Math.random() < PROB_PINCHE_BURBUJAS;
         objetos.push({
-            x: canvas.width + 20,
-            y: 20 + Math.random() * (canvas.height - 40),
+            x: anchoL + 20,
+            y: 20 + Math.random() * (altoL - 40),
             vel: 1.4 + Math.random() * 2,
             r: 16 + Math.random() * 10,
             esPinche
@@ -181,7 +183,7 @@ function arrancarCanvasBurbujas(horaFin){
 
     function loop(){
         if (terminando) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, anchoL, altoL);
         spawnAcumulado++;
         if (spawnAcumulado > 34) { spawnBurbuja(); spawnAcumulado = 0; }
         for (let i = objetos.length - 1; i >= 0; i--) {

@@ -4,13 +4,59 @@
 // + primera respuesta correcta que Cálculo Mental Rayo, pero
 // verificando texto en vez de una opción de un botón.
 const META_ANAGRAMAS = 5;
-const BANCO_ANAGRAMAS = [
+// El banco grande está en js/juegos/anagramas-banco.js (window.BANCO_ANAGRAMAS).
+// Esta lista corta es la de antes: la usan sólo las partidas que ya estaban
+// empezadas sin "palabras" en el doc.
+const BANCO_VIEJO_ANAGRAMAS = [
     'CASA', 'AMOR', 'PLAYA', 'LIBRO', 'MUSICA', 'CAFE', 'NOCHE', 'ESTRELLA',
     'VIAJE', 'JARDIN', 'LLUVIA', 'FUEGO', 'RISA', 'ABRAZO', 'SUEÑO', 'CIELO',
     'FLOR', 'BESO', 'LUNA', 'MAR', 'MONTAÑA', 'CAMINO', 'PUENTE', 'VENTANA',
     'CANCION', 'BAILE', 'FIESTA', 'HISTORIA', 'RECUERDO', 'FAMILIA', 'AMIGO',
     'VERANO', 'INVIERNO', 'OTOÑO', 'PRIMAVERA', 'CHOCOLATE', 'HELADO', 'PIZZA',
 ];
+const PALABRAS_POR_PARTIDA_ANAGRAMAS = 15; // a 5 puntos son 9 rondas como mucho
+const bancoAnagramas = () => window.BANCO_ANAGRAMAS || BANCO_VIEJO_ANAGRAMAS;
+
+// Elige las palabras de la partida nueva entre las que nunca salieron. El
+// doc guarda "usadas" (sus números en el banco); cuando se acaban, se vacía
+// y empieza otra "vuelta" del banco.
+function elegirPalabrasAnagramas(estado){
+    const total = bancoAnagramas().length;
+    let usadas = new Set(estado?.usadas || []), vuelta = estado?.vuelta || 0;
+    const palabras = [], vueltas = [];
+    const sacar = (cuantas) => {
+        const libres = [];
+        for (let i = 0; i < total; i++) if (!usadas.has(i) && !palabras.includes(i)) libres.push(i);
+        for (let k = 0; k < cuantas && libres.length; k++) {
+            const j = Math.floor(Math.random() * libres.length);
+            palabras.push(libres[j]); vueltas.push(vuelta); usadas.add(libres[j]);
+            libres.splice(j, 1);
+        }
+    };
+    sacar(PALABRAS_POR_PARTIDA_ANAGRAMAS);
+    if (palabras.length < PALABRAS_POR_PARTIDA_ANAGRAMAS) {
+        // Se terminó el banco: empieza otra vuelta (las de esta partida no se repiten entre sí).
+        usadas = new Set(); vuelta++;
+        sacar(PALABRAS_POR_PARTIDA_ANAGRAMAS - palabras.length);
+        usadas = new Set(palabras.filter((_, k) => vueltas[k] === vuelta));
+    }
+    return { palabras, vueltas, usadas: [...usadas], vuelta };
+}
+
+// Cómo se mezclan las letras de la palabra i en la vuelta v. Depende sólo
+// de (i, v), así los dos celus ven lo mismo, y si la palabra vuelve a salir
+// en otra vuelta se asegura que las letras queden en otro orden.
+function mezclaAnagrama(palabra, i, v){
+    const rng = window.rngRonda(i * 7919 + v * 104729 + 17);
+    const anterior = v > 0 ? mezclaAnagrama(palabra, i, v - 1) : null;
+    let letras = palabra.split('');
+    for (let intento = 0; intento < 30; intento++) {
+        letras = window.barajarRnd(rng, letras);
+        const t = letras.join('');
+        if (t !== palabra && t !== anterior) break;
+    }
+    return letras.join('');
+}
 
 function refAnagramas(){ return window.doc(window.db, 'juegos', 'anagramas'); }
 
@@ -18,17 +64,22 @@ function normalizarPalabra(t){
     return (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim();
 }
 
-function problemaAnagrama(ronda){
+function problemaAnagrama(estado, ronda){
+    const lista = estado && estado.palabras;
+    if (lista && lista.length && window.BANCO_ANAGRAMAS) {
+        const k = (ronda - 1) % lista.length, i = lista[k], v = (estado.vueltas && estado.vueltas[k]) || 0;
+        const palabra = window.BANCO_ANAGRAMAS[i] || 'PALABRA';
+        return { palabra, desordenada: mezclaAnagrama(palabra, i, v).split('').join(' ') };
+    }
+    // Partidas viejas (sin "palabras" en el doc): como antes.
     const rng = window.rngRonda(ronda * 65599 + 31);
-    const palabra = window.elegirRnd(rng, BANCO_ANAGRAMAS);
+    const palabra = window.elegirRnd(rng, BANCO_VIEJO_ANAGRAMAS);
     let letras = window.barajarRnd(rng, palabra.split(''));
-    // Si por azar quedó igual a la palabra original, la volvemos a
-    // barajar una vez más (si la palabra tiene 1-2 letras puede quedar
-    // igual de todos modos, pero el banco no tiene palabras tan cortas).
     if (letras.join('') === palabra) letras = window.barajarRnd(rng, letras);
     return { palabra, desordenada: letras.join(' ') };
 }
 
+let _estadoAnagramas = null;
 let _anagramasFaseAnterior = null;
 function iniciarAnagramas(){
     _anagramasFaseAnterior = null;
@@ -49,6 +100,7 @@ function iniciarAnagramas(){
 
 let _cuentaRegresivaAnagramas = null;
 function renderAnagramas(estado){
+    _estadoAnagramas = estado;
     const cont = document.getElementById('contenido-anagramas');
     if (_cuentaRegresivaAnagramas) { clearTimeout(_cuentaRegresivaAnagramas); _cuentaRegresivaAnagramas = null; }
 
@@ -72,7 +124,7 @@ function renderAnagramas(estado){
             </div>
             <button class="btn-principal" ${listoYo ? 'disabled style="opacity:0.5;"' : ''} onclick="marcarListoAnagramas()">${listoYo ? 'Esperando al otro…' : '¡Estoy listo/a! 🔤'}</button>
         </div>`;
-        if (listoYo && listoRival) iniciarRondaArcadeSiCorresponde(refAnagramas(), 'anagramas', 0, { ronda: 1, puntajes: { nico: 0, carito: 0 }, ganador: null });
+        if (listoYo && listoRival) iniciarRondaArcadeSiCorresponde(refAnagramas(), 'anagramas', 0, { ronda: 1, puntajes: { nico: 0, carito: 0 }, ganador: null, ...elegirPalabrasAnagramas(estado) });
         return;
     }
 
@@ -97,7 +149,7 @@ function renderAnagramas(estado){
     if (pausaDueloSiCorresponde(estado, 'anagramas', refAnagramas(), renderAnagramas, 'la Carrera de Anagramas')) return;
     const p = estado.puntajes || { nico: 0, carito: 0 };
     const ronda = estado.ronda || 1;
-    const prob = problemaAnagrama(ronda);
+    const prob = problemaAnagrama(estado, ronda);
     cont.innerHTML = `<div class="texto-tenue texto-centro" style="margin-bottom:8px;">Nico ${p.nico || 0} — Carito ${p.carito || 0} · a ${META_ANAGRAMAS}</div>
     <div class="panel texto-centro">
         <div style="font-family:var(--fuente-titulo); font-size:2rem; letter-spacing:6px; margin:6px 0 16px;">${prob.desordenada}</div>
@@ -134,7 +186,7 @@ async function responderAnagrama(rondaEsperada){
     const intento = normalizarPalabra(input ? input.value : '');
     if (!intento) return;
     const ref = refAnagramas();
-    const correcta = intento === normalizarPalabra(problemaAnagrama(rondaEsperada).palabra);
+    const correcta = intento === normalizarPalabra(problemaAnagrama(_estadoAnagramas, rondaEsperada).palabra);
     let resultado = { acierto: correcta, cuenta: false };
     if (correcta) {
         resultado = await window.runTransaction(window.db, async (tx) => {
@@ -161,5 +213,6 @@ async function responderAnagrama(rondaEsperada){
 async function revanchaAnagramas(){
     vibrarJ(10);
     const estado = await new Promise(res => { const u = window.onSnapshot(refAnagramas(), s => { u(); res(s.exists() ? s.data() : null); }); });
-    await revanchaUnToque(refAnagramas(), 'anagramas', { victorias: estado?.victorias || { nico: 0, carito: 0 } });
+    // Se conservan las palabras que ya salieron: la revancha reescribe el doc entero.
+    await revanchaUnToque(refAnagramas(), 'anagramas', { victorias: estado?.victorias || { nico: 0, carito: 0 }, usadas: estado?.usadas || [], vuelta: estado?.vuelta || 0 });
 }

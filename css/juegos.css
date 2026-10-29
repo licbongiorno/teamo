@@ -1711,6 +1711,7 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 /* ==================== Hockey de aire + motos de luz ==================== */
 .lienzo-hockey{ display:block; width:min(100%, 340px); aspect-ratio:240/360; margin:4px auto 8px; border-radius:18px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
 .lienzo-autitos{ display:block; width:min(100%, 330px); aspect-ratio:300/400; margin:4px auto 8px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
+.lienzo-voley{ display:block; width:100%; max-width:560px; aspect-ratio:320/200; margin:4px auto 8px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.45); touch-action:none; }
 .lienzo-motos{ display:block; width:min(100%, 330px); aspect-ratio:240/352; margin:4px auto 8px; border-radius:10px; box-shadow:0 0 18px rgba(120,110,255,0.35); touch-action:none; image-rendering:pixelated; }
 
 /* ==================== Favoritos, últimos, filtros, cara a cara ==================== */

@@ -13,7 +13,7 @@
 //       swoosh · motor {vel 0..1}
 //   AudioArcade.musica(tema, modo) → música generativa que no se repite igual:
 //       tema: espacio · aventura · carrera · neon · deporte · templo · batalla
-//             · tranqui · agua    (null = apagar)
+//             · tranqui · agua · arcade    (null = apagar)
 //       modo: 'calma' · 'juego' · 'combate' · 'pausa' (cambia con fundido)
 //   AudioArcade.musicaActiva() / alternarMusica() → preferencia de música
 //       (aparte del silencio general de la app, que también la apaga).
@@ -154,6 +154,7 @@
         templo: { bpm: 96, acordes: [[50, 53, 57], [46, 50, 53], [48, 52, 55], [45, 49, 52]], escala: [62, 65, 67, 69, 72, 74], bajo: 'lento', bat: 'tribal', lead: 'triangle', pad: 'sine' },
         batalla: { bpm: 136, acordes: [[52, 55, 59], [48, 52, 55], [50, 53, 57], [47, 50, 54]], escala: [64, 67, 69, 71, 74, 76], bajo: 'galope', bat: 'marcha', lead: 'square', pad: 'sawtooth' },
         tranqui: { bpm: 92, acordes: [[60, 64, 67, 71], [57, 60, 64, 67], [62, 65, 69, 72], [55, 59, 62, 65]], escala: [72, 74, 76, 79, 81], bajo: 'lento', bat: 'suave', lead: 'sine', pad: 'triangle' },
+        arcade: { bpm: 150, acordes: [[60, 64, 67], [57, 60, 64], [65, 69, 72], [67, 71, 74]], escala: [72, 74, 76, 79, 81, 84, 86], bajo: 'saltito', bat: 'pop', lead: 'square', pad: 'triangle' },
         agua: { bpm: 104, acordes: [[64, 68, 71], [61, 64, 68], [57, 61, 64], [59, 63, 66]], escala: [76, 78, 80, 83, 85, 88], bajo: 'lento', bat: 'suave', lead: 'sine', pad: 'sine' },
     };
     let motivo = [];

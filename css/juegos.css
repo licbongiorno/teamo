@@ -1843,3 +1843,6 @@ body.encuadre .pantalla-juego.activa .mv-host{ border-radius:0; }
 .nuestro-progreso[open] > summary::after{ transform:rotate(180deg); }
 .nuestro-progreso > summary small{ font-weight:400; opacity:0.55; font-size:0.72rem; }
 .fila-progreso{ display:flex; gap:8px; margin:6px 0 10px; } .fila-progreso button{ flex:1; }
+
+/* Capa de efectos de los juegos rápidos (js/arcade-comun.js) */
+.capa-fx-arcade{ position:fixed; inset:0; width:100vw; height:100vh; pointer-events:none; z-index:9000; }

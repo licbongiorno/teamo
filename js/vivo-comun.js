@@ -277,7 +277,8 @@
         b.bPausa.classList.toggle('activo', p);
         b.bEnc.textContent = encuadrado() ? '✕ Salir del encuadre' : '⛶ Encuadrar';
         const A = window.AudioArcade;
-        b.bMus.style.display = TEMAS_MUSICA[id] && A ? '' : 'none';
+        const conMusica = TEMAS_MUSICA[id] || (typeof JUEGOS_QUE_USAN_ARCADE_COMUN !== 'undefined' && JUEGOS_QUE_USAN_ARCADE_COMUN.includes(id) && !ARCADE_SIN_MUSICA.includes(id));
+        b.bMus.style.display = conMusica && A ? '' : 'none';
         if (A) { b.bMus.textContent = A.musicaActiva() ? '🎵' : '🔇'; b.bMus.title = A.musicaActiva() ? 'Apagar la música' : 'Prender la música'; b.bMus.classList.toggle('activo', !A.musicaActiva()); }
         document.body.classList.toggle('vivo-pausado', !!p && actual === id);
     }
@@ -336,12 +337,19 @@
     };
     // Juegos de la misma pantalla que manejan su propia música.
     const MUSICA_PROPIA = ['multiverso', 'astrofutbol'];
+    // Juegos rápidos (js/arcade-comun.js): no hay un estado común que diga "está la
+    // ronda", así que suena la música arcade mientras están tocando (y unos segundos más).
+    const ARCADE_SIN_MUSICA = ['ritmo']; // ya tiene su propia base
+    const actividadArcade = {};
+    function actividad(id) { if (ARCADE_SIN_MUSICA.includes(id)) return; actividadArcade[id] = Date.now(); controlMusica(); }
     let musicaAct = '';
     function controlMusica() {
         const A = window.AudioArcade;
         if (!A) return;
         const p = document.querySelector('.pantalla-juego.activa'), id = p && p.id.replace('pantalla-', '');
-        const tema = TEMAS_MUSICA[id], e = estados[id], jugando = !!(tema && e && e.fase === 'jugando' && !document.hidden);
+        const arcade = !TEMAS_MUSICA[id] && actividadArcade[id] && Date.now() - actividadArcade[id] < 9000;
+        const tema = TEMAS_MUSICA[id] || (arcade ? 'arcade' : null), e = estados[id];
+        const jugando = !!(tema && !document.hidden && (arcade || (e && e.fase === 'jugando')));
         // Mientras hay un juego en vivo, los sonidos de sfx.js salen por el motor arcade.
         A.enVivo = jugando || MUSICA_PROPIA.includes(id);
         const quiero = jugando ? tema + ':' + (pausa(id) ? 'pausa' : 'juego') : '';
@@ -355,5 +363,5 @@
     setInterval(controlMusica, 400);
     document.addEventListener('visibilitychange', controlMusica);
 
-    window.VivoComun = { botones, teclado, recibir, suave, adelantar, posBola, estado, cuenta, montar, reloj, pausa, cartelPausa, encuadrar, soloEncuadre, escritor, sync, TEMAS_MUSICA };
+    window.VivoComun = { botones, teclado, recibir, suave, adelantar, posBola, estado, cuenta, montar, reloj, pausa, cartelPausa, encuadrar, soloEncuadre, escritor, sync, TEMAS_MUSICA, actividad };
 })();

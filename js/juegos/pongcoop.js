@@ -14,7 +14,7 @@ const NIVELES_PC = [
 ];
 // # = ladrillo duro: hay que pegarle dos veces.
 const COLORES_PC = { '#': '#9aa0b4', 1: '#ff6b6b', 2: '#ffb347', 3: '#ffd23a', 4: '#4cd18a', 5: '#3da8ff', L: '#c78bff', M: '#ff8fd8' };
-const PC = { tocados: new Set(), canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, ladrillos: [], rotos: new Set(), bolas: [], dueno: false, yo: null, el: null, teclas: {}, dedo: null, ultimoEnvio: 0, ultimoTs: 0, perdida: false, lanzada: false };
+const PC = { tocados: new Set(), canvas: null, ctx: null, enlace: null, loop: null, estado: null, clave: null, ladrillos: [], rotos: new Set(), bolas: [], dueno: false, yo: null, el: null, teclas: {}, dedo: null, ultimoEnvio: 0, ultimoTs: 0, perdida: false, lanzada: false , fx: null, golpeT: {}, estelas: [], vidaT: 0, nivelT: 0};
 
 function armarLadrillosPc(nivel){
     const filas = NIVELES_PC[nivel - 1], l = [], bw = W_PC / COLS_PC;
@@ -69,15 +69,15 @@ function pasoPc(dt){
     const vivas = [];
     for (const b of PC.bolas) {
         b.x += b.vx * dt; b.y += b.vy * dt;
-        if (b.x < R_BOLA_PC) { b.x = R_BOLA_PC; b.vx = Math.abs(b.vx); }
-        if (b.x > W_PC - R_BOLA_PC) { b.x = W_PC - R_BOLA_PC; b.vx = -Math.abs(b.vx); }
-        if (b.y < 18 + R_BOLA_PC) { b.y = 18 + R_BOLA_PC; b.vy = Math.abs(b.vy); }
+        paredesPc(b);
         // Paletas: el ángulo depende de dónde pega.
         for (const pa of paletas) {
             if (b.vy > 0 && b.y + R_BOLA_PC >= Y_PALETA && b.y < Y_PALETA + ALTO_PALETA && Math.abs(b.x - pa.x) < w / 2 + R_BOLA_PC) {
                 const rel = (b.x - pa.x) / (w / 2), v = Math.min(6.2, Math.hypot(b.vx, b.vy) * 1.02);
                 const ang = rel * 1.05;
                 b.vx = Math.sin(ang) * v + pa.vx * 0.15; b.vy = -Math.abs(Math.cos(ang) * v); b.y = Y_PALETA - R_BOLA_PC;
+                PC.golpeT[pa.mia ? 'yo' : 'el'] = performance.now();
+                if (PC.fx) PC.fx.chispas(b.x, Y_PALETA, ['#fff', '#ffe58a'], 5);
                 if (pa.mia) {
                     if (window.sfx) window.sfx.toque();
                     if (!PC.dueno) { PC.dueno = true; PC.enlace && PC.enlace.enviar('toma', { b: bolasPlanasPc(), c: PC.clave }, true); }
@@ -98,12 +98,30 @@ function pasoPc(dt){
     PC.bolas = vivas;
     if (PC.dueno && !PC.bolas.length) perderVidaPc();
 }
+// Rebote en las paredes (también lo usa la predicción de las pelotas del otro).
+function paredesPc(b, sinEfecto){
+    const chispa = (x, y) => { if (!sinEfecto && PC.fx) PC.fx.chispas(x, y, ['#fff', '#c8b8ff'], 3); };
+    if (b.x < R_BOLA_PC) { b.x = R_BOLA_PC; b.vx = Math.abs(b.vx); chispa(0, b.y); }
+    if (b.x > W_PC - R_BOLA_PC) { b.x = W_PC - R_BOLA_PC; b.vx = -Math.abs(b.vx); chispa(W_PC, b.y); }
+    if (b.y < 18 + R_BOLA_PC) { b.y = 18 + R_BOLA_PC; b.vy = Math.abs(b.vy); chispa(b.x, 18); }
+}
+const avanzarBolaPc = (b, dt) => { b.x += b.vx * dt; b.y += b.vy * dt; paredesPc(b, true); };
+function efectoLadrilloPc(l, medio){
+    if (!PC.fx) return;
+    const col = COLORES_PC[l.tipo] || '#fff', cx = l.x + l.w / 2, cy = l.y + l.h / 2;
+    if (medio) { PC.fx.chispas(cx, cy, ['#fff', '#d0d4e4'], 8); PC.fx.onda(cx, cy, { radio: 12, vida: 220 }); return; }
+    PC.fx.particulas({ x: cx, y: cy, n: 10, color: [col, '#ffffff'], vel: 2.4, vida: 600, grav: 0.12, forma: 'cuadro', tam: 3.2, r: 6 });
+    const especial = l.tipo === 'L' || l.tipo === 'M';
+    PC.fx.texto(cx, cy, especial ? (l.tipo === 'L' ? '⬌ ¡Largas!' : '✦ ¡Multibola!') : '+10', { tam: especial ? 11 : 8, color: especial ? col : '#fff', vida: especial ? 1000 : 600, sube: 12 });
+    if (especial) { PC.fx.onda(cx, cy, { radio: 30, vida: 450, color: col }); PC.fx.temblor(2.5, 200); }
+}
 const bolasPlanasPc = () => PC.bolas.flatMap(b => [+b.x.toFixed(1), +b.y.toFixed(1), +b.vx.toFixed(2), +b.vy.toFixed(2)]);
 function desplanarPc(a){ const l = []; for (let i = 0; i + 3 < a.length; i += 4) l.push({ x: a[i], y: a[i + 1], vx: a[i + 2], vy: a[i + 3] }); return l; }
 function romperPc(l, b){
     if (l.tipo === '#' && !PC.tocados.has(l.id)) {
         // Primer golpe a un ladrillo duro: queda rajado.
         PC.tocados.add(l.id);
+        efectoLadrilloPc(l, true);
         if (window.sfx) window.sfx.golpe();
         PC.enlace && PC.enlace.enviar('roto', { id: l.id, medio: 1, c: PC.clave }, true);
         const clave = PC.clave, id = l.id;
@@ -111,6 +129,7 @@ function romperPc(l, b){
         return;
     }
     PC.rotos.add(l.id);
+    efectoLadrilloPc(l);
     vibrarJ(6);
     if (window.sfx) window.sfx[l.tipo === 'L' || l.tipo === 'M' ? 'logro' : 'rebote']();
     if (l.tipo === 'M') {
@@ -131,9 +150,17 @@ function romperPc(l, b){
         return cambios;
     });
 }
+function efectoVidaPc(){
+    PC.vidaT = performance.now();
+    if (!PC.fx) return;
+    PC.fx.temblor(5, 380); PC.fx.flash('rgba(255,70,90,0.3)', 220);
+    PC.fx.texto(W_PC / 2, 220, '💔 ¡Se cayó!', { tam: 16, color: '#ffb3c6', vida: 1200 });
+}
 async function perderVidaPc(){
     if (PC.perdida) return;
     PC.perdida = true;
+    efectoVidaPc();
+    PC.enlace && PC.enlace.enviar('cae', { c: PC.clave }, true);
     vibrarJ([30, 40, 30]);
     if (window.sfx) window.sfx.error();
     const clave = PC.clave;
@@ -147,34 +174,78 @@ async function perderVidaPc(){
 function dibujarPc(){
     const c = PC.ctx, e = PC.estado;
     if (!c || !e) return;
+    const pt = performance.now(), tt = pt / 1000;
     c.setTransform(2, 0, 0, 2, 0, 0);
-    const g = c.createLinearGradient(0, 0, 0, H_PC); g.addColorStop(0, '#1d1638'); g.addColorStop(1, '#2d1f4a');
-    c.fillStyle = g; c.fillRect(0, 0, W_PC, H_PC);
+    if (PC.fx) PC.fx.antes(c);
+    const g = c.createLinearGradient(0, 0, 0, H_PC); g.addColorStop(0, '#150f30'); g.addColorStop(1, '#2d1f4a');
+    c.fillStyle = g; c.fillRect(-10, -10, W_PC + 20, H_PC + 20);
+    // Grilla de neón que se desliza despacio y estrellitas
+    c.strokeStyle = 'rgba(160,120,255,0.08)'; c.lineWidth = 1;
+    for (let y = ((tt * 12) % 24) + 200; y < H_PC; y += 24) { c.beginPath(); c.moveTo(0, y); c.lineTo(W_PC, y); c.stroke(); }
+    for (let x = 0; x <= W_PC; x += 30) { c.beginPath(); c.moveTo(x, 200); c.lineTo(W_PC / 2 + (x - W_PC / 2) * 1.6, H_PC); c.stroke(); }
+    for (let i = 0; i < 26; i++) { c.fillStyle = `rgba(255,255,255,${0.25 + Math.sin(tt * 2 + i) * 0.2})`; c.fillRect((i * 67) % W_PC, 24 + (i * 41) % 170, 1.2, 1.2); }
     c.strokeStyle = 'rgba(255,255,255,0.06)'; c.setLineDash([4, 6]); c.beginPath(); c.moveTo(W_PC / 2, 200); c.lineTo(W_PC / 2, H_PC); c.stroke(); c.setLineDash([]);
+    // Ladrillos con volumen; los especiales laten y los duros tienen remaches
     for (const l of PC.ladrillos) {
         if (PC.rotos.has(l.id)) continue;
-        c.fillStyle = COLORES_PC[l.tipo] || '#fff'; c.fillRect(l.x, l.y, l.w, l.h);
-        c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(l.x, l.y, l.w, 2);
-        c.fillStyle = 'rgba(0,0,0,0.2)'; c.fillRect(l.x, l.y + l.h - 2, l.w, 2);
-        if (l.tipo === '#') { c.strokeStyle = 'rgba(40,40,60,0.6)'; c.lineWidth = 1; c.strokeRect(l.x + 1.5, l.y + 1.5, l.w - 3, l.h - 3); if (PC.tocados.has(l.id)) { c.beginPath(); c.moveTo(l.x + 6, l.y + 1); c.lineTo(l.x + 12, l.y + 7); c.lineTo(l.x + 9, l.y + 11); c.moveTo(l.x + 12, l.y + 7); c.lineTo(l.x + 20, l.y + 5); c.stroke(); } }
-        if (l.tipo === 'L' || l.tipo === 'M') { c.fillStyle = '#fff'; c.font = 'bold 9px monospace'; c.textAlign = 'center'; c.fillText(l.tipo === 'L' ? '⬌' : '✦', l.x + l.w / 2, l.y + 9.5); c.textAlign = 'left'; }
+        const col = COLORES_PC[l.tipo] || '#fff', especial = l.tipo === 'L' || l.tipo === 'M';
+        if (especial) { const late = 0.35 + Math.sin(pt / 200 + l.id) * 0.2; c.fillStyle = col; c.globalAlpha = late; c.fillRect(l.x - 2, l.y - 2, l.w + 4, l.h + 4); c.globalAlpha = 1; }
+        const gl = c.createLinearGradient(0, l.y, 0, l.y + l.h); gl.addColorStop(0, '#ffffff'); gl.addColorStop(0.18, col); gl.addColorStop(1, col);
+        c.fillStyle = gl; c.fillRect(l.x, l.y, l.w, l.h);
+        c.fillStyle = 'rgba(0,0,0,0.22)'; c.fillRect(l.x, l.y + l.h - 2.5, l.w, 2.5); c.fillRect(l.x + l.w - 2, l.y, 2, l.h);
+        // Brillo que pasa por la fila de vez en cuando
+        const barrido = ((pt / 18 + l.y * 4) % 900) - 300;
+        if (barrido > l.x - 10 && barrido < l.x + l.w) { c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(Math.max(l.x, barrido), l.y + 1, 5, l.h - 3); }
+        if (l.tipo === '#') {
+            c.fillStyle = 'rgba(40,40,60,0.6)'; [[3, 3], [l.w - 4, 3], [3, l.h - 4], [l.w - 4, l.h - 4]].forEach(([x, y]) => c.fillRect(l.x + x - 1, l.y + y - 1, 2, 2));
+            if (PC.tocados.has(l.id)) { c.strokeStyle = 'rgba(30,30,45,0.8)'; c.lineWidth = 1; c.beginPath(); c.moveTo(l.x + 6, l.y + 1); c.lineTo(l.x + 12, l.y + 7); c.lineTo(l.x + 9, l.y + 11); c.moveTo(l.x + 12, l.y + 7); c.lineTo(l.x + 20, l.y + 5); c.stroke(); }
+        }
+        if (especial) { c.fillStyle = '#fff'; c.font = 'bold 9px monospace'; c.textAlign = 'center'; c.fillText(l.tipo === 'L' ? '⬌' : '✦', l.x + l.w / 2, l.y + 9.5); c.textAlign = 'left'; }
     }
-    const w = anchoPaletaPc();
-    const paleta = (x, col) => { c.fillStyle = col; c.beginPath(); c.roundRect ? c.roundRect(x - w / 2, Y_PALETA, w, ALTO_PALETA, 4) : c.rect(x - w / 2, Y_PALETA, w, ALTO_PALETA); c.fill(); c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(x - w / 2 + 3, Y_PALETA + 1, w - 6, 2); };
+    const w = anchoPaletaPc(), larga = w > 60;
+    const paleta = (x, col, clave) => {
+        const golpe = Math.max(0, 1 - (pt - (PC.golpeT[clave] || 0)) / 160);
+        const ww = w * (1 + golpe * 0.08), hh = ALTO_PALETA * (1 - golpe * 0.3);
+        const halo = c.createRadialGradient(x, Y_PALETA + 4, 2, x, Y_PALETA + 4, ww * 0.7); halo.addColorStop(0, col + '66'); halo.addColorStop(1, col + '00');
+        c.fillStyle = halo; c.fillRect(x - ww, Y_PALETA - 14, ww * 2, 30);
+        const gp = c.createLinearGradient(0, Y_PALETA, 0, Y_PALETA + hh); gp.addColorStop(0, '#ffffff'); gp.addColorStop(0.35, col); gp.addColorStop(1, col);
+        c.fillStyle = gp; c.beginPath(); c.roundRect ? c.roundRect(x - ww / 2, Y_PALETA + (ALTO_PALETA - hh), ww, hh, 4) : c.rect(x - ww / 2, Y_PALETA, ww, hh); c.fill();
+        if (larga) { const k = (pt / 400) % 1; c.fillStyle = 'rgba(255,255,255,0.5)'; c.fillRect(x - ww / 2 + k * (ww - 6), Y_PALETA + 1, 6, 2); }
+        if (golpe > 0) { c.strokeStyle = `rgba(255,255,255,${golpe})`; c.lineWidth = 1.5; c.strokeRect(x - ww / 2 - 2, Y_PALETA - 2, ww + 4, ALTO_PALETA + 4); }
+    };
     const col = (q) => q === 'nico' ? '#3d8bfd' : '#e8496b';
-    if (PC.el) { PC.el.rx = PC.el.rx == null || compuPc() ? PC.el.x : PC.el.rx + (PC.el.x - PC.el.rx) * 0.5; paleta(PC.el.rx, col(miRival)); }
-    if (PC.yo) paleta(PC.yo.x, col(miIdentidad));
-    c.shadowColor = '#fff'; c.shadowBlur = 8; c.fillStyle = '#fff';
-    PC.bolas.forEach(b => { c.beginPath(); c.arc(b.x, b.y, R_BOLA_PC, 0, Math.PI * 2); c.fill(); });
-    c.shadowBlur = 0;
+    if (PC.el) { const pos = compuPc() ? [PC.el.x] : VivoComun.suave(PC.el) || [PC.el.x]; paleta(pos[0], col(miRival), 'el'); }
+    if (PC.yo) paleta(PC.yo.x, col(miIdentidad), 'yo');
+    // Pelotas con estela y brillo (sin sombra difuminada, que es lenta en celus)
+    PC.bolas.forEach((b, i) => {
+        const [bx, by] = VivoComun.posBola(b);
+        const est = PC.estelas[i] || (PC.estelas[i] = []); est.push([bx, by]); if (est.length > 8) est.shift();
+        est.forEach(([x, y], k) => { c.globalAlpha = k / est.length * 0.35; c.fillStyle = '#c8b8ff'; c.beginPath(); c.arc(x, y, R_BOLA_PC * (0.4 + k / 14), 0, Math.PI * 2); c.fill(); });
+        c.globalAlpha = 1;
+        const gb = c.createRadialGradient(bx, by, 0.5, bx, by, R_BOLA_PC * 2.4); gb.addColorStop(0, 'rgba(255,255,255,0.9)'); gb.addColorStop(0.4, 'rgba(200,180,255,0.35)'); gb.addColorStop(1, 'rgba(200,180,255,0)');
+        c.fillStyle = gb; c.beginPath(); c.arc(bx, by, R_BOLA_PC * 2.4, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#fff'; c.beginPath(); c.arc(bx, by, R_BOLA_PC, 0, Math.PI * 2); c.fill();
+    });
+    PC.estelas.length = PC.bolas.length;
+    if (PC.fx) PC.fx.dibujar(c);
     // Tablero
-    c.fillStyle = 'rgba(0,0,0,0.4)'; c.fillRect(0, 0, W_PC, 18);
+    c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(0, 0, W_PC, 18);
     c.fillStyle = '#fff'; c.font = 'bold 10px monospace';
-    c.fillText(`Nivel ${e.nivel}/${NIVELES_PC.length} · ${'❤️'.repeat(Math.max(0, e.vidas))} · ${e.puntos || 0} pts`, 5, 13);
-    VivoComun.estado(c, W_PC, H_PC, PC.enlace, nombreJugador(miRival));
+    const popVida = PC.vidaT ? Math.max(0, 1 - (pt - PC.vidaT) / 600) : 0;
+    c.fillText(`Nivel ${e.nivel}/${NIVELES_PC.length} · `, 5, 13);
+    const xv = 5 + c.measureText(`Nivel ${e.nivel}/${NIVELES_PC.length} · `).width;
+    c.save(); c.translate(xv, 9); c.scale(1 + popVida * 0.4, 1 + popVida * 0.4); c.fillText('❤️'.repeat(Math.max(0, e.vidas)), 0, 4); c.restore();
+    c.textAlign = 'right'; c.fillText(`${e.puntos || 0} pts`, W_PC - 12, 13); c.textAlign = 'left';
     if (e.larga && VivoComun.reloj('pongcoop') < e.larga) { c.fillStyle = '#c78bff'; c.font = 'bold 9px monospace'; c.textAlign = 'center'; c.fillText(`⬌ paletas largas ${Math.ceil((e.larga - VivoComun.reloj('pongcoop')) / 1000)}s`, W_PC / 2, 30); c.textAlign = 'left'; }
     const falta = e.inicio - VivoComun.reloj('pongcoop');
-    if (e.fase === 'jugando' && falta > 0) { c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 28px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W_PC / 2, 250); c.font = '10px monospace'; c.fillText(e.saque === miIdentidad ? 'Sacás vos' : `Saca ${nombreJugador(e.saque)}`, W_PC / 2, 268); c.textAlign = 'left'; }
+    if (e.fase === 'jugando' && falta > 0) {
+        const n = Math.ceil(falta / 1000), k = 1 - (falta % 1000) / 1000, esc = FxVivo.rebote(Math.min(1, k * 3));
+        if (e.aviso && e.aviso.startsWith('✅') && pt - PC.nivelT > 3000 && falta > 1800) { PC.nivelT = pt; if (PC.fx) { PC.fx.confeti(W_PC / 2, 120, 50); PC.fx.texto(W_PC / 2, 160, e.aviso, { tam: 13, color: '#7dffb0', vida: 1600 }); } }
+        c.save(); c.translate(W_PC / 2, 245); c.scale(esc, esc); c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 28px monospace'; c.fillText(String(n), 0, 0); c.restore();
+        c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = '10px monospace'; c.fillText(e.saque === miIdentidad ? 'Sacás vos' : `Saca ${nombreJugador(e.saque)}`, W_PC / 2, 268); c.textAlign = 'left';
+    }
+    if (PC.fx) PC.fx.despues(c);
+    VivoComun.estado(c, W_PC, H_PC, PC.enlace, nombreJugador(miRival));
 }
 function bucleRl(ts){
     const pantalla = document.getElementById('pantalla-pongcoop');
@@ -194,6 +265,7 @@ function bucleRl(ts){
     PC.loop = requestAnimationFrame(bucleRl);
 }
 function arrancarPc(){
+    PC.fx = PC.fx || FxVivo.crear();
     if (!PC.canvas) {
         PC.canvas = document.createElement('canvas');
         PC.canvas.width = W_PC * 2; PC.canvas.height = H_PC * 2;
@@ -215,17 +287,19 @@ function arrancarPc(){
             alMensaje(t, d) {
                 if (d.c !== PC.clave) return;
                 if (t === 'p') {
-                    PC.el = { ...(PC.el || {}), x: d.px };
+                    PC.el = VivoComun.recibir(PC.el, { x: d.px, y: Y_PALETA });
                     if (d.b && !PC.dueno && !PC.perdida) {
                         const nuevas = desplanarPc(d.b);
-                        // Corrijo suave las que coinciden; si cambió la cantidad, copio todo.
+                        // Las adelanto lo que tardó el mensaje y corrijo de a poco; si cambió la cantidad, copio todo.
                         if (nuevas.length !== PC.bolas.length) PC.bolas = nuevas;
-                        else nuevas.forEach((n, i) => { const b = PC.bolas[i]; b.x += (n.x - b.x) * 0.5; b.y += (n.y - b.y) * 0.5; b.vx = n.vx; b.vy = n.vy; });
+                        else nuevas.forEach((n, i) => VivoComun.adelantar(PC.bolas[i], n, avanzarBolaPc));
                     }
                 }
-                if (t === 'toma') { PC.dueno = false; PC.bolas = desplanarPc(d.b); if (window.sfx) window.sfx.toque(); }
-                if (t === 'roto' && d.medio) { PC.tocados.add(d.id); if (window.sfx) window.sfx.golpe(); }
-                else if (t === 'roto' && !PC.rotos.has(d.id)) { PC.rotos.add(d.id); if (window.sfx) window.sfx.rebote(); }
+                if (t === 'toma') { PC.dueno = false; const nuevas = desplanarPc(d.b); PC.bolas = nuevas.map(n => VivoComun.adelantar({ ...n }, n, avanzarBolaPc)); PC.golpeT.el = performance.now(); if (window.sfx) window.sfx.toque(); }
+                const lad = PC.ladrillos.find(x => x.id === d.id);
+                if (t === 'roto' && d.medio) { PC.tocados.add(d.id); if (lad) efectoLadrilloPc(lad, true); if (window.sfx) window.sfx.golpe(); }
+                else if (t === 'roto' && !PC.rotos.has(d.id)) { PC.rotos.add(d.id); if (lad) efectoLadrilloPc(lad); if (window.sfx) window.sfx.rebote(); }
+                if (t === 'cae' && !PC.perdida) efectoVidaPc();
             }
         });
     }

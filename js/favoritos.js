@@ -8,9 +8,9 @@
 // ============================================================
 (function () {
     const CLAVE = 'juegosFavoritos';
-    const EN_VIVO = ['aventura', 'fuegoagua', 'autitos', 'voley', 'snake2', 'pongcoop', 'tanques', 'pescavivo', 'obstaculos', 'hockey', 'motos', 'bombitas', 'cocina', 'cifras', 'sopa', 'tabu', 'reflejos', 'tuttifrutti', 'palabras', 'dibujayadivina', 'mente', 'rosco', 'palabradia'];
+    const EN_VIVO = ['futbolcabezas', 'pingpongvivo', 'natacion', 'aventura', 'fuegoagua', 'autitos', 'voley', 'snake2', 'pongcoop', 'tanques', 'pescavivo', 'obstaculos', 'hockey', 'motos', 'bombitas', 'cocina', 'cifras', 'sopa', 'tabu', 'reflejos', 'tuttifrutti', 'palabras', 'dibujayadivina', 'mente', 'rosco', 'palabradia'];
     const EQUIPO = ['aventura', 'laberinto', 'cocina', 'faros', 'mente', 'codigo', 'onda', 'emojipelis', 'tabu', 'historia', 'exquisito', 'pesca', 'escaperoom', 'sudoku'];
-    const CORTOS = ['obstaculos', 'fosforos', 'chancho', 'tateti', 'ppt', 'reflejos', 'calculo', 'trivia', 'sopa', 'palabradia', 'cifras', 'hockey', 'motos', 'mastermind'];
+    const CORTOS = ['natacion', 'futbolcabezas', 'obstaculos', 'fosforos', 'chancho', 'tateti', 'ppt', 'reflejos', 'calculo', 'trivia', 'sopa', 'palabradia', 'cifras', 'hockey', 'motos', 'mastermind'];
     const FILTROS = {
         vivo: { t: '⚡ En vivo', ids: () => [...EN_VIVO, ...(typeof JUEGOS_QUE_USAN_ARCADE_COMUN !== 'undefined' ? JUEGOS_QUE_USAN_ARCADE_COMUN : [])] },
         turnos: { t: '🎲 Por turnos', ids: () => (window.JUEGOS || []).filter(j => j.categoria === 'clasicos').map(j => j.id) },

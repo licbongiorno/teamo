@@ -17,7 +17,7 @@ const CANTIDAD_JUEGOS_NOCHE = 4;
 // 5 juegos en vivo encadenados (modo: 'torneo'). Puntos: 3 al que gana y 1
 // al que pierde (por jugar); empate, 2 cada uno. Al final, podio y un premio
 // cariñoso que paga quien perdió el torneo.
-const JUEGOS_TORNEO_VIVO = ['hockey', 'motos', 'bombitas', 'autitos', 'voley', 'snake2', 'tanques', 'obstaculos'];
+const JUEGOS_TORNEO_VIVO = ['hockey', 'motos', 'bombitas', 'autitos', 'voley', 'snake2', 'tanques', 'obstaculos', 'futbolcabezas', 'pingpongvivo', 'natacion'];
 const CANTIDAD_TORNEO = 5;
 const PREMIOS_TORNEO = ['le prepara unos mates (o un cafecito) a', 'elige la peli de esta noche para', 'le da un masaje de 5 minutos a', 'cocina el próximo postre para',
     'le escribe una cartita de amor a', 'le canta una canción a', 'hace el desayuno de mañana para', 'le debe un abrazo de oso a', 'elige la música del próximo viaje para', 'le hace una playlist a'];

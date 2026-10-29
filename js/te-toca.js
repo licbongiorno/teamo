@@ -89,6 +89,8 @@ const DETECTORES_TE_TOCA = {
     chancho: _porTurno('jugando'),
     sieteymedio: _porTurno('jugando'),
     pescar: _porTurno('jugando'),
+    historia: _porTurno('jugando'),
+    emojipelis: _porTurno('jugando'),
 };
 
 const TEXTO_QUE_TE_TOCA = {

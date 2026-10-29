@@ -1677,3 +1677,25 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .boton-naipe-pes{ padding:0; border:none; background:none; cursor:pointer; }
 .boton-naipe-pes:active .naipe-chinchon{ transform:translateY(-6px); }
 .juego-pes{ display:inline-block; margin-left:3px; padding:1px 7px; border-radius:999px; background:rgba(245,217,160,0.18); color:#f5d9a0; font-size:0.72rem; }
+
+/* ==================== Creativos: historia, emojis, tabú ==================== */
+.historia-texto{ padding:14px 16px; margin:8px 0; border-radius:14px; background:#fbf5ea; color:#3b2c45; font-family:var(--fuente-titulo); font-size:1.02rem; line-height:1.55; }
+.historia-texto .comienzo{ margin:0 0 4px; font-style:italic; }
+.historia-texto .de-nico{ color:#2f6fae; }
+.historia-texto .de-carito{ color:#b33a62; }
+.texto-tenue .de-nico{ color:#a8d8ff; } .texto-tenue .de-carito{ color:#ffb3c6; }
+.textarea-historia{ width:100%; box-sizing:border-box; padding:12px; margin-bottom:8px; border-radius:14px; border:1px solid rgba(255,255,255,0.18); background:rgba(0,0,0,0.25); color:inherit; font:inherit; resize:vertical; }
+.historia-guardada{ margin:6px 0; padding:8px 10px; border-radius:12px; background:rgba(255,255,255,0.05); }
+.historia-guardada summary{ cursor:pointer; }
+.emojis-armados, .emojis-acertijo{ font-size:2rem; text-align:center; min-height:1.4em; margin:8px 0; letter-spacing:2px; word-break:break-all; }
+.emojis-acertijo{ font-size:2.4rem; padding:12px; border-radius:16px; background:rgba(255,255,255,0.05); }
+.teclado-emoji{ display:grid; grid-template-columns:repeat(8, 1fr); gap:3px; max-height:180px; overflow-y:auto; margin:6px 0 10px; padding:4px; border-radius:12px; background:rgba(0,0,0,0.2); }
+.teclado-emoji button{ font-size:1.35rem; padding:5px 0; border:none; border-radius:8px; background:transparent; cursor:pointer; }
+.teclado-emoji button:active{ background:rgba(255,255,255,0.12); transform:scale(0.9); }
+.carta-tabu{ margin:10px auto; padding:18px 14px; max-width:320px; border-radius:18px; background:linear-gradient(160deg, #fdf6f0, #f0e4d8); color:#2a1f33; text-align:center; box-shadow:0 8px 20px rgba(0,0,0,0.4); }
+.palabra-tabu{ font-family:var(--fuente-titulo); font-size:1.9rem; font-weight:700; margin-bottom:10px; color:#7a2944; }
+.prohibidas-tabu{ display:flex; flex-direction:column; gap:4px; font-size:1rem; }
+.botones-tabu{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+.botones-tabu button{ padding:14px 4px; border-radius:14px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:inherit; font:inherit; font-size:0.85rem; cursor:pointer; }
+.botones-tabu .si{ background:rgba(76,209,138,0.22); border-color:#4cd18a; }
+.botones-tabu .no{ background:rgba(255,107,107,0.18); border-color:#ff6b6b; }

@@ -1621,3 +1621,45 @@ html[data-mesa="madera"] .estrella-dch, html[data-mesa="pano"] .estrella-dch, ht
 .monstruo-exq img:nth-child(2){ animation-delay:.5s; } .monstruo-exq img:nth-child(3){ animation-delay:1s; }
 @keyframes ajEntrarMonstruo{ from{ opacity:0; transform:translateY(-12px); } to{ opacity:1; transform:none; } }
 @media (prefers-reduced-motion: reduce){ .monstruo-exq img{ animation:none; } }
+
+/* ==================== Mesa rápida: mastermind, hex, fósforos, chancho ==================== */
+.codigo-mm{ font-size:1.3rem; letter-spacing:3px; }
+.codigo-mm.grande{ font-size:2rem; margin:8px 0; }
+.paleta-mm{ display:flex; justify-content:center; gap:6px; margin:6px 0 10px; }
+.paleta-mm button{ width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); font-size:1.4rem; cursor:pointer; }
+.paleta-mm button:active{ transform:scale(0.9); }
+.tableros-mm{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.tableros-mm .panel{ padding:10px; margin:0 0 8px; }
+.fila-mm{ display:flex; align-items:center; justify-content:space-between; gap:4px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.06); }
+.fila-mm .codigo-mm{ font-size:0.95rem; letter-spacing:1px; }
+.pista-mm{ font-size:0.62rem; letter-spacing:1px; white-space:nowrap; }
+.tablero-hex{ position:relative; width:100%; max-width:440px; aspect-ratio:1.608; margin:8px auto; }
+.celda-hex{ position:absolute; aspect-ratio:0.866; padding:0; border:none; clip-path:polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background:rgba(255,255,255,0.13); transform:scale(0.94); cursor:pointer; }
+.celda-hex.borde-n{ background:rgba(168,216,255,0.28); }
+.celda-hex.borde-c{ background:rgba(255,179,198,0.28); }
+.celda-hex.borde-n.borde-c{ background:linear-gradient(135deg, rgba(168,216,255,0.3), rgba(255,179,198,0.3)); }
+.celda-hex.ficha-nico{ background:radial-gradient(circle at 35% 30%, #d9ecff, var(--celeste)); }
+.celda-hex.ficha-carito{ background:radial-gradient(circle at 35% 30%, #ffe3ec, var(--rosa)); }
+.celda-hex.ultima{ transform:scale(1); }
+.celda-hex.ganadora{ animation:ajLatirReglas 1s ease-in-out infinite; }
+.mesa-fosforos{ display:flex; flex-direction:column; align-items:center; gap:14px; padding:16px 8px; margin:8px 0; border-radius:18px; background:radial-gradient(ellipse at center, #3a2f45, #241c2e); }
+html[data-mesa="madera"] .mesa-fosforos, html[data-mesa="otono"] .mesa-fosforos{ background:repeating-linear-gradient(95deg, #9a6640 0 14px, #8a5a36 14px 22px, #a46e46 22px 34px); }
+html[data-mesa="pano"] .mesa-fosforos{ background:radial-gradient(ellipse at center, #2f6b47, #1f4a32); }
+.fila-fosforos{ display:flex; align-items:flex-end; gap:10px; }
+.fila-fosforos .texto-tenue{ font-size:0.75rem; width:14px; }
+.fosforo{ position:relative; width:9px; height:58px; padding:0; border:none; border-radius:3px; background:linear-gradient(90deg, #e8c48a, #c99a5a); cursor:pointer; transition:transform .2s, opacity .3s; }
+.fosforo::before{ content:''; position:absolute; top:-9px; left:-3px; width:15px; height:16px; border-radius:50% 50% 45% 45%; background:radial-gradient(circle at 40% 35%, #ff7a6b, #b3261e); }
+.fosforo.elegido{ transform:translateY(-10px); box-shadow:0 0 12px rgba(255,160,90,0.8); }
+.fosforo.quemado{ opacity:0.12; cursor:default; }
+.fosforo.quemado::before{ background:#333; }
+.fosforo.recien{ opacity:0.35; animation:quemarFosforo .8s ease; }
+@keyframes quemarFosforo{ 0%{ opacity:1; filter:brightness(1.8); } 100%{ opacity:0.35; } }
+.barra-chancho{ display:grid; grid-template-columns:60px 1fr 34px; align-items:center; gap:8px; margin:6px 0; font-size:0.85rem; }
+.barra-chancho > div{ display:flex; height:14px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; }
+.barra-chancho i{ display:block; height:100%; transition:width .4s; }
+.barra-chancho i.enjuego{ background:repeating-linear-gradient(45deg, #f5d9a0 0 6px, #e8c48a 6px 12px); }
+.dado-chancho{ font-size:4.4rem; text-align:center; margin:8px 0 2px; animation:rodarDado .45s ease; }
+.dado-chancho.uno{ color:#ff8fa3; }
+@keyframes rodarDado{ 0%{ transform:rotate(-200deg) scale(0.6); } 100%{ transform:none; } }
+.tiradas-chancho{ text-align:center; font-size:1.2rem; min-height:1.5em; opacity:0.75; margin-bottom:8px; }
+@media (prefers-reduced-motion: reduce){ .dado-chancho, .fosforo.recien{ animation:none; } }

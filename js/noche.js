@@ -13,6 +13,36 @@ const JUEGOS_NOCHE = ['calculo', 'trivia', 'tipeo', 'anagramas', 'stroop', 'refl
     'topo', 'blancomovil', 'carreraglobos', 'ritmo', 'simon', 'memoriarelampago', 'buscaminas', 'tiraafloja', 'bloques'];
 const CANTIDAD_JUEGOS_NOCHE = 4;
 
+// ---------- Torneo en vivo ----------
+// 5 juegos en vivo encadenados (modo: 'torneo'). Puntos: 3 al que gana y 1
+// al que pierde (por jugar); empate, 2 cada uno. Al final, podio y un premio
+// cariñoso que paga quien perdió el torneo.
+const JUEGOS_TORNEO_VIVO = ['hockey', 'motos', 'bombitas', 'autitos', 'voley', 'snake2', 'tanques', 'obstaculos'];
+const CANTIDAD_TORNEO = 5;
+const PREMIOS_TORNEO = ['le prepara unos mates (o un cafecito) a', 'elige la peli de esta noche para', 'le da un masaje de 5 minutos a', 'cocina el próximo postre para',
+    'le escribe una cartita de amor a', 'le canta una canción a', 'hace el desayuno de mañana para', 'le debe un abrazo de oso a', 'elige la música del próximo viaje para', 'le hace una playlist a'];
+const MODOS_NOCHE = { noche: { icono: '🌙', nombre: 'Noche', la: 'la noche' }, cita: { icono: '🕯️', nombre: 'Cita', la: 'la cita' }, torneo: { icono: '🏆', nombre: 'Torneo', la: 'el torneo' } };
+const modoNoche = (d) => MODOS_NOCHE[(d && d.modo) || 'noche'] || MODOS_NOCHE.noche;
+function armarTorneoEnVivo(){
+    vibrarJ(15);
+    if (_estadoNoche && _estadoNoche.activa && !confirm('Ya hay una noche en curso. ¿Empezar un torneo desde cero?')) return;
+    const disponibles = JUEGOS_TORNEO_VIVO.filter(id => document.getElementById('pantalla-' + id));
+    const juegos = [];
+    while (juegos.length < CANTIDAD_TORNEO && disponibles.length) juegos.push(disponibles.splice(Math.floor(Math.random() * disponibles.length), 1)[0]);
+    if (typeof invitarAJugar === 'function') invitarAJugar(juegos[0]);
+    window.setDoc(refNoche(), {
+        id: Date.now().toString(36), modo: 'torneo', activa: true, juegos, resultados: [], marcador: { nico: 0, carito: 0 },
+        premio: PREMIOS_TORNEO[Math.floor(Math.random() * PREMIOS_TORNEO.length)], creadaPor: miIdentidad, creadaEn: Date.now()
+    }).then(() => { if (window.sfx) window.sfx.logro(); })
+      .catch(e => console.error('No se pudo armar el torneo:', e));
+}
+// "Carito le prepara unos mates a Nico" (sólo si hubo campeón).
+function textoPremioTorneo(d){
+    if (!d || d.modo !== 'torneo' || !d.campeon || !d.premio) return '';
+    const perdio = d.campeon === 'nico' ? 'carito' : 'nico';
+    return `${nombreJugador(perdio)} ${d.premio} ${nombreJugador(d.campeon)}`;
+}
+
 // ---------- Cita de juegos ----------
 // Una noche guiada: eligen cuánto tiempo tienen y el humor, y se arma un
 // recorrido de 3 a 5 juegos. Va en el mismo doc (modo: 'cita'). Los
@@ -136,7 +166,7 @@ function _barraCita(){
         document.body.appendChild(barra);
     }
     const n = (d.resultados || []).length;
-    const html = `<span>${d.modo === 'cita' ? '🕯️ Cita' : '🌙 Noche'} · ${n + 1} de ${d.juegos.length}</span><button onclick="siguienteEnCita()">✅ Listo, siguiente</button>`;
+    const html = `<span>${modoNoche(d).icono} ${modoNoche(d).nombre} · ${n + 1} de ${d.juegos.length}${d.modo === 'torneo' ? ` · ${nombreJugador('nico')} ${(d.marcador || {}).nico || 0} — ${(d.marcador || {}).carito || 0} ${nombreJugador('carito')}` : ''}</span>${d.modo === 'torneo' ? '' : '<button onclick="siguienteEnCita()">✅ Listo, siguiente</button>'}`;
     if (barra.innerHTML !== html) barra.innerHTML = html;
 }
 setInterval(_barraCita, 1000);
@@ -173,6 +203,7 @@ function renderNocheDeJuegos(){
             <div class="texto-tenue" style="margin-bottom:10px;">${CANTIDAD_JUEGOS_NOCHE} duelos en vivo al azar, uno atrás del otro. Gana la noche quien gane más.</div>
             <button class="btn-principal" onclick="armarNocheDeJuegos()">✨ Armar la noche</button>
             <button class="btn-secundario" style="margin-top:8px;" onclick="abrirCitaDeJuegos()">🕯️ Mejor una cita: elegimos tiempo y humor</button>
+            <button class="btn-secundario" style="margin-top:8px;" onclick="armarTorneoEnVivo()">🏆 Torneo en vivo: ${CANTIDAD_TORNEO} juegos, podio y premio</button>
         </div>`;
         return;
     }
@@ -180,7 +211,7 @@ function renderNocheDeJuegos(){
     const resultados = d.resultados || [];
     const lista = d.juegos.map((j, i) => {
         const r = resultados[i];
-        const marca = r ? (r.ganador ? `✅ ${nombreJugador(r.ganador)}` : r.manual ? '💞 listo' : '🤝 empate') : (i === resultados.length && d.activa ? '▶ ahora' : '');
+        const marca = r ? (r.ganador ? `✅ ${nombreJugador(r.ganador)}` : r.manual ? (d.modo === 'torneo' ? '⏭️ salteado' : '💞 listo') : '🤝 empate') : (i === resultados.length && d.activa ? '▶ ahora' : '');
         return `<div class="fila-noche${i === resultados.length && d.activa ? ' actual' : ''}"><span>${_juegoNoche(j)}</span><small>${marca}</small></div>`;
     }).join('');
     let pie;
@@ -188,16 +219,22 @@ function renderNocheDeJuegos(){
         const actual = d.juegos[resultados.length];
         pie = `<button class="btn-principal" onclick="abrirJuego('${actual}')">▶ Jugar ${_juegoNoche(actual)}</button>
             <button class="btn-secundario" style="margin-top:8px;" onclick="siguienteEnCita()">⏭️ Ya lo jugamos: siguiente</button>
-            <button class="btn-secundario" style="margin-top:8px;" onclick="terminarNocheDeJuegos()">Terminar ${d.modo === 'cita' ? 'la cita' : 'la noche'}</button>`;
+            <button class="btn-secundario" style="margin-top:8px;" onclick="terminarNocheDeJuegos()">Terminar ${modoNoche(d).la}</button>`;
     } else {
         const competitivos = resultados.filter(r => r.ganador).length;
-        const campeon = d.campeon ? `🏆 ${nombreJugador(d.campeon)} ganó la ${d.modo === 'cita' ? 'cita' : 'noche'}` : (competitivos || d.modo !== 'cita' ? '🤝 ¡Terminó empatada!' : '💞 ¡Qué linda cita!');
-        pie = `<div class="texto-centro" style="font-size:1.1rem; margin:6px 0 10px;">${campeon}</div>
+        const campeon = d.campeon ? `🏆 ${nombreJugador(d.campeon)} ganó ${modoNoche(d).la}` : (competitivos || d.modo !== 'cita' ? '🤝 ¡Terminó empatada!' : '💞 ¡Qué linda cita!');
+        const podio = d.modo === 'torneo' ? (() => {
+            const orden = ['nico', 'carito'].sort((a, b) => (m[b] || 0) - (m[a] || 0)), [pri, seg] = orden, empate = (m.nico || 0) === (m.carito || 0);
+            return `<div class="podio-torneo"><div class="podio-puesto segundo"><span>${empate ? '🥇' : '🥈'}</span><b>${nombreJugador(seg)}</b><small>${m[seg] || 0} pts</small><i></i></div>
+                <div class="podio-puesto primero"><span>🥇</span><b>${nombreJugador(pri)}</b><small>${m[pri] || 0} pts</small><i></i></div></div>
+                ${textoPremioTorneo(d) ? `<div class="premio-torneo">🎁 Premio: <b>${textoPremioTorneo(d)}</b></div>` : ''}`;
+        })() : '';
+        pie = `${podio}<div class="texto-centro" style="font-size:1.1rem; margin:6px 0 10px;">${campeon}</div>
             ${d.modo === 'cita' && d.cierre ? `<div class="cierre-cita">💭 Para cerrar: <b>${d.cierre}</b><br><button class="btn-principal" style="margin-top:8px;" onclick="responderCierreCita()">Responder juntos</button></div>` : ''}
-            <div class="btn-fila" style="margin-top:8px;"><button class="btn-secundario" onclick="armarNocheDeJuegos()">✨ Otra noche</button><button class="btn-secundario" onclick="abrirCitaDeJuegos()">🕯️ Otra cita</button></div>`;
+            <div class="btn-fila" style="margin-top:8px;"><button class="btn-secundario" onclick="armarNocheDeJuegos()">✨ Otra noche</button><button class="btn-secundario" onclick="abrirCitaDeJuegos()">🕯️ Otra cita</button><button class="btn-secundario" onclick="armarTorneoEnVivo()">🏆 Otro torneo</button></div>`;
     }
     cont.innerHTML = `<div class="panel tarjeta-noche">
-        <div class="titulo-noche">${d.modo === 'cita' ? `🕯️ Cita ${(HUMORES_CITA[d.humor] || {}).icono || ''} ${(HUMORES_CITA[d.humor] || {}).nombre || ''}` : '🌙 Noche de juegos'} · Nico ${m.nico || 0} — Carito ${m.carito || 0}</div>
+        <div class="titulo-noche">${d.modo === 'cita' ? `🕯️ Cita ${(HUMORES_CITA[d.humor] || {}).icono || ''} ${(HUMORES_CITA[d.humor] || {}).nombre || ''}` : d.modo === 'torneo' ? '🏆 Torneo en vivo' : '🌙 Noche de juegos'} · Nico ${m.nico || 0} — Carito ${m.carito || 0}${d.modo === 'torneo' ? ' pts' : ''}</div>
         ${lista}
         <div style="margin-top:10px;">${pie}</div>
     </div>`;
@@ -247,16 +284,22 @@ async function nocheRegistrarResultado(juegoId, ganador, manual){
             if (d.juegos[resultados.length] !== juegoId) return; // no es el juego que tocaba
             resultados.push({ juego: juegoId, ganador: ganador || null, ...(manual ? { manual: true } : {}) });
             const marcador = { ...(d.marcador || { nico: 0, carito: 0 }) };
-            if (ganador) marcador[ganador] = (marcador[ganador] || 0) + 1;
+            if (d.modo === 'torneo') {
+                // 3 al que gana y 1 al que pierde; empate, 2 cada uno; salteado, nada.
+                if (ganador) { const otro = ganador === 'nico' ? 'carito' : 'nico'; marcador[ganador] = (marcador[ganador] || 0) + 3; marcador[otro] = (marcador[otro] || 0) + 1; }
+                else if (!manual) { marcador.nico = (marcador.nico || 0) + 2; marcador.carito = (marcador.carito || 0) + 2; }
+            } else if (ganador) marcador[ganador] = (marcador[ganador] || 0) + 1;
             const fin = resultados.length >= d.juegos.length;
             tx.update(refNoche(), { resultados, marcador, ...(fin ? { activa: false, campeon: ganadorPorPuntos(marcador), terminadaEn: Date.now() } : {}) });
             if (fin) terminada = { ...d, marcador, campeon: ganadorPorPuntos(marcador) };
         });
         if (terminada && window.guardarMomento) {
-            const cita = terminada.modo === 'cita', m = terminada.marcador;
-            window.guardarMomento({ id: 'noche-' + terminada.id, icono: cita ? '🕯️' : '🌙',
-                titulo: terminada.campeon ? `${nombreJugador(terminada.campeon)} ganó la ${cita ? 'cita' : 'Noche'} de juegos` : `Una ${cita ? 'cita' : 'Noche'} de juegos juntos`,
-                sub: `${terminada.juegos.map(_juegoNoche).join(' · ')} — ${m.nico || 0} a ${m.carito || 0}`, quien: terminada.campeon || null });
+            const cita = terminada.modo === 'cita', torneo = terminada.modo === 'torneo', m = terminada.marcador;
+            const premio = textoPremioTorneo(terminada);
+            window.guardarMomento({ id: 'noche-' + terminada.id, icono: modoNoche(terminada).icono,
+                titulo: torneo ? (terminada.campeon ? `${nombreJugador(terminada.campeon)} ganó el Torneo en vivo` : 'Un Torneo en vivo empatado')
+                    : terminada.campeon ? `${nombreJugador(terminada.campeon)} ganó la ${cita ? 'cita' : 'Noche'} de juegos` : `Una ${cita ? 'cita' : 'Noche'} de juegos juntos`,
+                sub: `${terminada.juegos.map(_juegoNoche).join(' · ')} — ${m.nico || 0} a ${m.carito || 0}${torneo ? ' pts' : ''}${premio ? ` · 🎁 ${premio}` : ''}`, quien: terminada.campeon || null });
         }
     } catch (e) { console.warn('No se pudo anotar el resultado en la Noche de juegos:', e); }
 }
@@ -271,6 +314,13 @@ function _avisarAvanceNoche(d){
         if (window.fx) window.fx.confeti();
         return;
     }
+    if (!d.activa && d.modo === 'torneo') {
+        mostrarCartelEnVivo({ titulo: d.campeon ? `🏆 ¡${nombreJugador(d.campeon)} ganó el Torneo!` : '🤝 ¡El torneo terminó empatado!',
+            sub: `Nico ${m.nico || 0} — Carito ${m.carito || 0} pts${textoPremioTorneo(d) ? ` · 🎁 ${textoPremioTorneo(d)}` : ''}`, duracion: 10000 });
+        if (window.fx) window.fx.confeti();
+        if (window.sfx) window.sfx.victoria();
+        return;
+    }
     if (!d.activa) {
         mostrarCartelEnVivo({ titulo: d.campeon ? `🏆 ¡${nombreJugador(d.campeon)} ganó la Noche de juegos!` : '🤝 ¡La noche terminó empatada!',
             sub: `Nico ${m.nico || 0} — Carito ${m.carito || 0}`, duracion: 7000 });
@@ -279,7 +329,7 @@ function _avisarAvanceNoche(d){
     }
     const siguiente = d.juegos[d.resultados.length];
     mostrarCartelEnVivo({
-        clave: 'noche', titulo: `${d.modo === 'cita' ? '🕯️' : '🌙'} ${quien} · Nico ${m.nico || 0} — Carito ${m.carito || 0}`,
+        clave: 'noche', titulo: `${modoNoche(d).icono} ${quien} · Nico ${m.nico || 0} — Carito ${m.carito || 0}${d.modo === 'torneo' ? ' pts' : ''}`,
         sub: `Siguiente: ${_juegoNoche(siguiente)}`, si: '▶ Ir', no: 'Después',
         alSi: () => { if (typeof cerrarJuego === 'function') cerrarJuego(); abrirJuego(siguiente); }, duracion: 15000
     });
@@ -287,6 +337,7 @@ function _avisarAvanceNoche(d){
 
 window.iniciarNocheDeJuegos = iniciarNocheDeJuegos;
 window.armarNocheDeJuegos = armarNocheDeJuegos;
+window.armarTorneoEnVivo = armarTorneoEnVivo;
 window.terminarNocheDeJuegos = terminarNocheDeJuegos;
 window.nocheRegistrarResultado = nocheRegistrarResultado;
 window.abrirCitaDeJuegos = abrirCitaDeJuegos;

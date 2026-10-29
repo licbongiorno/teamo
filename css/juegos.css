@@ -1751,3 +1751,14 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .niveles-av button{ width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:inherit; font:inherit; font-weight:700; cursor:pointer; }
 .niveles-av button.activa{ border-color:#ffb3c6; background:rgba(255,179,198,0.2); }
 .niveles-av button:disabled{ opacity:0.4; cursor:default; }
+
+/* ==================== Torneo en vivo ==================== */
+.podio-torneo{ display:flex; justify-content:center; align-items:flex-end; gap:10px; margin:10px 0 4px; }
+.podio-puesto{ display:flex; flex-direction:column; align-items:center; gap:2px; width:110px; }
+.podio-puesto span{ font-size:1.6rem; }
+.podio-puesto small{ opacity:0.75; }
+.podio-puesto i{ display:block; width:100%; border-radius:10px 10px 4px 4px; background:linear-gradient(180deg, rgba(255,179,198,0.5), rgba(255,179,198,0.15)); }
+.podio-puesto.primero i{ height:64px; background:linear-gradient(180deg, rgba(245,211,107,0.7), rgba(245,211,107,0.2)); }
+.podio-puesto.segundo i{ height:38px; }
+.premio-torneo{ margin:8px 0 2px; padding:8px 10px; border-radius:12px; background:rgba(255,179,198,0.12); border:1px dashed rgba(255,179,198,0.5); text-align:center; font-size:0.9rem; }
+.btn-torneo-vivo{ width:100%; margin:0 0 8px; }

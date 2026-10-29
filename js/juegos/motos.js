@@ -69,7 +69,7 @@ async function chocarMoto(){
     MT.choque = true;
     efectoChoqueMoto(MT.yo, true);
     vibrarJ([40, 30, 40]);
-    if (window.sfx) window.sfx.error();
+    if (!(window.sonarArcade && sonarArcade('explosion', { tam: 0.7 })) && window.sfx) window.sfx.error();
     const clave = MT.clave, k = MT.yo.k;
     MT.enlace && MT.enlace.enviar('choque', { k, c: clave }, true);
     // El primero que choca pierde la ronda (y la ronda se cierra ahí: si el

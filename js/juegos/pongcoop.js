@@ -79,7 +79,7 @@ function pasoPc(dt){
                 PC.golpeT[pa.mia ? 'yo' : 'el'] = performance.now();
                 if (PC.fx) PC.fx.chispas(b.x, Y_PALETA, ['#fff', '#ffe58a'], 5);
                 if (pa.mia) {
-                    if (window.sfx) window.sfx.toque();
+                    if (!(window.sonarArcade && sonarArcade('paleta')) && window.sfx) window.sfx.toque();
                     if (!PC.dueno) { PC.dueno = true; PC.enlace && PC.enlace.enviar('toma', { b: bolasPlanasPc(), c: PC.clave }, true); }
                 }
             }
@@ -131,7 +131,7 @@ function romperPc(l, b){
     PC.rotos.add(l.id);
     efectoLadrilloPc(l);
     vibrarJ(6);
-    if (window.sfx) window.sfx[l.tipo === 'L' || l.tipo === 'M' ? 'logro' : 'rebote']();
+    if (!(window.sonarArcade && sonarArcade(l.tipo === 'L' || l.tipo === 'M' ? 'powerup' : 'ladrillo', { tono: 1 + (l.y || 0) / 200 })) && window.sfx) window.sfx[l.tipo === 'L' || l.tipo === 'M' ? 'logro' : 'rebote']();
     if (l.tipo === 'M') {
         // Multibola: dos pelotas más desde esta.
         PC.bolas.push({ x: b.x, y: b.y, vx: -b.vx - 1, vy: b.vy }, { x: b.x, y: b.y, vx: b.vx + 1, vy: -Math.abs(b.vy) });

@@ -101,7 +101,7 @@ async function comerSn(n){
         if (e.clave !== clave || (e.manzana || 0) !== n) return null;
         return { manzana: n + 1, largos: { ...e.largos, [quien]: SN.yo.cuerpo.length + 2 } };
     });
-    if (res) { SN.yo.crecer += 2; SN.comioT[miIdentidad] = performance.now(); vibrarJ(12); if (window.sfx) window.sfx.acierto(); }
+    if (res) { SN.yo.crecer += 2; SN.comioT[miIdentidad] = performance.now(); vibrarJ(12); if (!(window.sonarArcade && sonarArcade('comer')) && window.sfx) window.sfx.acierto(); }
 }
 function cortarSn(){
     const p = SN.yo;

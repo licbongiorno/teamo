@@ -124,7 +124,7 @@ async function marcarGolHoc(quien){
     efectoGolHoc(quien);
     HC.enlace && HC.enlace.enviar('gol', { q: quien, c: HC.clave }, true);
     vibrarJ([20, 40, 20]);
-    if (window.sfx) window.sfx[quien === miIdentidad ? 'punto' : 'error']();
+    if (!(window.sonarArcade && sonarArcade('gol')) && window.sfx) window.sfx[quien === miIdentidad ? 'punto' : 'error']();
     const clave = HC.clave;
     await Hockey.accion((e) => {
         if (e.clave !== clave) return null;

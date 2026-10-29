@@ -103,7 +103,7 @@ function dispararTq(p){
     TQ.balas.push(b);
     efectoDisparoTq(miIdentidad, b.x, b.y, p.a);
     vibrarJ(8);
-    if (window.sfx) window.sfx.golpe();
+    if (!(window.sonarArcade && sonarArcade('disparo')) && window.sfx) window.sfx.golpe();
     TQ.enlace && TQ.enlace.enviar('bala', { ...b, c: TQ.clave }, true);
 }
 async function meDieronTq(b){
@@ -112,7 +112,7 @@ async function meDieronTq(b){
     TQ.balas = TQ.balas.filter(x => x !== b);
     efectoBoomTq(TQ.yo.x, TQ.yo.y, true);
     vibrarJ([40, 30, 60]);
-    if (window.sfx) window.sfx.explosion();
+    if (!(window.sonarArcade && sonarArcade('explosion', { tam: 0.9 })) && window.sfx) window.sfx.explosion();
     TQ.enlace && TQ.enlace.enviar('boom', { x: TQ.yo.x, y: TQ.yo.y, bala: b.id, c: TQ.clave }, true);
     const clave = TQ.clave, otro = miRival, propia = b.de === miIdentidad;
     await Tanques.accionEnCola((e) => {

@@ -155,7 +155,7 @@ function pasoAu(dt){
     const o = AU.el;
     if (o && Date.now() - o.visto < 1500) {
         const dx = p.x - o.x, dy = p.y - o.y, d = Math.hypot(dx, dy);
-        if (d < 12 && d > 0) { p.x += dx / d * (12 - d) * 0.6; p.y += dy / d * (12 - d) * 0.6; p.v *= 0.9; if (!AU._choque || Date.now() - AU._choque > 500) { AU._choque = Date.now(); vibrarJ(15); if (window.sfx) window.sfx.toque(); if (AU.fx) { AU.fx.chispas((p.x + o.x) / 2, (p.y + o.y) / 2, ['#fff7c2', '#ffd23a', '#ff9f43'], 10); AU.fx.temblor(2, 180); } } }
+        if (d < 12 && d > 0) { p.x += dx / d * (12 - d) * 0.6; p.y += dy / d * (12 - d) * 0.6; p.v *= 0.9; if (!AU._choque || Date.now() - AU._choque > 500) { AU._choque = Date.now(); vibrarJ(15); if (!(window.sonarArcade && sonarArcade('choque')) && window.sfx) window.sfx.toque(); if (AU.fx) { AU.fx.chispas((p.x + o.x) / 2, (p.y + o.y) / 2, ['#fff7c2', '#ffd23a', '#ff9f43'], 10); AU.fx.temblor(2, 180); } } }
     }
     const derrapa = Math.abs(Math.atan2(p.vy, p.vx) - p.a) % (Math.PI * 2);
     if (Math.abs(p.v) > 2.4 && (derrapa > 0.35 && derrapa < Math.PI * 2 - 0.35)) p.humo.push({ x: p.x, y: p.y, t: Date.now() });

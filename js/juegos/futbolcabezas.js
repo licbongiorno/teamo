@@ -171,7 +171,7 @@ async function marcarGolFb(quien){
     efectoGolFb(quien, FB.pelota);
     FB.enlace && FB.enlace.enviar('gol', { q: quien, x: FB.pelota.x, y: FB.pelota.y, c: FB.clave }, true);
     vibrarJ([20, 40, 20]);
-    if (window.sfx) window.sfx[quien === miIdentidad ? 'punto' : 'error']();
+    if (!(window.sonarArcade && sonarArcade('gol')) && window.sfx) window.sfx[quien === miIdentidad ? 'punto' : 'error']();
     const clave = FB.clave;
     await FutbolCabezas.accionEnCola((e) => {
         if (e.clave !== clave) return null;

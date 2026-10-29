@@ -80,35 +80,38 @@
         src.start(t0); src.stop(t0 + dur + 0.03);
     }
 
+    // Durante un juego en vivo (js/audio-arcade.js con enVivo) los sonidos de
+    // acción salen por el motor arcade: mezcla, eco y variaciones de tono.
+    const arcade = (n) => !!(window.AudioArcade && window.AudioArcade.enVivo && window.AudioArcade.sfx(n));
     const sfx = {
         // Interacción genérica
         click() { tono({ freq: 520, dur: 0.05, tipo: 'sine', vol: 0.11 }); },
-        toque() { tono({ freq: 440, dur: 0.04, tipo: 'sine', vol: 0.09 }); },
+        toque() { if (arcade('paleta')) return; tono({ freq: 440, dur: 0.04, tipo: 'sine', vol: 0.09 }); },
         pop() { tono({ freq: 300, dur: 0.09, tipo: 'sine', vol: 0.17, freqFinal: 520 }); },
         seleccionar() { tono({ freq: 660, dur: 0.05, tipo: 'triangle', vol: 0.1 }); },
 
         // Resultado de una jugada/pregunta
-        acierto() { tono({ freq: 523.25, dur: 0.1, tipo: 'sine', vol: 0.17 }); tono({ freq: 659.25, dur: 0.15, tipo: 'sine', vol: 0.15, delay: 0.07 }); },
-        error() { tono({ freq: 180, dur: 0.18, tipo: 'sawtooth', vol: 0.13, freqFinal: 90 }); },
+        acierto() { if (arcade('acierto')) return; tono({ freq: 523.25, dur: 0.1, tipo: 'sine', vol: 0.17 }); tono({ freq: 659.25, dur: 0.15, tipo: 'sine', vol: 0.15, delay: 0.07 }); },
+        error() { if (arcade('error')) return; tono({ freq: 180, dur: 0.18, tipo: 'sawtooth', vol: 0.13, freqFinal: 90 }); },
         revelar() { [523.25, 659.25, 830.61].forEach((f, i) => tono({ freq: f, dur: 0.18, tipo: 'sine', vol: 0.14, delay: i * 0.06 })); },
         empate() { tono({ freq: 440, dur: 0.14, tipo: 'sine', vol: 0.13 }); tono({ freq: 440, dur: 0.14, tipo: 'sine', vol: 0.13, delay: 0.16 }); },
 
         // Cierre de partida
-        victoria() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tono({ freq: f, dur: 0.22, tipo: 'triangle', vol: 0.17, delay: i * 0.09 })); },
-        derrota() { [392, 349.23, 293.66].forEach((f, i) => tono({ freq: f, dur: 0.28, tipo: 'sine', vol: 0.14, delay: i * 0.12 })); },
+        victoria() { if (arcade('victoria')) return; [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tono({ freq: f, dur: 0.22, tipo: 'triangle', vol: 0.17, delay: i * 0.09 })); },
+        derrota() { if (arcade('derrota')) return; [392, 349.23, 293.66].forEach((f, i) => tono({ freq: f, dur: 0.28, tipo: 'sine', vol: 0.14, delay: i * 0.12 })); },
 
         // Progreso / economía del juego
-        punto() { tono({ freq: 880, dur: 0.08, tipo: 'sine', vol: 0.14 }); },
-        moneda() { tono({ freq: 988, dur: 0.06, tipo: 'square', vol: 0.08 }); tono({ freq: 1319, dur: 0.1, tipo: 'square', vol: 0.08, delay: 0.05 }); },
+        punto() { if (arcade('punto')) return; tono({ freq: 880, dur: 0.08, tipo: 'sine', vol: 0.14 }); },
+        moneda() { if (arcade('moneda')) return; tono({ freq: 988, dur: 0.06, tipo: 'square', vol: 0.08 }); tono({ freq: 1319, dur: 0.1, tipo: 'square', vol: 0.08, delay: 0.05 }); },
         logro() { [659.25, 830.61, 987.77, 1318.51].forEach((f, i) => tono({ freq: f, dur: 0.16, tipo: 'sine', vol: 0.15, delay: i * 0.06 })); },
 
         // Objetos / texturas
-        swoosh() { ruido({ dur: 0.22, vol: 0.1, filtro: 2200 }); },
+        swoosh() { if (arcade('swoosh')) return; ruido({ dur: 0.22, vol: 0.1, filtro: 2200 }); },
         cartaFlip() { ruido({ dur: 0.09, vol: 0.08, filtro: 3500 }); },
         dado() { ruido({ dur: 0.1, vol: 0.09, filtro: 3000 }); ruido({ dur: 0.09, vol: 0.07, filtro: 2500, delay: 0.09 }); },
-        golpe() { ruido({ dur: 0.08, vol: 0.14, filtro: 1400 }); tono({ freq: 140, dur: 0.09, tipo: 'sine', vol: 0.1 }); },
-        rebote() { tono({ freq: 300, dur: 0.05, tipo: 'triangle', vol: 0.1, freqFinal: 500 }); },
-        explosion() { ruido({ dur: 0.3, vol: 0.18, filtro: 800 }); tono({ freq: 90, dur: 0.25, tipo: 'sawtooth', vol: 0.12 }); },
+        golpe() { if (arcade('golpe')) return; ruido({ dur: 0.08, vol: 0.14, filtro: 1400 }); tono({ freq: 140, dur: 0.09, tipo: 'sine', vol: 0.1 }); },
+        rebote() { if (arcade('rebote')) return; tono({ freq: 300, dur: 0.05, tipo: 'triangle', vol: 0.1, freqFinal: 500 }); },
+        explosion() { if (arcade('explosion')) return; ruido({ dur: 0.3, vol: 0.18, filtro: 800 }); tono({ freq: 90, dur: 0.25, tipo: 'sawtooth', vol: 0.12 }); },
 
         // Cronómetro / navegación
         tick() { tono({ freq: 900, dur: 0.025, tipo: 'square', vol: 0.06 }); },

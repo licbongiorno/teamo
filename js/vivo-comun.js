@@ -21,6 +21,9 @@
 //  VivoComun.pausa(id) → true si está en pausa. VivoComun.cartelPausa(ctx) → el velo.
 //  VivoComun.soloEncuadre(id, selector) → juegos rápidos: sólo ⛶ Encuadrar.
 //  VivoComun.escritor(refFn) → G para montar() en juegos que no usan JuegoTurnos.
+//  Música: cada juego tiene su tema (TEMAS_MUSICA, con js/audio-arcade.js) que
+//      suena solo mientras se juega, baja en la pausa y se corta al salir.
+//      La barrita suma 🎵 para prenderla o apagarla (se recuerda).
 // ============================================================
 (function () {
     function botones(grupos, teclas) {
@@ -155,7 +158,7 @@
         const falta = inicio - reloj(actual), seg = Math.ceil(falta / 1000);
         const clave = id + inicio;
         if (falta > 0 && seg <= 3 && ultimaCuenta[clave] !== seg) { ultimaCuenta[clave] = seg; window.sfx.tick(); }
-        else if (falta <= 0 && falta > -300 && ultimaCuenta[clave] !== 0 && ultimaCuenta[clave] != null) { ultimaCuenta[clave] = 0; window.sfx.punto(); }
+        else if (falta <= 0 && falta > -300 && ultimaCuenta[clave] !== 0 && ultimaCuenta[clave] != null) { ultimaCuenta[clave] = 0; if (!(window.AudioArcade && AudioArcade.sfx('ya'))) window.sfx.punto(); }
     }
 
     // ---------- Pausa compartida ----------
@@ -273,6 +276,9 @@
         b.bPausa.disabled = !jugando;
         b.bPausa.classList.toggle('activo', p);
         b.bEnc.textContent = encuadrado() ? '✕ Salir del encuadre' : '⛶ Encuadrar';
+        const A = window.AudioArcade;
+        b.bMus.style.display = TEMAS_MUSICA[id] && A ? '' : 'none';
+        if (A) { b.bMus.textContent = A.musicaActiva() ? '🎵' : '🔇'; b.bMus.title = A.musicaActiva() ? 'Apagar la música' : 'Prender la música'; b.bMus.classList.toggle('activo', !A.musicaActiva()); }
         document.body.classList.toggle('vivo-pausado', !!p && actual === id);
     }
     // opciones.velo: elemento sobre el que se pone el velo de pausa (juegos sin lienzo).
@@ -281,11 +287,12 @@
         if (!barras[id]) {
             const el = document.createElement('div');
             el.className = 'barra-vivo';
-            el.innerHTML = '<button type="button" class="b-pausa"></button><button type="button" class="b-encuadre"></button>';
-            const bPausa = el.querySelector('.b-pausa'), bEnc = el.querySelector('.b-encuadre');
+            el.innerHTML = '<button type="button" class="b-pausa"></button><button type="button" class="b-encuadre"></button><button type="button" class="b-musica" aria-label="Música"></button>';
+            const bPausa = el.querySelector('.b-pausa'), bEnc = el.querySelector('.b-encuadre'), bMus = el.querySelector('.b-musica');
             bPausa.addEventListener('click', () => cambiarPausa(id, !pausa(id)));
             bEnc.addEventListener('click', () => encuadrar(!encuadrado()));
-            barras[id] = { el, bPausa, bEnc };
+            bMus.addEventListener('click', () => { if (window.AudioArcade) { AudioArcade.alternarMusica(); musicaAct = ''; controlMusica(); Object.keys(barras).forEach(refrescar); } });
+            barras[id] = { el, bPausa, bEnc, bMus };
         }
         if (opciones && opciones.velo) barras[id].velo = opciones.velo;
         if (opciones && opciones.area) areas[id] = opciones.area;
@@ -320,5 +327,31 @@
     }
     // Para los que dibujan con HTML: guarda el estado antes de dibujar (así reloj() ya lo usa).
     function sync(id, e) { if (e) { estados[id] = e; actual = id; refrescar(id); } }
-    window.VivoComun = { botones, teclado, recibir, suave, adelantar, posBola, estado, cuenta, montar, reloj, pausa, cartelPausa, encuadrar, soloEncuadre, escritor, sync };
+    // ---------- Música de cada juego ----------
+    const TEMAS_MUSICA = {
+        autitos: 'carrera', aventura: 'aventura', obstaculos: 'aventura', snake2: 'aventura',
+        bombitas: 'batalla', tanques: 'batalla', motos: 'neon', pongcoop: 'neon',
+        futbolcabezas: 'deporte', hockey: 'deporte', voley: 'deporte', pingpongvivo: 'deporte',
+        natacion: 'agua', pescavivo: 'agua', fuegoagua: 'templo', cocina: 'tranqui', bloques: 'tranqui',
+    };
+    let musicaAct = '';
+    function controlMusica() {
+        const A = window.AudioArcade;
+        if (!A) return;
+        const p = document.querySelector('.pantalla-juego.activa'), id = p && p.id.replace('pantalla-', '');
+        const tema = TEMAS_MUSICA[id], e = estados[id], jugando = !!(tema && e && e.fase === 'jugando' && !document.hidden);
+        // Mientras hay un juego en vivo, los sonidos de sfx.js salen por el motor arcade.
+        A.enVivo = jugando || id === 'multiverso';
+        const quiero = jugando ? tema + ':' + (pausa(id) ? 'pausa' : 'juego') : '';
+        if (quiero === musicaAct) return;
+        // El Multiverso maneja su propia música: si no la puse yo, no la toco.
+        if (!quiero && !musicaAct) return;
+        musicaAct = quiero;
+        if (jugando) A.musica(tema, pausa(id) ? 'pausa' : 'juego');
+        else if (id !== 'multiverso') A.musica(null);
+    }
+    setInterval(controlMusica, 400);
+    document.addEventListener('visibilitychange', controlMusica);
+
+    window.VivoComun = { botones, teclado, recibir, suave, adelantar, posBola, estado, cuenta, montar, reloj, pausa, cartelPausa, encuadrar, soloEncuadre, escritor, sync, TEMAS_MUSICA };
 })();

@@ -188,3 +188,6 @@ async function revanchaTiraAfloja(){
     const anterior = snap.exists() ? snap.data() : null;
     await revanchaUnToque(refTiraAfloja(), 'tiraafloja', { puntajes: anterior?.puntajes || { nico: 0, carito: 0 } });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('tiraafloja', '#area-toque-ta');

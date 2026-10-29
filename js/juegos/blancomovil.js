@@ -196,3 +196,6 @@ async function revanchaBlancoMovil(){
     const puntajes = await leerPuntajesBlancoMovil();
     await revanchaUnToque(refBlancoMovil(), 'blancomovil', { puntajes });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('blancomovil', '#area-blanco');

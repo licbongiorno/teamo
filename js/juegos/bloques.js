@@ -14,6 +14,7 @@ const INTERVALO_CAIDA_BLOQUES = 650;
 function refBloques(){ return window.doc(window.db, 'juegos', 'bloques'); }
 
 let _bloquesFaseAnterior = null;
+const _escritorBloques = VivoComun.escritor(refBloques);
 function iniciarBloques(){
     const cont = document.getElementById('contenido-bloques');
     if (cont) delete cont.dataset.jugandoLocal;
@@ -114,7 +115,7 @@ function jugarRondaBloques(){
     _puntajeBloques = 0; _lineasAcumBloques = 0; _garbageYaEnviadasBloques = 0;
     _jugandoLocalBloques = true; _terminadaBloques = false;
 
-    let html = `<div class="panel texto-centro">
+    let html = `<div class="zona-bloques"><div class="panel texto-centro">
         <span id="puntaje-bloques">0 pts</span> &nbsp;·&nbsp;
         <span class="texto-tenue">${nombreJugador(miRival)}: <span id="puntaje-rival-bloques">0</span> pts</span>
     </div>
@@ -125,8 +126,9 @@ function jugarRondaBloques(){
     html += `</div></div>
     <div class="panel"><div style="display:grid; grid-template-columns:repeat(${COLUMNAS_BLOQUES},1fr); gap:4px;">
         ${Array.from({ length: COLUMNAS_BLOQUES }, (_, c) => `<button class="btn-secundario" style="padding:12px 0;" onclick="moverColumnaBloques(${c})">${c + 1}</button>`).join('')}
-    </div></div>`;
+    </div></div></div>`;
     cont.innerHTML = html;
+    VivoComun.montar('bloques', _escritorBloques, cont, _ultimoEstadoBloques, { velo: cont.querySelector('.zona-bloques') });
 
     spawnPiezaBloques();
     _timerCaidaBloques = setInterval(tickCaidaBloques, INTERVALO_CAIDA_BLOQUES);
@@ -148,14 +150,14 @@ function spawnPiezaBloques(){
 }
 
 function moverColumnaBloques(col){
-    if (!_jugandoLocalBloques || _terminadaBloques) return;
+    if (!_jugandoLocalBloques || _terminadaBloques || VivoComun.pausa('bloques')) return;
     vibrarJ(6);
     _piezaColBloques = col;
     dibujarGrillaBloques();
 }
 
 function tickCaidaBloques(){
-    if (!_jugandoLocalBloques || _terminadaBloques) return;
+    if (!_jugandoLocalBloques || _terminadaBloques || VivoComun.pausa('bloques')) return;
     if (colisionaBloques(_piezaFilaBloques + 1, _piezaColBloques)) {
         _gridBloques[idxBloques(_piezaFilaBloques, _piezaColBloques)] = _piezaColorBloques;
         limpiarFilasBloques();
@@ -276,8 +278,11 @@ async function intentarCerrarPartidaBloques(){
 
 // Escucha permanente (vía iniciarBloques): aplica basura entrante y
 // detecta si el rival perdió mientras jugamos nuestra propia partida.
+let _ultimoEstadoBloques = null;
 function manejarSnapshotBloques(data){
     if (!data) return;
+    _ultimoEstadoBloques = data;
+    VivoComun.sync('bloques', data);
     if (_jugandoLocalBloques && !_terminadaBloques) {
         const campoGarbage = miIdentidad === 'nico' ? 'garbageParaNico' : 'garbageParaCarito';
         const pendiente = data[campoGarbage] || 0;

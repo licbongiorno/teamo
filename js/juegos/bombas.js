@@ -211,3 +211,6 @@ async function revanchaBombas(){
     const puntajes = await leerPuntajesBombas();
     await revanchaUnToque(refBombas(), 'bombas', { puntajes });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('bombas', '#area-bombas');

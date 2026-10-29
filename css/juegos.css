@@ -1792,3 +1792,7 @@ body.encuadre .pantalla-juego.activa .panel{ margin-bottom:6px; }
 }
 body.encuadre .pantalla-juego.activa canvas{ width:100%; max-width:none; margin-top:2px; margin-bottom:4px; }
 body.encuadre .pantalla-juego.activa .franja-campeonato{ display:none; }
+/* Velo de pausa para los juegos dibujados con HTML (Cocina, Bloques). */
+.velo-pausa{ position:absolute; inset:0; z-index:5; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:rgba(14,10,24,0.72); border-radius:14px; color:#fff; text-align:center; }
+.velo-pausa b{ font-size:1.6rem; } .velo-pausa span{ font-size:0.85rem; opacity:0.85; }
+body.encuadre .pantalla-juego.activa [id^="contenido-"] > .barra-vivo:first-child + .texto-tenue{ display:none; }

@@ -183,3 +183,6 @@ async function romperLadrillo(indice){
         registrarEvento('cuidado_compartido', `Limpiaron la pared en Rompe Ladrillos a Dúo`);
     }
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('ladrillos', '#tiempo-ladrillos');

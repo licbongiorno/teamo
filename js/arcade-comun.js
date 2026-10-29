@@ -55,6 +55,7 @@ async function iniciarRondaArcadeSiCorresponde(refDoc, juegoId, duracionMs, extr
                 ptsFinalesNico: del, ptsFinalesCarito: del,
                 resultadosNico: del, resultadosCarito: del,
                 ultimoPunto: del, horaRonda: del, cierreEn: del,
+                pausa: del, pausaTotal: del, // la pausa de la ronda anterior (js/vivo-comun.js)
                 ...(extraInicial || {})
             }, { merge: true });
         });

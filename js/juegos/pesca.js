@@ -232,3 +232,6 @@ async function revanchaPesca(){
     // ya había tocado Revancha primero.
     await revanchaUnToque(refPesca(), 'pesca', { mejorConjunto: data?.mejorConjunto || 0 });
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('pesca', '#area-pesca');

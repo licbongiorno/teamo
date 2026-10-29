@@ -307,7 +307,9 @@
     };
     // Los juegos en vivo de pantalla compartida tienen la barrita de arriba.
     const TIP_BARRA = '⏸ Pausa frena la partida para los dos (cualquiera toca ▶ Seguir) y ⛶ Encuadrar deja el juego fijo en toda la pantalla, sin que se corra.';
-    ['aventura', 'fuegoagua', 'autitos', 'voley', 'snake2', 'pongcoop', 'hockey', 'motos', 'bombitas', 'tanques', 'pescavivo', 'obstaculos'].forEach(id => { if (R[id]) R[id].tips = [...(R[id].tips || []), TIP_BARRA]; });
+    ['aventura', 'fuegoagua', 'autitos', 'voley', 'snake2', 'pongcoop', 'hockey', 'motos', 'bombitas', 'tanques', 'pescavivo', 'obstaculos', 'cocina', 'bloques'].forEach(id => { if (R[id]) R[id].tips = [...(R[id].tips || []), TIP_BARRA]; });
+    const TIP_ENCUADRE = '⛶ Encuadrar deja la ronda fija en toda la pantalla, así no se corre cuando tocás rápido.';
+    ['burbujas', 'bombas', 'pinatas', 'carreraglobos', 'topo', 'blancomovil', 'cocodrilos', 'pesca', 'ladrillos', 'ritmo', 'tiraafloja', 'semaforo'].forEach(id => { if (R[id]) R[id].tips = [...(R[id].tips || []), TIP_ENCUADRE]; });
 
     // Jerarquía del truco, de mayor a menor: [palo, número] (null = todos los palos).
     const JERARQUIA = [

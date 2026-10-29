@@ -239,3 +239,6 @@ async function revanchaSemaforo(){
     vibrarJ(10);
     await revanchaUnToque(refSemaforo(), 'semaforo');
 }
+
+// Encuadre (js/vivo-comun.js): la ronda queda fija en la pantalla, sin que se corra al tocar rápido.
+VivoComun.soloEncuadre('semaforo', '#emoji-semaforo');

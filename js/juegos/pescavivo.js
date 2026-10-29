@@ -22,7 +22,7 @@ function pezPv(e, i){
     return { i, g, tipo, cx: 55 + r() * 190, cy: 80 + r() * 210, ax: 20 + r() * 55, ay: 10 + r() * 35, w: 0.3 + r() * 0.5, ph: r() * 6.28, ph2: r() * 6.28, nace: ((e.pescadosT || {})['p' + i]) || 0 };
 }
 function posPezPv(e, f){
-    const t = (window.ahoraSync() - e.inicio) / 1000;
+    const t = (VivoComun.reloj('pescavivo') - e.inicio) / 1000;
     return { x: f.cx + f.ax * Math.sin(f.w * t + f.ph), y: f.cy + f.ay * Math.sin(f.w * 0.7 * t + f.ph2), dir: Math.cos(f.w * t + f.ph) >= 0 ? 1 : -1 };
 }
 const muelleX = (q) => q === 'nico' ? 80 : 220;
@@ -33,7 +33,7 @@ function reiniciarPv(e){
 }
 function tirarCañaPv(x, y){
     const c = PV.caña, e = PV.estado;
-    if (!c || !e || e.fase !== 'jugando' || window.ahoraSync() < e.inicio) return;
+    if (!c || !e || e.fase !== 'jugando' || VivoComun.reloj('pescavivo') < e.inicio) return;
     if (c.st === 'pica') { empezarARecogerPv(); return; }
     if (c.st === 'recogiendo') return;
     if (y < AGUA_PV[0] + 4 || y > AGUA_PV[1] - 8) return;
@@ -54,7 +54,7 @@ function soltarPv(motivo){
 function pasoPv(dt){
     const e = PV.estado, c = PV.caña;
     if (!e || e.fase !== 'jugando' || !c) return;
-    const ahora = window.ahoraSync();
+    const ahora = VivoComun.reloj('pescavivo');
     if (ahora >= e.inicio + DURA_PV) { terminarPv(); return; }
     if (ahora < e.inicio) return;
     if (c.st === 'lanzando') {
@@ -97,7 +97,7 @@ async function pescarPv(f){
     let equipo = false;
     const res = await PescaVivo.accionEnCola((e) => {
         if (e.clave !== clave || ((e.pescados || {})['p' + f.i] || 0) !== f.g) return null;
-        const ahora = window.ahoraSync(), ult = e.ultima;
+        const ahora = VivoComun.reloj('pescavivo'), ult = e.ultima;
         equipo = !!(ult && ult.q !== quien && ahora - ult.t < 4000);
         return {
             pescados: { ...(e.pescados || {}), ['p' + f.i]: f.g + 1 }, pescadosT: { ...(e.pescadosT || {}), ['p' + f.i]: ahora },
@@ -113,7 +113,7 @@ async function terminarPv(){
     PV.cerrando = true;
     const clave = PV.clave;
     await PescaVivo.accionEnCola((e) => {
-        if (e.clave !== clave || window.ahoraSync() < e.inicio + DURA_PV) return null;
+        if (e.clave !== clave || VivoComun.reloj('pescavivo') < e.inicio + DURA_PV) return null;
         const pts = e.puntos || 0, rec = e.record || 0, nuevo = pts > rec;
         return { record: Math.max(rec, pts), ganador: 'empate', motivo: `🎉 Pescaron ${e.cantidad || 0} peces juntos: ${pts} puntos${nuevo ? ' · ¡nuevo récord de la pareja!' : ` · récord: ${rec}`}` };
     });
@@ -140,7 +140,7 @@ function dibujarPv(){
     c.strokeStyle = 'rgba(255,255,255,0.18)'; c.lineWidth = 1;
     for (let i = 0; i < 9; i++) { const y = AGUA_PV[0] + 20 + i * 31, x = 30 + ((i * 71 + t * 8) % 220); c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 8, y - 3, x + 16, y); c.stroke(); }
     [[40, 70], [255, 120], [60, 260]].forEach(([x, y]) => { c.fillStyle = '#4f9a4a'; c.beginPath(); c.arc(x, y, 10, 0.3, Math.PI * 2); c.lineTo(x, y); c.fill(); });
-    const ahora = window.ahoraSync();
+    const ahora = VivoComun.reloj('pescavivo');
     if (e.fase === 'jugando') for (let i = 0; i < PECES_PV; i++) {
         const f = pezPv(e, i);
         const mio = PV.caña && PV.caña.pez && PV.caña.pez.i === i && (PV.caña.st === 'pica' || PV.caña.st === 'recogiendo');
@@ -195,6 +195,7 @@ function dibujarPv(){
 function buclePv(ts){
     const pantalla = document.getElementById('pantalla-pescavivo');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararPv(); return; }
+    if (VivoComun.pausa('pescavivo')) { PV.ultimoTs = 0; dibujarPv(); VivoComun.cartelPausa(PV.ctx); PV.loop = requestAnimationFrame(buclePv); return; }
     const dt = Math.min(2.5, (ts - (PV.ultimoTs || ts)) / 16.67 || 1);
     PV.ultimoTs = ts;
     pasoPv(dt);
@@ -214,6 +215,7 @@ function arrancarPv(){
         PV.ctx = PV.canvas.getContext('2d');
         PV.canvas.addEventListener('pointerdown', (ev) => {
             ev.preventDefault();
+            if (VivoComun.pausa('pescavivo')) return;
             const r = PV.canvas.getBoundingClientRect();
             if (PV.caña && (PV.caña.st === 'pica' || PV.caña.st === 'recogiendo')) { PV.teclas.tirar = true; if (PV.caña.st === 'pica') empezarARecogerPv(); return; }
             tirarCañaPv((ev.clientX - r.left) * W_PV / r.width, (ev.clientY - r.top) * H_PV / r.height);
@@ -259,6 +261,7 @@ const PescaVivo = JuegoTurnos.crear({
         PV.estado = e;
         const host = cont.querySelector('#pescavivo-host');
         if (!host) return;
+        VivoComun.montar('pescavivo', PescaVivo, host, e);
         if (PV.clave !== e.clave) reiniciarPv(e);
         if (e.fase === 'jugando') { arrancarPv(); host.appendChild(PV.canvas); host.appendChild(PV.controles); }
         else if (PV.canvas) { host.appendChild(PV.canvas); dibujarPv(); }

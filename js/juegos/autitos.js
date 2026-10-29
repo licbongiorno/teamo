@@ -101,7 +101,7 @@ function progresoAu(p){
 function pasoAu(dt){
     const e = AU.estado, p = AU.yo;
     if (!e || e.fase !== 'jugando' || !p || AU.terminado) return;
-    const ahora = window.ahoraSync();
+    const ahora = VivoComun.reloj('autitos');
     if (ahora < e.inicio) return;
     if (p.tVuelta == null) p.tVuelta = e.inicio;
     const k = AU.teclas;
@@ -199,7 +199,7 @@ function dibujarAu(){
     c.textAlign = 'left';
     VivoComun.estado(c, W_AU, H_AU, AU.enlace, nombreJugador(miRival));
     // Semáforo
-    const falta = e.inicio - window.ahoraSync();
+    const falta = e.inicio - VivoComun.reloj('autitos');
     if (e.fase === 'jugando' && falta > -900) {
         const prendidas = falta > 0 ? Math.min(3, 4 - Math.ceil(falta / 1000)) : 0;
         c.fillStyle = 'rgba(20,16,30,0.85)'; c.fillRect(W_AU / 2 - 44, 150, 88, 34);
@@ -212,6 +212,7 @@ function dibujarAu(){
 function bucleAu(ts){
     const pantalla = document.getElementById('pantalla-autitos');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararAu(); return; }
+    if (VivoComun.pausa('autitos')) { AU.ultimoTs = 0; dibujarAu(); VivoComun.cartelPausa(AU.ctx); AU.loop = requestAnimationFrame(bucleAu); return; }
     const dt = Math.min(2.5, (ts - (AU.ultimoTs || ts)) / 16.67 || 1);
     AU.ultimoTs = ts;
     pasoAu(dt);
@@ -284,6 +285,7 @@ const Autitos = JuegoTurnos.crear({
         AU.estado = e;
         const host = cont.querySelector('#autitos-host');
         if (!host) return;
+        VivoComun.montar('autitos', Autitos, host, e);
         if (AU.clave !== e.clave) cargarCarreraAu(e);
         if (e.fase === 'jugando') {
             arrancarAu();

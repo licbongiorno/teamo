@@ -233,7 +233,7 @@ function solidoFa(x, y, placa){
 }
 function pasoFa(dt){
     const e = FA.estado, p = FA.yo;
-    if (!e || e.fase !== 'jugando' || !p || FA.muriendo || window.ahoraSync() < e.inicio) return;
+    if (!e || e.fase !== 'jugando' || !p || FA.muriendo || VivoComun.reloj('fuegoagua') < e.inicio) return;
     const placa = placaFa();
     const otro = FA.el && Date.now() - FA.el.visto < 1500 ? FA.el : null;
     moverAscensoresFa(dt);
@@ -323,9 +323,9 @@ async function completarFa(){
             paso = null;
             if (e.nivel + '-' + e.inicio !== clave) return null;
             paso = e.nivel;
-            const tiempo = Math.round((window.ahoraSync() - e.inicio) / 1000);
+            const tiempo = Math.round((VivoComun.reloj('fuegoagua') - e.inicio) / 1000);
             if (e.nivel >= NIVELES_FA.length) return { ganador: 'empate', motivo: `🎉 ¡Pasaron los ${NIVELES_FA.length} niveles! Gemas: ${e.gemas || 0} · tropezones: ${e.muertes || 0}` };
-            return { nivel: e.nivel + 1, inicio: window.ahoraSync() + 3000, tomados: [], palanca: false, cajas: [], aviso: `✅ Nivel ${e.nivel} en ${tiempo} s` };
+            return { nivel: e.nivel + 1, inicio: VivoComun.reloj('fuegoagua') + 3000, tomados: [], palanca: false, cajas: [], aviso: `✅ Nivel ${e.nivel} en ${tiempo} s` };
         });
     } finally { setTimeout(() => { _completandoFa = false; }, 1500); }
     if (paso && window.sfx) window.sfx.victoria ? window.sfx.victoria() : window.sfx.acierto();
@@ -371,15 +371,16 @@ function dibujarFa(){
     if (FA.yo && !FA.muriendo) pj(FA.yo, miIdentidad);
     c.fillStyle = 'rgba(0,0,0,0.5)'; c.fillRect(0, 0, W, 12);
     c.fillStyle = '#fff'; c.font = 'bold 8px monospace';
-    c.fillText(`${e.nivel}/${NIVELES_FA.length} ${NIVELES_FA[e.nivel - 1].nombre} · 💎 ${e.gemas || 0} · ⏱ ${Math.max(0, Math.round((window.ahoraSync() - e.inicio) / 1000))}s`, 3, 9);
+    c.fillText(`${e.nivel}/${NIVELES_FA.length} ${NIVELES_FA[e.nivel - 1].nombre} · 💎 ${e.gemas || 0} · ⏱ ${Math.max(0, Math.round((VivoComun.reloj('fuegoagua') - e.inicio) / 1000))}s`, 3, 9);
     VivoComun.estado(c, W, H, FA.enlace, nombreJugador(miRival));
-    const falta = e.inicio - window.ahoraSync();
+    const falta = e.inicio - VivoComun.reloj('fuegoagua');
     if (e.fase === 'jugando' && falta > 0) { c.fillStyle = 'rgba(0,0,0,0.45)'; c.fillRect(0, H / 2 - 20, W, 36); c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = 'bold 18px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W / 2, H / 2 + 2); c.font = '8px monospace'; c.fillText(NIVELES_FA[e.nivel - 1].nombre, W / 2, H / 2 + 12); c.textAlign = 'left'; }
     else if (FA.enPuerta) { c.fillStyle = '#fff'; c.textAlign = 'center'; c.font = '8px monospace'; c.fillText(`¡En tu puerta! Falta ${nombreJugador(miRival)}…`, W / 2, 24); c.textAlign = 'left'; }
 }
 function bucleFa(ts){
     const pantalla = document.getElementById('pantalla-fuegoagua');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararFa(); return; }
+    if (VivoComun.pausa('fuegoagua')) { FA.ultimoTs = 0; dibujarFa(); VivoComun.cartelPausa(FA.ctx); FA.loop = requestAnimationFrame(bucleFa); return; }
     const dt = Math.min(2.5, (ts - (FA.ultimoTs || ts)) / 16.67 || 1);
     FA.ultimoTs = ts;
     pasoFa(dt);
@@ -448,6 +449,7 @@ const FuegoAgua = JuegoTurnos.crear({
         FA.estado = e;
         const host = cont.querySelector('#fuegoagua-host');
         if (!host) return;
+        VivoComun.montar('fuegoagua', FuegoAgua, host, e);
         if (e.fase === 'jugando' && FA.clave !== e.nivel + '-' + e.inicio) cargarNivelFa(e);
         if (e.fase === 'jugando') {
             (e.tomados || []).forEach(id => { if (!FA.tomados.has(id)) { FA.tomados.add(id); const [, x, y] = id.split('-'); FA.mapa[+y][+x] = '.'; } });

@@ -111,16 +111,16 @@ function elegirNivelAv(n){
 }
 function posMovilAv(m){
     const largo = m.rango * T_AV;
-    const t = (window.ahoraSync() - (AV.estado?.inicio || 0)) / 1000 * 26;
+    const t = (VivoComun.reloj('aventura') - (AV.estado?.inicio || 0)) / 1000 * 26;
     const q = ((t % (2 * largo)) + 2 * largo) % (2 * largo), off = q < largo ? q : 2 * largo - q;
     return m.eje === 'h' ? { x: m.x * T_AV + off, y: m.y * T_AV } : { x: m.x * T_AV, y: m.y * T_AV - off };
 }
 function posJefeAv(){
     const j = AV.jefe, golpes = (AV.estado && AV.estado.jefeGolpes) || 0;
-    const largo = j.x1 - j.x0, t = (window.ahoraSync() - (AV.estado?.inicio || 0)) / 1000 * (42 + golpes * 18);
+    const largo = j.x1 - j.x0, t = (VivoComun.reloj('aventura') - (AV.estado?.inicio || 0)) / 1000 * (42 + golpes * 18);
     const q = ((t % (2 * largo)) + 2 * largo) % (2 * largo);
     // Salta cada tanto: más enojado con cada golpe.
-    const salto = Math.max(0, Math.sin((window.ahoraSync() - (AV.estado?.inicio || 0)) / (900 - golpes * 150))) * (golpes ? 26 : 0);
+    const salto = Math.max(0, Math.sin((VivoComun.reloj('aventura') - (AV.estado?.inicio || 0)) / (900 - golpes * 150))) * (golpes ? 26 : 0);
     return { x: j.x0 + (q < largo ? q : 2 * largo - q), y: j.y - salto };
 }
 const jefeVivoAv = () => AV.jefe && ((AV.estado && AV.estado.jefeGolpes) || 0) < 3;
@@ -177,13 +177,13 @@ function pisoPlacaAv(p){
 function caidaAv(x, y){
     const t = AV.caidas && AV.caidas[x + ',' + y];
     if (!t) return 0;
-    const d = window.ahoraSync() - t;
+    const d = VivoComun.reloj('aventura') - t;
     return d < 650 ? 1 : d < 3800 ? 2 : 0; // 1 tiembla · 2 no está
 }
 function pisarCaeAv(x, y){
     const k = x + ',' + y;
     if (caidaAv(x, y)) return;
-    const t = window.ahoraSync();
+    const t = VivoComun.reloj('aventura');
     AV.caidas[k] = t;
     if (AV.enlace && AV.estado) AV.enlace.enviar('cae', { k, t, n: AV.estado.nivel }, true);
 }
@@ -198,7 +198,7 @@ function esSolidoAv(x, y, placa){
 function posBichoAv(b){
     const largo = b.max - b.min;
     if (largo <= 0) return b.min;
-    const t = (window.ahoraSync() - (AV.estado?.inicio || 0)) / 1000 * 28 + b.fase;
+    const t = (VivoComun.reloj('aventura') - (AV.estado?.inicio || 0)) / 1000 * 28 + b.fase;
     const p = ((t % (2 * largo)) + 2 * largo) % (2 * largo);
     return b.min + (p < largo ? p : 2 * largo - p);
 }
@@ -206,7 +206,7 @@ function posBichoAv(b){
 // ---------- Física de mi personaje ----------
 function pasoFisicaAv(dt){
     const p = AV.yo, e = AV.estado;
-    if (!p || !e || e.fase !== 'jugando' || window.ahoraSync() < e.inicio || AV.muriendo) return;
+    if (!p || !e || e.fase !== 'jugando' || VivoComun.reloj('aventura') < e.inicio || AV.muriendo) return;
     const placa = placaApretadaAv();
     const k = AV.teclas;
     const objetivo = (k.der ? 1 : 0) - (k.izq ? 1 : 0);
@@ -299,10 +299,10 @@ async function golpearJefeAv(){
     const nivel = AV.estado.nivel;
     let vencido = false;
     await Aventura.accion((e) => {
-        if (e.nivel !== nivel || (e.jefeGolpes || 0) >= 3 || window.ahoraSync() - (e.jefeT || 0) < 900) return null;
+        if (e.nivel !== nivel || (e.jefeGolpes || 0) >= 3 || VivoComun.reloj('aventura') - (e.jefeT || 0) < 900) return null;
         const jefeGolpes = (e.jefeGolpes || 0) + 1;
         vencido = jefeGolpes >= 3;
-        return { jefeGolpes, jefeT: window.ahoraSync() };
+        return { jefeGolpes, jefeT: VivoComun.reloj('aventura') };
     });
     if (vencido) {
         if (window.animJuegos) window.animJuegos.cartel('👑 ¡Vencieron al jefe!', { sub: '¡A la bandera!', dur: 2000 });
@@ -353,7 +353,7 @@ async function llegarAv(){
         if (!(llegaron.nico && llegaron.carito)) return { llegaron };
         paso = e.nivel;
         if (e.nivel >= NIVELES_AV.length) return { llegaron, ganador: 'empate', motivo: `🎉 ¡Terminaron la aventura con ${e.monedas || 0} monedas y ${e.vidas} vidas!` };
-        return { nivel: e.nivel + 1, inicio: window.ahoraSync() + 3500, llegaron: {}, tomados: [], vidas: Math.min(VIDAS_AV, e.vidas + 1), jefeGolpes: 0, jefeT: 0 };
+        return { nivel: e.nivel + 1, inicio: VivoComun.reloj('aventura') + 3500, llegaron: {}, tomados: [], vidas: Math.min(VIDAS_AV, e.vidas + 1), jefeGolpes: 0, jefeT: 0 };
     });
     if (paso && paso > (AV.progreso.max || 0)) window.setDoc(refProgresoAv(), { max: paso, elegido: Math.min(NIVELES_AV.length, paso + 1) }, { merge: true }).catch(() => {});
     if (paso && paso < NIVELES_AV.length && window.guardarMomento) window.guardarMomento({ id: `aventura-${paso}-${Date.now().toString(36)}`, juego: 'aventura', icono: '🍄', titulo: `¡Pasaron "${NIVELES_AV[paso - 1].nombre}" juntos!`, sub: `Nivel ${paso} de la Aventura de a Dos` });
@@ -412,7 +412,7 @@ function dibujarAv(){
     });
     // Jefe
     if (jefeVivoAv()) {
-        const jp = posJefeAv(), jx = jp.x - cam, golpes = e.jefeGolpes || 0, parpadeo = window.ahoraSync() - (e.jefeT || 0) < 900 && Math.floor(Date.now() / 80) % 2;
+        const jp = posJefeAv(), jx = jp.x - cam, golpes = e.jefeGolpes || 0, parpadeo = VivoComun.reloj('aventura') - (e.jefeT || 0) < 900 && Math.floor(Date.now() / 80) % 2;
         if (!parpadeo) {
             c.fillStyle = '#7a3aa8'; c.beginPath(); c.arc(jx + 14, jp.y + 14, 14, Math.PI, 0); c.fill(); c.fillRect(jx, jp.y + 14, 28, 10);
             c.fillStyle = '#f5d36b'; c.fillRect(jx + 6, jp.y - 4, 16, 4); c.fillRect(jx + 6, jp.y - 8, 3, 4); c.fillRect(jx + 12, jp.y - 9, 4, 5); c.fillRect(jx + 19, jp.y - 8, 3, 4);
@@ -461,7 +461,7 @@ function dibujarAv(){
     c.fillText(`🪙 ${e.monedas || 0}`, 4, 10); c.fillText(`❤ ${e.vidas}`, 52, 10); c.fillText(`${e.nivel}/${NIVELES_AV.length} ${n.nombre}`, 92, 10);
     VivoComun.estado(c, W, H, AV.enlace, nombreJugador(miRival));
     // Cuenta regresiva o espera en la bandera
-    const falta = e.inicio - window.ahoraSync();
+    const falta = e.inicio - VivoComun.reloj('aventura');
     if (e.fase === 'jugando' && falta > 0) { textoGrandeAv(c, W, H, falta > 1000 ? String(Math.ceil(falta / 1000) - 0) : '¡YA!', `Nivel ${e.nivel}: ${n.nombre}`); }
     else if (AV.llegue && e.fase === 'jugando') textoGrandeAv(c, W, H, '🚩', `¡Llegaste! Esperando a ${nombreJugador(miRival)}…`);
 }
@@ -496,6 +496,7 @@ function pjAv(c, x, y, quien, dir, paso, aire, soyYo){
 function bucleAv(ts){
     const pantalla = document.getElementById('pantalla-aventura');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararMotorAv(); return; }
+    if (VivoComun.pausa('aventura')) { AV.ultimoTs = 0; dibujarAv(); VivoComun.cartelPausa(AV.ctx); AV.loop = requestAnimationFrame(bucleAv); return; }
     const dt = Math.min(2.5, (ts - (AV.ultimoTs || ts)) / 16.67 || 1);
     AV.ultimoTs = ts;
     pasoFisicaAv(dt);
@@ -575,6 +576,7 @@ const Aventura = JuegoTurnos.crear({
         AV.estado = e;
         const host = cont.querySelector('#aventura-host');
         if (!host) return;
+        VivoComun.montar('aventura', Aventura, host, e);
         if (e.fase === 'jugando' && AV.nivelCargado !== e.nivel + '-' + e.inicio) cargarNivelAv(e);
         if (e.fase === 'jugando') {
             // Lo que el otro tomó mientras tanto (por si se perdió algún mensaje).

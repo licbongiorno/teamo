@@ -48,7 +48,7 @@ function chocarHoc(m, d){
 }
 function pasoHoc(dt){
     const e = HC.estado;
-    if (!e || e.fase !== 'jugando' || !HC.mio || window.ahoraSync() < e.inicio) return;
+    if (!e || e.fase !== 'jugando' || !HC.mio || VivoComun.reloj('hockey') < e.inicio) return;
     // Mi mazo sigue al dedo, sólo en mi mitad.
     const m = HC.mio, abajo = miIdentidad === 'nico';
     if (HC.dedo) {
@@ -106,7 +106,7 @@ async function marcarGolHoc(quien){
         const goles = { ...e.goles, [quien]: e.goles[quien] + 1 };
         const otro = quien === 'nico' ? 'carito' : 'nico';
         if (goles[quien] >= GOLES_HOC) return { goles, ganador: quien, motivo: `¡${goles.nico} a ${goles.carito}!` };
-        return { goles, saque: otro, clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 1200, ultimoGol: quien };
+        return { goles, saque: otro, clave: Math.random().toString(36).slice(2, 7), inicio: VivoComun.reloj('hockey') + 1200, ultimoGol: quien };
     });
 }
 function dibujarHoc(){
@@ -130,7 +130,7 @@ function dibujarHoc(){
     const yo = e.goles[miIdentidad], el = e.goles[miRival];
     c.fillStyle = 'rgba(42,31,51,0.55)'; c.font = 'bold 28px monospace'; c.textAlign = 'right';
     c.fillText(String(el), W_HOC - 12, H_HOC / 2 - 10); c.fillText(String(yo), W_HOC - 12, H_HOC / 2 + 32); c.textAlign = 'left';
-    const falta = e.inicio - window.ahoraSync();
+    const falta = e.inicio - VivoComun.reloj('hockey');
     if (e.fase === 'jugando' && (falta > 0 || HC.golMarcado)) {
         c.fillStyle = 'rgba(42,31,51,0.7)'; c.textAlign = 'center'; c.font = 'bold 26px monospace';
         c.fillText(HC.golMarcado || (e.ultimoGol && falta > 0 && e.goles.nico + e.goles.carito > 0) ? '¡GOL!' : String(Math.ceil(falta / 1000)), W_HOC / 2, H_HOC / 2 + 9);
@@ -140,6 +140,7 @@ function dibujarHoc(){
 function bucleHoc(ts){
     const pantalla = document.getElementById('pantalla-hockey');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararHoc(); return; }
+    if (VivoComun.pausa('hockey')) { HC.ultimoTs = 0; dibujarHoc(); VivoComun.cartelPausa(HC.ctx); HC.loop = requestAnimationFrame(bucleHoc); return; }
     const dt = Math.min(2.5, (ts - (HC.ultimoTs || ts)) / 16.67 || 1);
     HC.ultimoTs = ts;
     pasoHoc(dt);
@@ -209,6 +210,7 @@ const Hockey = JuegoTurnos.crear({
         HC.estado = e;
         const host = cont.querySelector('#hockey-host');
         if (!host) return;
+        VivoComun.montar('hockey', Hockey, host, e);
         if (HC.clave !== e.clave) reiniciarHoc(e);
         if (e.fase === 'jugando') arrancarHoc();
         if (HC.canvas) { host.appendChild(HC.canvas); dibujarHoc(); }

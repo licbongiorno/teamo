@@ -305,6 +305,9 @@
             tips: ['Dos fichas juntas forman un punto seguro: no las pueden comer.', 'Los "pips" te dicen cuánto les falta a cada uno para terminar.']
         },
     };
+    // Los juegos en vivo de pantalla compartida tienen la barrita de arriba.
+    const TIP_BARRA = '⏸ Pausa frena la partida para los dos (cualquiera toca ▶ Seguir) y ⛶ Encuadrar deja el juego fijo en toda la pantalla, sin que se corra.';
+    ['aventura', 'fuegoagua', 'autitos', 'voley', 'snake2', 'pongcoop', 'hockey', 'motos', 'bombitas', 'tanques', 'pescavivo', 'obstaculos'].forEach(id => { if (R[id]) R[id].tips = [...(R[id].tips || []), TIP_BARRA]; });
 
     // Jerarquía del truco, de mayor a menor: [palo, número] (null = todos los palos).
     const JERARQUIA = [

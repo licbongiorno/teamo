@@ -1762,3 +1762,33 @@ html[data-mesa="clasico"] .mesa-sym{ background:radial-gradient(ellipse at cente
 .podio-puesto.segundo i{ height:38px; }
 .premio-torneo{ margin:8px 0 2px; padding:8px 10px; border-radius:12px; background:rgba(255,179,198,0.12); border:1px dashed rgba(255,179,198,0.5); text-align:center; font-size:0.9rem; }
 .btn-torneo-vivo{ width:100%; margin:0 0 8px; }
+
+/* ===== Barrita de los juegos en vivo: ⏸ Pausa (para los dos) y ⛶ Encuadrar ===== */
+.barra-vivo{ display:flex; justify-content:center; gap:8px; margin:0 auto 4px; user-select:none; -webkit-user-select:none; touch-action:none; }
+.barra-vivo button{ border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.08); color:inherit; border-radius:999px; padding:5px 12px; font-size:0.8rem; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.barra-vivo button:disabled{ opacity:0.4; }
+.barra-vivo button.activo{ background:rgba(255,179,198,0.3); border-color:#ffb3c6; font-weight:bold; }
+body.vivo-pausado .controles-aventura{ opacity:0.45; }
+/* Encuadre: el juego queda fijo ocupando toda la pantalla, sin scroll ni rebote. */
+html:has(body.encuadre), body.encuadre{ overflow:hidden; overscroll-behavior:none; height:100%; }
+body.encuadre .pantalla-juego.activa{ position:fixed; inset:0; z-index:9998; margin:0; overflow-y:auto; overscroll-behavior:contain; background:radial-gradient(ellipse 140% 90% at 50% 0%, #241a33 0%, var(--bg-oscuro) 55%, #0b0812 100%);
+    padding:calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left)); animation:none; }
+/* Fuera lo que no es el juego: título, presencia, apuesta, marcador de partidas, tips y botones flotantes. */
+body.encuadre .pantalla-juego.activa > :not([id^="contenido-"]),
+body.encuadre .pantalla-juego.activa [id^="contenido-"] > .texto-tenue:first-child,
+body.encuadre .pantalla-juego.activa [id$="-host"] ~ .texto-tenue,
+body.encuadre .azar-flotante, body.encuadre .chat-flotante, body.encuadre .gate-chip-sesion{ display:none !important; }
+body.encuadre .pantalla-juego.activa .panel{ margin-bottom:6px; }
+/* Acostado: los botones van a los costados del juego, no abajo. */
+@media (orientation: landscape) {
+    body.encuadre .pantalla-juego.activa .controles-aventura{ position:fixed; left:calc(10px + env(safe-area-inset-left)); right:calc(10px + env(safe-area-inset-right)); bottom:calc(10px + env(safe-area-inset-bottom)); max-width:none; margin:0; pointer-events:none; z-index:2; }
+    body.encuadre .pantalla-juego.activa .controles-aventura button{ pointer-events:auto; }
+    body.encuadre .pantalla-juego.activa [id$="-host"] ~ *{ display:none; }
+    /* Con tres grupos (Tanques) el del medio sube a la derecha, arriba del último. */
+    body.encuadre .pantalla-juego.activa .controles-aventura{ display:grid; grid-template-columns:auto 1fr auto; align-items:end; row-gap:8px; }
+    body.encuadre .pantalla-juego.activa .controles-aventura > :first-child{ grid-column:1; grid-row:2; }
+    body.encuadre .pantalla-juego.activa .controles-aventura > :nth-child(2):not(:last-child){ grid-column:3; grid-row:1; justify-self:end; }
+    body.encuadre .pantalla-juego.activa .controles-aventura > :last-child:not(:first-child){ grid-column:3; grid-row:2; justify-self:end; }
+}
+body.encuadre .pantalla-juego.activa canvas{ width:100%; max-width:none; margin-top:2px; margin-bottom:4px; }
+body.encuadre .pantalla-juego.activa .franja-campeonato{ display:none; }

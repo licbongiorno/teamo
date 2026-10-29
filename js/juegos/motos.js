@@ -33,7 +33,7 @@ function avanzarOtroMoto(x, y){
 function pasoMoto(){
     const e = MT.estado, p = MT.yo;
     if (!e || e.fase !== 'jugando' || !p || MT.choque) return;
-    const ahora = window.ahoraSync();
+    const ahora = VivoComun.reloj('motos');
     if (ahora < e.inicio) return;
     const debido = Math.floor((ahora - e.inicio) / PASO_MOTO);
     let n = 0;
@@ -65,7 +65,7 @@ async function chocarMoto(){
         const rondas = { ...e.rondas, [otro]: e.rondas[otro] + 1 };
         const texto = `Chocó ${nombreJugador(miIdentidad)}: ronda para ${nombreJugador(otro)}.`;
         if (rondas[otro] >= RONDAS_MOTO) return { rondas, ganador: otro, motivo: `${rondas.nico} a ${rondas.carito} en rondas.` };
-        return { rondas, clave: Math.random().toString(36).slice(2, 7), inicio: window.ahoraSync() + 2500, aviso: texto };
+        return { rondas, clave: Math.random().toString(36).slice(2, 7), inicio: VivoComun.reloj('motos') + 2500, aviso: texto };
     });
 }
 function girarHacia(dir){ if (!MT.yo || MT.choque) return; vibrarJ(5); MT.pendiente = dir; }
@@ -96,17 +96,18 @@ function dibujarMoto(){
     pintar(MT.yo, ...col(miIdentidad));
     c.fillStyle = '#fff'; c.font = 'bold 11px monospace';
     c.fillText(`${nombreJugador(miIdentidad)} ${e.rondas[miIdentidad]} · ${e.rondas[miRival]} ${nombreJugador(miRival)}`, 6, 14);
-    const falta = e.inicio - window.ahoraSync();
+    const falta = e.inicio - VivoComun.reloj('motos');
     if (e.fase === 'jugando' && falta > 0) { c.textAlign = 'center'; c.font = 'bold 30px monospace'; c.fillText(String(Math.ceil(falta / 1000)), W / 2, H / 2); c.font = '11px monospace'; c.fillText(e.aviso || 'Esquivá las estelas', W / 2, H / 2 + 22); c.textAlign = 'left'; }
     if (MT.choque && e.fase === 'jugando') { c.textAlign = 'center'; c.font = 'bold 22px monospace'; c.fillStyle = '#ff8fa3'; c.fillText('💥 ¡CHOQUE!', W / 2, H / 2); c.textAlign = 'left'; }
 }
 function bucleMoto(){
     const pantalla = document.getElementById('pantalla-motos');
     if (!pantalla || !pantalla.classList.contains('activa')) { pararMoto(); return; }
+    if (VivoComun.pausa('motos')) { MT.ultimoTs = 0; dibujarMoto(); VivoComun.cartelPausa(MT.ctx); MT.loop = requestAnimationFrame(bucleMoto); return; }
     pasoMoto();
     if (MT.enlace && MT.yo && MT.yo.k !== MT.ultimoPaso) { MT.ultimoPaso = MT.yo.k; MT.enlace.enviar('pos', { k: MT.yo.k, x: MT.yo.x, y: MT.yo.y, c: MT.clave }); }
     dibujarMoto();
-    VivoComun.estado(MT.ctx, COLS_MOTO * CEL_MOTO, FILAS_MOTO * CEL_MOTO, MT.enlace, nombreJugador(miRival), !!(MT.estado && MT.estado.fase === 'jugando' && window.ahoraSync() > MT.estado.inicio + 500 && !MT.choque && !(MT.el && MT.el.choco)));
+    VivoComun.estado(MT.ctx, COLS_MOTO * CEL_MOTO, FILAS_MOTO * CEL_MOTO, MT.enlace, nombreJugador(miRival), !!(MT.estado && MT.estado.fase === 'jugando' && VivoComun.reloj('motos') > MT.estado.inicio + 500 && !MT.choque && !(MT.el && MT.el.choco)));
     MT.loop = requestAnimationFrame(bucleMoto);
 }
 function arrancarMoto(){
@@ -166,6 +167,7 @@ const Motos = JuegoTurnos.crear({
         MT.estado = e;
         const host = cont.querySelector('#motos-host');
         if (!host) return;
+        VivoComun.montar('motos', Motos, host, e);
         if (MT.clave !== e.clave) reiniciarMoto(e);
         if (e.fase === 'jugando') arrancarMoto();
         if (MT.canvas) { host.appendChild(MT.canvas); if (MT.botones) host.appendChild(MT.botones); dibujarMoto(); }

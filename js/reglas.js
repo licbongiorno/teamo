@@ -345,6 +345,7 @@
         fondo.innerHTML = `<div class="compu-selector panel reglas-hoja" role="dialog" aria-label="Cómo se juega">
             <div class="compu-selector-titulo">❓ ¿Cómo se juega ${info.nombre ? info.nombre : ''}?</div>
             <div class="reglas-objetivo">🎯 ${r.objetivo}</div>
+            ${typeof window.caraACaraJuego === 'function' ? window.caraACaraJuego(juego) : ''}
             <h4>Paso a paso</h4>
             <ol class="reglas-lista">${r.pasos.map(p => `<li>${p}</li>`).join('')}</ol>
             ${r.tabla ? tabla(r.tabla) : ''}

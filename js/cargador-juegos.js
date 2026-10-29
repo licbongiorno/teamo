@@ -21,7 +21,7 @@ const JUEGOS_QUE_USAN_BASE_TURNOS = ['gomoku', 'mancala', 'serpientes', 'parchis
 // Versión de caché: sumale 1 cada vez que se actualicen archivos de
 // juegos y el navegador/Vercel puedan estar sirviendo una copia vieja
 // en caché. Cambiar este número fuerza a descargar la versión nueva.
-const VERSION_CACHE = 91;
+const VERSION_CACHE = 92;
 
 function scriptsNecesariosPara(juegoId) {
     // 'estadisticas' no es un juego del catálogo: su script (js/estadisticas.js)
@@ -43,6 +43,11 @@ function scriptsNecesariosPara(juegoId) {
     }
     if (juegoId === 'multiverso') {
         const mv = ['mv-audio', 'mv-entrada', 'mv-fondo', 'mv-ranking', 'mv-naves', 'mv-modos'].map(n => `js/juegos/multiverso/${n}.js?v=${VERSION_CACHE}`);
+        return [...mv, propio];
+    }
+    // Astro Fútbol reusa el motor del Multiverso (controles, fondo, naves y sonido).
+    if (juegoId === 'astrofutbol') {
+        const mv = ['mv-audio', 'mv-entrada', 'mv-fondo', 'mv-naves'].map(n => `js/juegos/multiverso/${n}.js?v=${VERSION_CACHE}`);
         return [...mv, propio];
     }
     if (juegoId === 'anagramas') {

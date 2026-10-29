@@ -66,7 +66,7 @@
             ev.preventDefault();
             tactil = true;
             if (opciones.alPrimerGesto) opciones.alPrimerGesto();
-            canvas.setPointerCapture && canvas.setPointerCapture(ev.pointerId);
+            try { canvas.setPointerCapture && canvas.setPointerCapture(ev.pointerId); } catch (_) { /* algunos navegadores no lo dejan: igual se sigue el dedo */ }
             const r = canvas.getBoundingClientRect(), j = zonaDe(ev.clientX, ev.clientY), lx = ev.clientX - r.left, ly = ev.clientY - r.top;
             const be = botonEspecial(j);
             let tipo = 'joy';

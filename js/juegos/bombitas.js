@@ -35,12 +35,19 @@ function reiniciarBom(e){
     const s = salidaBom(miIdentidad), o = salidaBom(miRival);
     BM.yo = { x: s.x * T_BOM + 2, y: s.y * T_BOM + 2 };
     BM.el = { x: o.x * T_BOM + 2, y: o.y * T_BOM + 2 };
-    BM.muerto = false; BM.alcance = 2; BM.maxBombas = 1;
+    BM.muerto = false; BM.avisoToque = false; BM.alcance = 2; BM.maxBombas = 1;
     BM.bot = { alcance: 2, maxBombas: 1, camino: [], piensa: 0 };
 }
 // ---------- Contra la compu: el otro personaje lo maneja la compu en este celu ----------
 const compuBom = () => { const m = typeof window.modoCompu === 'function' && window.modoCompu(); return m && m.juego === 'bombitas' ? m : null; };
 const celdaDeBom = (p) => [Math.floor((p.x + 6) / T_BOM), Math.floor((p.y + 6) / T_BOM)];
+// ¿El fuego toca al personaje? Se mira toda la caja de adentro (no sólo el centro):
+// si estaba medio metido en la cruz, explota, como se ve en las dos pantallas.
+function tocaFuegoBom(p){
+    if (!p || !BM.fuegos.length) return false;
+    const x0 = Math.floor((p.x + 3) / T_BOM), x1 = Math.floor((p.x + 9) / T_BOM), y0 = Math.floor((p.y + 3) / T_BOM), y1 = Math.floor((p.y + 9) / T_BOM);
+    return BM.fuegos.some(f => f.celdas.some(([x, y]) => x >= x0 && x <= x1 && y >= y0 && y <= y1));
+}
 // Celdas que va a alcanzar el fuego (bombas puestas + fuego que ya está), con una bomba extra opcional.
 function peligroBom(extra){
     const peligro = new Set();
@@ -194,7 +201,8 @@ function simularBom(){
                 BM.bombas.forEach(o => { if (!o.exploto && o.x === x && o.y === y && o.t > proxima.t) o.t = proxima.t; });
             }
         });
-        BM.fuegos.push({ celdas, hasta: proxima.t + FUEGO_BOM });
+        // Si la bomba llegó tarde por la red, el fuego igual dura unos cuadros para poder tocar.
+        BM.fuegos.push({ celdas, hasta: Math.max(proxima.t + FUEGO_BOM, ahora + 150) });
         if (fresca) { efectoExplosionBom(proxima, celdas); vibrarJ(15); }
         if (fresca && !(window.sonarArcade && sonarArcade('explosion', { tam: Math.min(1, 0.35 + proxima.alcance * 0.12) })) && window.sfx) window.sfx.dado ? window.sfx.dado() : window.sfx.toque();
     }
@@ -207,8 +215,7 @@ function pasoBom(dt){
     const compu = compuBom();
     if (compu && BM.el && !BM.el.muerto && VivoComun.reloj('bombitas') >= e.inicio) {
         moverCompuBom(dt, compu.nivel);
-        const [bx, by] = celdaDeBom(BM.el);
-        if (BM.fuegos.some(f => f.celdas.some(([x, y]) => x === bx && y === by))) muereCompuBom();
+        if (tocaFuegoBom(BM.el)) muereCompuBom();
     }
     if (VivoComun.reloj('bombitas') < e.inicio || BM.muerto) return;
     const k = BM.teclas, v = 1.35 * dt, tam = 12;
@@ -240,7 +247,13 @@ function pasoBom(dt){
         if (!(window.sonarArcade && sonarArcade('powerup')) && window.sfx) window.sfx.acierto();
     }
     // ¿Me alcanzó el fuego?
-    if (BM.fuegos.some(f => f.celdas.some(([x, y]) => x === cx && y === cy))) morirBom();
+    if (tocaFuegoBom(p)) morirBom();
+    // Y si en este celu el fuego toca al otro (en su última posición real), le aviso: así no se
+    // escapa por el retraso de la red. Su celu se da por muerto con eso.
+    if (!compu && BM.enlace && BM.el && !BM.el.muerto && !BM.avisoToque && BM.el.netx != null && tocaFuegoBom({ x: BM.el.netx, y: BM.el.nety })) {
+        BM.avisoToque = true;
+        BM.enlace.enviar('teToco', { c: BM.clave }, true);
+    }
 }
 function ponerBombaBom(){
     const e = BM.estado, p = BM.yo;
@@ -482,9 +495,10 @@ function arrancarBom(){
         BM.enlace = EnlaceVivo.conectar('bombitas', {
             alMensaje(t, d) {
                 if (d.c !== BM.clave || !BM.el) return;
-                if (t === 'pos') VivoComun.recibir(BM.el, { x: d.x, y: d.y });
+                if (t === 'pos') { BM.el.netx = d.x; BM.el.nety = d.y; VivoComun.recibir(BM.el, { x: d.x, y: d.y }); }
                 if (t === 'bomba' && !BM.idsBomba.has(d.id)) { BM.idsBomba.add(d.id); BM.bombas.push({ id: d.id, x: d.x, y: d.y, t: d.t, alcance: d.alcance, duenio: d.duenio, pisando: !!pisaBom(BM.yo, d) }); if (BM.fx) BM.fx.polvo(d.x * T_BOM + 8, d.y * T_BOM + 13, 'rgba(230,230,210,0.6)', 4); }
                 if (t === 'mejora' && BM.mejoras[d.k]) { const [mx, my] = d.k.split(',').map(Number); efectoMejoraBom(mx, my, BM.mejoras[d.k], false); delete BM.mejoras[d.k]; }
+                if (t === 'teToco' && !BM.muerto && BM.estado && BM.estado.fase === 'jugando') morirBom();
                 if (t === 'muerto' && !BM.el.muerto) { BM.el.muerto = true; BM.el.tMuerte = performance.now(); efectoMuerteBom({ x: BM.el.rx != null ? BM.el.rx : BM.el.x, y: BM.el.ry != null ? BM.el.ry : BM.el.y }, miRival); }
             }
         });

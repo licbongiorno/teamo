@@ -64,3 +64,6 @@
     opacity: 0.75; transition: opacity 0.2s;
 }
 .gate-chip-sesion:active { opacity: 1; }
+/* En juegos.html abajo a la izquierda está el dado de "al azar" (58px):
+   el chip se sube arriba de él para que no queden encimados. */
+body:has(.azar-flotante) .gate-chip-sesion { bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }

@@ -3,7 +3,7 @@
 //
 // Es una versión del portón de acceso que valida usuario/contraseña
 // contra Firebase Authentication (cuentas reales, contraseña propia
-// por persona) en vez de la contraseña compartida "777" que usa
+// por persona) en vez de la contraseña compartida "CyN777" que usa
 // js/auth-gate.js. La diferencia importante: con esto, la contraseña
 // NUNCA viaja dentro del código de la web — vive del lado de Firebase,
 // así que alguien mirando "ver código fuente" no la puede leer.

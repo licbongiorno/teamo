@@ -8,6 +8,8 @@
       "firebase.json",
       "firestore.rules",
       "skills-lock.json",
+      "CLAUDE.md",
+      "SEGURIDAD.md",
       "**/.*"
     ]
   }

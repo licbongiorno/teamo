@@ -16,7 +16,7 @@
 // sólo se usa lo cacheado si falla (sin conexión). Esto sacrifica algo
 // de velocidad/ahorro de datos a cambio de que las actualizaciones
 // lleguen siempre, que para una app de dos personas pesa mucho más.
-const VERSION = 'refugio-v2';
+const VERSION = 'refugio-v3';
 const CACHE_SHELL = VERSION + '-shell';
 const CACHE_RUNTIME = VERSION + '-runtime';
 

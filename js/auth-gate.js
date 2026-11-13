@@ -14,7 +14,10 @@
 // ============================================================
 (function () {
     var USUARIOS_VALIDOS = ['carito', 'nico'];
-    var CLAVE_VALIDA = '777';
+    var CLAVE_VALIDA = 'CyN777';
+    // Subir este número obliga a todos los dispositivos a volver a
+    // ingresar la contraseña (se usó al pasar de "777" a "CyN777").
+    var VERSION_CLAVE = 2;
     var LLAVE_SESION = 'sesionRefugio';
 
     var usuarioElegido = null;
@@ -22,7 +25,7 @@
     function sesionActiva() {
         try {
             var datos = JSON.parse(localStorage.getItem(LLAVE_SESION) || 'null');
-            return !!(datos && USUARIOS_VALIDOS.indexOf(datos.usuario) !== -1);
+            return !!(datos && USUARIOS_VALIDOS.indexOf(datos.usuario) !== -1 && datos.v === VERSION_CLAVE);
         } catch (e) {
             return false;
         }
@@ -49,7 +52,7 @@
     }
 
     function concederAcceso(usuario) {
-        localStorage.setItem(LLAVE_SESION, JSON.stringify({ usuario: usuario, ts: Date.now() }));
+        localStorage.setItem(LLAVE_SESION, JSON.stringify({ usuario: usuario, ts: Date.now(), v: VERSION_CLAVE }));
         // Compat: el resto del sitio (chat, juegos, muro, etc.) ya lee
         // esta misma llave para saber "quién sos", así que con esto
         // alcanza para que no vuelvan a pedir identidad por separado.

@@ -6,7 +6,8 @@ Notas rápidas sobre cómo está protegido el sitio hoy y qué se podría subir 
 
 Todas las páginas (`index.html`, `juegos.html`, `categorias/*.html`, etc.) muestran un portón a
 pantalla completa antes de dejar ver nada: elegís **Carito** o **Nico** e ingresás la contraseña
-**CyN777** (respeta mayúsculas: C y N mayúsculas, y minúscula). Lo implementa `js/auth-gate.js` + `css/auth-gate.css`.
+compartida (a propósito no se escribe acá, porque este archivo se puede ver en GitHub; está en
+`CLAVE_VALIDA` dentro de `js/auth-gate.js`). Lo implementa `js/auth-gate.js` + `css/auth-gate.css`.
 
 **Esto es un candado del lado del cliente, no seguridad real.** Cualquiera que abra "ver código
 fuente" en el navegador puede leer la contraseña ahí mismo. Sirve para frenar a alguien que llega
@@ -33,7 +34,7 @@ Para aplicarlas (no se puede desde este entorno, hace falta la consola del proye
 
 ## 3. Contraseña real por persona (opcional, no activado)
 
-Si en algún momento "CyN777 compartida" deja de alcanzar, `js/auth-gate-firebase.js` es una versión
+Si en algún momento "una contraseña compartida" deja de alcanzar, `js/auth-gate-firebase.js` es una versión
 alternativa del portón que valida contra **Firebase Authentication**: cada persona tendría su
 propia contraseña, y esa contraseña nunca estaría escrita en el código del sitio (vive del lado de
 Firebase). No está activada por defecto porque requiere trabajo manual en la consola de Firebase

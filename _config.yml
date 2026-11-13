@@ -1,0 +1,7 @@
+# GitHub Pages (Jekyll): archivos del repo que NO se publican en la web.
+exclude:
+  - CLAUDE.md
+  - SEGURIDAD.md
+  - skills-lock.json
+  - firebase.json
+  - firestore.rules
